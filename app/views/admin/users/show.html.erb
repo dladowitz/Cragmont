@@ -1,0 +1,40 @@
+<%= render "admin/shared/header", title: @user.full_name %>
+
+<section class="panel">
+  <div class="panel-header user-detail-header">
+    <dl class="details-list">
+    <div>
+      <dt>Email</dt>
+      <dd><%= @user.email.presence || "None" %></dd>
+    </div>
+    <div>
+      <dt>Phone</dt>
+      <dd><%= @user.phone.presence || "None" %></dd>
+    </div>
+       <div>
+      <dt>Club member</dt>
+      <dd><%= @user.member? ? "Yes" : "No" %></dd>
+    </div>
+  </dl>
+    <div class="actions">
+      <%= link_to "Edit user", edit_admin_user_path(@user), class: "button secondary" %>
+      <%= button_to "Delete user",
+        admin_user_path(@user),
+        method: :delete,
+        class: "button danger",
+        form: { data: { turbo_confirm: "Are you sure you want to delete this user?" } } %>
+    </div>
+  </div>
+
+
+</section>
+
+<section class="panel">
+  <h2>Coordinated trips</h2>
+
+  <% if @coordinated_trips.any? %>
+    <%= render "admin/trips/table", trips: @coordinated_trips %>
+  <% else %>
+    <p class="muted">This user is not assigned as a campsite coordinator yet.</p>
+  <% end %>
+</section>

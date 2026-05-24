@@ -7,6 +7,7 @@ class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", "Admin dashboard"
     assert_select "td", text: /Yosemite Valley Spring/
+    assert_select "td", text: "Alex Rivera"
     assert_select "td", text: "10"
     assert_select "td", text: "3"
   end

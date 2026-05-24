@@ -8,8 +8,27 @@
         <span class="eyebrow"><%= @trip.status.titleize %></span>
       </div>
       <p><%= @trip.start_date.to_fs(:long) %> to <%= @trip.end_date.to_fs(:long) %></p>
+      <div class="coordinator-summary">
+        <strong>Campsite coordinator:</strong>
+        <% if @trip.campsite_coordinator.present? %>
+          <div class="coordinator-contact">
+            <span><%= @trip.campsite_coordinator.full_name %></span>
+            <% if @trip.campsite_coordinator.email.present? %>
+              <span><%= mail_to @trip.campsite_coordinator.email %></span>
+            <% end %>
+            <% if @trip.campsite_coordinator.phone.present? %>
+              <span><%= @trip.campsite_coordinator.phone %></span>
+            <% end %>
+          </div>
+        <% else %>
+          <span class="muted">Unassigned</span>
+        <% end %>
+      </div>
       <% if @trip.description.present? %>
-        <div class="description"><%= simple_format(@trip.description) %></div>
+        <div class="description">
+          <strong>Notes:</strong>
+          <%= simple_format(@trip.description) %>
+        </div>
       <% end %>
     </div>
     <div class="actions">

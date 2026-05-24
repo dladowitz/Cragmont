@@ -5,6 +5,7 @@ yosemite:
   end_date: 2026-06-15
   description: Spring granite weekend.
   status: published
+  campsite_coordinator: alex
 
 jtree:
   name: Joshua Tree Winter

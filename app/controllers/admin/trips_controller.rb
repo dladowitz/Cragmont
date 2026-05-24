@@ -1,8 +1,9 @@
 class Admin::TripsController < ApplicationController
   before_action :set_trip, only: %i[show edit update destroy]
+  before_action :set_users, only: %i[new create edit update]
 
   def index
-    @trips = Trip.includes(campsites: :campground).order(start_date: :asc, name: :asc)
+    @trips = Trip.includes(:campsite_coordinator, campsites: :campground).order(start_date: :asc, name: :asc)
   end
 
   def show
@@ -46,6 +47,10 @@ class Admin::TripsController < ApplicationController
   end
 
   def trip_params
-    params.require(:trip).permit(:name, :location, :start_date, :end_date, :description, :status)
+    params.require(:trip).permit(:name, :location, :start_date, :end_date, :description, :status, :campsite_coordinator_id)
+  end
+
+  def set_users
+    @users = User.order(:last_name, :first_name)
   end
 end

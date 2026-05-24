@@ -1,12 +1,17 @@
 class Trip < ApplicationRecord
   STATUSES = %w[draft published archived].freeze
 
+  belongs_to :campsite_coordinator,
+    class_name: "User",
+    optional: true,
+    inverse_of: :coordinated_trips
   has_many :campsites, dependent: :destroy
 
   enum :status, STATUSES.index_with(&:itself), default: "draft"
 
   validates :name, :location, :start_date, :end_date, :status, presence: true
   validates :status, inclusion: { in: STATUSES }
+  validates :campsite_coordinator, presence: true, if: :published?
   validate :end_date_after_start_date
 
   def campsite_count

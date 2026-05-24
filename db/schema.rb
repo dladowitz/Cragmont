@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_24_031513) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_24_043112) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -41,6 +41,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_031513) do
   end
 
   create_table "trips", force: :cascade do |t|
+    t.bigint "campsite_coordinator_id"
     t.datetime "created_at", null: false
     t.text "description"
     t.date "end_date", null: false
@@ -49,10 +50,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_031513) do
     t.date "start_date", null: false
     t.string "status", default: "draft", null: false
     t.datetime "updated_at", null: false
+    t.index ["campsite_coordinator_id"], name: "index_trips_on_campsite_coordinator_id"
     t.index ["start_date"], name: "index_trips_on_start_date"
     t.index ["status"], name: "index_trips_on_status"
   end
 
+  create_table "users", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.string "first_name", null: false
+    t.string "last_name", null: false
+    t.boolean "member", default: false, null: false
+    t.string "phone"
+    t.datetime "updated_at", null: false
+    t.index "lower((email)::text)", name: "index_users_on_lower_email", unique: true, where: "((email IS NOT NULL) AND ((email)::text <> ''::text))"
+  end
+
   add_foreign_key "campsites", "campgrounds"
   add_foreign_key "campsites", "trips"
+  add_foreign_key "trips", "users", column: "campsite_coordinator_id"
 end

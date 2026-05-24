@@ -7,6 +7,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", "Trips"
     assert_select "td", text: /Yosemite Valley Spring/
+    assert_select "td", text: "Alex Rivera"
   end
 
   test "can view trip details with campsites" do
@@ -14,6 +15,10 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", "Yosemite Valley Spring"
+    assert_select ".coordinator-summary", text: /Alex Rivera/
+    assert_select ".coordinator-summary", text: /alex@example.com/
+    assert_select ".coordinator-summary", text: /555-0100/
+    assert_select ".description", text: /Notes:/
     assert_select "h3", "Upper Pines"
     assert_select "td", text: "A12"
     assert_select ".campsite-notes-row", text: /Close to bathrooms/
@@ -50,13 +55,32 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
         start_date: trips(:jtree).start_date,
         end_date: trips(:jtree).end_date,
         description: trips(:jtree).description,
-        status: "published"
+        status: "published",
+        campsite_coordinator_id: users(:sam).id
       }
     }
 
     assert_redirected_to admin_trip_url(trips(:jtree))
     assert_equal "Joshua Tree Winter Session", trips(:jtree).reload.name
     assert trips(:jtree).published?
+    assert_equal users(:sam), trips(:jtree).campsite_coordinator
+  end
+
+  test "published trip requires campsite coordinator" do
+    patch admin_trip_url(trips(:jtree)), params: {
+      trip: {
+        name: trips(:jtree).name,
+        location: trips(:jtree).location,
+        start_date: trips(:jtree).start_date,
+        end_date: trips(:jtree).end_date,
+        description: trips(:jtree).description,
+        status: "published",
+        campsite_coordinator_id: ""
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert_select ".form-errors", text: /Campsite coordinator can't be blank/
   end
 
   test "can render edit trip form" do
