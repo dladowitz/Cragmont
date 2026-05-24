@@ -34,6 +34,10 @@ class Trip < ApplicationRecord
     trip_signups.confirmed.count
   end
 
+  def available_participant_capacity
+    [ total_participant_capacity - confirmed_signup_count, 0 ].max
+  end
+
   private
 
   def end_date_after_start_date
