@@ -10,13 +10,27 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "allows blank email" do
-    user = User.new(first_name: "Blank", last_name: "Email")
+    user = User.new(first_name: "Blank", last_name: "Email", password: "password")
 
     assert user.valid?
   end
 
+  test "requires password on create" do
+    user = User.new(first_name: "No", last_name: "Password")
+
+    assert_not user.valid?
+    assert_includes user.errors[:password], "can't be blank"
+  end
+
+  test "authenticates with email and password" do
+    user = users(:alex)
+
+    assert user.authenticate("password")
+    assert_not user.authenticate("wrong-password")
+  end
+
   test "rejects duplicate nonblank email case insensitively" do
-    user = User.new(first_name: "Duplicate", last_name: "Email", email: "ALEX@EXAMPLE.COM")
+    user = User.new(first_name: "Duplicate", last_name: "Email", email: "ALEX@EXAMPLE.COM", password: "password")
 
     assert_not user.valid?
     assert_includes user.errors[:email], "has already been taken"
@@ -33,5 +47,9 @@ class UserTest < ActiveSupport::TestCase
 
   test "full name combines first and last name" do
     assert_equal "Alex Rivera", users(:alex).full_name
+  end
+
+  test "public name abbreviates last name" do
+    assert_equal "Alex R.", users(:alex).public_name
   end
 end

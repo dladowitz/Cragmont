@@ -1,4 +1,13 @@
 Rails.application.routes.draw do
+  root "home#index"
+
+  resource :registration, only: %i[new create]
+  resource :session, only: %i[new create destroy]
+
+  resources :trips, only: %i[index show] do
+    resource :trip_signup, only: :create
+  end
+
   namespace :admin do
     root "dashboard#index"
     resources :users

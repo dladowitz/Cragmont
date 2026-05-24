@@ -4,10 +4,12 @@ alex:
   email: alex@example.com
   phone: 555-0100
   member: true
+  password_digest: <%= BCrypt::Password.create("password") %>
 
 sam:
   first_name: Sam
   last_name: Lee
-  email:
+  email: sam@example.com
   phone: 555-0101
   member: false
+  password_digest: <%= BCrypt::Password.create("password") %>

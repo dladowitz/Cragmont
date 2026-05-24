@@ -6,8 +6,12 @@ class Trip < ApplicationRecord
     optional: true,
     inverse_of: :coordinated_trips
   has_many :campsites, dependent: :destroy
+  has_many :trip_signups, dependent: :destroy
+  has_many :participants, through: :trip_signups, source: :user
 
   enum :status, STATUSES.index_with(&:itself), default: "draft"
+
+  scope :published_for_public, -> { published.order(start_date: :asc, name: :asc) }
 
   validates :name, :location, :start_date, :end_date, :status, presence: true
   validates :status, inclusion: { in: STATUSES }
@@ -19,11 +23,15 @@ class Trip < ApplicationRecord
   end
 
   def total_participant_capacity
-    campsites.sum(:participant_capacity)
+    campsites.loaded? ? campsites.sum(&:participant_capacity) : campsites.sum(:participant_capacity)
   end
 
   def total_car_capacity
-    campsites.sum(:car_capacity)
+    campsites.loaded? ? campsites.sum(&:car_capacity) : campsites.sum(:car_capacity)
+  end
+
+  def confirmed_signup_count
+    trip_signups.confirmed.count
   end
 
   private

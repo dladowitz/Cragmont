@@ -11,6 +11,8 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "can view trip details with campsites" do
+    TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
+
     get admin_trip_url(trips(:yosemite))
 
     assert_response :success
@@ -22,6 +24,10 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select "h3", "Upper Pines"
     assert_select "td", text: "A12"
     assert_select ".campsite-notes-row", text: /Close to bathrooms/
+    assert_select "h2", "Participant signups"
+    assert_select "td", text: "Sam Lee"
+    assert_select "td", text: "555-0101"
+    assert_select "td", text: "Confirmed"
   end
 
   test "can create trip" do
