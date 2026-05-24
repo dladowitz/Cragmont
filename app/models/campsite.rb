@@ -5,7 +5,7 @@ class Campsite < ApplicationRecord
   validates :site_number, :arrival_date, :checkout_date, presence: true
   validates :participant_capacity,
     presence: true,
-    numericality: { only_integer: true, greater_than_or_equal_to: 4, less_than_or_equal_to: 8 }
+    numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 50 }
   validates :car_capacity,
     presence: true,
     numericality: { only_integer: true, greater_than_or_equal_to: 0 }

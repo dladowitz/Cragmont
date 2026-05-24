@@ -14,16 +14,16 @@ class CampsiteTest < ActiveSupport::TestCase
     assert_includes campsite.errors[:car_capacity], "can't be blank"
   end
 
-  test "participant capacity must be between four and eight" do
+  test "participant capacity must be between zero and fifty" do
     campsite = campsites(:yosemite_a)
 
-    campsite.participant_capacity = 3
+    campsite.participant_capacity = -1
     assert_not campsite.valid?
-    assert_includes campsite.errors[:participant_capacity], "must be greater than or equal to 4"
+    assert_includes campsite.errors[:participant_capacity], "must be greater than or equal to 0"
 
-    campsite.participant_capacity = 9
+    campsite.participant_capacity = 51
     assert_not campsite.valid?
-    assert_includes campsite.errors[:participant_capacity], "must be less than or equal to 8"
+    assert_includes campsite.errors[:participant_capacity], "must be less than or equal to 50"
   end
 
   test "car capacity must be non negative" do

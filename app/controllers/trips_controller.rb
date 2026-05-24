@@ -8,6 +8,7 @@ class TripsController < ApplicationController
   def show
     @campsites_by_campground = @trip.campsites.includes(:campground).order(:arrival_date, :site_number).group_by(&:campground)
     @confirmed_signups = @trip.trip_signups.confirmed.includes(:user).order(created_at: :asc)
+    @waitlisted_signups = @trip.trip_signups.waitlisted.includes(:user).order(created_at: :asc)
     @current_signup = @trip.trip_signups.find_by(user: current_user) if user_signed_in?
   end
 

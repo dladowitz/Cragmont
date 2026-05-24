@@ -4,7 +4,6 @@
   <section class="panel trip-overview">
     <div class="panel-header trip-summary-header">
       <div class="trip-summary-copy">
-        <p class="eyebrow">Trip</p>
         <h1><%= @trip.name %></h1>
         <h2><%= @trip.location %></h2>
         <p><%= @trip.start_date.to_fs(:long) %> to <%= @trip.end_date.to_fs(:long) %></p>
@@ -19,8 +18,7 @@
 
       <aside class="signup-panel">
         <% if @current_signup.present? %>
-          <strong>You are <%= @current_signup.status %>.</strong>
-          <p class="muted">Your signup is recorded for this trip.</p>
+          <strong>You are <%= @current_signup.status %> for this trip.</strong>
         <% elsif user_signed_in? %>
           <%= button_to "Sign up for this trip", trip_trip_signup_path(@trip), method: :post, class: "button" %>
         <% else %>
@@ -30,31 +28,34 @@
     </div>
 
     <div class="stats">
+      <div><strong><%= @trip.confirmed_signup_count %></strong><span>Signed up</span></div>
+      <div><strong><%= @trip.available_participant_capacity %></strong><span>Spaces available</span></div>
+      <div><strong><%= @trip.total_participant_capacity %></strong><span>Total capacity</span></div>
       <div><strong><%= @trip.campsite_count %></strong><span>Campsites</span></div>
-      <div><strong><%= @trip.total_participant_capacity %></strong><span>Participant capacity</span></div>
-      <div><strong><%= @trip.confirmed_signup_count %></strong><span>Confirmed participants</span></div>
     </div>
   </section>
 
   <section class="panel">
-    <h2>Campsite coordinator</h2>
-    <% if @trip.campsite_coordinator.present? %>
-      <dl class="details-list">
-        <div>
-          <dt>Name</dt>
-          <dd><%= @trip.campsite_coordinator.full_name %></dd>
-        </div>
-        <div>
-          <dt>Email</dt>
-          <dd><%= mail_to @trip.campsite_coordinator.email if @trip.campsite_coordinator.email.present? %></dd>
-        </div>
-        <div>
-          <dt>Phone</dt>
-          <dd><%= @trip.campsite_coordinator.phone.presence || "None" %></dd>
-        </div>
-      </dl>
+    <h2>Attendees</h2>
+    <% if @confirmed_signups.any? %>
+      <ul class="attendee-list">
+        <% @confirmed_signups.each do |signup| %>
+          <li><%= signup.user.public_name %></li>
+        <% end %>
+      </ul>
     <% else %>
-      <p class="muted">Unassigned</p>
+      <p class="muted">No confirmed attendees yet.</p>
+    <% end %>
+
+    <% if @waitlisted_signups.any? %>
+      <div class="waitlist">
+        <h3>Waitlist</h3>
+        <ul class="attendee-list">
+          <% @waitlisted_signups.each do |signup| %>
+            <li><%= signup.user.public_name %></li>
+          <% end %>
+        </ul>
+      </div>
     <% end %>
   </section>
 
@@ -113,15 +114,24 @@
   </section>
 
   <section class="panel">
-    <h2>Attendees</h2>
-    <% if @confirmed_signups.any? %>
-      <ul class="attendee-list">
-        <% @confirmed_signups.each do |signup| %>
-          <li><%= signup.user.public_name %></li>
-        <% end %>
-      </ul>
+    <h2>Campsite coordinator</h2>
+    <% if @trip.campsite_coordinator.present? %>
+      <dl class="details-list">
+        <div>
+          <dt>Name</dt>
+          <dd><%= @trip.campsite_coordinator.full_name %></dd>
+        </div>
+        <div>
+          <dt>Email</dt>
+          <dd><%= mail_to @trip.campsite_coordinator.email if @trip.campsite_coordinator.email.present? %></dd>
+        </div>
+        <div>
+          <dt>Phone</dt>
+          <dd><%= @trip.campsite_coordinator.phone.presence || "None" %></dd>
+        </div>
+      </dl>
     <% else %>
-      <p class="muted">No confirmed attendees yet.</p>
+      <p class="muted">Unassigned</p>
     <% end %>
   </section>
 </main>

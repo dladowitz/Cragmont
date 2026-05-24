@@ -53,4 +53,11 @@ class TripTest < ActiveSupport::TestCase
     assert_equal 10, trip.total_participant_capacity
     assert_equal 3, trip.total_car_capacity
   end
+
+  test "summarizes available participant capacity" do
+    trip = trips(:yosemite)
+    TripSignup.create!(trip: trip, user: users(:sam))
+
+    assert_equal 9, trip.available_participant_capacity
+  end
 end

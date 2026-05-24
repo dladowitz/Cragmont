@@ -286,7 +286,7 @@ input[type="submit"] {
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
   margin-top: 20px;
 }
@@ -382,6 +382,16 @@ td span {
   border-radius: 999px;
   background: #fbfaf7;
   font-weight: 700;
+}
+
+.waitlist {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.waitlist h3 {
+  margin: 0 0 10px;
 }
 
 .auth-panel {

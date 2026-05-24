@@ -5,7 +5,7 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     get root_url
 
     assert_response :success
-    assert_select "h1", text: /Club trips/
+    assert_select "h1", text: /Yosemite/
     assert_select "a[href='#{trips_path}']", text: /View trips/
   end
 
@@ -26,6 +26,9 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     assert_select "h2", "Campsite coordinator"
     assert_select ".details-list", text: /Alex Rivera/
     assert_select ".details-list", text: /alex@example.com/
+    assert_select ".stats", text: /Signed up/
+    assert_select ".stats", text: /Spaces available/
+    assert_select ".stats", text: /Total capacity/
     assert_select "td", text: "A12"
     assert_select ".campsite-notes-row", text: /Close to bathrooms/
   end
@@ -97,7 +100,7 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     assert_select ".attendee-list", text: /555-0101/, count: 0
   end
 
-  test "public attendee list hides waitlisted users" do
+  test "public trip detail shows waitlisted users separately" do
     trip = trips(:yosemite)
     trip.total_participant_capacity.times do |index|
       TripSignup.create!(trip: trip, user: User.create!(
@@ -113,7 +116,10 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     get trip_url(trip)
 
     assert_response :success
-    assert_select ".attendee-list", text: /Willa W./, count: 0
+    assert_select ".waitlist", text: /Waitlist/
+    assert_select ".waitlist", text: /Willa W./
+    assert_select ".waitlist", text: /Willa Wait/, count: 0
+    assert_select ".waitlist", text: /willa@example.com/, count: 0
   end
 
   private
