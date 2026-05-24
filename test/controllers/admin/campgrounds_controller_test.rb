@@ -7,6 +7,7 @@ class Admin::CampgroundsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", "Campgrounds"
     assert_select "td", text: "Upper Pines"
+    assert_select "th", text: "Campsites", count: 0
   end
 
   test "can view campground details" do
