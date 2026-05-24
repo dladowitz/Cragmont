@@ -170,13 +170,17 @@ input[type="submit"] {
   padding-bottom: 32px;
 }
 
+.home-main {
+  width: 100%;
+  padding-bottom: 0;
+}
+
 .home-hero {
   position: relative;
   display: grid;
   align-items: end;
-  min-height: min(72vh, 720px);
+  min-height: calc(100svh - 104px);
   overflow: hidden;
-  border-radius: 8px;
   isolation: isolate;
   background: #1f2933;
 }
@@ -202,21 +206,23 @@ input[type="submit"] {
 }
 
 .home-hero-copy {
-  max-width: 680px;
-  padding: clamp(32px, 7vw, 72px);
+  width: min(1120px, calc(100% - 32px));
+  margin-inline: auto;
+  padding-block: clamp(32px, 7vw, 72px);
 }
 
 .home-hero h1 {
-  margin: 0 0 18px;
+  max-width: 680px;
+  margin: 0;
   color: #fff;
   font-size: clamp(2rem, 4vw, 3.7rem);
-  line-height: 1.05;
+  line-height: 0.92;
   text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
 }
 
 .home-hero p:not(.eyebrow) {
   max-width: 58ch;
-  margin: 0 0 24px;
+  margin: 24px 0 24px;
   color: rgba(255, 255, 255, 0.88);
   font-size: 1.1rem;
   text-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);

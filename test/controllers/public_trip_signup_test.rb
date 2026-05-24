@@ -5,7 +5,9 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     get root_url
 
     assert_response :success
-    assert_select "h1", text: /Find your next climb outside/
+    assert_select "h1", text: "Climbing"
+    assert_select "h1", text: "Camping"
+    assert_select "h1", text: "Community"
     assert_select "p", text: /Yosemite/
     assert_select "a[href='#{trips_path}']", text: /View trips/
   end
