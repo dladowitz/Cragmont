@@ -4,8 +4,8 @@
   <div class="panel-header">
     <div>
       <h2><%= @campground.location %></h2>
-      <% if @campground.website.present? %>
-        <p><%= link_to @campground.website, @campground.website %></p>
+      <% if (website_url = campground_website_url(@campground)) %>
+        <p><%= link_to website_url, website_url, rel: "noopener", target: "_blank" %></p>
       <% end %>
     </div>
     <div class="actions">
