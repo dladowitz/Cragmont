@@ -55,6 +55,7 @@
           <th>Email</th>
           <th>Phone</th>
           <th>Status</th>
+          <th>Waiver</th>
         </tr>
       </thead>
       <tbody>
@@ -64,6 +65,14 @@
             <td><%= signup.user.email.presence || "None" %></td>
             <td><%= signup.user.phone.presence || "None" %></td>
             <td><span class="status"><%= signup.status.titleize %></span></td>
+            <td>
+              <% if signup.waiver_signed? %>
+                Signed <%= signup.waiver_signed_at.to_fs(:long) %>
+                <%= link_to "Download waiver", rails_blob_path(signup.waiver_document, disposition: "attachment") %>
+              <% else %>
+                <span class="muted">Missing</span>
+              <% end %>
+            </td>
           </tr>
         <% end %>
       </tbody>

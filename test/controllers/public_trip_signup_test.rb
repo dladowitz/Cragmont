@@ -76,11 +76,39 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     log_in_as(users(:sam))
 
     assert_difference "TripSignup.count", 1 do
+      post trip_trip_signup_url(trips(:yosemite)), params: waiver_signature_params
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite))
+    signup = TripSignup.find_by(trip: trips(:yosemite), user: users(:sam))
+    assert signup.confirmed?
+    assert signup.waiver_signed?
+    assert signup.waiver_signature_image.attached?
+    assert signup.waiver_document.attached?
+    assert_equal users(:sam).full_name, signup.waiver_signer_name
+    assert_equal TripSignupWaiver.text, signup.waiver_text
+  end
+
+  test "logged in user cannot sign up without signing waiver" do
+    log_in_as(users(:sam))
+
+    assert_no_difference "TripSignup.count" do
       post trip_trip_signup_url(trips(:yosemite))
     end
 
     assert_redirected_to trip_url(trips(:yosemite))
-    assert TripSignup.find_by(trip: trips(:yosemite), user: users(:sam)).confirmed?
+    assert_equal "Please sign the waiver before signing up.", flash[:alert]
+  end
+
+  test "logged in user cannot sign up with malformed signature" do
+    log_in_as(users(:sam))
+
+    assert_no_difference "TripSignup.count" do
+      post trip_trip_signup_url(trips(:yosemite)), params: { trip_signup: { waiver_signature_data: "not-a-signature" } }
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite))
+    assert_equal "Please sign the waiver before signing up.", flash[:alert]
   end
 
   test "duplicate signup is blocked" do
@@ -88,7 +116,7 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     log_in_as(users(:sam))
 
     assert_no_difference "TripSignup.count" do
-      post trip_trip_signup_url(trips(:yosemite))
+      post trip_trip_signup_url(trips(:yosemite)), params: waiver_signature_params
     end
 
     assert_redirected_to trip_url(trips(:yosemite))
@@ -152,6 +180,10 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "button", text: "Sign up for this trip"
     assert_select "dialog.signup-modal"
+    assert_select ".waiver-text", text: /#{Regexp.escape(TripSignupWaiver.text)}/
+    assert_select "canvas.signature-pad"
+    assert_select "button", text: "Clear signature"
+    assert_select "input[type='hidden'][name='trip_signup[waiver_signature_data]']"
     assert_select "form[action='#{trip_trip_signup_path(trips(:yosemite))}'][method='post']", text: /Pay Now and Sign Up/
   end
 
@@ -178,6 +210,27 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     assert_select ".signup-modal h2", text: "Sign up for WAITLIST"
     assert_select "form[action='#{trip_trip_signup_path(trip)}'][method='post']", text: /Sign up for Waitlist/
     assert_select "form[action='#{trip_trip_signup_path(trip)}'][method='post']", text: /Pay Now and Sign Up/, count: 0
+  end
+
+  test "logged in user can sign waiver and join waitlist" do
+    trip = trips(:yosemite)
+    trip.total_participant_capacity.times do |index|
+      TripSignup.create!(trip: trip, user: User.create!(
+        first_name: "Confirmed",
+        last_name: "WaitlistSignup#{index}",
+        email: "waitlist-signup#{index}@example.com",
+        password: "password"
+      ))
+    end
+    log_in_as(users(:sam))
+
+    assert_difference "TripSignup.count", 1 do
+      post trip_trip_signup_url(trip), params: waiver_signature_params
+    end
+
+    signup = TripSignup.find_by!(trip: trip, user: users(:sam))
+    assert signup.waitlisted?
+    assert signup.waiver_signed?
   end
 
   test "trip detail shows almost full warning at sixty percent capacity" do

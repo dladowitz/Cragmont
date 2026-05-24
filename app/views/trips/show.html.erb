@@ -60,10 +60,29 @@
                   <p><%= @trip.start_date.to_fs(:long) %> to <%= @trip.end_date.to_fs(:long) %></p>
                 </div>
 
-                <div class="form-actions">
-                  <button type="button" class="button secondary" data-action="modal#close">Cancel</button>
-                  <%= button_to modal_submit_text, trip_trip_signup_path(@trip), method: :post, class: "button" %>
-                </div>
+                <%= form_with url: trip_trip_signup_path(@trip), method: :post, class: "waiver-form", data: { controller: "signature" } do %>
+                  <section class="waiver-text">
+                    <h3>Trip Waiver</h3>
+                    <p><%= TripSignupWaiver.text %></p>
+                  </section>
+
+                  <div class="signature-field">
+                    <label for="trip-signup-signature">Signature</label>
+                    <canvas
+                      id="trip-signup-signature"
+                      class="signature-pad"
+                      width="560"
+                      height="180"
+                      data-signature-target="canvas"></canvas>
+                    <%= hidden_field_tag "trip_signup[waiver_signature_data]", "", data: { signature_target: "input" } %>
+                    <button type="button" class="button secondary" data-action="signature#clear">Clear signature</button>
+                  </div>
+
+                  <div class="form-actions">
+                    <button type="button" class="button secondary" data-action="modal#close">Cancel</button>
+                    <%= button_tag modal_submit_text, type: :submit, class: "button", data: { signature_target: "submit" }, disabled: true %>
+                  </div>
+                <% end %>
               </div>
             </dialog>
           </div>
