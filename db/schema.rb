@@ -10,9 +10,37 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_24_152317) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_24_194100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.bigint "record_id", null: false
+    t.string "record_type", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.string "content_type"
+    t.datetime "created_at", null: false
+    t.string "filename", null: false
+    t.string "key", null: false
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
 
   create_table "campgrounds", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -46,10 +74,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_152317) do
     t.bigint "trip_id", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.string "waiver_ip_address"
+    t.string "waiver_signature_digest"
+    t.datetime "waiver_signed_at"
+    t.string "waiver_signer_name"
+    t.text "waiver_text"
+    t.string "waiver_text_digest"
+    t.string "waiver_user_agent"
     t.index ["status"], name: "index_trip_signups_on_status"
     t.index ["trip_id", "user_id"], name: "index_trip_signups_on_trip_id_and_user_id", unique: true
     t.index ["trip_id"], name: "index_trip_signups_on_trip_id"
     t.index ["user_id"], name: "index_trip_signups_on_user_id"
+    t.index ["waiver_signature_digest"], name: "index_trip_signups_on_waiver_signature_digest"
+    t.index ["waiver_signed_at"], name: "index_trip_signups_on_waiver_signed_at"
+    t.index ["waiver_text_digest"], name: "index_trip_signups_on_waiver_text_digest"
   end
 
   create_table "trips", force: :cascade do |t|
@@ -79,6 +117,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_152317) do
     t.index "lower((email)::text)", name: "index_users_on_lower_email", unique: true, where: "((email IS NOT NULL) AND ((email)::text <> ''::text))"
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "campsites", "campgrounds"
   add_foreign_key "campsites", "trips"
   add_foreign_key "trip_signups", "trips"

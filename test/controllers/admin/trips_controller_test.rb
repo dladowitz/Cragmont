@@ -11,7 +11,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "can view trip details with campsites" do
-    TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
+    attach_test_waiver_to(TripSignup.create!(trip: trips(:yosemite), user: users(:sam)))
 
     get admin_trip_url(trips(:yosemite))
 
@@ -28,6 +28,17 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select "td", text: "Sam Lee"
     assert_select "td", text: "555-0101"
     assert_select "td", text: "Confirmed"
+    assert_select "td", text: /Signed/
+    assert_select "a", text: "Download waiver"
+  end
+
+  test "trip details show missing waiver for legacy signups" do
+    TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
+
+    get admin_trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "td", text: /Missing/
   end
 
   test "can create trip" do

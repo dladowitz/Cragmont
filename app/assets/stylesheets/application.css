@@ -467,7 +467,7 @@ td span {
 }
 
 .signup-modal {
-  width: min(520px, calc(100% - 32px));
+  width: min(680px, calc(100% - 32px));
   padding: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -501,6 +501,48 @@ td span {
 
 .signup-modal form {
   margin: 0;
+}
+
+.waiver-form {
+  display: grid;
+  gap: 18px;
+}
+
+.waiver-text {
+  max-height: 180px;
+  overflow: auto;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfaf7;
+}
+
+.waiver-text h3 {
+  margin: 0 0 8px;
+}
+
+.signature-field {
+  display: grid;
+  gap: 10px;
+}
+
+.signature-field label {
+  font-weight: 750;
+}
+
+.signature-pad {
+  width: 100%;
+  height: 180px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.waiver-form button[type="submit"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .attendee-list {

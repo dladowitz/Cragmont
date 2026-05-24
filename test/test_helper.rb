@@ -1,6 +1,8 @@
 ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
+require "digest"
+require "stringio"
 
 module ActiveSupport
   class TestCase
@@ -10,6 +12,32 @@ module ActiveSupport
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
 
-    # Add more helper methods to be used by all tests here...
+    SIGNATURE_DATA_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=".freeze
+
+    def waiver_signature_params
+      { trip_signup: { waiver_signature_data: SIGNATURE_DATA_URL } }
+    end
+
+    def attach_test_waiver_to(signup)
+      signature = WaiverSignatureData.new(SIGNATURE_DATA_URL)
+      waiver_text = TripSignupWaiver.text
+
+      signup.update!(
+        waiver_signed_at: Time.current,
+        waiver_signer_name: signup.user.full_name,
+        waiver_text: waiver_text,
+        waiver_text_digest: ::Digest::SHA256.hexdigest(waiver_text),
+        waiver_signature_digest: signature.digest,
+        waiver_ip_address: "127.0.0.1",
+        waiver_user_agent: "Rails test"
+      )
+      signup.waiver_signature_image.attach(io: StringIO.new(signature.bytes), filename: "signature.png", content_type: "image/png")
+      signup.waiver_document.attach(
+        io: StringIO.new(TripSignupWaiverPdf.new(trip_signup: signup, signature_png: signature.bytes).render),
+        filename: "waiver.pdf",
+        content_type: "application/pdf"
+      )
+      signup
+    end
   end
 end

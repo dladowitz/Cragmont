@@ -3,6 +3,8 @@ class TripSignup < ApplicationRecord
 
   belongs_to :trip
   belongs_to :user
+  has_one_attached :waiver_document
+  has_one_attached :waiver_signature_image
 
   enum :status, STATUSES.index_with(&:itself), default: "confirmed"
 
@@ -10,6 +12,10 @@ class TripSignup < ApplicationRecord
   validates :user_id, uniqueness: { scope: :trip_id, message: "is already signed up for this trip" }
 
   before_validation :assign_capacity_status, on: :create
+
+  def waiver_signed?
+    waiver_signed_at.present? && waiver_document.attached?
+  end
 
   private
 

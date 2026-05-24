@@ -49,4 +49,14 @@ class TripSignupTest < ActiveSupport::TestCase
 
     assert waitlisted.waitlisted?
   end
+
+  test "knows when waiver is signed" do
+    signup = TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
+
+    assert_not signup.waiver_signed?
+
+    attach_test_waiver_to(signup)
+
+    assert signup.waiver_signed?
+  end
 end
