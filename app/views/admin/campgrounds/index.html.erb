@@ -24,8 +24,8 @@
             <td><%= link_to campground.name, admin_campground_path(campground) %></td>
             <td><%= campground.location %></td>
             <td>
-              <% if campground.website.present? %>
-                <%= link_to "Website", campground.website %>
+              <% if (website_url = campground_website_url(campground)) %>
+                <%= link_to "Website", website_url, rel: "noopener", target: "_blank" %>
               <% end %>
             </td>
           </tr>

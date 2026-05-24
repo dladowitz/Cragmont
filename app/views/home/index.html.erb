@@ -2,8 +2,11 @@
 
 <main class="public-main">
   <section class="home-hero">
-    <h1>Yosemite, Tahoe, Joshua Tree, Marin, Mt St Helena and more.</h1>
-    <p>Find a trip and get outside climbing</p>
-    <%= link_to "View trips", trips_path, class: "button" %>
+    <%= image_tag "home-hero.png", alt: "", class: "home-hero-image" %>
+    <div class="home-hero-copy">
+      <h1>Find your next climb outside.</h1>
+      <p>Yosemite, Tahoe, Joshua Tree, Marin, Mt St Helena and more.</p>
+      <%= link_to "View trips", trips_path, class: "button" %>
+    </div>
   </section>
 </main>
