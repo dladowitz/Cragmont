@@ -1,0 +1,29 @@
+yosemite_a:
+  trip: yosemite
+  campground: upper_pines
+  site_number: A12
+  arrival_date: 2026-06-12
+  checkout_date: 2026-06-15
+  participant_capacity: 6
+  car_capacity: 2
+  notes: Close to bathrooms.
+
+yosemite_b:
+  trip: yosemite
+  campground: upper_pines
+  site_number: A13
+  arrival_date: 2026-06-12
+  checkout_date: 2026-06-15
+  participant_capacity: 4
+  car_capacity: 1
+  notes: Shadier site.
+
+jtree_a:
+  trip: jtree
+  campground: hidden_valley
+  site_number: H4
+  arrival_date: 2026-12-04
+  checkout_date: 2026-12-07
+  participant_capacity: 5
+  car_capacity: 2
+  notes: Walk-in adjacent.

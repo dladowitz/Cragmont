@@ -1,0 +1,15 @@
+yosemite:
+  name: Yosemite Valley Spring
+  location: Yosemite Valley, CA
+  start_date: 2026-06-12
+  end_date: 2026-06-15
+  description: Spring granite weekend.
+  status: published
+
+jtree:
+  name: Joshua Tree Winter
+  location: Joshua Tree, CA
+  start_date: 2026-12-04
+  end_date: 2026-12-07
+  description: Desert climbing weekend.
+  status: draft

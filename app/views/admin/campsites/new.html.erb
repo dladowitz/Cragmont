@@ -1,0 +1,12 @@
+<%= render "admin/shared/header", title: "Add campsite" %>
+
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <h2><%= @trip.name %></h2>
+      <p><%= @trip.location %></p>
+    </div>
+  </div>
+
+  <%= render "form", trip: @trip, campsite: @campsite, campgrounds: @campgrounds %>
+</section>

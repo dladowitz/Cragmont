@@ -1,0 +1,94 @@
+<%= render "admin/shared/header", title: @trip.name %>
+
+<section class="panel trip-overview">
+  <div class="panel-header trip-summary-header">
+    <div class="trip-summary-copy">
+      <div class="trip-location-line">
+        <h2><%= @trip.location %></h2>
+        <span class="eyebrow"><%= @trip.status.titleize %></span>
+      </div>
+      <p><%= @trip.start_date.to_fs(:long) %> to <%= @trip.end_date.to_fs(:long) %></p>
+      <% if @trip.description.present? %>
+        <div class="description"><%= simple_format(@trip.description) %></div>
+      <% end %>
+    </div>
+    <div class="actions">
+      <%= link_to "Edit trip", edit_admin_trip_path(@trip), class: "button secondary" %>
+      <%= button_to "Delete trip", admin_trip_path(@trip), method: :delete, class: "button danger" %>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div><strong><%= @trip.campsite_count %></strong><span>Campsites</span></div>
+    <div><strong><%= @trip.total_participant_capacity %></strong><span>Participant capacity</span></div>
+    <div><strong><%= @trip.total_car_capacity %></strong><span>Car capacity</span></div>
+  </div>
+</section>
+
+<section class="panel campsites-panel">
+  <div class="panel-header campsites-panel-header">
+    <div>
+      <h2>Campsites</h2>
+    </div>
+    <%= link_to "Add campsite", new_admin_trip_campsite_path(@trip), class: "button" %>
+  </div>
+
+  <% if @campsites_by_campground.any? %>
+    <% @campsites_by_campground.each do |campground, campsites| %>
+      <div class="campground-group">
+        <h3><%= campground.name %></h3>
+        <p><%= campground.location %></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Site</th>
+              <th>Reservation dates</th>
+              <th>Capacity limit</th>
+              <th>Cars</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% campsites.each do |campsite| %>
+              <tr class="<%= "campsite-row-with-notes" if campsite.notes.present? %>">
+                <td><%= campsite.site_number %></td>
+                <td>
+                  <dl class="date-pair">
+                    <div>
+                      <dt>Arrival</dt>
+                      <dd><%= campsite.arrival_date.to_fs(:long) %></dd>
+                    </div>
+                    <div>
+                      <dt>Checkout</dt>
+                      <dd><%= campsite.checkout_date.to_fs(:long) %></dd>
+                    </div>
+                  </dl>
+                </td>
+                <td><%= campsite.participant_capacity %></td>
+                <td><%= campsite.car_capacity %></td>
+                <td class="table-actions">
+                  <%= link_to "Edit", edit_admin_trip_campsite_path(@trip, campsite) %>
+                  <%= button_to "Delete", admin_trip_campsite_path(@trip, campsite), method: :delete, class: "link-button" %>
+                </td>
+              </tr>
+              <% if campsite.notes.present? %>
+                <tr class="campsite-notes-row">
+                  <td></td>
+                  <td colspan="4">
+                    <strong>Notes:</strong>
+                    <%= campsite.notes %>
+                  </td>
+                </tr>
+              <% end %>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="empty-state">
+      <p>No campsites have been added to this trip yet.</p>
+      <%= link_to "Add campsite", new_admin_trip_campsite_path(@trip), class: "button" %>
+    </div>
+  <% end %>
+</section>

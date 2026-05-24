@@ -1,0 +1,34 @@
+<% if trips.any? %>
+  <table>
+    <thead>
+      <tr>
+        <th>Trip</th>
+        <th>Status</th>
+        <th>Dates</th>
+        <th>Campsites</th>
+        <th>Participants</th>
+        <th>Cars</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% trips.each do |trip| %>
+        <tr>
+          <td>
+            <%= link_to trip.name, admin_trip_path(trip) %>
+            <span><%= trip.location %></span>
+          </td>
+          <td><span class="status"><%= trip.status.titleize %></span></td>
+          <td><%= trip.start_date.to_fs(:long) %> to <%= trip.end_date.to_fs(:long) %></td>
+          <td><%= trip.campsite_count %></td>
+          <td><%= trip.total_participant_capacity %></td>
+          <td><%= trip.total_car_capacity %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <div class="empty-state">
+    <p>No trips have been added yet.</p>
+    <%= link_to "New trip", new_admin_trip_path, class: "button" %>
+  </div>
+<% end %>

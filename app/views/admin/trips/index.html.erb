@@ -1,0 +1,13 @@
+<%= render "admin/shared/header", title: "Trips" %>
+
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <h2>Trip inventory</h2>
+      <p>Manage club trips and the campsites reserved for each trip.</p>
+    </div>
+    <%= link_to "New trip", new_admin_trip_path, class: "button" %>
+  </div>
+
+  <%= render "table", trips: @trips %>
+</section>

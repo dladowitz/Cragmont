@@ -1,0 +1,11 @@
+upper_pines:
+  name: Upper Pines
+  location: Yosemite National Park
+  website: https://example.com/upper-pines
+  notes: Near the valley floor.
+
+hidden_valley:
+  name: Hidden Valley
+  location: Joshua Tree National Park
+  website: https://example.com/hidden-valley
+  notes: Central campground.

@@ -1,0 +1,52 @@
+<%= form_with model: [:admin, trip, campsite], class: "admin-form" do |form| %>
+  <%= render "admin/shared/errors", record: campsite %>
+
+  <% if campgrounds.any? %>
+    <div class="form-grid">
+      <div class="field">
+        <%= form.label :campground_id, "Campground" %>
+        <%= form.collection_select :campground_id, campgrounds, :id, :name, { prompt: "Select a campground" }, required: true %>
+      </div>
+
+      <div class="field">
+        <%= form.label :site_number %>
+        <%= form.text_field :site_number, required: true %>
+      </div>
+
+      <div class="field">
+        <%= form.label :arrival_date %>
+        <%= form.date_field :arrival_date, required: true %>
+      </div>
+
+      <div class="field">
+        <%= form.label :checkout_date %>
+        <%= form.date_field :checkout_date, required: true %>
+      </div>
+
+      <div class="field">
+        <%= form.label :participant_capacity %>
+        <%= form.number_field :participant_capacity, min: 4, max: 8, required: true %>
+      </div>
+
+      <div class="field">
+        <%= form.label :car_capacity %>
+        <%= form.number_field :car_capacity, min: 0, required: true %>
+      </div>
+    </div>
+
+    <div class="field">
+      <%= form.label :notes %>
+      <%= form.text_area :notes, rows: 5 %>
+    </div>
+
+    <div class="form-actions">
+      <%= form.submit %>
+      <%= link_to "Cancel", admin_trip_path(trip), class: "button secondary" %>
+    </div>
+  <% else %>
+    <div class="empty-state">
+      <p>Create a campground before adding campsites to this trip.</p>
+      <%= link_to "Add campground", new_admin_campground_path, class: "button" %>
+    </div>
+  <% end %>
+<% end %>
