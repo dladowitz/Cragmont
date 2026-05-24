@@ -90,10 +90,24 @@ textarea {
 }
 
 .site-name {
+  display: inline-grid;
+  gap: 0;
   color: var(--text);
-  font-size: 1.35rem;
-  font-weight: 800;
+  line-height: 0.95;
   text-decoration: none;
+}
+
+.site-name span {
+  font-size: 1.65rem;
+  font-weight: 800;
+}
+
+.site-name small {
+  color: var(--muted);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
 }
 
 .public-nav {
@@ -238,6 +252,17 @@ input[type="submit"] {
   align-items: baseline;
 }
 
+.trip-title-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.trip-title-line h1 {
+  margin: 0;
+}
+
 .trip-location-line .eyebrow {
   margin: 0;
 }
@@ -301,6 +326,29 @@ input[type="submit"] {
 .stats strong {
   display: block;
   font-size: 1.8rem;
+}
+
+.stats .availability-stat strong,
+.stats .availability-stat span {
+  color: inherit;
+}
+
+.stats .success-stat {
+  border-color: #9bd0ba;
+  background: #ecf8f2;
+  color: var(--accent);
+}
+
+.stats .warning-stat {
+  border-color: #efd77a;
+  background: #fff8db;
+  color: #936100;
+}
+
+.stats .danger-stat {
+  border-color: #f4b6ae;
+  background: #fff1f0;
+  color: var(--danger);
 }
 
 .stats span,
@@ -368,6 +416,47 @@ td span {
   margin: 8px 0 0;
 }
 
+.signup-panel form {
+  margin-top: 12px;
+}
+
+.signup-modal {
+  width: min(520px, calc(100% - 32px));
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 20px 60px rgb(31 41 51 / 20%);
+}
+
+.signup-modal::backdrop {
+  background: rgb(31 41 51 / 45%);
+}
+
+.signup-modal-content {
+  display: grid;
+  gap: 20px;
+  padding: 24px;
+}
+
+.signup-modal h2,
+.signup-modal p {
+  margin: 0;
+}
+
+.signup-modal p {
+  color: var(--muted);
+}
+
+.signup-modal .form-actions {
+  justify-content: end;
+}
+
+.signup-modal form {
+  margin: 0;
+}
+
 .attendee-list {
   display: flex;
   flex-wrap: wrap;
@@ -425,6 +514,16 @@ th {
   color: var(--accent-dark);
   font-size: 0.85rem;
   font-weight: 750;
+}
+
+.danger-status {
+  background: #fff1f0;
+  color: var(--danger);
+}
+
+.warning-status {
+  background: #fff8db;
+  color: #936100;
 }
 
 .admin-form {

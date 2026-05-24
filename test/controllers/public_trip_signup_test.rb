@@ -29,6 +29,8 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     assert_select ".stats", text: /Signed up/
     assert_select ".stats", text: /Spaces available/
     assert_select ".stats", text: /Total capacity/
+    assert_select ".stats .success-stat", text: /10/
+    assert_select ".stats .success-stat", text: /Spaces available/
     assert_select "td", text: "A12"
     assert_select ".campsite-notes-row", text: /Close to bathrooms/
   end
@@ -87,6 +89,112 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to trip_url(trips(:yosemite))
+  end
+
+  test "confirmed user can remove themself from a trip" do
+    signup = TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
+    log_in_as(users(:sam))
+
+    assert_difference "TripSignup.count", -1 do
+      delete trip_trip_signup_url(trips(:yosemite))
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite))
+    assert_nil TripSignup.find_by(id: signup.id)
+  end
+
+  test "waitlisted user can remove themself from a trip" do
+    signup = TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
+    signup.waitlisted!
+    log_in_as(users(:sam))
+
+    assert_difference "TripSignup.count", -1 do
+      delete trip_trip_signup_url(trips(:yosemite))
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite))
+    assert_nil TripSignup.find_by(id: signup.id)
+  end
+
+  test "trip detail shows remove modal for signed in participant" do
+    TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
+    log_in_as(users(:sam))
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "button", text: "Remove me from this trip"
+    assert_select "dialog.signup-modal h2", text: "Remove yourself from this trip?"
+    assert_select "form[action='#{trip_trip_signup_path(trips(:yosemite))}'][method='post']", text: /Remove me from this trip/
+  end
+
+  test "trip detail shows waitlist remove modal for signed in waitlisted participant" do
+    signup = TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
+    signup.waitlisted!
+    log_in_as(users(:sam))
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "button", text: "Remove me from the waitlist"
+    assert_select "dialog.signup-modal h2", text: "Remove yourself from the waitlist?"
+    assert_select "form[action='#{trip_trip_signup_path(trips(:yosemite))}'][method='post']", text: /Remove me from the waitlist/
+  end
+
+  test "trip detail shows signup modal for logged in non participant" do
+    log_in_as(users(:sam))
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "button", text: "Sign up for this trip"
+    assert_select "dialog.signup-modal"
+    assert_select "form[action='#{trip_trip_signup_path(trips(:yosemite))}'][method='post']", text: /Pay Now and Sign Up/
+  end
+
+  test "trip detail shows waitlist signup button when no spaces are available" do
+    trip = trips(:yosemite)
+    trip.total_participant_capacity.times do |index|
+      TripSignup.create!(trip: trip, user: User.create!(
+        first_name: "Confirmed",
+        last_name: "WaitlistButton#{index}",
+        email: "waitlist-button#{index}@example.com",
+        password: "password"
+      ))
+    end
+    log_in_as(users(:sam))
+
+    get trip_url(trip)
+
+    assert_response :success
+    assert_select "button", text: "Sign up for the waitlist"
+    assert_select "button", text: "Sign up for this trip", count: 0
+    assert_select ".trip-title-line .status", text: "Trip Full"
+    assert_select ".stats .danger-stat", text: /0/
+    assert_select ".stats .danger-stat", text: /Spaces available/
+    assert_select ".signup-modal h2", text: "Sign up for WAITLIST"
+    assert_select "form[action='#{trip_trip_signup_path(trip)}'][method='post']", text: /Sign up for Waitlist/
+    assert_select "form[action='#{trip_trip_signup_path(trip)}'][method='post']", text: /Pay Now and Sign Up/, count: 0
+  end
+
+  test "trip detail shows almost full warning at sixty percent capacity" do
+    trip = trips(:yosemite)
+    6.times do |index|
+      TripSignup.create!(trip: trip, user: User.create!(
+        first_name: "Almost",
+        last_name: "FullView#{index}",
+        email: "almost-full-view#{index}@example.com",
+        password: "password"
+      ))
+    end
+
+    get trip_url(trip)
+
+    assert_response :success
+    assert_select ".trip-title-line .warning-status", text: "Almost Full"
+    assert_select ".trip-title-line .danger-status", count: 0
+    assert_select ".stats .warning-stat", text: /4/
+    assert_select ".stats .warning-stat", text: /Spaces available/
   end
 
   test "public attendee list abbreviates names and hides contact details" do

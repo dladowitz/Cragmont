@@ -1,8 +1,8 @@
 <header class="public-header">
-  <div>
-    <p class="eyebrow">Cragmont Climbing Club</p>
-    <%= link_to "Cragmont", root_path, class: "site-name" %>
-  </div>
+  <%= link_to root_path, class: "site-name" do %>
+    <span>Cragmont</span>
+    <small>Climbing Club</small>
+  <% end %>
 
   <nav class="public-nav">
     <% if user_signed_in? %>
