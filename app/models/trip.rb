@@ -38,6 +38,16 @@ class Trip < ApplicationRecord
     [ total_participant_capacity - confirmed_signup_count, 0 ].max
   end
 
+  def capacity_full?
+    available_participant_capacity.zero?
+  end
+
+  def almost_full?
+    return false if capacity_full? || total_participant_capacity.zero?
+
+    confirmed_signup_count.to_f / total_participant_capacity >= 0.6
+  end
+
   private
 
   def end_date_after_start_date

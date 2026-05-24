@@ -4,7 +4,14 @@
   <section class="panel trip-overview">
     <div class="panel-header trip-summary-header">
       <div class="trip-summary-copy">
-        <h1><%= @trip.name %></h1>
+        <div class="trip-title-line">
+          <h1><%= @trip.name %></h1>
+          <% if @trip.capacity_full? %>
+            <span class="status danger-status">Trip Full</span>
+          <% elsif @trip.almost_full? %>
+            <span class="status warning-status">Almost Full</span>
+          <% end %>
+        </div>
         <h2><%= @trip.location %></h2>
         <p><%= @trip.start_date.to_fs(:long) %> to <%= @trip.end_date.to_fs(:long) %></p>
 
@@ -19,8 +26,47 @@
       <aside class="signup-panel">
         <% if @current_signup.present? %>
           <strong>You are <%= @current_signup.status %> for this trip.</strong>
+          <div data-controller="modal">
+            <% remove_button_text = @current_signup.waitlisted? ? "Remove me from the waitlist" : "Remove me from this trip" %>
+            <% remove_title = @current_signup.waitlisted? ? "Remove yourself from the waitlist?" : "Remove yourself from this trip?" %>
+            <button type="button" class="button danger" data-action="modal#open"><%= remove_button_text %></button>
+
+            <dialog class="signup-modal" data-modal-target="dialog" data-action="click->modal#closeOnBackdrop">
+              <div class="signup-modal-content">
+                <div>
+                  <h2><%= remove_title %></h2>
+                  <p><%= @trip.name %></p>
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" class="button secondary" data-action="modal#close">Cancel</button>
+                  <%= button_to remove_button_text, trip_trip_signup_path(@trip), method: :delete, class: "button danger" %>
+                </div>
+              </div>
+            </dialog>
+          </div>
         <% elsif user_signed_in? %>
-          <%= button_to "Sign up for this trip", trip_trip_signup_path(@trip), method: :post, class: "button" %>
+          <div data-controller="modal">
+            <% waitlist_signup = @trip.capacity_full? %>
+            <% signup_button_text = waitlist_signup ? "Sign up for the waitlist" : "Sign up for this trip" %>
+            <% modal_title = waitlist_signup ? "Sign up for WAITLIST" : "Sign up for #{@trip.name}" %>
+            <% modal_submit_text = waitlist_signup ? "Sign up for Waitlist" : "Pay Now and Sign Up" %>
+            <button type="button" class="button" data-action="modal#open"><%= signup_button_text %></button>
+
+            <dialog class="signup-modal" data-modal-target="dialog" data-action="click->modal#closeOnBackdrop">
+              <div class="signup-modal-content">
+                <div>
+                  <h2><%= modal_title %></h2>
+                  <p><%= @trip.start_date.to_fs(:long) %> to <%= @trip.end_date.to_fs(:long) %></p>
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" class="button secondary" data-action="modal#close">Cancel</button>
+                  <%= button_to modal_submit_text, trip_trip_signup_path(@trip), method: :post, class: "button" %>
+                </div>
+              </div>
+            </dialog>
+          </div>
         <% else %>
           <%= link_to "Log in to sign up", new_session_path, class: "button" %>
         <% end %>
@@ -29,7 +75,10 @@
 
     <div class="stats">
       <div><strong><%= @trip.confirmed_signup_count %></strong><span>Signed up</span></div>
-      <div><strong><%= @trip.available_participant_capacity %></strong><span>Spaces available</span></div>
+      <div class="availability-stat <%= @trip.capacity_full? ? "danger-stat" : (@trip.almost_full? ? "warning-stat" : "success-stat") %>">
+        <strong><%= @trip.available_participant_capacity %></strong>
+        <span>Spaces available</span>
+      </div>
       <div><strong><%= @trip.total_participant_capacity %></strong><span>Total capacity</span></div>
       <div><strong><%= @trip.campsite_count %></strong><span>Campsites</span></div>
     </div>

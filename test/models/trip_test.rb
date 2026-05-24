@@ -60,4 +60,19 @@ class TripTest < ActiveSupport::TestCase
 
     assert_equal 9, trip.available_participant_capacity
   end
+
+  test "knows when capacity is almost full" do
+    trip = trips(:yosemite)
+    6.times do |index|
+      TripSignup.create!(trip: trip, user: User.create!(
+        first_name: "Almost",
+        last_name: "Full#{index}",
+        email: "almost-full#{index}@example.com",
+        password: "password"
+      ))
+    end
+
+    assert trip.almost_full?
+    assert_not trip.capacity_full?
+  end
 end
