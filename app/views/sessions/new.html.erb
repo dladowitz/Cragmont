@@ -1,0 +1,24 @@
+<%= render "shared/public_header" %>
+
+<main class="public-main">
+  <section class="panel auth-panel">
+    <h1>Log in</h1>
+
+    <%= form_with url: session_path, class: "admin-form" do |form| %>
+      <div class="field">
+        <%= form.label :email %>
+        <%= form.email_field :email, required: true, autocomplete: "email" %>
+      </div>
+
+      <div class="field">
+        <%= form.label :password %>
+        <%= form.password_field :password, required: true, autocomplete: "current-password" %>
+      </div>
+
+      <div class="form-actions">
+        <%= form.submit "Log in" %>
+        <%= link_to "Create account", new_registration_path, class: "button secondary" %>
+      </div>
+    <% end %>
+  </section>
+</main>

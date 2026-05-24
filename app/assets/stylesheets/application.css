@@ -45,6 +45,8 @@ textarea {
 }
 
 .admin-header,
+.public-header,
+.public-main,
 .panel,
 .flash-messages {
   width: min(1120px, calc(100% - 32px));
@@ -79,6 +81,51 @@ textarea {
   gap: 8px;
 }
 
+.public-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: center;
+  padding: 24px 0 18px;
+}
+
+.site-name {
+  color: var(--text);
+  font-size: 1.35rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.public-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.public-nav a,
+.nav-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--accent-dark);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.public-nav span {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.nav-button {
+  cursor: pointer;
+}
+
 .admin-nav a,
 .button,
 input[type="submit"] {
@@ -103,6 +150,28 @@ input[type="submit"] {
 .button.danger {
   border-color: var(--danger);
   background: var(--danger);
+}
+
+.public-main {
+  padding-bottom: 32px;
+}
+
+.home-hero {
+  max-width: 780px;
+  padding: 64px 0 80px;
+}
+
+.home-hero h1 {
+  margin: 0 0 18px;
+  font-size: clamp(2rem, 4vw, 3.7rem);
+  line-height: 1.05;
+}
+
+.home-hero p:not(.eyebrow) {
+  max-width: 58ch;
+  margin: 0 0 24px;
+  color: var(--muted);
+  font-size: 1.1rem;
 }
 
 .panel {
@@ -239,6 +308,84 @@ td span {
   display: block;
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.trip-cards {
+  display: grid;
+  gap: 14px;
+}
+
+.trip-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.8fr) auto;
+  gap: 20px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfaf7;
+}
+
+.trip-card h2,
+.trip-card p,
+.trip-card dl {
+  margin: 0;
+}
+
+.trip-card p,
+.trip-card-meta dt {
+  color: var(--muted);
+}
+
+.trip-card-meta {
+  display: grid;
+  gap: 6px;
+}
+
+.trip-card-meta div {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 10px;
+}
+
+.trip-card-meta dt {
+  font-weight: 750;
+}
+
+.trip-card-meta dd {
+  margin: 0;
+}
+
+.signup-panel {
+  min-width: 240px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfaf7;
+}
+
+.signup-panel p {
+  margin: 8px 0 0;
+}
+
+.attendee-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.attendee-list li {
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fbfaf7;
+  font-weight: 700;
+}
+
+.auth-panel {
+  max-width: 520px;
 }
 
 table {
@@ -449,13 +596,15 @@ textarea {
 
 @media (max-width: 760px) {
   .admin-header,
+  .public-header,
   .panel-header {
     align-items: stretch;
     flex-direction: column;
   }
 
   .form-grid,
-  .stats {
+  .stats,
+  .trip-card {
     grid-template-columns: 1fr;
   }
 

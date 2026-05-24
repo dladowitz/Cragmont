@@ -1,0 +1,127 @@
+<%= render "shared/public_header" %>
+
+<main class="public-main">
+  <section class="panel trip-overview">
+    <div class="panel-header trip-summary-header">
+      <div class="trip-summary-copy">
+        <p class="eyebrow">Trip</p>
+        <h1><%= @trip.name %></h1>
+        <h2><%= @trip.location %></h2>
+        <p><%= @trip.start_date.to_fs(:long) %> to <%= @trip.end_date.to_fs(:long) %></p>
+
+        <% if @trip.description.present? %>
+          <div class="description">
+            <strong>Notes:</strong>
+            <%= simple_format(@trip.description) %>
+          </div>
+        <% end %>
+      </div>
+
+      <aside class="signup-panel">
+        <% if @current_signup.present? %>
+          <strong>You are <%= @current_signup.status %>.</strong>
+          <p class="muted">Your signup is recorded for this trip.</p>
+        <% elsif user_signed_in? %>
+          <%= button_to "Sign up for this trip", trip_trip_signup_path(@trip), method: :post, class: "button" %>
+        <% else %>
+          <%= link_to "Log in to sign up", new_session_path, class: "button" %>
+        <% end %>
+      </aside>
+    </div>
+
+    <div class="stats">
+      <div><strong><%= @trip.campsite_count %></strong><span>Campsites</span></div>
+      <div><strong><%= @trip.total_participant_capacity %></strong><span>Participant capacity</span></div>
+      <div><strong><%= @trip.confirmed_signup_count %></strong><span>Confirmed participants</span></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Campsite coordinator</h2>
+    <% if @trip.campsite_coordinator.present? %>
+      <dl class="details-list">
+        <div>
+          <dt>Name</dt>
+          <dd><%= @trip.campsite_coordinator.full_name %></dd>
+        </div>
+        <div>
+          <dt>Email</dt>
+          <dd><%= mail_to @trip.campsite_coordinator.email if @trip.campsite_coordinator.email.present? %></dd>
+        </div>
+        <div>
+          <dt>Phone</dt>
+          <dd><%= @trip.campsite_coordinator.phone.presence || "None" %></dd>
+        </div>
+      </dl>
+    <% else %>
+      <p class="muted">Unassigned</p>
+    <% end %>
+  </section>
+
+  <section class="panel campsites-panel">
+    <h2>Campsites</h2>
+    <% if @campsites_by_campground.any? %>
+      <% @campsites_by_campground.each do |campground, campsites| %>
+        <div class="campground-group">
+          <h3><%= campground.name %></h3>
+          <p><%= campground.location %></p>
+          <table>
+            <thead>
+              <tr>
+                <th>Site</th>
+                <th>Reservation dates</th>
+                <th>Capacity limit</th>
+                <th>Cars</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% campsites.each do |campsite| %>
+                <tr class="<%= "campsite-row-with-notes" if campsite.notes.present? %>">
+                  <td><%= campsite.site_number %></td>
+                  <td>
+                    <dl class="date-pair">
+                      <div>
+                        <dt>Arrival</dt>
+                        <dd><%= campsite.arrival_date.to_fs(:long) %></dd>
+                      </div>
+                      <div>
+                        <dt>Checkout</dt>
+                        <dd><%= campsite.checkout_date.to_fs(:long) %></dd>
+                      </div>
+                    </dl>
+                  </td>
+                  <td><%= campsite.participant_capacity %></td>
+                  <td><%= campsite.car_capacity %></td>
+                </tr>
+                <% if campsite.notes.present? %>
+                  <tr class="campsite-notes-row">
+                    <td></td>
+                    <td colspan="3">
+                      <strong>Notes:</strong>
+                      <%= campsite.notes %>
+                    </td>
+                  </tr>
+                <% end %>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+    <% else %>
+      <p class="muted">No campsite reservations have been added yet.</p>
+    <% end %>
+  </section>
+
+  <section class="panel">
+    <h2>Attendees</h2>
+    <% if @confirmed_signups.any? %>
+      <ul class="attendee-list">
+        <% @confirmed_signups.each do |signup| %>
+          <li><%= signup.user.public_name %></li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="muted">No confirmed attendees yet.</p>
+    <% end %>
+  </section>
+</main>

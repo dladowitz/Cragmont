@@ -44,6 +44,35 @@
   </div>
 </section>
 
+<section class="panel">
+  <h2>Participant signups</h2>
+
+  <% if @trip_signups.any? %>
+    <table>
+      <thead>
+        <tr>
+          <th>Participant</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @trip_signups.each do |signup| %>
+          <tr>
+            <td><%= signup.user.full_name %></td>
+            <td><%= signup.user.email.presence || "None" %></td>
+            <td><%= signup.user.phone.presence || "None" %></td>
+            <td><span class="status"><%= signup.status.titleize %></span></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p class="muted">No participants have signed up yet.</p>
+  <% end %>
+</section>
+
 <section class="panel campsites-panel">
   <div class="panel-header campsites-panel-header">
     <div>

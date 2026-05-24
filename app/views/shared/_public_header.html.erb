@@ -1,0 +1,17 @@
+<header class="public-header">
+  <div>
+    <p class="eyebrow">Cragmont Climbing Club</p>
+    <%= link_to "Cragmont", root_path, class: "site-name" %>
+  </div>
+
+  <nav class="public-nav">
+    <%= link_to "Trips", trips_path %>
+    <% if user_signed_in? %>
+      <span><%= current_user.full_name %></span>
+      <%= button_to "Log out", session_path, method: :delete, class: "nav-button" %>
+    <% else %>
+      <%= link_to "Log in", new_session_path %>
+      <%= link_to "Register", new_registration_path %>
+    <% end %>
+  </nav>
+</header>

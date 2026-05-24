@@ -28,7 +28,9 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
           last_name: "Chen",
           email: "morgan@example.com",
           phone: "555-0102",
-          member: "1"
+          member: "1",
+          password: "password",
+          password_confirmation: "password"
         }
       }
     end
@@ -58,6 +60,40 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Samantha", users(:sam).reload.first_name
   end
 
+  test "admin create requires password" do
+    assert_no_difference "User.count" do
+      post admin_users_url, params: {
+        user: {
+          first_name: "No",
+          last_name: "Password",
+          email: "nopassword@example.com",
+          member: "0"
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select ".form-errors", text: /Password can't be blank/
+  end
+
+  test "admin edit can leave password blank" do
+    patch admin_user_url(users(:alex)), params: {
+      user: {
+        first_name: users(:alex).first_name,
+        last_name: "Updated",
+        email: users(:alex).email,
+        phone: users(:alex).phone,
+        member: users(:alex).member,
+        password: "",
+        password_confirmation: ""
+      }
+    }
+
+    assert_redirected_to admin_user_url(users(:alex))
+    assert_equal "Updated", users(:alex).reload.last_name
+    assert users(:alex).authenticate("password")
+  end
+
   test "can render edit user form" do
     get edit_admin_user_url(users(:alex))
 
@@ -68,7 +104,7 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "can delete unassigned user" do
-    user = User.create!(first_name: "Unused", last_name: "Person")
+    user = User.create!(first_name: "Unused", last_name: "Person", password: "password")
 
     assert_difference "User.count", -1 do
       delete admin_user_url(user)
