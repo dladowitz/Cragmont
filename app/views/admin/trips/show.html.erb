@@ -67,8 +67,8 @@
             <td><span class="status"><%= signup.status.titleize %></span></td>
             <td>
               <% if signup.waiver_signed? %>
-                Signed <%= signup.waiver_signed_at.to_fs(:long) %>
-                <%= link_to "Download waiver", rails_blob_path(signup.waiver_document, disposition: "attachment") %>
+                <%= signup.waiver_signed_at.strftime("%m/%d/%y") %>
+                <%= link_to "Download", rails_blob_path(signup.waiver_document, disposition: "attachment") %>
               <% else %>
                 <span class="muted">Missing</span>
               <% end %>
