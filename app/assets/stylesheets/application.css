@@ -549,15 +549,17 @@ td span {
 
 .waiver-document {
   display: grid;
-  gap: 16px;
+  gap: 10px;
   max-width: 860px;
   margin: 0 auto;
   color: #40512b;
-  line-height: 1.55;
+  line-height: 1.42;
 }
 
 .waiver-document p {
   margin: 0;
+  font-size: 1.3rem;
+  color: black;
 }
 
 .waiver-title {
@@ -571,10 +573,11 @@ td span {
   margin: 0;
   text-align: center;
   font-weight: 750;
+  line-height: 1.25;
 }
 
 .waiver-summary-heading {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
 }
 
 .signature-field {
@@ -611,6 +614,18 @@ td span {
 .signature-pad.disabled {
   cursor: not-allowed;
   opacity: 0.55;
+}
+
+.signup-modal .waiver-signature-actions {
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.waiver-signature-submit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: end;
 }
 
 .waiver-form button[type="submit"]:disabled {
