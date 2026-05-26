@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_24_194100) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_25_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -74,6 +74,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_194100) do
     t.bigint "trip_id", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.datetime "waiver_acknowledged_at"
+    t.text "waiver_acknowledgement_text"
+    t.string "waiver_acknowledgement_text_digest"
     t.string "waiver_ip_address"
     t.string "waiver_signature_digest"
     t.datetime "waiver_signed_at"
@@ -85,6 +88,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_194100) do
     t.index ["trip_id", "user_id"], name: "index_trip_signups_on_trip_id_and_user_id", unique: true
     t.index ["trip_id"], name: "index_trip_signups_on_trip_id"
     t.index ["user_id"], name: "index_trip_signups_on_user_id"
+    t.index ["waiver_acknowledged_at"], name: "index_trip_signups_on_waiver_acknowledged_at"
+    t.index ["waiver_acknowledgement_text_digest"], name: "index_trip_signups_on_waiver_acknowledgement_text_digest"
     t.index ["waiver_signature_digest"], name: "index_trip_signups_on_waiver_signature_digest"
     t.index ["waiver_signed_at"], name: "index_trip_signups_on_waiver_signed_at"
     t.index ["waiver_text_digest"], name: "index_trip_signups_on_waiver_text_digest"

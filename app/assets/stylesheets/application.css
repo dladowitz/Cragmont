@@ -467,7 +467,8 @@ td span {
 }
 
 .signup-modal {
-  width: min(680px, calc(100% - 32px));
+  width: min(960px, calc(100% - 32px));
+  max-height: calc(100vh - 32px);
   padding: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -484,6 +485,8 @@ td span {
   display: grid;
   gap: 20px;
   padding: 24px;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
 }
 
 .signup-modal h2,
@@ -508,17 +511,70 @@ td span {
   gap: 18px;
 }
 
+.waiver-intro {
+  display: grid;
+  gap: 20px;
+}
+
+.waiver-intro[hidden],
+[data-signature-target="waiverStep"][hidden] {
+  display: none;
+}
+
+.waiver-intro-copy {
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfaf7;
+  
+  font-size: 1.4rem;
+  line-height: 1.55;
+}
+
+.waiver-intro-copy p {
+  margin: 0;
+  color: black;
+}
+
 .waiver-text {
-  max-height: 180px;
+  max-height: 520px;
   overflow: auto;
-  padding: 14px;
+  padding: 22px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fbfaf7;
 }
 
-.waiver-text h3 {
-  margin: 0 0 8px;
+.waiver-document {
+  display: grid;
+  gap: 16px;
+  max-width: 860px;
+  margin: 0 auto;
+  color: #40512b;
+  line-height: 1.55;
+}
+
+.waiver-document p {
+  margin: 0;
+}
+
+.waiver-title {
+  margin: 0;
+  text-align: center;
+  font-size: 1.5rem;
+}
+
+.waiver-warning,
+.waiver-summary-heading {
+  margin: 0;
+  text-align: center;
+  font-weight: 750;
+}
+
+.waiver-summary-heading {
+  font-size: 1.2rem;
 }
 
 .signature-field {
@@ -526,18 +582,35 @@ td span {
   gap: 10px;
 }
 
-.signature-field label {
+.signature-label-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.signature-label-row label {
   font-weight: 750;
+}
+
+.signature-label-row span {
+  color: var(--muted);
+  font-size: 0.95rem;
 }
 
 .signature-pad {
   width: 100%;
-  height: 180px;
+  height: 120px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
   cursor: crosshair;
   touch-action: none;
+}
+
+.signature-pad.disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .waiver-form button[type="submit"]:disabled {

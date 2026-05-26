@@ -10,5 +10,6 @@ class TripSignupWaiverPdfTest < ActiveSupport::TestCase
 
     assert pdf.start_with?("%PDF")
     assert_operator pdf.bytesize, :>, 1_000
+    assert_match(/\/Count [2-9]\b/, pdf)
   end
 end

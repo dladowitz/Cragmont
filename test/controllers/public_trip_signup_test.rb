@@ -85,7 +85,10 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     assert signup.waiver_signed?
     assert signup.waiver_signature_image.attached?
     assert signup.waiver_document.attached?
+    assert_match(/\A\d{4}-\d{2}-\d{2}-Sam-Lee-Yosemite-Valley-Spring-#{signup.id}\.pdf\z/, signup.waiver_document.filename.to_s)
     assert_equal users(:sam).full_name, signup.waiver_signer_name
+    assert signup.waiver_acknowledged_at.present?
+    assert_equal TripSignupWaiver.acknowledgement_text, signup.waiver_acknowledgement_text
     assert_equal TripSignupWaiver.text, signup.waiver_text
   end
 
@@ -93,18 +96,29 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     log_in_as(users(:sam))
 
     assert_no_difference "TripSignup.count" do
-      post trip_trip_signup_url(trips(:yosemite))
+      post trip_trip_signup_url(trips(:yosemite)), params: { trip_signup: { waiver_acknowledged_at: Time.current.iso8601 } }
     end
 
     assert_redirected_to trip_url(trips(:yosemite))
     assert_equal "Please sign the waiver before signing up.", flash[:alert]
   end
 
+  test "logged in user cannot sign up without agreeing to acknowledgement" do
+    log_in_as(users(:sam))
+
+    assert_no_difference "TripSignup.count" do
+      post trip_trip_signup_url(trips(:yosemite)), params: { trip_signup: { waiver_signature_data: SIGNATURE_DATA_URL } }
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite))
+    assert_equal "Please agree to the waiver acknowledgement before signing up.", flash[:alert]
+  end
+
   test "logged in user cannot sign up with malformed signature" do
     log_in_as(users(:sam))
 
     assert_no_difference "TripSignup.count" do
-      post trip_trip_signup_url(trips(:yosemite)), params: { trip_signup: { waiver_signature_data: "not-a-signature" } }
+      post trip_trip_signup_url(trips(:yosemite)), params: { trip_signup: { waiver_signature_data: "not-a-signature", waiver_acknowledged_at: Time.current.iso8601 } }
     end
 
     assert_redirected_to trip_url(trips(:yosemite))
@@ -180,10 +194,14 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "button", text: "Sign up for this trip"
     assert_select "dialog.signup-modal"
-    assert_select ".waiver-text", text: /#{Regexp.escape(TripSignupWaiver.text)}/
+    assert_select ".waiver-intro", text: /not a teaching or instructional organization/
+    assert_select "button", text: "Agree and Sign Waiver"
+    assert_select ".waiver-text", text: /READ THIS DOCUMENT CAREFULLY BEFORE SIGNING/
+    assert_select ".waiver-text", text: /YOU ARE GIVING UP IMPORTANT LEGAL RIGHTS/
     assert_select "canvas.signature-pad"
     assert_select "button", text: "Clear signature"
     assert_select "input[type='hidden'][name='trip_signup[waiver_signature_data]']"
+    assert_select "input[type='hidden'][name='trip_signup[waiver_acknowledged_at]']"
     assert_select "form[action='#{trip_trip_signup_path(trips(:yosemite))}'][method='post']", text: /Pay Now and Sign Up/
   end
 

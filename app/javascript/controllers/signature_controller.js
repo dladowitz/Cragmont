@@ -1,12 +1,13 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["canvas", "input", "submit"]
+  static targets = ["acknowledgementInput", "canvas", "input", "intro", "submit", "waiver", "waiverStep"]
 
   connect() {
     this.canvasContext = this.canvasTarget.getContext("2d")
     this.drawing = false
     this.signed = false
+    this.waiverRead = false
     this.boundStart = this.start.bind(this)
     this.boundDraw = this.draw.bind(this)
     this.boundStop = this.stop.bind(this)
@@ -20,6 +21,7 @@ export default class extends Controller {
     window.addEventListener("touchcancel", this.boundStop)
     this.resize()
     this.clear()
+    this.checkWaiverScroll()
     window.addEventListener("resize", this.boundResize)
   }
 
@@ -61,6 +63,8 @@ export default class extends Controller {
   }
 
   start(event) {
+    this.checkWaiverScroll()
+    if (!this.waiverRead) return
     if (event.button !== undefined && event.button !== 0) return
 
     event.preventDefault()
@@ -77,7 +81,8 @@ export default class extends Controller {
   }
 
   draw(event) {
-    if (!this.drawing) return
+    this.checkWaiverScroll()
+    if (!this.waiverRead || !this.drawing) return
 
     event.preventDefault()
     this.canvasContext.lineTo(...this.point(event))
@@ -100,9 +105,30 @@ export default class extends Controller {
     this.update()
   }
 
+  showWaiver() {
+    this.acknowledgementInputTarget.value ||= new Date().toISOString()
+    this.introTarget.hidden = true
+    this.waiverStepTarget.hidden = false
+    this.resize()
+    this.checkWaiverScroll()
+  }
+
+  checkWaiverScroll() {
+    this.waiverRead = this.waiverScrolledToBottom()
+    this.canvasTarget.classList.toggle("disabled", !this.waiverRead)
+    this.update()
+  }
+
+  waiverScrolledToBottom() {
+    const waiver = this.waiverTarget
+    if (waiver.clientHeight === 0) return false
+
+    return waiver.scrollTop + waiver.clientHeight >= waiver.scrollHeight - 2
+  }
+
   update() {
     this.inputTarget.value = this.signed ? this.canvasTarget.toDataURL("image/png") : ""
-    this.submitTarget.disabled = !this.signed
+    this.submitTarget.disabled = !this.waiverRead || !this.signed
   }
 
   point(event) {
