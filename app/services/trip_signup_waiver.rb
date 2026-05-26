@@ -1,27 +1,65 @@
 class TripSignupWaiver
-  TEXT = <<~TEXT.squish.freeze
-    Liability Release: BY SIGNING THIS DOCUMENT I AGREE TO GIVE UP CERTAIN LEGAL RIGHTS THAT I MAY HAVE IN THE EVENT I BECOME INJURED WHILE ENGAGING IN ACTIVITIES
-WITH THE CRAGMONT CLIMBING CLUB. I WISH TO ENGAGE IN ROCK CLIMBING WITH CRAGMONT CLIMBING CLUB MEMBERS AND OTHERS WHO ENGAGE IN ROCK
-CLIMBING AND MOUNTAINEERING ACTIVITIES SPONSORED BY THE CLUB. I UNDERSTAND THAT ROCK CLIMBING AND MOUNTAINEERING ARE INHERENTLY
-DANGEROUS ACTIVITIES THAT INVOLVE RISK OF SERIOUS INJURY OR DEATH. I UNDERSTAND THAT, ALTHOUGH IT IS THE GOAL OF THE CRAGMONT CLIMBING CLUB
-TO ALWAYS CLIMB IN A MANNER THAT IS SAFE, INJURY IS NEVERTHELESS POSSIBLE. IN ORDER TO PARTICIPATE IN THESE ACTIVITIES, I AGREE TO ASSUME THE RISK OF ANY INJURY THAT MAY OCCUR, AND I PROMISE THAT I WILL NOT HOLD THE CRAGMONT CLIMBING CLUB, ITS MEMBERS AND THOSE ASSOCIATED WITH IT
-RESPONSIBLE IF I BECOME INJURED.
+  ACKNOWLEDGEMENT_TEXT = <<~TEXT.strip.freeze
+    I understand that the Cragmont Climbing Club is not a teaching or instructional organization and that it is my responsibility to provide for my own instruction in climbing techniques and safety.
 
+    Fees I pay are for sharing campsite space, supplies and logistics in getting together. They are not for guidance or instruction in climbing.
 
-IN ADDITION, I RELEASE THE CRAGMONT CLIMBING CLUB, ITS MEMBERS AND THOSE ASSOCIATED WITH IT FROM ALL CLAIMS I MAY HAVE FOR INJURY OR LOSS
-RESULTING FROM NEGLIGENCE OR OTHER ACTS OR OMISSIONS OF MEMBERS OR THOSE ASSOCIATED WITH THE CRAGMONT CLIMBING CLUB.
-I UNDERSTAND THAT THE CRAGMONT CLIMBING CLUB IS NOT A TEACHING OR INSTRUCTIONAL ORGANIZATION AND THAT IT IS MY RESPONSIBILITY TO PROVIDE
-FOR MY OWN INSTRUCTION IN CLIMBING TECHNIQUES AND SAFETY.
+    No member or guest of Cragmont is authorized to give formal guidance or instruction on behalf of the club.
 
+    The club does not test or vet club members or guests on their knowledge of climbing techniques, gear or safety.
+  TEXT
 
+  TEXT = <<~TEXT.strip.freeze
+    Liability Release
 
-I PROMISE THAT I WILL CAREFULLY FOLLOW ALL INSTRUCTION PROVIDED BY MEMBERS OR THOSE ASSOCIATED WITH THE CRAGMONT CLIMBING CLUB, AND WILL DO EVERYTHING POSSIBLE TO AVOID INJURY TO MYSELF AND OTHERS. I FURTHER AGREE TO DEFEND AND PAY ALL COSTS AND EXPENSES THAT THE CRAGMONT CLIMBING CLUB, ITS MEMBERS AND THOSE ASSOCIATED WITH IT MAY INCUR AS A CONSEQUENCE OF ANY LEGAL ACTION ARISING OUT OF INJURY TO MYSELF OR INJURY TO SOMEONE ELSE AS A RESULT OF MY ACT OR OMISSION. I STATE THAT I AM CURRENTLY COVERED BY MEDICAL INSURANCE FOR ANY INJURIES THAT MAY OCCUR TO ME WHILE PARTICIPATING IN CRAGMONT CLIMBING CLUB ACTIVITIES. I PROMISE TO NEVER PARTICIPATE IN CRAGMONT CLIMBING CLUB ACTIVITIES IF I AM NOT COVERED BY THIS OR SIMILAR MEDICAL INSURANCE.
+    READ THIS DOCUMENT CAREFULLY BEFORE SIGNING.
 
+    YOU ARE GIVING UP IMPORTANT LEGAL RIGHTS.
 
-FINALLY, I INTEND FOR THIS DOCUMENT TO APPLY NOT ONLY TO MYSELF, BUT TO ANYONE ACTING ON MY BEHALF.
+    Liability Release
+
+    Agreement Not to Sue
+
+    Indemnity Agreement
+
+    Assumption of Risk
+
+    By signing this document I agree to give up certain legal rights that I may have in the event I become injured while engaging in activities with the Cragmont Climbing Club. I wish to engage in rock climbing with Cragmont Climbing Club members and others who engage in rock climbing and mountaineering activities sponsored by the club. I understand that rock climbing and mountaineering are inherently dangerous activities that involve risk of serious injury or death. I understand that, although it is the goal of the Cragmont Climbing Club to always climb in a manner that is safe, injury is nevertheless possible. In order to participate in these activities, I agree to assume the risk of any injury that may occur, and I promise that I will not hold the Cragmont Climbing Club, its members and those associated with it responsible if I become injured.
+
+    In addition, I release the Cragmont Climbing Club, its members and those associated with it from all claims I may have for injury or loss resulting from negligence or other acts or omissions of members or those associated with the Cragmont Climbing Club.
+
+    I understand that the Cragmont Climbing Club is not a teaching or instructional organization and that it is my responsibility to provide for my own instruction in climbing techniques and safety.
+
+    I promise that I will carefully follow all instruction provided by members or those associated with the Cragmont Climbing Club, and will do everything possible to avoid injury to myself and others. I further agree to defend and pay all costs and expenses that the Cragmont Climbing Club, its members and those associated with it may incur as a consequence of any legal action arising out of injury to myself or injury to someone else as a result of my act or omission. I state that I am currently covered by medical insurance for any injuries that may occur to me while participating in Cragmont Climbing Club activities. I promise to never participate in Cragmont Climbing Club activities if I am not covered by this or similar medical insurance.
+
+    Finally, I intend for this document to apply not only to myself, but to anyone acting on my behalf.
   TEXT
 
   def self.text
     TEXT
+  end
+
+  def self.acknowledgement_text
+    ACKNOWLEDGEMENT_TEXT
+  end
+
+  def self.acknowledgement_blocks
+    ACKNOWLEDGEMENT_TEXT.split(/\n{2,}/).map(&:strip)
+  end
+
+  def self.blocks
+    TEXT.split(/\n{2,}/).map(&:strip)
+  end
+
+  def self.title_block?(index)
+    index.zero?
+  end
+
+  def self.warning_block?(index)
+    [ 1, 2 ].include?(index)
+  end
+
+  def self.summary_heading_block?(index)
+    (3..6).cover?(index)
   end
 end

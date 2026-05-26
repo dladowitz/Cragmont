@@ -59,4 +59,11 @@ class TripSignupTest < ActiveSupport::TestCase
 
     assert signup.waiver_signed?
   end
+
+  test "builds waiver document filename from signed date and participant name" do
+    signup = TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
+    signup.waiver_signed_at = Time.zone.local(2026, 5, 25)
+
+    assert_equal "2026-05-25-Sam-Lee-Yosemite-Valley-Spring-#{signup.id}.pdf", signup.waiver_document_filename
+  end
 end

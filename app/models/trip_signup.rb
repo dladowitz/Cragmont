@@ -17,7 +17,22 @@ class TripSignup < ApplicationRecord
     waiver_signed_at.present? && waiver_document.attached?
   end
 
+  def waiver_document_filename
+    signed_on = (waiver_signed_at || Time.current).strftime("%Y-%m-%d")
+    [
+      signed_on,
+      filename_part(user.first_name),
+      filename_part(user.last_name),
+      filename_part(trip.name),
+      id
+    ].join("-") + ".pdf"
+  end
+
   private
+
+  def filename_part(value)
+    value.to_s.strip.gsub(/[^A-Za-z0-9]+/, "-").gsub(/\A-|-+\z/, "").presence || "Unknown"
+  end
 
   def assign_capacity_status
     return if trip.blank?

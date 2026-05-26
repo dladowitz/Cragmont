@@ -61,26 +61,59 @@
                 </div>
 
                 <%= form_with url: trip_trip_signup_path(@trip), method: :post, class: "waiver-form", data: { controller: "signature" } do %>
-                  <section class="waiver-text">
-                    <h3>Trip Waiver</h3>
-                    <p><%= TripSignupWaiver.text %></p>
+                  <section class="waiver-intro" data-signature-target="intro">
+                    <div class="waiver-intro-copy">
+                      <% TripSignupWaiver.acknowledgement_blocks.each do |block| %>
+                        <p><%= block %></p>
+                      <% end %>
+                    </div>
+
+                    <div class="form-actions">
+                      <button type="button" class="button secondary" data-action="modal#close">Cancel</button>
+                      <button type="button" class="button" data-action="signature#showWaiver">Agree and Sign Waiver</button>
+                    </div>
                   </section>
 
-                  <div class="signature-field">
-                    <label for="trip-signup-signature">Signature</label>
-                    <canvas
-                      id="trip-signup-signature"
-                      class="signature-pad"
-                      width="560"
-                      height="180"
-                      data-signature-target="canvas"></canvas>
-                    <%= hidden_field_tag "trip_signup[waiver_signature_data]", "", data: { signature_target: "input" } %>
-                    <button type="button" class="button secondary" data-action="signature#clear">Clear signature</button>
-                  </div>
+                  <div data-signature-target="waiverStep" hidden>
+                    <section
+                      class="waiver-text"
+                      data-signature-target="waiver"
+                      data-action="scroll->signature#checkWaiverScroll">
+                      <div class="waiver-document">
+                        <% TripSignupWaiver.blocks.each_with_index do |block, index| %>
+                          <% if TripSignupWaiver.title_block?(index) %>
+                            <h3 class="waiver-title"><%= block %></h3>
+                          <% elsif TripSignupWaiver.warning_block?(index) %>
+                            <p class="waiver-warning"><%= block %></p>
+                          <% elsif TripSignupWaiver.summary_heading_block?(index) %>
+                            <h4 class="waiver-summary-heading"><%= block %></h4>
+                          <% else %>
+                            <p><%= block %></p>
+                          <% end %>
+                        <% end %>
+                      </div>
+                    </section>
 
-                  <div class="form-actions">
-                    <button type="button" class="button secondary" data-action="modal#close">Cancel</button>
-                    <%= button_tag modal_submit_text, type: :submit, class: "button", data: { signature_target: "submit" }, disabled: true %>
+                    <div class="signature-field">
+                      <div class="signature-label-row">
+                        <label for="trip-signup-signature">Signature</label>
+                        <span>You must view all the text to sign</span>
+                      </div>
+                      <canvas
+                        id="trip-signup-signature"
+                        class="signature-pad"
+                        width="560"
+                        height="120"
+                        data-signature-target="canvas"></canvas>
+                      <%= hidden_field_tag "trip_signup[waiver_signature_data]", "", data: { signature_target: "input" } %>
+                      <%= hidden_field_tag "trip_signup[waiver_acknowledged_at]", "", data: { signature_target: "acknowledgementInput" } %>
+                      <button type="button" class="button secondary" data-action="signature#clear">Clear signature</button>
+                    </div>
+
+                    <div class="form-actions">
+                      <button type="button" class="button secondary" data-action="modal#close">Cancel</button>
+                      <%= button_tag modal_submit_text, type: :submit, class: "button", data: { signature_target: "submit" }, disabled: true %>
+                    </div>
                   </div>
                 <% end %>
               </div>

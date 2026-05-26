@@ -28,8 +28,8 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select "td", text: "Sam Lee"
     assert_select "td", text: "555-0101"
     assert_select "td", text: "Confirmed"
-    assert_select "td", text: /Signed/
-    assert_select "a", text: "Download waiver"
+    assert_match(/\d{2}\/\d{2}\/\d{2}/, response.body)
+    assert_select "a", text: "Download"
   end
 
   test "trip details show missing waiver for legacy signups" do

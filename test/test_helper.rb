@@ -15,14 +15,18 @@ module ActiveSupport
     SIGNATURE_DATA_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=".freeze
 
     def waiver_signature_params
-      { trip_signup: { waiver_signature_data: SIGNATURE_DATA_URL } }
+      { trip_signup: { waiver_signature_data: SIGNATURE_DATA_URL, waiver_acknowledged_at: Time.current.iso8601 } }
     end
 
     def attach_test_waiver_to(signup)
       signature = WaiverSignatureData.new(SIGNATURE_DATA_URL)
       waiver_text = TripSignupWaiver.text
+      acknowledgement_text = TripSignupWaiver.acknowledgement_text
 
       signup.update!(
+        waiver_acknowledged_at: Time.current,
+        waiver_acknowledgement_text: acknowledgement_text,
+        waiver_acknowledgement_text_digest: ::Digest::SHA256.hexdigest(acknowledgement_text),
         waiver_signed_at: Time.current,
         waiver_signer_name: signup.user.full_name,
         waiver_text: waiver_text,
@@ -34,7 +38,7 @@ module ActiveSupport
       signup.waiver_signature_image.attach(io: StringIO.new(signature.bytes), filename: "signature.png", content_type: "image/png")
       signup.waiver_document.attach(
         io: StringIO.new(TripSignupWaiverPdf.new(trip_signup: signup, signature_png: signature.bytes).render),
-        filename: "waiver.pdf",
+        filename: signup.waiver_document_filename,
         content_type: "application/pdf"
       )
       signup
