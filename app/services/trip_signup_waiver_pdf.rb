@@ -1,6 +1,8 @@
 require "stringio"
 
 class TripSignupWaiverPdf
+  PACIFIC_TIME_ZONE = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
+
   def initialize(trip_signup:, signature_png:)
     @trip_signup = trip_signup
     @signature_png = signature_png
@@ -15,15 +17,15 @@ class TripSignupWaiverPdf
       detail(pdf, "Trip dates", "#{trip.start_date.to_fs(:long)} to #{trip.end_date.to_fs(:long)}")
       detail(pdf, "Participant", @trip_signup.user.full_name)
       detail(pdf, "Email", @trip_signup.user.email.presence || "None")
-      detail(pdf, "Acknowledged at", @trip_signup.waiver_acknowledged_at.to_fs(:long))
-      detail(pdf, "Signed at", @trip_signup.waiver_signed_at.to_fs(:long))
-      detail(pdf, "Signature digest", @trip_signup.waiver_signature_digest)
+      divider(pdf)
+      detail(pdf, "Plain Text Acknowledged at", formatted_metadata_time(@trip_signup.waiver_acknowledged_at))
       detail(pdf, "Acknowledgement digest", @trip_signup.waiver_acknowledgement_text_digest)
-      detail(pdf, "Waiver digest", @trip_signup.waiver_text_digest)
 
       pdf.move_down 18
       render_acknowledgement_text(pdf)
-      pdf.move_down 4
+      pdf.move_down 8
+      render_waiver_metadata(pdf)
+      pdf.move_down 18
       render_waiver_text(pdf)
 
       pdf.start_new_page
@@ -46,6 +48,18 @@ class TripSignupWaiverPdf
     pdf.text "#{label}: #{value}", size: 11
   end
 
+  def formatted_metadata_time(value)
+    return "None" if value.blank?
+
+    value.in_time_zone(PACIFIC_TIME_ZONE).strftime("%B %-d, %Y %-I:%M %p %Z")
+  end
+
+  def divider(pdf)
+    pdf.move_down 10
+    pdf.stroke_horizontal_rule
+    pdf.move_down 10
+  end
+
   def render_acknowledgement_text(pdf)
     pdf.fill_color "1f2933"
     pdf.text "Plain-Language Acknowledgement", size: 14, style: :bold
@@ -54,6 +68,14 @@ class TripSignupWaiverPdf
       pdf.text block, size: 11, leading: 4
       pdf.move_down 8
     end
+  end
+
+  def render_waiver_metadata(pdf)
+    pdf.fill_color "000000"
+    divider(pdf)
+    detail(pdf, "Waiver Signed at", formatted_metadata_time(@trip_signup.waiver_signed_at))
+    detail(pdf, "Signature digest", @trip_signup.waiver_signature_digest)
+    detail(pdf, "Waiver digest", @trip_signup.waiver_text_digest)
   end
 
   def render_waiver_text(pdf)
