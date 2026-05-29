@@ -1,0 +1,28 @@
+= render "shared/public_header"
+%main.public-main
+  %section.panel
+    %h1 Create account
+    = form_with model: @user, url: registration_path, class: "admin-form" do |form|
+      = render "admin/shared/errors", record: @user
+      .form-grid
+        .field
+          = form.label :first_name
+          = form.text_field :first_name, required: true
+        .field
+          = form.label :last_name
+          = form.text_field :last_name, required: true
+        .field
+          = form.label :email
+          = form.email_field :email, required: true
+        .field
+          = form.label :phone
+          = form.telephone_field :phone
+        .field
+          = form.label :password
+          = form.password_field :password, required: true, autocomplete: "new-password"
+        .field
+          = form.label :password_confirmation
+          = form.password_field :password_confirmation, required: true, autocomplete: "new-password"
+      .form-actions
+        = form.submit "Create account"
+        = link_to "Cancel", trips_path, class: "button secondary"

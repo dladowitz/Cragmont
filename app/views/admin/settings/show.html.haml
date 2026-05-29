@@ -1,0 +1,26 @@
+= render "admin/shared/header", title: "Settings"
+%section.panel
+  = form_with model: @site_setting, url: admin_settings_path, method: :patch, class: "admin-form" do |form|
+    = render "admin/shared/errors", record: @site_setting
+    .form-grid
+      %div
+        = form.label :uncounted_minor_age_limit, "Age limit of uncounted minors"
+        = form.number_field :uncounted_minor_age_limit, min: 0, max: 17
+      %div
+        = form.label :campsite_weekend_fee, "Campsite weekend fee"
+        .currency-field
+          %span{"aria-hidden" => "true"} $
+          = form.number_field :campsite_weekend_fee, min: 0, step: 0.01
+      %div
+        = form.label :campsite_extra_night_fee, "Campsite extra night fee"
+        .currency-field
+          %span{"aria-hidden" => "true"} $
+          = form.number_field :campsite_extra_night_fee, min: 0, step: 0.01
+      %div
+        = form.label :minor_fee, "Minor fee"
+        .currency-field
+          %span{"aria-hidden" => "true"} $
+          = form.number_field :minor_fee, min: 0, step: 0.01
+    %p.muted Fees are entered in dollars and stored in cents.
+    .form-actions
+      = form.submit "Save settings", class: "button"

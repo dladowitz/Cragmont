@@ -1,0 +1,29 @@
+= render "shared/public_header"
+%main.public-main.home-main
+  %section.home-hero
+    = image_tag "home-hero.png", alt: "", class: "home-hero-image"
+    .home-hero-copy
+      %h1 Climbing
+      %h1 Camping
+      %h1 Community
+      %p
+        Yosemite
+        %br/
+        Tahoe
+        %br/
+        Bay Area
+        %br/
+        Mt St Helena
+        %br/
+        Touchstone
+        %br/
+        Joshua Tree
+        %br/
+        Movement
+        %br/
+        Indian Creek
+        %br/
+        City of Rocks
+        %br/
+        More
+      = link_to "View trips", trips_path, class: "button"

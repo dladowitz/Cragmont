@@ -40,6 +40,9 @@ gem "thruster", require: false
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 2.0"
 
+# Render Rails views with HAML templates.
+gem "haml-rails", "~> 2.1"
+
 # Generate signed waiver PDFs for trip signups.
 gem "prawn", "~> 2.5"
 

@@ -1,0 +1,26 @@
+= render "admin/shared/header", title: "Campgrounds"
+%section.panel
+  .panel-header
+    %div
+      %h2 Campground directory
+      %p Manage the places used by trip campsite reservations.
+    = link_to "New campground", new_admin_campground_path, class: "button"
+  - if @campgrounds.any?
+    %table
+      %thead
+        %tr
+          %th Name
+          %th Location
+          %th Website
+      %tbody
+        - @campgrounds.each do |campground|
+          %tr
+            %td= link_to campground.name, admin_campground_path(campground)
+            %td= campground.location
+            %td
+              - if (website_url = campground_website_url(campground))
+                = link_to "Website", website_url, rel: "noopener", target: "_blank"
+  - else
+    .empty-state
+      %p No campgrounds have been added yet.
+      = link_to "New campground", new_admin_campground_path, class: "button"

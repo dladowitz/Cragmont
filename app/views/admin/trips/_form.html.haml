@@ -1,0 +1,27 @@
+= form_with model: [:admin, trip], class: "admin-form" do |form|
+  = render "admin/shared/errors", record: trip
+  .form-grid
+    .field
+      = form.label :name
+      = form.text_field :name, required: true
+    .field
+      = form.label :location
+      = form.text_field :location, required: true
+    .field
+      = form.label :start_date
+      = form.date_field :start_date, required: true
+    .field
+      = form.label :end_date
+      = form.date_field :end_date, required: true
+    .field
+      = form.label :status
+      = form.select :status, Trip.statuses.keys.map { |status| [status.titleize, status] }, {}, required: true
+    .field
+      = form.label :campsite_coordinator_id, "Campsite coordinator"
+      = form.collection_select :campsite_coordinator_id, @users, :id, :full_name, { prompt: "Unassigned" }
+  .field
+    = form.label :description
+    = form.text_area :description, rows: 5
+  .form-actions
+    = form.submit
+    = link_to "Cancel", trip.persisted? ? admin_trip_path(trip) : admin_trips_path, class: "button secondary"
