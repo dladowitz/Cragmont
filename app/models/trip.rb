@@ -63,6 +63,8 @@ class Trip < ApplicationRecord
   private
 
   def confirmed_signups_with_minors
+    return trip_signups.select(&:confirmed?) if trip_signups.loaded?
+
     trip_signups.confirmed.includes(:trip_signup_minors)
   end
 

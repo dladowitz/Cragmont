@@ -10,6 +10,7 @@ class Campsite < ApplicationRecord
     presence: true,
     numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validate :checkout_date_after_arrival_date
+  validate :reservation_dates_within_trip_dates
 
   private
 
@@ -18,5 +19,19 @@ class Campsite < ApplicationRecord
     return if checkout_date > arrival_date
 
     errors.add(:checkout_date, "must be after the arrival date")
+  end
+
+  def reservation_dates_within_trip_dates
+    return if trip.blank?
+
+    validate_trip_date_range(:arrival_date, arrival_date)
+    validate_trip_date_range(:checkout_date, checkout_date)
+  end
+
+  def validate_trip_date_range(attribute, value)
+    return if value.blank? || trip.start_date.blank? || trip.end_date.blank?
+    return if value.between?(trip.start_date, trip.end_date)
+
+    errors.add(attribute, "must be within the trip dates")
   end
 end
