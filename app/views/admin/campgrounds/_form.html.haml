@@ -1,0 +1,18 @@
+= form_with model: [:admin, campground], class: "admin-form" do |form|
+  = render "admin/shared/errors", record: campground
+  .form-grid
+    .field
+      = form.label :name
+      = form.text_field :name, required: true
+    .field
+      = form.label :location
+      = form.text_field :location, required: true
+  .field
+    = form.label :website
+    = form.url_field :website
+  .field
+    = form.label :notes
+    = form.text_area :notes, rows: 5
+  .form-actions
+    = form.submit
+    = link_to "Cancel", campground.persisted? ? admin_campground_path(campground) : admin_campgrounds_path, class: "button secondary"

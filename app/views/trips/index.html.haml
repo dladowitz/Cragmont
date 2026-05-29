@@ -1,0 +1,28 @@
+= render "shared/public_header"
+%main.public-main
+  %section.panel
+    .panel-header
+      %div
+        %p.eyebrow Upcoming trips
+        %h1 Trips
+    - if @trips.any?
+      .trip-cards
+        - @trips.each do |trip|
+          %article.trip-card
+            %div
+              %h2= link_to trip.name, trip_path(trip)
+              %p= trip.location
+            %dl.trip-card-meta
+              %div
+                %dt Dates
+                %dd
+                  = trip.start_date.to_fs(:long)
+                  to #{trip.end_date.to_fs(:long)}
+              %div
+                %dt Capacity
+                %dd
+                  = trip.total_participant_capacity
+                  participants
+            = link_to "View trip", trip_path(trip), class: "button secondary"
+    - else
+      %p.muted No published trips are available right now.

@@ -1,0 +1,25 @@
+= render "admin/shared/header", title: "Users"
+%section.panel
+  .panel-header
+    %div
+      %h2 User directory
+    = link_to "New user", new_admin_user_path, class: "button"
+  - if @users.any?
+    %table
+      %thead
+        %tr
+          %th Name
+          %th Email
+          %th Phone
+          %th Member
+      %tbody
+        - @users.each do |user|
+          %tr
+            %td= link_to user.full_name, admin_user_path(user)
+            %td= user.email.presence || tag.span("None")
+            %td= user.phone.presence || tag.span("None")
+            %td= user.member? ? "Yes" : "No"
+  - else
+    .empty-state
+      %p No users have been added yet.
+      = link_to "New user", new_admin_user_path, class: "button"

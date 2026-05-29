@@ -1,0 +1,119 @@
+= render "admin/shared/header", title: @trip.name
+%section.panel.trip-overview
+  .panel-header.trip-summary-header
+    .trip-summary-copy
+      .trip-location-line
+        %h2= @trip.location
+        %span.eyebrow= @trip.status.titleize
+      %p
+        = @trip.start_date.to_fs(:long)
+        to #{@trip.end_date.to_fs(:long)}
+      .coordinator-summary
+        %strong Campsite coordinator:
+        - if @trip.campsite_coordinator.present?
+          .coordinator-contact
+            %span= @trip.campsite_coordinator.full_name
+            - if @trip.campsite_coordinator.email.present?
+              %span= mail_to @trip.campsite_coordinator.email
+            - if @trip.campsite_coordinator.phone.present?
+              %span= @trip.campsite_coordinator.phone
+        - else
+          %span.muted Unassigned
+      - if @trip.description.present?
+        .description
+          %strong Notes:
+          = simple_format(@trip.description)
+    .actions
+      = link_to "Edit trip", edit_admin_trip_path(@trip), class: "button secondary"
+      = button_to "Delete trip", admin_trip_path(@trip), method: :delete, class: "button danger"
+  .stats
+    %div
+      %strong= @trip.campsite_count
+      %span Campsites
+    %div
+      %strong= @trip.total_participant_capacity
+      %span Participant capacity
+    %div
+      %strong= @trip.total_car_capacity
+      %span Car capacity
+%section.panel
+  %h2 Participant signups
+  - if @trip_signups.any?
+    %table
+      %thead
+        %tr
+          %th Participant
+          %th Minors
+          %th Email
+          %th Phone
+          %th Status
+          %th Waiver
+      %tbody
+        - @trip_signups.each do |signup|
+          %tr
+            %td= signup.user.full_name
+            %td
+              - if signup.trip_signup_minors.any?
+                %ul.admin-minor-list
+                  - signup.trip_signup_minors.each do |minor|
+                    %li
+                      = "#{minor.full_name}, age #{minor.age}, #{minor.relationship}"
+              - else
+                %span.muted None
+            %td= signup.user.email.presence || "None"
+            %td= signup.user.phone.presence || "None"
+            %td
+              %span.status= signup.status.titleize
+            %td
+              - if signup.waiver_signed?
+                = signup.waiver_signed_at.strftime("%m/%d/%y")
+                = link_to "Download", rails_blob_path(signup.waiver_document, disposition: "attachment")
+              - else
+                %span.muted Missing
+  - else
+    %p.muted No participants have signed up yet.
+%section.panel.campsites-panel
+  .panel-header.campsites-panel-header
+    %div
+      %h2 Campsites
+    = link_to "Add campsite", new_admin_trip_campsite_path(@trip), class: "button"
+  - if @campsites_by_campground.any?
+    - @campsites_by_campground.each do |campground, campsites|
+      .campground-group
+        %h3= campground.name
+        %p= campground.location
+        %table
+          %thead
+            %tr
+              %th Site
+              %th Reservation dates
+              %th Capacity limit
+              %th Cars
+              %th
+          %tbody
+            - campsites.each do |campsite|
+              %tr{:class => "#{"campsite-row-with-notes" if campsite.notes.present?}"}
+                %td= campsite.site_number
+                %td
+                  %dl.date-pair
+                    %div
+                      %dt Arrival
+                      %dd= campsite.arrival_date.to_fs(:long)
+                    %div
+                      %dt Checkout
+                      %dd= campsite.checkout_date.to_fs(:long)
+                %td= campsite.participant_capacity
+                %td= campsite.car_capacity
+                %td.table-actions
+                  = link_to "Edit", edit_admin_trip_campsite_path(@trip, campsite)
+                  = button_to "Delete", admin_trip_campsite_path(@trip, campsite), method: :delete, class: "link-button"
+              - if campsite.notes.present?
+                %tr.campsite-notes-row
+                  %td
+                  %td{:colspan => "4"}
+                    %strong Notes:
+                    = campsite.notes
+  - else
+    .empty-state
+      %p No campsites have been added to this trip yet.
+      = link_to "Add campsite", new_admin_trip_campsite_path(@trip), class: "button"

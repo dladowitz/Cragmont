@@ -1,0 +1,25 @@
+!!!
+%html
+  %head
+    %meta{:content => "text/html; charset=UTF-8", "http-equiv" => "Content-Type"}/
+    %title= content_for(:title) || "Cragmont Climbing"
+    %meta{:content => "width=device-width,initial-scale=1", :name => "viewport"}/
+    %meta{:content => "yes", :name => "apple-mobile-web-app-capable"}/
+    %meta{:content => "Cragmont", :name => "application-name"}/
+    %meta{:content => "yes", :name => "mobile-web-app-capable"}/
+    = csrf_meta_tags
+    = csp_meta_tag
+    = yield :head
+    %link{:href => "/icon.svg?v=4", :rel => "icon", :type => "image/svg+xml"}/
+    %link{:href => "/icon.png?v=4", :rel => "alternate icon", :type => "image/png"}/
+    %link{:href => "/icon.png?v=4", :rel => "apple-touch-icon"}/
+    = stylesheet_link_tag :app, "data-turbo-track": "reload"
+    = javascript_importmap_tags
+  %body
+    - if notice.present? || alert.present?
+      .flash-messages
+        - if notice.present?
+          %p.flash.notice= notice
+        - if alert.present?
+          %p.flash.alert= alert
+    = yield
