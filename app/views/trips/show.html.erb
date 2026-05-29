@@ -61,7 +61,50 @@
                 </div>
 
                 <%= form_with url: trip_trip_signup_path(@trip), method: :post, class: "waiver-form", data: { controller: "signature" } do %>
-                  <section class="waiver-intro" data-signature-target="intro">
+                  <section class="signup-kind-step" data-signature-target="signupStep">
+                    <fieldset class="signup-kind-options">
+                      <legend>Who are you signing up?</legend>
+                      <label>
+                        <%= radio_button_tag "trip_signup[signup_kind]", "self", true, data: { signature_target: "signupKind", action: "signature#toggleMinorFields" } %>
+                        <span>I am signing up for myself</span>
+                      </label>
+                      <label>
+                        <%= radio_button_tag "trip_signup[signup_kind]", "with_minors", false, data: { signature_target: "signupKind", action: "signature#toggleMinorFields" } %>
+                        <span>I am signing up for myself and minors (max 2)</span>
+                      </label>
+                    </fieldset>
+
+                    <section class="minor-fields" data-signature-target="minorFields" hidden>
+                      <h3>Minor information</h3>
+                      <% 2.times do |index| %>
+                        <div class="minor-field-row">
+                          <div>
+                            <%= label_tag "trip_signup_minor_#{index}_first_name", "First name" %>
+                            <%= text_field_tag "trip_signup[trip_signup_minors_attributes][#{index}][first_name]", "", id: "trip_signup_minor_#{index}_first_name", data: ({ required_for_minor: "true" } if index.zero?) %>
+                          </div>
+                          <div>
+                            <%= label_tag "trip_signup_minor_#{index}_last_name", "Last name" %>
+                            <%= text_field_tag "trip_signup[trip_signup_minors_attributes][#{index}][last_name]", "", id: "trip_signup_minor_#{index}_last_name", data: ({ required_for_minor: "true" } if index.zero?) %>
+                          </div>
+                          <div>
+                            <%= label_tag "trip_signup_minor_#{index}_age", "Age" %>
+                            <%= number_field_tag "trip_signup[trip_signup_minors_attributes][#{index}][age]", "", id: "trip_signup_minor_#{index}_age", min: 0, max: 17, data: ({ required_for_minor: "true" } if index.zero?) %>
+                          </div>
+                          <div>
+                            <%= label_tag "trip_signup_minor_#{index}_relationship", "Relationship" %>
+                            <%= text_field_tag "trip_signup[trip_signup_minors_attributes][#{index}][relationship]", "", id: "trip_signup_minor_#{index}_relationship", placeholder: "Parent, Guardian, Uncle, etc", data: ({ required_for_minor: "true" } if index.zero?) %>
+                          </div>
+                        </div>
+                      <% end %>
+                    </section>
+
+                    <div class="form-actions">
+                      <button type="button" class="button secondary" data-action="modal#close">Cancel</button>
+                      <button type="button" class="button" data-action="signature#showAcknowledgement">Next</button>
+                    </div>
+                  </section>
+
+                  <section class="waiver-intro" data-signature-target="intro" hidden>
                     <div class="waiver-intro-copy">
                       <% TripSignupWaiver.acknowledgement_blocks.each do |block| %>
                         <p><%= block %></p>
@@ -128,7 +171,20 @@
     </div>
 
     <div class="stats">
-      <div><strong><%= @trip.confirmed_signup_count %></strong><span>Signed up</span></div>
+      <% if @trip.confirmed_uncounted_minor_count.positive? %>
+        <div class="split-signup-stat">
+          <section>
+            <strong><%= @trip.confirmed_signup_count %></strong>
+            <span>Signed up</span>
+          </section>
+          <section>
+            <strong><%= @trip.confirmed_uncounted_minor_count %></strong>
+            <span class="under-13-label">Under <%= @trip.uncounted_minor_age_limit %></span>
+          </section>
+        </div>
+      <% else %>
+        <div><strong><%= @trip.confirmed_signup_count %></strong><span>Signed up</span></div>
+      <% end %>
       <div class="availability-stat <%= @trip.capacity_full? ? "danger-stat" : (@trip.almost_full? ? "warning-stat" : "success-stat") %>">
         <strong><%= @trip.available_participant_capacity %></strong>
         <span>Spaces available</span>
@@ -143,7 +199,7 @@
     <% if @confirmed_signups.any? %>
       <ul class="attendee-list">
         <% @confirmed_signups.each do |signup| %>
-          <li><%= signup.user.public_name %></li>
+          <li><%= signup.public_attendee_name %></li>
         <% end %>
       </ul>
     <% else %>
@@ -155,7 +211,7 @@
         <h3>Waitlist</h3>
         <ul class="attendee-list">
           <% @waitlisted_signups.each do |signup| %>
-            <li><%= signup.user.public_name %></li>
+            <li><%= signup.public_attendee_name %></li>
           <% end %>
         </ul>
       </div>

@@ -11,7 +11,9 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "can view trip details with campsites" do
-    attach_test_waiver_to(TripSignup.create!(trip: trips(:yosemite), user: users(:sam)))
+    signup = TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
+    signup.trip_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
+    attach_test_waiver_to(signup)
 
     get admin_trip_url(trips(:yosemite))
 
@@ -26,6 +28,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".campsite-notes-row", text: /Close to bathrooms/
     assert_select "h2", "Participant signups"
     assert_select "td", text: "Sam Lee"
+    assert_select ".admin-minor-list", text: /Mika Lee, age 12, Child/
     assert_select "td", text: "555-0101"
     assert_select "td", text: "Confirmed"
     assert_match(/\d{2}\/\d{2}\/\d{2}/, response.body)

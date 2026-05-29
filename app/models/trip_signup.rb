@@ -3,6 +3,7 @@ class TripSignup < ApplicationRecord
 
   belongs_to :trip
   belongs_to :user
+  has_many :trip_signup_minors, dependent: :destroy
   has_one_attached :waiver_document
   has_one_attached :waiver_signature_image
 
@@ -10,8 +11,28 @@ class TripSignup < ApplicationRecord
 
   validates :status, presence: true, inclusion: { in: STATUSES }
   validates :user_id, uniqueness: { scope: :trip_id, message: "is already signed up for this trip" }
+  validates_associated :trip_signup_minors
+  validate :minor_limit
 
   before_validation :assign_capacity_status, on: :create
+
+  def includes_minors?
+    trip_signup_minors.any?
+  end
+
+  def public_attendee_name
+    return user.public_name unless includes_minors?
+
+    "#{user.public_name} + #{trip_signup_minors.size} #{'minor'.pluralize(trip_signup_minors.size)}"
+  end
+
+  def capacity_count
+    1 + trip_signup_minors.select(&:capacity_counted?).size
+  end
+
+  def uncounted_minor_count
+    trip_signup_minors.select(&:uncounted_for_capacity?).size
+  end
 
   def waiver_signed?
     waiver_signed_at.present? && waiver_document.attached?
@@ -34,9 +55,13 @@ class TripSignup < ApplicationRecord
     value.to_s.strip.gsub(/[^A-Za-z0-9]+/, "-").gsub(/\A-|-+\z/, "").presence || "Unknown"
   end
 
+  def minor_limit
+    errors.add(:trip_signup_minors, "cannot include more than 2 minors") if trip_signup_minors.size > 2
+  end
+
   def assign_capacity_status
     return if trip.blank?
 
-    self.status = trip.confirmed_signup_count < trip.total_participant_capacity ? "confirmed" : "waitlisted"
+    self.status = trip.available_participant_capacity >= capacity_count ? "confirmed" : "waitlisted"
   end
 end

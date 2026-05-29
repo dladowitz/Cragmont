@@ -92,6 +92,75 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     assert_equal TripSignupWaiver.text, signup.waiver_text
   end
 
+  test "logged in user can sign up with minors" do
+    log_in_as(users(:sam))
+
+    assert_difference "TripSignup.count", 1 do
+      assert_difference "TripSignupMinor.count", 2 do
+        post trip_trip_signup_url(trips(:yosemite)), params: waiver_signature_params_with_minors(
+          { first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child" },
+          { first_name: "Nora", last_name: "Lee", age: 14, relationship: "Niece" }
+        )
+      end
+    end
+
+    signup = TripSignup.find_by!(trip: trips(:yosemite), user: users(:sam))
+    assert signup.confirmed?
+    assert_equal 2, signup.trip_signup_minors.size
+    assert_includes signup.waiver_acknowledgement_text, TripSignupWaiver::MINOR_RESPONSIBILITY_TEXT
+    assert_includes signup.waiver_text, TripSignupWaiver::MINOR_RESPONSIBILITY_TEXT
+    assert signup.waiver_document.attached?
+  end
+
+  test "signup with minors requires minor information" do
+    log_in_as(users(:sam))
+
+    assert_no_difference [ "TripSignup.count", "TripSignupMinor.count" ] do
+      post trip_trip_signup_url(trips(:yosemite)), params: waiver_signature_params_with_minors
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite))
+    assert_equal "Please enter minor information before signing up.", flash[:alert]
+  end
+
+  test "signup with minors rejects incomplete minor information" do
+    log_in_as(users(:sam))
+
+    assert_no_difference [ "TripSignup.count", "TripSignupMinor.count" ] do
+      post trip_trip_signup_url(trips(:yosemite)), params: waiver_signature_params_with_minors(
+        { first_name: "Mika", last_name: "", age: 12, relationship: "Child" }
+      )
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite))
+  end
+
+  test "signup with minors rejects more than two minors" do
+    log_in_as(users(:sam))
+
+    assert_no_difference [ "TripSignup.count", "TripSignupMinor.count" ] do
+      post trip_trip_signup_url(trips(:yosemite)), params: waiver_signature_params_with_minors(
+        { first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child" },
+        { first_name: "Nora", last_name: "Lee", age: 14, relationship: "Niece" },
+        { first_name: "Tali", last_name: "Lee", age: 10, relationship: "Child" }
+      )
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite))
+  end
+
+  test "signup with minors rejects adult age" do
+    log_in_as(users(:sam))
+
+    assert_no_difference [ "TripSignup.count", "TripSignupMinor.count" ] do
+      post trip_trip_signup_url(trips(:yosemite)), params: waiver_signature_params_with_minors(
+        { first_name: "Mika", last_name: "Lee", age: 18, relationship: "Child" }
+      )
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite))
+  end
+
   test "logged in user cannot sign up without signing waiver" do
     log_in_as(users(:sam))
 
@@ -194,6 +263,10 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "button", text: "Sign up for this trip"
     assert_select "dialog.signup-modal"
+    assert_select ".signup-kind-options", text: /I am signing up for myself/
+    assert_select ".signup-kind-options", text: /I am signing up for myself and minors/
+    assert_select ".minor-fields", text: /Minor information/
+    assert_select "button", text: "Next"
     assert_select ".waiver-intro", text: /not a teaching or instructional organization/
     assert_select "button", text: "Agree and Sign Waiver"
     assert_select ".waiver-text", text: /READ THIS DOCUMENT CAREFULLY BEFORE SIGNING/
@@ -251,6 +324,72 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     assert signup.waiver_signed?
   end
 
+  test "minor under configured age limit does not consume capacity" do
+    trip = trips(:yosemite)
+    9.times do |index|
+      TripSignup.create!(trip: trip, user: User.create!(
+        first_name: "Confirmed",
+        last_name: "UnderCapacity#{index}",
+        email: "under-capacity#{index}@example.com",
+        password: "password"
+      ))
+    end
+    log_in_as(users(:sam))
+
+    post trip_trip_signup_url(trip), params: waiver_signature_params_with_minors(
+      { first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child" }
+    )
+
+    signup = TripSignup.find_by!(trip: trip, user: users(:sam))
+    assert signup.confirmed?
+    assert_equal 10, trip.reload.confirmed_signup_count
+    assert_equal 1, trip.confirmed_uncounted_minor_count
+  end
+
+  test "minor at configured age limit consumes capacity" do
+    trip = trips(:yosemite)
+    8.times do |index|
+      TripSignup.create!(trip: trip, user: User.create!(
+        first_name: "Confirmed",
+        last_name: "TeenCapacity#{index}",
+        email: "teen-capacity#{index}@example.com",
+        password: "password"
+      ))
+    end
+    log_in_as(users(:sam))
+
+    post trip_trip_signup_url(trip), params: waiver_signature_params_with_minors(
+      { first_name: "Nora", last_name: "Lee", age: 13, relationship: "Niece" }
+    )
+
+    signup = TripSignup.find_by!(trip: trip, user: users(:sam))
+    assert signup.confirmed?
+    assert_equal 10, trip.reload.confirmed_signup_count
+    assert_equal 0, trip.available_participant_capacity
+  end
+
+  test "whole group is waitlisted when capacity cannot fit counting minors" do
+    trip = trips(:yosemite)
+    8.times do |index|
+      TripSignup.create!(trip: trip, user: User.create!(
+        first_name: "Confirmed",
+        last_name: "GroupWaitlist#{index}",
+        email: "group-waitlist#{index}@example.com",
+        password: "password"
+      ))
+    end
+    log_in_as(users(:sam))
+
+    post trip_trip_signup_url(trip), params: waiver_signature_params_with_minors(
+      { first_name: "Mika", last_name: "Lee", age: 13, relationship: "Child" },
+      { first_name: "Nora", last_name: "Lee", age: 14, relationship: "Niece" }
+    )
+
+    signup = TripSignup.find_by!(trip: trip, user: users(:sam))
+    assert signup.waitlisted?
+    assert_equal 8, trip.reload.confirmed_signup_count
+  end
+
   test "trip detail shows almost full warning at sixty percent capacity" do
     trip = trips(:yosemite)
     6.times do |index|
@@ -282,6 +421,30 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     assert_select ".attendee-list", text: /555-0101/, count: 0
   end
 
+  test "public attendee list summarizes minors without names" do
+    signup = TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
+    signup.trip_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select ".attendee-list", text: /Sam L\. \+ 1 minor/
+    assert_select ".attendee-list", text: /Mika/, count: 0
+  end
+
+  test "public stats split out uncounted minors" do
+    signup = TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
+    signup.trip_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select ".split-signup-stat section:first-child", text: /1/
+    assert_select ".split-signup-stat section:first-child", text: /Signed up/
+    assert_select ".split-signup-stat section:last-child", text: /1/
+    assert_select ".split-signup-stat section:last-child", text: /Under #{SiteSetting.current.uncounted_minor_age_limit}/
+  end
+
   test "public trip detail shows waitlisted users separately" do
     trip = trips(:yosemite)
     trip.total_participant_capacity.times do |index|
@@ -309,5 +472,14 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
   def log_in_as(user)
     post session_url, params: { email: user.email, password: "password" }
     follow_redirect!
+  end
+
+  def waiver_signature_params_with_minors(*minor_attributes)
+    params = waiver_signature_params.deep_dup
+    params[:trip_signup][:signup_kind] = "with_minors"
+    params[:trip_signup][:trip_signup_minors_attributes] = minor_attributes.each_with_index.to_h do |attributes, index|
+      [ index.to_s, attributes ]
+    end
+    params
   end
 end

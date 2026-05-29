@@ -9,14 +9,17 @@ class TripSignupsController < ApplicationController
     signup = trip.trip_signups.find_or_initialize_by(user: current_user)
     signature = WaiverSignatureData.new(signup_params[:waiver_signature_data])
     acknowledged_at = waiver_acknowledged_at
+    minor_attributes = normalized_minor_attributes
 
     if signup.persisted?
       redirect_to trip_path(trip), alert: "You are already signed up for this trip."
+    elsif signing_up_with_minors? && minor_attributes.empty?
+      redirect_to trip_path(trip), alert: "Please enter minor information before signing up."
     elsif acknowledged_at.blank?
       redirect_to trip_path(trip), alert: "Please agree to the waiver acknowledgement before signing up."
     elsif !signature.valid?
       redirect_to trip_path(trip), alert: "Please sign the waiver before signing up."
-    elsif create_signup_with_waiver(signup, signature, acknowledged_at)
+    elsif create_signup_with_waiver(signup, signature, acknowledged_at, minor_attributes)
       redirect_to trip_path(trip), notice: signup.confirmed? ? "You are confirmed for this trip." : "You have been added to the waitlist."
     else
       redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
@@ -38,7 +41,12 @@ class TripSignupsController < ApplicationController
   private
 
   def signup_params
-    params.fetch(:trip_signup, {}).permit(:waiver_signature_data, :waiver_acknowledged_at)
+    params.fetch(:trip_signup, {}).permit(
+      :signup_kind,
+      :waiver_signature_data,
+      :waiver_acknowledged_at,
+      trip_signup_minors_attributes: %i[first_name last_name age relationship]
+    )
   end
 
   def waiver_acknowledged_at
@@ -47,8 +55,25 @@ class TripSignupsController < ApplicationController
     nil
   end
 
-  def create_signup_with_waiver(signup, signature, acknowledged_at)
+  def signing_up_with_minors?
+    signup_params[:signup_kind] == "with_minors"
+  end
+
+  def normalized_minor_attributes
+    return [] unless signing_up_with_minors?
+
+    raw_attributes = signup_params[:trip_signup_minors_attributes] || {}
+    raw_attributes.values.filter_map do |attributes|
+      cleaned = attributes.to_h.transform_values { |value| value.to_s.strip }
+      next if cleaned.values.all?(&:blank?)
+
+      cleaned
+    end
+  end
+
+  def create_signup_with_waiver(signup, signature, acknowledged_at, minor_attributes)
     TripSignup.transaction do
+      minor_attributes.each { |attributes| signup.trip_signup_minors.build(attributes) }
       signup.save!
       attach_waiver!(signup, signature, acknowledged_at)
     end

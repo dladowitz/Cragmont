@@ -1,4 +1,6 @@
 class TripSignupWaiver
+  MINOR_RESPONSIBILITY_TEXT = "I agree I am solely responsible for the safety of minors I bring on a Cragmont trip.".freeze
+
   ACKNOWLEDGEMENT_TEXT = <<~TEXT.strip.freeze
     I understand that the Cragmont Climbing Club is not a teaching or instructional organization and that it is my responsibility to provide for my own instruction in climbing techniques and safety.
 
@@ -7,6 +9,8 @@ class TripSignupWaiver
     No member or guest of Cragmont is authorized to give formal guidance or instruction on behalf of the club.
 
     The club does not test or vet club members or guests on their knowledge of climbing techniques, gear or safety.
+
+    #{MINOR_RESPONSIBILITY_TEXT}
   TEXT
 
   TEXT = <<~TEXT.strip.freeze
@@ -32,34 +36,44 @@ class TripSignupWaiver
 
     I promise that I will carefully follow all instruction provided by members or those associated with the Cragmont Climbing Club, and will do everything possible to avoid injury to myself and others. I further agree to defend and pay all costs and expenses that the Cragmont Climbing Club, its members and those associated with it may incur as a consequence of any legal action arising out of injury to myself or injury to someone else as a result of my act or omission. I state that I am currently covered by medical insurance for any injuries that may occur to me while participating in Cragmont Climbing Club activities. I promise to never participate in Cragmont Climbing Club activities if I am not covered by this or similar medical insurance.
 
+    #{MINOR_RESPONSIBILITY_TEXT}
+
     Finally, I intend for this document to apply not only to myself, but to anyone acting on my behalf.
   TEXT
 
-  def self.text
+  def self.text(includes_minors: false)
     TEXT
   end
 
-  def self.acknowledgement_text
+  def self.acknowledgement_text(includes_minors: false)
     ACKNOWLEDGEMENT_TEXT
   end
 
-  def self.acknowledgement_blocks
-    ACKNOWLEDGEMENT_TEXT.split(/\n{2,}/).map(&:strip)
+  def self.acknowledgement_blocks(includes_minors: false)
+    blocks_from(acknowledgement_text(includes_minors:))
   end
 
-  def self.blocks
-    TEXT.split(/\n{2,}/).map(&:strip)
+  def self.blocks(includes_minors: false)
+    blocks_from(text(includes_minors:))
   end
 
-  def self.title_block?(index)
+  def self.blocks_from(text)
+    text.to_s.split(/\n{2,}/).map(&:strip)
+  end
+
+  def self.title_block?(index, includes_minors: false)
     index.zero?
   end
 
-  def self.warning_block?(index)
+  def self.warning_block?(index, includes_minors: false)
     [ 1, 2 ].include?(index)
   end
 
-  def self.summary_heading_block?(index)
+  def self.summary_heading_block?(index, includes_minors: false)
     (3..6).cover?(index)
+  end
+
+  def self.minor_responsibility_block?(block)
+    block == MINOR_RESPONSIBILITY_TEXT
   end
 end

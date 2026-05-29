@@ -52,6 +52,7 @@
       <thead>
         <tr>
           <th>Participant</th>
+          <th>Minors</th>
           <th>Email</th>
           <th>Phone</th>
           <th>Status</th>
@@ -62,6 +63,17 @@
         <% @trip_signups.each do |signup| %>
           <tr>
             <td><%= signup.user.full_name %></td>
+            <td>
+              <% if signup.trip_signup_minors.any? %>
+                <ul class="admin-minor-list">
+                  <% signup.trip_signup_minors.each do |minor| %>
+                    <li><%= minor.full_name %>, age <%= minor.age %>, <%= minor.relationship %></li>
+                  <% end %>
+                </ul>
+              <% else %>
+                <span class="muted">None</span>
+              <% end %>
+            </td>
             <td><%= signup.user.email.presence || "None" %></td>
             <td><%= signup.user.phone.presence || "None" %></td>
             <td><span class="status"><%= signup.status.titleize %></span></td>

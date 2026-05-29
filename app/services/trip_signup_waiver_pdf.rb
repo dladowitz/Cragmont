@@ -17,6 +17,7 @@ class TripSignupWaiverPdf
       detail(pdf, "Trip dates", "#{trip.start_date.to_fs(:long)} to #{trip.end_date.to_fs(:long)}")
       detail(pdf, "Participant", @trip_signup.user.full_name)
       detail(pdf, "Email", @trip_signup.user.email.presence || "None")
+      render_minors(pdf)
       divider(pdf)
       detail(pdf, "Plain Text Acknowledged at", formatted_metadata_time(@trip_signup.waiver_acknowledged_at))
       detail(pdf, "Acknowledgement digest", @trip_signup.waiver_acknowledgement_text_digest)
@@ -44,6 +45,10 @@ class TripSignupWaiverPdf
     @trip_signup.trip
   end
 
+  def includes_minors?
+    @trip_signup.includes_minors?
+  end
+
   def detail(pdf, label, value)
     pdf.text "#{label}: #{value}", size: 11
   end
@@ -64,9 +69,22 @@ class TripSignupWaiverPdf
     pdf.fill_color "1f2933"
     pdf.text "Plain-Language Acknowledgement", size: 14, style: :bold
     pdf.move_down 8
-    TripSignupWaiver.acknowledgement_blocks.each do |block|
+    acknowledgement_blocks.each do |block|
       pdf.text block, size: 11, leading: 4
       pdf.move_down 8
+    end
+  end
+
+  def render_minors(pdf)
+    return unless includes_minors?
+
+    pdf.move_down 10
+    pdf.text "Minors covered by this waiver", size: 12, style: :bold
+    @trip_signup.trip_signup_minors.each do |minor|
+      detail(pdf, "Name", minor.full_name)
+      detail(pdf, "Age", minor.age)
+      detail(pdf, "Relationship", minor.relationship.to_s.downcase)
+      pdf.move_down 6
     end
   end
 
@@ -79,14 +97,14 @@ class TripSignupWaiverPdf
   end
 
   def render_waiver_text(pdf)
-    TripSignupWaiver.blocks.each_with_index do |block, index|
-      if TripSignupWaiver.title_block?(index)
+    waiver_blocks.each_with_index do |block, index|
+      if TripSignupWaiver.title_block?(index, includes_minors: includes_minors?)
         pdf.fill_color "40512b"
         pdf.text block, size: 22, style: :bold, align: :center
-      elsif TripSignupWaiver.warning_block?(index)
+      elsif TripSignupWaiver.warning_block?(index, includes_minors: includes_minors?)
         pdf.fill_color "40512b"
         pdf.text block, size: 12, align: :center
-      elsif TripSignupWaiver.summary_heading_block?(index)
+      elsif TripSignupWaiver.summary_heading_block?(index, includes_minors: includes_minors?)
         pdf.fill_color "40512b"
         pdf.text block, size: 16, style: :bold, align: :center
       else
@@ -96,5 +114,15 @@ class TripSignupWaiverPdf
       pdf.move_down 14
     end
     pdf.fill_color "000000"
+  end
+
+  def acknowledgement_blocks
+    text = @trip_signup.waiver_acknowledgement_text.presence || TripSignupWaiver.acknowledgement_text(includes_minors: includes_minors?)
+    TripSignupWaiver.blocks_from(text)
+  end
+
+  def waiver_blocks
+    text = @trip_signup.waiver_text.presence || TripSignupWaiver.text(includes_minors: includes_minors?)
+    TripSignupWaiver.blocks_from(text)
   end
 end

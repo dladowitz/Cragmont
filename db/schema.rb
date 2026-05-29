@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_25_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_26_191000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -66,6 +66,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_25_120000) do
     t.index ["arrival_date"], name: "index_campsites_on_arrival_date"
     t.index ["campground_id"], name: "index_campsites_on_campground_id"
     t.index ["trip_id"], name: "index_campsites_on_trip_id"
+  end
+
+  create_table "site_settings", force: :cascade do |t|
+    t.integer "campsite_extra_night_fee_cents", default: 0, null: false
+    t.integer "campsite_weekend_fee_cents", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.integer "minor_fee_cents", default: 0, null: false
+    t.integer "uncounted_minor_age_limit", default: 13, null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "trip_signup_minors", force: :cascade do |t|
+    t.integer "age", null: false
+    t.datetime "created_at", null: false
+    t.string "first_name", null: false
+    t.string "last_name", null: false
+    t.string "relationship", null: false
+    t.bigint "trip_signup_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["age"], name: "index_trip_signup_minors_on_age"
+    t.index ["trip_signup_id"], name: "index_trip_signup_minors_on_trip_signup_id"
   end
 
   create_table "trip_signups", force: :cascade do |t|
@@ -126,6 +147,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_25_120000) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "campsites", "campgrounds"
   add_foreign_key "campsites", "trips"
+  add_foreign_key "trip_signup_minors", "trip_signups"
   add_foreign_key "trip_signups", "trips"
   add_foreign_key "trip_signups", "users"
   add_foreign_key "trips", "users", column: "campsite_coordinator_id"

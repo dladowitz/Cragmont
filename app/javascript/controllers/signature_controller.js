@@ -1,7 +1,18 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["acknowledgementInput", "canvas", "input", "intro", "submit", "waiver", "waiverStep"]
+  static targets = [
+    "acknowledgementInput",
+    "canvas",
+    "input",
+    "intro",
+    "minorFields",
+    "signupKind",
+    "signupStep",
+    "submit",
+    "waiver",
+    "waiverStep"
+  ]
 
   connect() {
     this.canvasContext = this.canvasTarget.getContext("2d")
@@ -21,6 +32,7 @@ export default class extends Controller {
     window.addEventListener("touchcancel", this.boundStop)
     this.resize()
     this.clear()
+    this.toggleMinorFields()
     this.checkWaiverScroll()
     window.addEventListener("resize", this.boundResize)
   }
@@ -105,6 +117,16 @@ export default class extends Controller {
     this.update()
   }
 
+  showAcknowledgement() {
+    if (this.minorSignupSelected() && !this.firstMinorRowComplete()) {
+      this.element.reportValidity()
+      return
+    }
+
+    this.signupStepTarget.hidden = true
+    this.introTarget.hidden = false
+  }
+
   showWaiver() {
     this.acknowledgementInputTarget.value ||= new Date().toISOString()
     this.introTarget.hidden = true
@@ -129,6 +151,26 @@ export default class extends Controller {
   update() {
     this.inputTarget.value = this.signed ? this.canvasTarget.toDataURL("image/png") : ""
     this.submitTarget.disabled = !this.waiverRead || !this.signed
+  }
+
+  toggleMinorFields() {
+    const selected = this.minorSignupSelected()
+    this.minorFieldsTarget.hidden = !selected
+    this.minorFieldsTarget.querySelectorAll("input").forEach((input) => {
+      input.disabled = !selected
+    })
+    this.minorFieldsTarget.querySelectorAll("[data-required-for-minor='true']").forEach((input) => {
+      input.required = selected
+    })
+  }
+
+  minorSignupSelected() {
+    return this.signupKindTargets.find((input) => input.checked)?.value === "with_minors"
+  }
+
+  firstMinorRowComplete() {
+    return Array.from(this.minorFieldsTarget.querySelectorAll("[data-required-for-minor='true']"))
+      .every((input) => input.checkValidity())
   }
 
   point(event) {

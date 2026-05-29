@@ -29,6 +29,27 @@ class TripSignupTest < ActiveSupport::TestCase
     assert signup.confirmed?
   end
 
+  test "requires valid minor details" do
+    signup = TripSignup.new(trip: trips(:yosemite), user: users(:sam))
+    minor = signup.trip_signup_minors.build(first_name: "Mika", last_name: "", age: 18, relationship: "")
+
+    assert_not signup.valid?
+    assert_not minor.valid?
+    assert_includes minor.errors[:last_name], "can't be blank"
+    assert_includes minor.errors[:relationship], "can't be blank"
+    assert_includes minor.errors[:age], "must be less than 18"
+  end
+
+  test "limits signup to two minors" do
+    signup = TripSignup.new(trip: trips(:yosemite), user: users(:sam))
+    3.times do |index|
+      signup.trip_signup_minors.build(first_name: "Minor", last_name: "Person#{index}", age: 10, relationship: "Child")
+    end
+
+    assert_not signup.valid?
+    assert_includes signup.errors[:trip_signup_minors], "cannot include more than 2 minors"
+  end
+
   test "signup is waitlisted after capacity is filled" do
     trip = trips(:yosemite)
     trip.total_participant_capacity.times do |index|
@@ -58,6 +79,15 @@ class TripSignupTest < ActiveSupport::TestCase
     attach_test_waiver_to(signup)
 
     assert signup.waiver_signed?
+  end
+
+  test "calculates capacity count from adult and older minors" do
+    signup = TripSignup.new(trip: trips(:yosemite), user: users(:sam))
+    signup.trip_signup_minors.build(first_name: "Young", last_name: "Minor", age: 12, relationship: "Child")
+    signup.trip_signup_minors.build(first_name: "Teen", last_name: "Minor", age: 13, relationship: "Child")
+
+    assert_equal 2, signup.capacity_count
+    assert_equal 1, signup.uncounted_minor_count
   end
 
   test "builds waiver document filename from signed date and participant name" do
