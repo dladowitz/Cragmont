@@ -8,7 +8,7 @@ class Admin::TripsController < ApplicationController
 
   def show
     @campsites_by_campground = @trip.campsites.includes(:campground).order(:arrival_date, :site_number).group_by(&:campground)
-    @trip_signups = @trip.trip_signups.includes(:user).order(created_at: :asc)
+    @trip_signups = @trip.trip_signups.includes(:user, :trip_signup_minors).order(created_at: :asc)
   end
 
   def new

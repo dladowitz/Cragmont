@@ -31,11 +31,23 @@ class Trip < ApplicationRecord
   end
 
   def confirmed_signup_count
-    trip_signups.confirmed.count
+    confirmed_capacity_count
+  end
+
+  def confirmed_capacity_count
+    confirmed_signups_with_minors.sum(&:capacity_count)
+  end
+
+  def confirmed_uncounted_minor_count
+    confirmed_signups_with_minors.sum(&:uncounted_minor_count)
+  end
+
+  def uncounted_minor_age_limit
+    SiteSetting.current.uncounted_minor_age_limit
   end
 
   def available_participant_capacity
-    [ total_participant_capacity - confirmed_signup_count, 0 ].max
+    [ total_participant_capacity - confirmed_capacity_count, 0 ].max
   end
 
   def capacity_full?
@@ -49,6 +61,10 @@ class Trip < ApplicationRecord
   end
 
   private
+
+  def confirmed_signups_with_minors
+    trip_signups.confirmed.includes(:trip_signup_minors)
+  end
 
   def end_date_after_start_date
     return if start_date.blank? || end_date.blank?

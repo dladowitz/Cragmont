@@ -10,6 +10,7 @@ Rails.application.routes.draw do
 
   namespace :admin do
     root "dashboard#index"
+    resource :settings, only: %i[show update]
     resources :users
     resources :campgrounds
     resources :trips do
