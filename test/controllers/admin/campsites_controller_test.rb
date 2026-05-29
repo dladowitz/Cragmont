@@ -6,6 +6,8 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", "Add campsite"
+    assert_select "input[name='campsite[arrival_date]'][min='2026-06-12'][max='2026-06-15']"
+    assert_select "input[name='campsite[checkout_date]'][min='2026-06-12'][max='2026-06-15']"
   end
 
   test "can add campsite to trip" do
@@ -15,7 +17,7 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
           campground_id: campgrounds(:upper_pines).id,
           site_number: "A14",
           arrival_date: "2026-06-13",
-          checkout_date: "2026-06-16",
+          checkout_date: "2026-06-15",
           participant_capacity: 8,
           car_capacity: 2,
           notes: "Extra site."
@@ -24,6 +26,26 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to admin_trip_url(trips(:yosemite))
+  end
+
+  test "rejects campsite dates outside trip dates" do
+    assert_no_difference "Campsite.count" do
+      post admin_trip_campsites_url(trips(:yosemite)), params: {
+        campsite: {
+          campground_id: campgrounds(:upper_pines).id,
+          site_number: "A14",
+          arrival_date: "2026-06-11",
+          checkout_date: "2026-06-16",
+          participant_capacity: 8,
+          car_capacity: 2,
+          notes: "Extra site."
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select ".form-errors", text: /Arrival date must be within the trip dates/
+    assert_select ".form-errors", text: /Checkout date must be within the trip dates/
   end
 
   test "can render edit campsite form" do

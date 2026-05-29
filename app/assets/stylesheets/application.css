@@ -261,6 +261,16 @@ input[type="submit"] {
   color: var(--muted);
 }
 
+.confirmed-signups-section {
+  border-color: #9bd0ba;
+  background: #ecf8f2;
+}
+
+.waitlisted-signups-section {
+  border-color: #efd77a;
+  background: #fff8db;
+}
+
 .trip-overview {
   padding-bottom: 20px;
 }
@@ -334,12 +344,17 @@ input[type="submit"] {
   margin-left: 10px;
 }
 
+.table-actions [data-controller="modal"] {
+  display: inline-block;
+  margin-left: 10px;
+}
+
 .campsites-panel {
   padding-top: 16px;
 }
 
 .campsites-panel-header {
-  margin-bottom: 0;
+  margin-bottom: 16px;
 }
 
 .campsites-panel-header h2 {
@@ -478,7 +493,8 @@ td span {
   margin-top: 12px;
 }
 
-.signup-modal {
+.signup-modal,
+.confirmation-modal {
   width: min(960px, calc(100% - 32px));
   max-height: calc(100vh - 32px);
   padding: 0;
@@ -489,11 +505,13 @@ td span {
   box-shadow: 0 20px 60px rgb(31 41 51 / 20%);
 }
 
-.signup-modal::backdrop {
+.signup-modal::backdrop,
+.confirmation-modal::backdrop {
   background: rgb(31 41 51 / 45%);
 }
 
-.signup-modal-content {
+.signup-modal-content,
+.confirmation-modal-content {
   display: grid;
   gap: 20px;
   padding: 24px;
@@ -502,19 +520,24 @@ td span {
 }
 
 .signup-modal h2,
-.signup-modal p {
+.signup-modal p,
+.confirmation-modal h2,
+.confirmation-modal p {
   margin: 0;
 }
 
-.signup-modal p {
+.signup-modal p,
+.confirmation-modal p {
   color: var(--muted);
 }
 
-.signup-modal .form-actions {
+.signup-modal .form-actions,
+.confirmation-modal .form-actions {
   justify-content: end;
 }
 
-.signup-modal form {
+.signup-modal form,
+.confirmation-modal form {
   margin: 0;
 }
 
@@ -744,6 +767,20 @@ td span {
   padding-left: 18px;
 }
 
+.waiver-download {
+  width: fit-content;
+}
+
+.waiver-download-link {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.waiver-download-icon {
+  flex: 0 0 auto;
+}
+
 .waitlist {
   margin-top: 18px;
   padding-top: 18px;
@@ -795,6 +832,21 @@ th {
 .warning-status {
   background: #fff8db;
   color: #936100;
+}
+
+.draft-status {
+  background: #fff8db;
+  color: #936100;
+}
+
+.waitlisted-status {
+  background: #fff8db;
+  color: #936100;
+}
+
+.archived-status {
+  background: #eef4ff;
+  color: #1f5fbf;
 }
 
 .admin-form {

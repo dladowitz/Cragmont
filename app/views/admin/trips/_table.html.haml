@@ -7,8 +7,8 @@
         %th Status
         %th Dates
         %th Campsites
-        %th Participants
-        %th Cars
+        %th Participant Capacity
+        %th Signed Up
     %tbody
       - trips.each do |trip|
         %tr
@@ -21,13 +21,18 @@
             - else
               %span Unassigned
           %td
-            %span.status= trip.status.titleize
+            %span{ class: [ "status", "#{trip.status}-status" ] }= trip.status.titleize
           %td
-            = trip.start_date.to_fs(:long)
-            to #{trip.end_date.to_fs(:long)}
+            %dl.date-pair
+              %div
+                %dt Arrival
+                %dd= trip.start_date.to_fs(:long)
+              %div
+                %dt Checkout
+                %dd= trip.end_date.to_fs(:long)
           %td= trip.campsite_count
           %td= trip.total_participant_capacity
-          %td= trip.total_car_capacity
+          %td= trip.confirmed_signup_count
 - else
   .empty-state
     %p No trips have been added yet.

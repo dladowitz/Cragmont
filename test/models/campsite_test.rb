@@ -41,4 +41,17 @@ class CampsiteTest < ActiveSupport::TestCase
     assert_not campsite.valid?
     assert_includes campsite.errors[:checkout_date], "must be after the arrival date"
   end
+
+  test "reservation dates must be within trip dates" do
+    campsite = campsites(:yosemite_a)
+
+    campsite.arrival_date = trips(:yosemite).start_date - 1.day
+    assert_not campsite.valid?
+    assert_includes campsite.errors[:arrival_date], "must be within the trip dates"
+
+    campsite.arrival_date = trips(:yosemite).start_date
+    campsite.checkout_date = trips(:yosemite).end_date + 1.day
+    assert_not campsite.valid?
+    assert_includes campsite.errors[:checkout_date], "must be within the trip dates"
+  end
 end

@@ -10,10 +10,10 @@
         = form.text_field :site_number, required: true
       .field
         = form.label :arrival_date
-        = form.date_field :arrival_date, required: true
+        = form.date_field :arrival_date, min: trip.start_date, max: trip.end_date, required: true
       .field
         = form.label :checkout_date
-        = form.date_field :checkout_date, required: true
+        = form.date_field :checkout_date, min: trip.start_date, max: trip.end_date, required: true
       .field
         = form.label :participant_capacity
         = form.number_field :participant_capacity, min: 0, max: 50, required: true

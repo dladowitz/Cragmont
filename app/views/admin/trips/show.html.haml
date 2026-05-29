@@ -27,51 +27,38 @@
       = link_to "Edit trip", edit_admin_trip_path(@trip), class: "button secondary"
       = button_to "Delete trip", admin_trip_path(@trip), method: :delete, class: "button danger"
   .stats
+    - if @trip.confirmed_uncounted_minor_count.positive?
+      .split-signup-stat
+        %section
+          %strong= @trip.confirmed_signup_count
+          %span Signed up
+        %section
+          %strong= @trip.confirmed_uncounted_minor_count
+          %span.under-13-label
+            Under #{@trip.uncounted_minor_age_limit}
+    - else
+      %div
+        %strong= @trip.confirmed_signup_count
+        %span Signed up
+    %div{:class => "availability-stat #{@trip.capacity_full? ? "danger-stat" : (@trip.almost_full? ? "warning-stat" : "success-stat")}"}
+      %strong= @trip.available_participant_capacity
+      %span Spaces available
+    %div
+      %strong= @trip.total_participant_capacity
+      %span Total capacity
     %div
       %strong= @trip.campsite_count
       %span Campsites
-    %div
-      %strong= @trip.total_participant_capacity
-      %span Participant capacity
-    %div
-      %strong= @trip.total_car_capacity
-      %span Car capacity
-%section.panel
-  %h2 Participant signups
-  - if @trip_signups.any?
-    %table
-      %thead
-        %tr
-          %th Participant
-          %th Minors
-          %th Email
-          %th Phone
-          %th Status
-          %th Waiver
-      %tbody
-        - @trip_signups.each do |signup|
-          %tr
-            %td= signup.user.full_name
-            %td
-              - if signup.trip_signup_minors.any?
-                %ul.admin-minor-list
-                  - signup.trip_signup_minors.each do |minor|
-                    %li
-                      = "#{minor.full_name}, age #{minor.age}, #{minor.relationship}"
-              - else
-                %span.muted None
-            %td= signup.user.email.presence || "None"
-            %td= signup.user.phone.presence || "None"
-            %td
-              %span.status= signup.status.titleize
-            %td
-              - if signup.waiver_signed?
-                = signup.waiver_signed_at.strftime("%m/%d/%y")
-                = link_to "Download", rails_blob_path(signup.waiver_document, disposition: "attachment")
-              - else
-                %span.muted Missing
+%section.panel.confirmed-signups-section
+  %h2 Confirmed participants
+  - if @confirmed_signups.any?
+    = render "signup_table", signups: @confirmed_signups
   - else
-    %p.muted No participants have signed up yet.
+    %p.muted No confirmed participants yet.
+- if @waitlisted_signups.any?
+  %section.panel.waitlisted-signups-section
+    %h2 Waitlisted participants
+    = render "signup_table", signups: @waitlisted_signups
 %section.panel.campsites-panel
   .panel-header.campsites-panel-header
     %div
@@ -106,7 +93,16 @@
                 %td= campsite.car_capacity
                 %td.table-actions
                   = link_to "Edit", edit_admin_trip_campsite_path(@trip, campsite)
-                  = button_to "Delete", admin_trip_campsite_path(@trip, campsite), method: :delete, class: "link-button"
+                  %div{"data-controller" => "modal"}
+                    %button.link-button{"data-action" => "modal#open", :type => "button"} Delete
+                    %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                      .confirmation-modal-content
+                        %div
+                          %h2 Delete campsite?
+                          %p This will not remove attendees signed up from the trip
+                        .form-actions
+                          %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
+                          = button_to "Delete campsite", admin_trip_campsite_path(@trip, campsite), method: :delete, class: "button danger"
               - if campsite.notes.present?
                 %tr.campsite-notes-row
                   %td
@@ -116,4 +112,3 @@
   - else
     .empty-state
       %p No campsites have been added to this trip yet.
-      = link_to "Add campsite", new_admin_trip_campsite_path(@trip), class: "button"
