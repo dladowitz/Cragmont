@@ -133,19 +133,19 @@
         %strong= @trip.campsite_count
         %span Campsites
   %section.panel
-    %h2 Attendees
+    %h2 Participants
     - if @confirmed_signups.any?
-      %ul.attendee-list
+      %ul.participant-list
         - @confirmed_signups.each do |signup|
-          %li= signup.public_attendee_name
+          %li= signup.public_participant_name
     - else
-      %p.muted No confirmed attendees yet.
+      %p.muted No confirmed participants yet.
     - if @waitlisted_signups.any?
       .waitlist
         %h3 Waitlist
-        %ul.attendee-list
+        %ul.participant-list
           - @waitlisted_signups.each do |signup|
-            %li= signup.public_attendee_name
+            %li= signup.public_participant_name
   %section.panel.campsites-panel
     %h2 Campsites
     - if @campsites_by_campground.any?

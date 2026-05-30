@@ -410,26 +410,26 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     assert_select ".stats .warning-stat", text: /Spaces available/
   end
 
-  test "public attendee list abbreviates names and hides contact details" do
+  test "public participant list abbreviates names and hides contact details" do
     TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
 
     get trip_url(trips(:yosemite))
 
     assert_response :success
-    assert_select ".attendee-list", text: /Sam L./
-    assert_select ".attendee-list", text: /Sam Lee/, count: 0
-    assert_select ".attendee-list", text: /555-0101/, count: 0
+    assert_select ".participant-list", text: /Sam L./
+    assert_select ".participant-list", text: /Sam Lee/, count: 0
+    assert_select ".participant-list", text: /555-0101/, count: 0
   end
 
-  test "public attendee list summarizes minors without names" do
+  test "public participant list summarizes minors without names" do
     signup = TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
     signup.trip_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
 
     get trip_url(trips(:yosemite))
 
     assert_response :success
-    assert_select ".attendee-list", text: /Sam L\. \+ 1 minor/
-    assert_select ".attendee-list", text: /Mika/, count: 0
+    assert_select ".participant-list", text: /Sam L\. \+ 1 minor/
+    assert_select ".participant-list", text: /Mika/, count: 0
   end
 
   test "public stats split out uncounted minors" do

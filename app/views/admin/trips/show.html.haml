@@ -99,7 +99,7 @@
                       .confirmation-modal-content
                         %div
                           %h2 Delete campsite?
-                          %p This will not remove attendees signed up from the trip
+                          %p This will not remove signed-up participants from the trip.
                         .form-actions
                           %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
                           = button_to "Delete campsite", admin_trip_campsite_path(@trip, campsite), method: :delete, class: "button danger"
