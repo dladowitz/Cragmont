@@ -5,7 +5,8 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
     get new_admin_trip_campsite_url(trips(:yosemite))
 
     assert_response :success
-    assert_select "h1", "Add campsite"
+    assert_select "h1", "Admin Dashboard"
+    assert_select ".panel-header", text: /Yosemite Valley Spring/
     assert_select "input[name='campsite[arrival_date]'][min='2026-06-12'][max='2026-06-15']"
     assert_select "input[name='campsite[checkout_date]'][min='2026-06-12'][max='2026-06-15']"
   end
@@ -52,7 +53,8 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
     get edit_admin_trip_campsite_url(trips(:yosemite), campsites(:yosemite_a))
 
     assert_response :success
-    assert_select "h1", "Edit campsite"
+    assert_select "h1", "Admin Dashboard"
+    assert_select ".panel-header", text: /Yosemite Valley Spring/
   end
 
   test "can update campsite" do

@@ -2,7 +2,6 @@
 %section.panel
   .panel-header
     %div
-      %h2 Trip inventory
-      %p Manage club trips and the campsites reserved for each trip.
+      %h2 Trips
     = link_to "New trip", new_admin_trip_path, class: "button"
   = render "table", trips: @trips

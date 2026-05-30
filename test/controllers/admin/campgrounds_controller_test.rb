@@ -5,7 +5,8 @@ class Admin::CampgroundsControllerTest < ActionDispatch::IntegrationTest
     get admin_campgrounds_url
 
     assert_response :success
-    assert_select "h1", "Campgrounds"
+    assert_select "h1", "Admin Dashboard"
+    assert_select "h2", "Campground directory"
     assert_select "td", text: "Upper Pines"
     assert_select "th", text: "Campsites", count: 0
   end
@@ -14,7 +15,8 @@ class Admin::CampgroundsControllerTest < ActionDispatch::IntegrationTest
     get admin_campground_url(campgrounds(:upper_pines))
 
     assert_response :success
-    assert_select "h1", "Upper Pines"
+    assert_select "h1", "Admin Dashboard"
+    assert_select ".panel-header", text: /Upper Pines/
     assert_select "td", text: "A12"
   end
 
