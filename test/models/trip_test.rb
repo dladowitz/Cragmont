@@ -56,16 +56,16 @@ class TripTest < ActiveSupport::TestCase
 
   test "summarizes available participant capacity" do
     trip = trips(:yosemite)
-    TripSignup.create!(trip: trip, user: users(:sam))
+    CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
 
     assert_equal 9, trip.available_participant_capacity
   end
 
   test "capacity count includes minors at the age limit and excludes younger minors" do
     trip = trips(:yosemite)
-    signup = TripSignup.create!(trip: trip, user: users(:sam))
-    signup.trip_signup_minors.create!(first_name: "Young", last_name: "Minor", age: 12, relationship: "Child")
-    signup.trip_signup_minors.create!(first_name: "Teen", last_name: "Minor", age: 13, relationship: "Child")
+    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup.campsite_signup_minors.create!(first_name: "Young", last_name: "Minor", age: 12, relationship: "Child")
+    signup.campsite_signup_minors.create!(first_name: "Teen", last_name: "Minor", age: 13, relationship: "Child")
 
     assert_equal 2, trip.confirmed_signup_count
     assert_equal 1, trip.confirmed_uncounted_minor_count
@@ -75,8 +75,8 @@ class TripTest < ActiveSupport::TestCase
   test "capacity count uses configured uncounted minor age limit" do
     SiteSetting.current.update!(uncounted_minor_age_limit: 15)
     trip = trips(:yosemite)
-    signup = TripSignup.create!(trip: trip, user: users(:sam))
-    signup.trip_signup_minors.create!(first_name: "Teen", last_name: "Minor", age: 14, relationship: "Child")
+    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup.campsite_signup_minors.create!(first_name: "Teen", last_name: "Minor", age: 14, relationship: "Child")
 
     assert_equal 1, trip.confirmed_signup_count
     assert_equal 1, trip.confirmed_uncounted_minor_count
@@ -88,7 +88,7 @@ class TripTest < ActiveSupport::TestCase
   test "knows when capacity is almost full" do
     trip = trips(:yosemite)
     6.times do |index|
-      TripSignup.create!(trip: trip, user: User.create!(
+      CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: User.create!(
         first_name: "Almost",
         last_name: "Full#{index}",
         email: "almost-full#{index}@example.com",

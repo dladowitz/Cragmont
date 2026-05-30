@@ -1,12 +1,12 @@
 require "test_helper"
 
-class TripSignupWaiverPdfTest < ActiveSupport::TestCase
+class CampsiteSignupWaiverPdfTest < ActiveSupport::TestCase
   test "renders non empty pdf bytes" do
-    signup = TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
+    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
     attach_test_waiver_to(signup)
     signature = WaiverSignatureData.new(SIGNATURE_DATA_URL)
 
-    pdf = TripSignupWaiverPdf.new(trip_signup: signup, signature_png: signature.bytes).render
+    pdf = CampsiteSignupWaiverPdf.new(campsite_signup: signup, signature_png: signature.bytes).render
 
     assert pdf.start_with?("%PDF")
     assert_operator pdf.bytesize, :>, 1_000
@@ -14,9 +14,9 @@ class TripSignupWaiverPdfTest < ActiveSupport::TestCase
   end
 
   test "formats metadata times in twelve hour Pacific time" do
-    signup = TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
+    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
     signature = WaiverSignatureData.new(SIGNATURE_DATA_URL)
-    service = TripSignupWaiverPdf.new(trip_signup: signup, signature_png: signature.bytes)
+    service = CampsiteSignupWaiverPdf.new(campsite_signup: signup, signature_png: signature.bytes)
 
     formatted_time = service.send(:formatted_metadata_time, Time.utc(2026, 5, 27, 1, 4))
 
@@ -24,12 +24,12 @@ class TripSignupWaiverPdfTest < ActiveSupport::TestCase
   end
 
   test "renders minor details into signed waiver pdf" do
-    signup = TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
-    signup.trip_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
+    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup.campsite_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
     attach_test_waiver_to(signup)
     signature = WaiverSignatureData.new(SIGNATURE_DATA_URL)
 
-    pdf = TripSignupWaiverPdf.new(trip_signup: signup, signature_png: signature.bytes).render
+    pdf = CampsiteSignupWaiverPdf.new(campsite_signup: signup, signature_png: signature.bytes).render
 
     assert pdf.start_with?("%PDF")
     assert_operator pdf.bytesize, :>, 1_000
@@ -38,10 +38,10 @@ class TripSignupWaiverPdfTest < ActiveSupport::TestCase
   end
 
   test "renders minor details as separate labeled lines" do
-    signup = TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
-    signup.trip_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
+    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup.campsite_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
     signature = WaiverSignatureData.new(SIGNATURE_DATA_URL)
-    service = TripSignupWaiverPdf.new(trip_signup: signup, signature_png: signature.bytes)
+    service = CampsiteSignupWaiverPdf.new(campsite_signup: signup, signature_png: signature.bytes)
     pdf = FakePdf.new
 
     service.send(:render_minors, pdf)

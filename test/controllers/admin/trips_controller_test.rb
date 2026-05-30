@@ -13,11 +13,11 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "can view trip details with campsites" do
-    signup = TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
-    signup.trip_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
+    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup.campsite_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
     attach_test_waiver_to(signup)
     waitlisted_user = User.create!(first_name: "Willa", last_name: "Wait", email: "willa-admin@example.com", password: "password")
-    waitlisted_signup = TripSignup.create!(trip: trips(:yosemite), user: waitlisted_user)
+    waitlisted_signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: waitlisted_user)
     waitlisted_signup.waitlisted!
 
     get admin_trip_url(trips(:yosemite))
@@ -37,14 +37,14 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".stats", text: /Campsites/
     assert_select ".stats span", text: "Car capacity", count: 0
     assert_select "h3", "Upper Pines"
-    assert_select "td", text: "A12"
+    assert_select "h4", text: "Site A12"
     assert_select ".table-actions [data-controller='modal'] button.link-button", text: "Delete"
     assert_select "dialog.confirmation-modal", text: /Delete campsite\?/
     assert_select "dialog.confirmation-modal", text: /This will not remove signed-up participants from the trip\./
     assert_select "dialog.confirmation-modal form[action='#{admin_trip_campsite_path(trips(:yosemite), campsites(:yosemite_a))}']"
-    assert_select ".campsite-notes-row", text: /Close to bathrooms/
+    assert_select ".campsite-notes", text: /Close to bathrooms/
     assert_select ".confirmed-signups-section" do
-      assert_select "h2", "Confirmed participants"
+      assert_select "h4", "Confirmed participants"
       assert_select "td", text: "Sam Lee"
       assert_select "td", text: "Willa Wait", count: 0
       assert_select ".admin-minor-list", text: /Mika Lee, age 12, Child/
@@ -53,7 +53,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select ".status.confirmed-status", count: 0
     end
     assert_select ".waitlisted-signups-section" do
-      assert_select "h2", "Waitlisted participants"
+      assert_select "h4", "Waitlisted participants"
       assert_select "td", text: "Willa Wait"
       assert_select "td", text: "Sam Lee", count: 0
       assert_select "th", text: "Status", count: 0
@@ -66,7 +66,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "trip details show missing waiver for legacy signups" do
-    TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
+    CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
 
     get admin_trip_url(trips(:yosemite))
 

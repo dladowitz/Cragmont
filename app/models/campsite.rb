@@ -1,6 +1,8 @@
 class Campsite < ApplicationRecord
   belongs_to :trip
   belongs_to :campground
+  has_many :campsite_signups, dependent: :restrict_with_error
+  has_many :participants, through: :campsite_signups, source: :user
 
   validates :site_number, :arrival_date, :checkout_date, presence: true
   validates :participant_capacity,
@@ -12,7 +14,41 @@ class Campsite < ApplicationRecord
   validate :checkout_date_after_arrival_date
   validate :reservation_dates_within_trip_dates
 
+  def confirmed_signup_count
+    confirmed_capacity_count
+  end
+
+  def confirmed_capacity_count
+    confirmed_signups_with_minors.sum(&:capacity_count)
+  end
+
+  def confirmed_uncounted_minor_count
+    confirmed_signups_with_minors.sum(&:uncounted_minor_count)
+  end
+
+  def available_participant_capacity
+    [ participant_capacity - confirmed_capacity_count, 0 ].max
+  end
+
+  def capacity_full?
+    available_participant_capacity.zero?
+  end
+
+  def confirmed_signups
+    campsite_signups.confirmed.includes(:user, :campsite_signup_minors).order(created_at: :asc)
+  end
+
+  def waitlisted_signups
+    campsite_signups.waitlisted.includes(:user, :campsite_signup_minors).order(created_at: :asc)
+  end
+
   private
+
+  def confirmed_signups_with_minors
+    return campsite_signups.select(&:confirmed?) if campsite_signups.loaded?
+
+    campsite_signups.confirmed.includes(:campsite_signup_minors)
+  end
 
   def checkout_date_after_arrival_date
     return if arrival_date.blank? || checkout_date.blank?

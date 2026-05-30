@@ -5,7 +5,9 @@ Rails.application.routes.draw do
   resource :session, only: %i[new create destroy]
 
   resources :trips, only: %i[index show] do
-    resource :trip_signup, only: %i[create destroy]
+    resources :campsites, only: [] do
+      resource :campsite_signup, only: %i[create destroy]
+    end
   end
 
   namespace :admin do

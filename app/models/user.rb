@@ -6,8 +6,8 @@ class User < ApplicationRecord
     foreign_key: :campsite_coordinator_id,
     dependent: :restrict_with_error,
     inverse_of: :campsite_coordinator
-  has_many :trip_signups, dependent: :restrict_with_error
-  has_many :signed_up_trips, through: :trip_signups, source: :trip
+  has_many :campsite_signups, dependent: :restrict_with_error
+  has_many :signed_up_trips, -> { distinct }, through: :campsite_signups, source: :trip
 
   normalizes :email, with: ->(email) { email.to_s.strip.downcase.presence }
 
