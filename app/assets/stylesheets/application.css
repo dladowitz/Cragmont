@@ -654,7 +654,9 @@ td span {
 
 .signup-modal p,
 .confirmation-modal p {
+  max-width: none;
   color: var(--muted);
+  text-align: left;
 }
 
 .signup-modal .form-actions,
@@ -762,8 +764,8 @@ td span {
   border-radius: 8px;
   background: #fbfaf7;
   
-  font-size: 1.4rem;
-  line-height: 1.55;
+  font-size: 1.05rem;
+  line-height: 1.6;
 }
 
 .waiver-intro-copy p {
@@ -787,8 +789,7 @@ td span {
 .waiver-document {
   display: grid;
   gap: 10px;
-  max-width: 860px;
-  margin: 0 auto;
+  width: 100%;
   color: #40512b;
   line-height: 1.42;
 }
@@ -811,6 +812,12 @@ td span {
   text-align: center;
   font-weight: 750;
   line-height: 1.25;
+}
+
+.signup-modal .waiver-warning {
+  justify-self: center;
+  width: min(100%, 48rem);
+  text-align: center;
 }
 
 .waiver-summary-heading {
