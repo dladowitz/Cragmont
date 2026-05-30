@@ -679,6 +679,26 @@ td span {
   gap: 18px;
 }
 
+.attendance-fields {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfaf7;
+}
+
+.attendance-fields h3,
+.attendance-fields p {
+  margin: 0;
+}
+
+.attendance-date-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
 .signup-kind-options {
   display: grid;
   gap: 12px;
@@ -1210,6 +1230,7 @@ textarea {
 
   .form-grid,
   .stats,
+  .attendance-date-row,
   .minor-field-row,
   .trip-card {
     grid-template-columns: 1fr;

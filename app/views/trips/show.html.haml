@@ -58,6 +58,7 @@
                 - if signed_up_for_this_campsite
                   %strong
                     You are #{@current_signup.status} for this campsite.
+                  %p.muted= @current_signup.attendance_date_range
                   %div{"data-controller" => "modal"}
                     - remove_button_text = @current_signup.waitlisted? ? "Remove me from the waitlist" : "Remove me from this campsite"
                     - remove_title = @current_signup.waitlisted? ? "Remove yourself from the waitlist?" : "Remove yourself from this campsite?"

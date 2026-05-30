@@ -15,7 +15,25 @@ module ActiveSupport
     SIGNATURE_DATA_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=".freeze
 
     def waiver_signature_params
-      { campsite_signup: { waiver_signature_data: SIGNATURE_DATA_URL, waiver_acknowledged_at: Time.current.iso8601 } }
+      {
+        campsite_signup: {
+          arrival_date: campsites(:yosemite_a).arrival_date.to_s,
+          checkout_date: campsites(:yosemite_a).checkout_date.to_s,
+          waiver_signature_data: SIGNATURE_DATA_URL,
+          waiver_acknowledged_at: Time.current.iso8601
+        }
+      }
+    end
+
+    def create_campsite_signup!(campsite:, user:, **attributes)
+      CampsiteSignup.create!(
+        {
+          campsite: campsite,
+          user: user,
+          arrival_date: campsite.arrival_date,
+          checkout_date: campsite.checkout_date
+        }.merge(attributes)
+      )
     end
 
     def attach_test_waiver_to(signup)

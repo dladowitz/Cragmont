@@ -3,7 +3,9 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = [
     "acknowledgementInput",
+    "arrivalDate",
     "canvas",
+    "checkoutDate",
     "input",
     "intro",
     "minorFields",
@@ -118,6 +120,9 @@ export default class extends Controller {
   }
 
   showAcknowledgement() {
+    this.checkAttendanceDates()
+    if (!this.element.reportValidity()) return
+
     if (this.minorSignupSelected() && !this.firstMinorRowComplete()) {
       this.element.reportValidity()
       return
@@ -125,6 +130,17 @@ export default class extends Controller {
 
     this.signupStepTarget.hidden = true
     this.introTarget.hidden = false
+  }
+
+  checkAttendanceDates() {
+    if (!this.hasArrivalDateTarget || !this.hasCheckoutDateTarget) return true
+
+    this.checkoutDateTarget.setCustomValidity("")
+    if (!this.arrivalDateTarget.value || !this.checkoutDateTarget.value) return true
+    if (this.arrivalDateTarget.value < this.checkoutDateTarget.value) return true
+
+    this.checkoutDateTarget.setCustomValidity("Checkout date must be after the arrival date.")
+    return false
   }
 
   showWaiver() {

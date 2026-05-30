@@ -17,7 +17,7 @@ class CampsiteSignupTest < ActiveSupport::TestCase
   end
 
   test "prevents duplicate signup for the same user and trip" do
-    CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     duplicate = CampsiteSignup.new(campsite: campsites(:yosemite_b), user: users(:sam))
 
     assert_not duplicate.valid?
@@ -25,7 +25,7 @@ class CampsiteSignupTest < ActiveSupport::TestCase
   end
 
   test "signup is confirmed while capacity remains" do
-    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
 
     assert signup.confirmed?
     assert_equal trips(:yosemite), signup.trip
@@ -62,7 +62,7 @@ class CampsiteSignupTest < ActiveSupport::TestCase
   test "signup is waitlisted after capacity is filled" do
     campsite = campsites(:yosemite_a)
     campsite.participant_capacity.times do |index|
-      CampsiteSignup.create!(campsite: campsite, user: User.create!(
+      create_campsite_signup!(campsite: campsite, user: User.create!(
         first_name: "Confirmed",
         last_name: "Person#{index}",
         email: "confirmed#{index}@example.com",
@@ -70,7 +70,7 @@ class CampsiteSignupTest < ActiveSupport::TestCase
       ))
     end
 
-    waitlisted = CampsiteSignup.create!(campsite: campsite, user: User.create!(
+    waitlisted = create_campsite_signup!(campsite: campsite, user: User.create!(
       first_name: "Waiting",
       last_name: "Person",
       email: "waiting@example.com",
@@ -81,7 +81,7 @@ class CampsiteSignupTest < ActiveSupport::TestCase
   end
 
   test "knows when waiver is signed" do
-    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
 
     assert_not signup.waiver_signed?
 
@@ -100,9 +100,56 @@ class CampsiteSignupTest < ActiveSupport::TestCase
   end
 
   test "builds waiver document filename from signed date participant and campsite" do
-    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     signup.waiver_signed_at = Time.zone.local(2026, 5, 25)
 
     assert_equal "2026-05-25-Sam-Lee-Yosemite-Valley-Spring-A12-#{signup.id}.pdf", signup.waiver_document_filename
+  end
+
+  test "requires attendance dates" do
+    signup = CampsiteSignup.new(campsite: campsites(:yosemite_a), user: users(:sam))
+
+    assert_not signup.valid?
+    assert_includes signup.errors[:arrival_date], "can't be blank"
+    assert_includes signup.errors[:checkout_date], "can't be blank"
+  end
+
+  test "attendance dates must be within campsite dates" do
+    campsite = campsites(:yosemite_a)
+    signup = CampsiteSignup.new(
+      campsite: campsite,
+      user: users(:sam),
+      arrival_date: campsite.arrival_date - 1.day,
+      checkout_date: campsite.checkout_date + 1.day
+    )
+
+    assert_not signup.valid?
+    assert_includes signup.errors[:arrival_date], "must be on or after the campsite arrival date"
+    assert_includes signup.errors[:checkout_date], "must be on or before the campsite checkout date"
+  end
+
+  test "checkout date must be after arrival date" do
+    campsite = campsites(:yosemite_a)
+    signup = CampsiteSignup.new(
+      campsite: campsite,
+      user: users(:sam),
+      arrival_date: campsite.arrival_date,
+      checkout_date: campsite.arrival_date
+    )
+
+    assert_not signup.valid?
+    assert_includes signup.errors[:checkout_date], "must be after the arrival date"
+  end
+
+  test "calculates night count" do
+    signup = create_campsite_signup!(
+      campsite: campsites(:yosemite_a),
+      user: users(:sam),
+      arrival_date: Date.new(2026, 6, 13),
+      checkout_date: Date.new(2026, 6, 15)
+    )
+
+    assert_equal 2, signup.night_count
+    assert_equal "Jun 13-Jun 15", signup.attendance_date_range
   end
 end

@@ -3,6 +3,8 @@
 - modal_title = waitlist_signup ? "Sign up for campsite waitlist" : "Sign up for this campsite"
 - modal_submit_text = waitlist_signup ? "Sign up for Waitlist" : "Pay Now and Sign Up"
 - signature_id = "campsite-signup-signature-#{campsite.id}"
+- arrival_id = "campsite-signup-arrival-#{campsite.id}"
+- checkout_id = "campsite-signup-checkout-#{campsite.id}"
 %div{"data-controller" => "modal"}
   %button.button{"data-action" => "modal#open", :type => "button"}= signup_button_text
   %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
@@ -17,6 +19,17 @@
           to #{campsite.checkout_date.to_fs(:long)}
       = form_with url: trip_campsite_campsite_signup_path(trip, campsite), method: :post, class: "waiver-form", data: { controller: "signature" } do
         %section.signup-kind-step{"data-signature-target" => "signupStep"}
+          %section.attendance-fields
+            %div
+              %h3 Attendance dates
+              %p.muted Choose the nights you will stay at this campsite.
+            .attendance-date-row
+              .field
+                = label_tag arrival_id, "Arrival date"
+                = date_field_tag "campsite_signup[arrival_date]", nil, id: arrival_id, min: campsite.arrival_date, max: campsite.checkout_date - 1.day, required: true, data: { signature_target: "arrivalDate", action: "input->signature#checkAttendanceDates" }
+              .field
+                = label_tag checkout_id, "Checkout date"
+                = date_field_tag "campsite_signup[checkout_date]", nil, id: checkout_id, min: campsite.arrival_date + 1.day, max: campsite.checkout_date, required: true, data: { signature_target: "checkoutDate", action: "input->signature#checkAttendanceDates" }
           %fieldset.signup-kind-options
             %legend Who are you signing up?
             %label

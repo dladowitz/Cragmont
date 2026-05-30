@@ -2,7 +2,7 @@ require "test_helper"
 
 class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
   test "shows trips overview with capacity totals" do
-    CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     Trip.create!(
       name: "Archived Trip",
       location: "Tahoe",

@@ -56,14 +56,14 @@ class TripTest < ActiveSupport::TestCase
 
   test "summarizes available participant capacity" do
     trip = trips(:yosemite)
-    CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
 
     assert_equal 9, trip.available_participant_capacity
   end
 
   test "capacity count includes minors at the age limit and excludes younger minors" do
     trip = trips(:yosemite)
-    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     signup.campsite_signup_minors.create!(first_name: "Young", last_name: "Minor", age: 12, relationship: "Child")
     signup.campsite_signup_minors.create!(first_name: "Teen", last_name: "Minor", age: 13, relationship: "Child")
 
@@ -75,7 +75,7 @@ class TripTest < ActiveSupport::TestCase
   test "capacity count uses configured uncounted minor age limit" do
     SiteSetting.current.update!(uncounted_minor_age_limit: 15)
     trip = trips(:yosemite)
-    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     signup.campsite_signup_minors.create!(first_name: "Teen", last_name: "Minor", age: 14, relationship: "Child")
 
     assert_equal 1, trip.confirmed_signup_count
@@ -88,7 +88,7 @@ class TripTest < ActiveSupport::TestCase
   test "knows when capacity is almost full" do
     trip = trips(:yosemite)
     6.times do |index|
-      CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: User.create!(
+      create_campsite_signup!(campsite: campsites(:yosemite_a), user: User.create!(
         first_name: "Almost",
         last_name: "Full#{index}",
         email: "almost-full#{index}@example.com",

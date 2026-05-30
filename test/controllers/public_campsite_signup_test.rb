@@ -75,14 +75,20 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
   test "logged in user can sign up for a campsite" do
     log_in_as(users(:sam))
+    params = waiver_signature_params.deep_dup
+    params[:campsite_signup][:arrival_date] = "2026-06-13"
+    params[:campsite_signup][:checkout_date] = "2026-06-15"
 
     assert_difference "CampsiteSignup.count", 1 do
-      post signup_url_for, params: waiver_signature_params
+      post signup_url_for, params: params
     end
 
     assert_redirected_to trip_url(trips(:yosemite))
     signup = CampsiteSignup.find_by(trip: trips(:yosemite), user: users(:sam))
     assert_equal campsites(:yosemite_a), signup.campsite
+    assert_equal Date.new(2026, 6, 13), signup.arrival_date
+    assert_equal Date.new(2026, 6, 15), signup.checkout_date
+    assert_equal 2, signup.night_count
     assert signup.confirmed?
     assert signup.waiver_signed?
     assert signup.waiver_signature_image.attached?
@@ -196,8 +202,38 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_equal "Please sign the waiver before signing up.", flash[:alert]
   end
 
+  test "logged in user cannot sign up without attendance dates" do
+    log_in_as(users(:sam))
+    params = waiver_signature_params.deep_dup
+    params[:campsite_signup].delete(:arrival_date)
+    params[:campsite_signup].delete(:checkout_date)
+
+    assert_no_difference "CampsiteSignup.count" do
+      post signup_url_for, params: params
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite))
+    assert_match(/Arrival date can't be blank/, flash[:alert])
+    assert_match(/Checkout date can't be blank/, flash[:alert])
+  end
+
+  test "logged in user cannot sign up with attendance dates outside campsite dates" do
+    log_in_as(users(:sam))
+    params = waiver_signature_params.deep_dup
+    params[:campsite_signup][:arrival_date] = "2026-06-11"
+    params[:campsite_signup][:checkout_date] = "2026-06-16"
+
+    assert_no_difference "CampsiteSignup.count" do
+      post signup_url_for, params: params
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite))
+    assert_match(/Arrival date must be on or after the campsite arrival date/, flash[:alert])
+    assert_match(/Checkout date must be on or before the campsite checkout date/, flash[:alert])
+  end
+
   test "duplicate signup for another campsite in the same trip is blocked" do
-    CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     log_in_as(users(:sam))
 
     assert_no_difference "CampsiteSignup.count" do
@@ -208,7 +244,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "confirmed user can remove themself from a campsite" do
-    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     log_in_as(users(:sam))
 
     assert_difference "CampsiteSignup.count", -1 do
@@ -220,7 +256,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "waitlisted user can remove themself from a campsite" do
-    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     signup.waitlisted!
     log_in_as(users(:sam))
 
@@ -233,19 +269,20 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "trip detail shows remove modal for signed in participant" do
-    CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam), arrival_date: Date.new(2026, 6, 13))
     log_in_as(users(:sam))
 
     get trip_url(trips(:yosemite))
 
     assert_response :success
     assert_select "button", text: "Remove me from this campsite"
+    assert_select "#campsite-#{campsites(:yosemite_a).id}", text: /Jun 13-Jun 15/
     assert_select "dialog.signup-modal h2", text: "Remove yourself from this campsite?"
     assert_select "form[action='#{signup_path_for}'][method='post']", text: /Remove me from this campsite/
   end
 
   test "trip detail shows waitlist remove modal for signed in waitlisted participant" do
-    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     signup.waitlisted!
     log_in_as(users(:sam))
 
@@ -267,6 +304,10 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "dialog.signup-modal"
     assert_select ".signup-kind-options", text: /I am signing up for myself/
     assert_select ".signup-kind-options", text: /I am signing up for myself and minors/
+    assert_select "input[type='date'][name='campsite_signup[arrival_date]'][required]"
+    assert_select "input[type='date'][name='campsite_signup[arrival_date]'][min='2026-06-12'][max='2026-06-14']"
+    assert_select "input[type='date'][name='campsite_signup[checkout_date]'][required]"
+    assert_select "input[type='date'][name='campsite_signup[checkout_date]'][min='2026-06-13'][max='2026-06-15']"
     assert_select ".minor-fields", text: /Minor information/
     assert_select "button", text: "Next"
     assert_select ".waiver-intro", text: /not a teaching or instructional organization/
@@ -281,7 +322,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "trip detail disables other campsite signup buttons after signup" do
-    CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     log_in_as(users(:sam))
 
     get trip_url(trips(:yosemite))
@@ -371,7 +412,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   test "trip detail shows almost full warning at sixty percent capacity" do
     trip = trips(:yosemite)
     6.times do |index|
-      CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: User.create!(
+      create_campsite_signup!(campsite: campsites(:yosemite_a), user: User.create!(
         first_name: "Almost",
         last_name: "FullView#{index}",
         email: "almost-full-view#{index}@example.com",
@@ -389,29 +430,29 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public participant list abbreviates names and hides contact details" do
-    CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam), arrival_date: Date.new(2026, 6, 13))
 
     get trip_url(trips(:yosemite))
 
     assert_response :success
-    assert_select ".participant-list", text: /Sam L./
+    assert_select ".participant-list", text: /Sam L\. \(Jun 13-Jun 15\)/
     assert_select ".participant-list", text: /Sam Lee/, count: 0
     assert_select ".participant-list", text: /555-0101/, count: 0
   end
 
   test "public participant list summarizes minors without names" do
-    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     signup.campsite_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
 
     get trip_url(trips(:yosemite))
 
     assert_response :success
-    assert_select ".participant-list", text: /Sam L\. \+ 1 minor/
+    assert_select ".participant-list", text: /Sam L\. \+ 1 minor \(Jun 12-Jun 15\)/
     assert_select ".participant-list", text: /Mika/, count: 0
   end
 
   test "public stats split out uncounted minors" do
-    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     signup.campsite_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
 
     get trip_url(trips(:yosemite))
@@ -427,13 +468,13 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     trip = trips(:yosemite)
     fill_campsite_capacity(campsites(:yosemite_a), "public-confirmed")
     waitlisted_user = User.create!(first_name: "Willa", last_name: "Wait", email: "willa@example.com", password: "password")
-    CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: waitlisted_user)
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: waitlisted_user)
 
     get trip_url(trip)
 
     assert_response :success
     assert_select ".waitlisted-signups-section", text: /Waitlist/
-    assert_select ".waitlisted-signups-section", text: /Willa W./
+    assert_select ".waitlisted-signups-section", text: /Willa W\. \(Jun 12-Jun 15\)/
     assert_select ".waitlisted-signups-section", text: /Willa Wait/, count: 0
     assert_select ".waitlisted-signups-section", text: /willa@example.com/, count: 0
   end
@@ -464,7 +505,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
   def fill_campsite_capacity(campsite, prefix, count: campsite.participant_capacity)
     count.times do |index|
-      CampsiteSignup.create!(
+      create_campsite_signup!(
         campsite: campsite,
         user: User.create!(
           first_name: "Confirmed",
