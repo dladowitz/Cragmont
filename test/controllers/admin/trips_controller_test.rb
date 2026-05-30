@@ -13,11 +13,11 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "can view trip details with campsites" do
-    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam), arrival_date: Date.new(2026, 6, 13))
     signup.campsite_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
     attach_test_waiver_to(signup)
     waitlisted_user = User.create!(first_name: "Willa", last_name: "Wait", email: "willa-admin@example.com", password: "password")
-    waitlisted_signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: waitlisted_user)
+    waitlisted_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: waitlisted_user)
     waitlisted_signup.waitlisted!
 
     get admin_trip_url(trips(:yosemite))
@@ -46,6 +46,8 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".confirmed-signups-section" do
       assert_select "h4", "Confirmed participants"
       assert_select "td", text: "Sam Lee"
+      assert_select "th", text: "Attendance"
+      assert_select "td", text: "Jun 13-Jun 15"
       assert_select "td", text: "Willa Wait", count: 0
       assert_select ".admin-minor-list", text: /Mika Lee, age 12, Child/
       assert_select "td", text: "555-0101"
@@ -55,6 +57,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".waitlisted-signups-section" do
       assert_select "h4", "Waitlisted participants"
       assert_select "td", text: "Willa Wait"
+      assert_select "td", text: "Jun 12-Jun 15"
       assert_select "td", text: "Sam Lee", count: 0
       assert_select "th", text: "Status", count: 0
       assert_select ".status.waitlisted-status", count: 0
@@ -66,7 +69,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "trip details show missing waiver for legacy signups" do
-    CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
 
     get admin_trip_url(trips(:yosemite))
 

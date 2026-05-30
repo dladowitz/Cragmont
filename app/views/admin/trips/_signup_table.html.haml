@@ -2,6 +2,7 @@
   %thead
     %tr
       %th Participant
+      %th Attendance
       %th Minors
       %th Email
       %th Phone
@@ -10,6 +11,7 @@
     - signups.each do |signup|
       %tr
         %td= signup.user.full_name
+        %td= signup.attendance_date_range
         %td
           - if signup.campsite_signup_minors.any?
             %ul.admin-minor-list

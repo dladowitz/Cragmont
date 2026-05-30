@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_26_191000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_30_061000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -106,7 +106,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_191000) do
     t.text "waiver_text"
     t.string "waiver_text_digest"
     t.string "waiver_user_agent"
+    t.date "arrival_date", null: false
+    t.date "checkout_date", null: false
+    t.index ["arrival_date"], name: "index_campsite_signups_on_arrival_date"
     t.index ["campsite_id"], name: "index_campsite_signups_on_campsite_id"
+    t.index ["checkout_date"], name: "index_campsite_signups_on_checkout_date"
     t.index ["status"], name: "index_campsite_signups_on_status"
     t.index ["trip_id", "user_id"], name: "index_campsite_signups_on_trip_id_and_user_id", unique: true
     t.index ["trip_id"], name: "index_campsite_signups_on_trip_id"

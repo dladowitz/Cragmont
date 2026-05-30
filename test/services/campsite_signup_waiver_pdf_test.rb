@@ -2,7 +2,7 @@ require "test_helper"
 
 class CampsiteSignupWaiverPdfTest < ActiveSupport::TestCase
   test "renders non empty pdf bytes" do
-    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     attach_test_waiver_to(signup)
     signature = WaiverSignatureData.new(SIGNATURE_DATA_URL)
 
@@ -14,7 +14,7 @@ class CampsiteSignupWaiverPdfTest < ActiveSupport::TestCase
   end
 
   test "formats metadata times in twelve hour Pacific time" do
-    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     signature = WaiverSignatureData.new(SIGNATURE_DATA_URL)
     service = CampsiteSignupWaiverPdf.new(campsite_signup: signup, signature_png: signature.bytes)
 
@@ -24,7 +24,7 @@ class CampsiteSignupWaiverPdfTest < ActiveSupport::TestCase
   end
 
   test "renders minor details into signed waiver pdf" do
-    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     signup.campsite_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
     attach_test_waiver_to(signup)
     signature = WaiverSignatureData.new(SIGNATURE_DATA_URL)
@@ -38,7 +38,7 @@ class CampsiteSignupWaiverPdfTest < ActiveSupport::TestCase
   end
 
   test "renders minor details as separate labeled lines" do
-    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     signup.campsite_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
     signature = WaiverSignatureData.new(SIGNATURE_DATA_URL)
     service = CampsiteSignupWaiverPdf.new(campsite_signup: signup, signature_png: signature.bytes)

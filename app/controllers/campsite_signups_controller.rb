@@ -9,6 +9,7 @@ class CampsiteSignupsController < ApplicationController
     campsite = trip.campsites.find(params[:campsite_id])
     signup = trip.campsite_signups.find_or_initialize_by(user: current_user)
     signup.campsite ||= campsite
+    signup.assign_attributes(attendance_params)
     signature = WaiverSignatureData.new(signup_params[:waiver_signature_data])
     acknowledged_at = waiver_acknowledged_at
     minor_attributes = normalized_minor_attributes
@@ -46,10 +47,16 @@ class CampsiteSignupsController < ApplicationController
   def signup_params
     params.fetch(:campsite_signup, {}).permit(
       :signup_kind,
+      :arrival_date,
+      :checkout_date,
       :waiver_signature_data,
       :waiver_acknowledged_at,
       campsite_signup_minors_attributes: %i[first_name last_name age relationship]
     )
+  end
+
+  def attendance_params
+    signup_params.slice(:arrival_date, :checkout_date)
   end
 
   def waiver_acknowledged_at
