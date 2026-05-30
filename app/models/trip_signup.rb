@@ -20,7 +20,7 @@ class TripSignup < ApplicationRecord
     trip_signup_minors.any?
   end
 
-  def public_attendee_name
+  def public_participant_name
     return user.public_name unless includes_minors?
 
     "#{user.public_name} + #{trip_signup_minors.size} #{'minor'.pluralize(trip_signup_minors.size)}"

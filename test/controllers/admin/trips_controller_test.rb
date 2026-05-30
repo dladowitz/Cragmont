@@ -40,7 +40,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select "td", text: "A12"
     assert_select ".table-actions [data-controller='modal'] button.link-button", text: "Delete"
     assert_select "dialog.confirmation-modal", text: /Delete campsite\?/
-    assert_select "dialog.confirmation-modal", text: /This will not remove attendees signed up from the trip/
+    assert_select "dialog.confirmation-modal", text: /This will not remove signed-up participants from the trip\./
     assert_select "dialog.confirmation-modal form[action='#{admin_trip_campsite_path(trips(:yosemite), campsites(:yosemite_a))}']"
     assert_select ".campsite-notes-row", text: /Close to bathrooms/
     assert_select ".confirmed-signups-section" do

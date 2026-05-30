@@ -744,7 +744,7 @@ td span {
   opacity: 0.55;
 }
 
-.attendee-list {
+.participant-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -752,7 +752,7 @@ td span {
   list-style: none;
 }
 
-.attendee-list li {
+.participant-list li {
   padding: 6px 10px;
   border: 1px solid var(--line);
   border-radius: 999px;
