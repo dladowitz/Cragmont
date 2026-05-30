@@ -1,10 +1,10 @@
 require "stringio"
 
-class TripSignupWaiverPdf
+class CampsiteSignupWaiverPdf
   PACIFIC_TIME_ZONE = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
 
-  def initialize(trip_signup:, signature_png:)
-    @trip_signup = trip_signup
+  def initialize(campsite_signup:, signature_png:)
+    @campsite_signup = campsite_signup
     @signature_png = signature_png
   end
 
@@ -15,12 +15,14 @@ class TripSignupWaiverPdf
 
       detail(pdf, "Trip", trip.name)
       detail(pdf, "Trip dates", "#{trip.start_date.to_fs(:long)} to #{trip.end_date.to_fs(:long)}")
-      detail(pdf, "Participant", @trip_signup.user.full_name)
-      detail(pdf, "Email", @trip_signup.user.email.presence || "None")
+      detail(pdf, "Campsite", "#{campsite.campground.name} site #{campsite.site_number}")
+      detail(pdf, "Campsite dates", "#{campsite.arrival_date.to_fs(:long)} to #{campsite.checkout_date.to_fs(:long)}")
+      detail(pdf, "Participant", @campsite_signup.user.full_name)
+      detail(pdf, "Email", @campsite_signup.user.email.presence || "None")
       render_minors(pdf)
       divider(pdf)
-      detail(pdf, "Plain Text Acknowledged at", formatted_metadata_time(@trip_signup.waiver_acknowledged_at))
-      detail(pdf, "Acknowledgement digest", @trip_signup.waiver_acknowledgement_text_digest)
+      detail(pdf, "Plain Text Acknowledged at", formatted_metadata_time(@campsite_signup.waiver_acknowledged_at))
+      detail(pdf, "Acknowledgement digest", @campsite_signup.waiver_acknowledgement_text_digest)
 
       pdf.move_down 18
       render_acknowledgement_text(pdf)
@@ -42,11 +44,15 @@ class TripSignupWaiverPdf
   private
 
   def trip
-    @trip_signup.trip
+    @campsite_signup.trip
+  end
+
+  def campsite
+    @campsite_signup.campsite
   end
 
   def includes_minors?
-    @trip_signup.includes_minors?
+    @campsite_signup.includes_minors?
   end
 
   def detail(pdf, label, value)
@@ -80,7 +86,7 @@ class TripSignupWaiverPdf
 
     pdf.move_down 10
     pdf.text "Minors covered by this waiver", size: 12, style: :bold
-    @trip_signup.trip_signup_minors.each do |minor|
+    @campsite_signup.campsite_signup_minors.each do |minor|
       detail(pdf, "Name", minor.full_name)
       detail(pdf, "Age", minor.age)
       detail(pdf, "Relationship", minor.relationship.to_s.downcase)
@@ -91,9 +97,9 @@ class TripSignupWaiverPdf
   def render_waiver_metadata(pdf)
     pdf.fill_color "000000"
     divider(pdf)
-    detail(pdf, "Waiver Signed at", formatted_metadata_time(@trip_signup.waiver_signed_at))
-    detail(pdf, "Signature digest", @trip_signup.waiver_signature_digest)
-    detail(pdf, "Waiver digest", @trip_signup.waiver_text_digest)
+    detail(pdf, "Waiver Signed at", formatted_metadata_time(@campsite_signup.waiver_signed_at))
+    detail(pdf, "Signature digest", @campsite_signup.waiver_signature_digest)
+    detail(pdf, "Waiver digest", @campsite_signup.waiver_text_digest)
   end
 
   def render_waiver_text(pdf)
@@ -117,12 +123,12 @@ class TripSignupWaiverPdf
   end
 
   def acknowledgement_blocks
-    text = @trip_signup.waiver_acknowledgement_text.presence || TripSignupWaiver.acknowledgement_text(includes_minors: includes_minors?)
+    text = @campsite_signup.waiver_acknowledgement_text.presence || TripSignupWaiver.acknowledgement_text(includes_minors: includes_minors?)
     TripSignupWaiver.blocks_from(text)
   end
 
   def waiver_blocks
-    text = @trip_signup.waiver_text.presence || TripSignupWaiver.text(includes_minors: includes_minors?)
+    text = @campsite_signup.waiver_text.presence || TripSignupWaiver.text(includes_minors: includes_minors?)
     TripSignupWaiver.blocks_from(text)
   end
 end

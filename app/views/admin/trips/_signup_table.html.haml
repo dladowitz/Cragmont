@@ -11,9 +11,9 @@
       %tr
         %td= signup.user.full_name
         %td
-          - if signup.trip_signup_minors.any?
+          - if signup.campsite_signup_minors.any?
             %ul.admin-minor-list
-              - signup.trip_signup_minors.each do |minor|
+              - signup.campsite_signup_minors.each do |minor|
                 %li
                   = "#{minor.full_name}, age #{minor.age}, #{minor.relationship}"
           - else

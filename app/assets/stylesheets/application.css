@@ -151,6 +151,7 @@ input[type="submit"] {
   border-radius: 6px;
   background: var(--accent);
   color: #fff;
+  cursor: pointer;
   font-weight: 700;
   text-decoration: none;
 }
@@ -164,6 +165,12 @@ input[type="submit"] {
 .button.danger {
   border-color: var(--danger);
   background: var(--danger);
+}
+
+.button:disabled,
+input[type="submit"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .public-main {
@@ -262,13 +269,24 @@ input[type="submit"] {
 }
 
 .confirmed-signups-section {
+  padding: 16px;
+  border: 1px solid;
+  border-radius: 8px;
   border-color: #9bd0ba;
   background: #ecf8f2;
 }
 
 .waitlisted-signups-section {
+  padding: 16px;
+  border: 1px solid;
+  border-radius: 8px;
   border-color: #efd77a;
   background: #fff8db;
+}
+
+.confirmed-signups-section h4,
+.waitlisted-signups-section h4 {
+  margin: 0 0 10px;
 }
 
 .trip-overview {
@@ -368,6 +386,114 @@ input[type="submit"] {
 
 .campsites-panel table {
   margin-top: 10px;
+}
+
+.campsite-card-list,
+.admin-campsite-list {
+  display: grid;
+  gap: 22px;
+  padding-left: 16px;
+}
+
+.campsite-card,
+.admin-campsite-card {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  background: #fff;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.campsite-card:hover,
+.campsite-card:focus-within,
+.admin-campsite-card:hover,
+.admin-campsite-card:focus-within {
+  border-color: #c7ddd4;
+  border-left-color: var(--accent-dark);
+  background: #fbfffc;
+  box-shadow: 0 8px 20px rgb(31 41 51 / 8%);
+  transform: translateY(-1px);
+}
+
+.campsite-card-header,
+.admin-campsite-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: start;
+}
+
+.campsite-card-header h3,
+.admin-campsite-card-header h4,
+.campsite-card-header p,
+.campground-group h3,
+.campground-group p {
+  margin: 0;
+}
+
+.campsite-card-header p,
+.campground-group p,
+.campsite-notes {
+  color: var(--muted);
+}
+
+.campsite-signup-action {
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+  min-width: 220px;
+}
+
+.campsite-signup-action p {
+  max-width: 28ch;
+  margin: 0;
+  text-align: right;
+}
+
+.campsite-card-details {
+  display: grid;
+  gap: 14px;
+  padding-top: 2px;
+}
+
+.campsite-stats {
+  margin-top: 0;
+}
+
+.campsite-card .stats > div,
+.admin-campsite-card .stats > div {
+  background: #fbfaf7;
+}
+
+.campsite-notes {
+  margin: 0;
+}
+
+.campsite-notes strong {
+  color: var(--text);
+}
+
+.campsite-participant-groups {
+  display: grid;
+  gap: 12px;
+  padding-top: 2px;
+}
+
+.campground-group {
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.campground-group:first-of-type {
+  margin-top: 0;
 }
 
 .stats {
@@ -1054,9 +1180,25 @@ textarea {
 @media (max-width: 760px) {
   .admin-header,
   .public-header,
-  .panel-header {
+  .panel-header,
+  .campsite-card-header,
+  .admin-campsite-card-header {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .campsite-signup-action {
+    justify-items: start;
+    min-width: 0;
+  }
+
+  .campsite-signup-action p {
+    text-align: left;
+  }
+
+  .campsite-card-list,
+  .admin-campsite-list {
+    padding-left: 0;
   }
 
   .form-grid,
@@ -1069,5 +1211,19 @@ textarea {
   table {
     display: block;
     overflow-x: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .campsite-card,
+  .admin-campsite-card {
+    transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  }
+
+  .campsite-card:hover,
+  .campsite-card:focus-within,
+  .admin-campsite-card:hover,
+  .admin-campsite-card:focus-within {
+    transform: none;
   }
 }

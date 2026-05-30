@@ -54,4 +54,27 @@ class CampsiteTest < ActiveSupport::TestCase
     assert_not campsite.valid?
     assert_includes campsite.errors[:checkout_date], "must be within the trip dates"
   end
+
+  test "summarizes campsite signup capacity" do
+    campsite = campsites(:yosemite_a)
+    CampsiteSignup.create!(campsite: campsite, user: users(:sam))
+
+    assert_equal 1, campsite.confirmed_signup_count
+    assert_equal 5, campsite.available_participant_capacity
+  end
+
+  test "campsite full status uses campsite signups" do
+    campsite = campsites(:yosemite_a)
+    campsite.participant_capacity.times do |index|
+      CampsiteSignup.create!(campsite: campsite, user: User.create!(
+        first_name: "Full",
+        last_name: "Site#{index}",
+        email: "full-site#{index}@example.com",
+        password: "password"
+      ))
+    end
+
+    assert campsite.capacity_full?
+    assert_equal 0, campsite.available_participant_capacity
+  end
 end

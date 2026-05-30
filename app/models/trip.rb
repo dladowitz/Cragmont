@@ -6,8 +6,8 @@ class Trip < ApplicationRecord
     optional: true,
     inverse_of: :coordinated_trips
   has_many :campsites, dependent: :destroy
-  has_many :trip_signups, dependent: :destroy
-  has_many :participants, through: :trip_signups, source: :user
+  has_many :campsite_signups, dependent: :destroy
+  has_many :participants, through: :campsite_signups, source: :user
 
   enum :status, STATUSES.index_with(&:itself), default: "draft"
 
@@ -63,9 +63,9 @@ class Trip < ApplicationRecord
   private
 
   def confirmed_signups_with_minors
-    return trip_signups.select(&:confirmed?) if trip_signups.loaded?
+    return campsite_signups.select(&:confirmed?) if campsite_signups.loaded?
 
-    trip_signups.confirmed.includes(:trip_signup_minors)
+    campsite_signups.confirmed.includes(:campsite_signup_minors)
   end
 
   def end_date_after_start_date

@@ -17,98 +17,6 @@
           .description
             %strong Notes:
             = simple_format(@trip.description)
-      %aside.signup-panel
-        - if @current_signup.present?
-          %strong
-            You are #{@current_signup.status} for this trip.
-          %div{"data-controller" => "modal"}
-            - remove_button_text = @current_signup.waitlisted? ? "Remove me from the waitlist" : "Remove me from this trip"
-            - remove_title = @current_signup.waitlisted? ? "Remove yourself from the waitlist?" : "Remove yourself from this trip?"
-            %button.button.danger{"data-action" => "modal#open", :type => "button"}= remove_button_text
-            %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
-              .signup-modal-content
-                %div
-                  %h2= remove_title
-                  %p= @trip.name
-                .form-actions
-                  %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
-                  = button_to remove_button_text, trip_trip_signup_path(@trip), method: :delete, class: "button danger"
-        - elsif user_signed_in?
-          %div{"data-controller" => "modal"}
-            - waitlist_signup = @trip.capacity_full?
-            - signup_button_text = waitlist_signup ? "Sign up for the waitlist" : "Sign up for this trip"
-            - modal_title = waitlist_signup ? "Sign up for WAITLIST" : "Sign up for #{@trip.name}"
-            - modal_submit_text = waitlist_signup ? "Sign up for Waitlist" : "Pay Now and Sign Up"
-            %button.button{"data-action" => "modal#open", :type => "button"}= signup_button_text
-            %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
-              .signup-modal-content
-                %div
-                  %h2= modal_title
-                  %p
-                    = @trip.start_date.to_fs(:long)
-                    to #{@trip.end_date.to_fs(:long)}
-                = form_with url: trip_trip_signup_path(@trip), method: :post, class: "waiver-form", data: { controller: "signature" } do
-                  %section.signup-kind-step{"data-signature-target" => "signupStep"}
-                    %fieldset.signup-kind-options
-                      %legend Who are you signing up?
-                      %label
-                        = radio_button_tag "trip_signup[signup_kind]", "self", true, data: { signature_target: "signupKind", action: "signature#toggleMinorFields" }
-                        %span I am signing up for myself
-                      %label
-                        = radio_button_tag "trip_signup[signup_kind]", "with_minors", false, data: { signature_target: "signupKind", action: "signature#toggleMinorFields" }
-                        %span I am signing up for myself and minors (max 2)
-                    %section.minor-fields{"data-signature-target" => "minorFields", :hidden => ""}
-                      %h3 Minor information
-                      - 2.times do |index|
-                        .minor-field-row
-                          %div
-                            = label_tag "trip_signup_minor_#{index}_first_name", "First name"
-                            = text_field_tag "trip_signup[trip_signup_minors_attributes][#{index}][first_name]", "", id: "trip_signup_minor_#{index}_first_name", data: ({ required_for_minor: "true" } if index.zero?)
-                          %div
-                            = label_tag "trip_signup_minor_#{index}_last_name", "Last name"
-                            = text_field_tag "trip_signup[trip_signup_minors_attributes][#{index}][last_name]", "", id: "trip_signup_minor_#{index}_last_name", data: ({ required_for_minor: "true" } if index.zero?)
-                          %div
-                            = label_tag "trip_signup_minor_#{index}_age", "Age"
-                            = number_field_tag "trip_signup[trip_signup_minors_attributes][#{index}][age]", "", id: "trip_signup_minor_#{index}_age", min: 0, max: 17, data: ({ required_for_minor: "true" } if index.zero?)
-                          %div
-                            = label_tag "trip_signup_minor_#{index}_relationship", "Relationship"
-                            = text_field_tag "trip_signup[trip_signup_minors_attributes][#{index}][relationship]", "", id: "trip_signup_minor_#{index}_relationship", placeholder: "Parent, Guardian, Uncle, etc", data: ({ required_for_minor: "true" } if index.zero?)
-                    .form-actions
-                      %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
-                      %button.button{"data-action" => "signature#showAcknowledgement", :type => "button"} Next
-                  %section.waiver-intro{"data-signature-target" => "intro", :hidden => ""}
-                    .waiver-intro-copy
-                      - TripSignupWaiver.acknowledgement_blocks.each do |block|
-                        %p= block
-                    .form-actions
-                      %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
-                      %button.button{"data-action" => "signature#showWaiver", :type => "button"} Agree and Sign Waiver
-                  %div{"data-signature-target" => "waiverStep", :hidden => ""}
-                    %section.waiver-text{"data-action" => "scroll->signature#checkWaiverScroll", "data-signature-target" => "waiver"}
-                      .waiver-document
-                        - TripSignupWaiver.blocks.each_with_index do |block, index|
-                          - if TripSignupWaiver.title_block?(index)
-                            %h3.waiver-title= block
-                          - elsif TripSignupWaiver.warning_block?(index)
-                            %p.waiver-warning= block
-                          - elsif TripSignupWaiver.summary_heading_block?(index)
-                            %h4.waiver-summary-heading= block
-                          - else
-                            %p= block
-                    .signature-field
-                      .signature-label-row
-                        %label{:for => "trip-signup-signature"} Signature
-                        %span You must view all the text to sign
-                      %canvas#trip-signup-signature.signature-pad{"data-signature-target" => "canvas", :height => "120", :width => "560"}
-                      = hidden_field_tag "trip_signup[waiver_signature_data]", "", data: { signature_target: "input" }
-                      = hidden_field_tag "trip_signup[waiver_acknowledged_at]", "", data: { signature_target: "acknowledgementInput" }
-                    .form-actions.waiver-signature-actions
-                      %button.button.secondary{"data-action" => "signature#clear", :type => "button"} Clear signature
-                      .waiver-signature-submit-actions
-                        %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
-                        = button_tag modal_submit_text, type: :submit, class: "button", data: { signature_target: "submit" }, disabled: true
-        - else
-          = link_to "Log in to sign up", new_session_path, class: "button"
     .stats
       - if @trip.confirmed_uncounted_minor_count.positive?
         .split-signup-stat
@@ -132,54 +40,85 @@
       %div
         %strong= @trip.campsite_count
         %span Campsites
-  %section.panel
-    %h2 Participants
-    - if @confirmed_signups.any?
-      %ul.participant-list
-        - @confirmed_signups.each do |signup|
-          %li= signup.public_participant_name
-    - else
-      %p.muted No confirmed participants yet.
-    - if @waitlisted_signups.any?
-      .waitlist
-        %h3 Waitlist
-        %ul.participant-list
-          - @waitlisted_signups.each do |signup|
-            %li= signup.public_participant_name
   %section.panel.campsites-panel
     %h2 Campsites
-    - if @campsites_by_campground.any?
-      - @campsites_by_campground.each do |campground, campsites|
-        .campground-group
-          %h3= campground.name
-          %p= campground.location
-          %table
-            %thead
-              %tr
-                %th Site
-                %th Reservation dates
-                %th Capacity limit
-                %th Cars
-            %tbody
-              - campsites.each do |campsite|
-                %tr{:class => "#{"campsite-row-with-notes" if campsite.notes.present?}"}
-                  %td= campsite.site_number
-                  %td
-                    %dl.date-pair
-                      %div
-                        %dt Arrival
-                        %dd= campsite.arrival_date.to_fs(:long)
-                      %div
-                        %dt Checkout
-                        %dd= campsite.checkout_date.to_fs(:long)
-                  %td= campsite.participant_capacity
-                  %td= campsite.car_capacity
-                - if campsite.notes.present?
-                  %tr.campsite-notes-row
-                    %td
-                    %td{:colspan => "3"}
-                      %strong Notes:
-                      = campsite.notes
+    - if @campsites.any?
+      .campsite-card-list
+        - @campsites.each do |campsite|
+          - signed_up_for_this_campsite = @current_signup&.campsite_id == campsite.id
+          - signed_up_for_another_campsite = @current_signup.present? && !signed_up_for_this_campsite
+          %section.campsite-card{id: "campsite-#{campsite.id}"}
+            .campsite-card-header
+              %div
+                %h3
+                  = campsite.campground.name
+                  site #{campsite.site_number}
+                %p= campsite.campground.location
+              .campsite-signup-action
+                - if signed_up_for_this_campsite
+                  %strong
+                    You are #{@current_signup.status} for this campsite.
+                  %div{"data-controller" => "modal"}
+                    - remove_button_text = @current_signup.waitlisted? ? "Remove me from the waitlist" : "Remove me from this campsite"
+                    - remove_title = @current_signup.waitlisted? ? "Remove yourself from the waitlist?" : "Remove yourself from this campsite?"
+                    %button.button.danger{"data-action" => "modal#open", :type => "button"}= remove_button_text
+                    %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                      .signup-modal-content
+                        %div
+                          %h2= remove_title
+                          %p
+                            = campsite.campground.name
+                            site #{campsite.site_number}
+                        .form-actions
+                          %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
+                          = button_to remove_button_text, trip_campsite_campsite_signup_path(@trip, campsite), method: :delete, class: "button danger"
+                - elsif signed_up_for_another_campsite
+                  %button.button.secondary{:disabled => true, :type => "button"} Already signed up
+                  %p.muted You are already signed up for another campsite on this trip.
+                - elsif user_signed_in?
+                  = render "campsite_signup_form", trip: @trip, campsite: campsite
+                - else
+                  = link_to "Log in to sign up", new_session_path, class: "button"
+            .campsite-card-details
+              %dl.date-pair
+                %div
+                  %dt Arrival
+                  %dd= campsite.arrival_date.to_fs(:long)
+                %div
+                  %dt Checkout
+                  %dd= campsite.checkout_date.to_fs(:long)
+              .stats.campsite-stats
+                %div
+                  %strong= campsite.confirmed_signup_count
+                  %span Signed up
+                %div{:class => "availability-stat #{campsite.capacity_full? ? "danger-stat" : "success-stat"}"}
+                  %strong= campsite.available_participant_capacity
+                  %span Spaces available
+                %div
+                  %strong= campsite.participant_capacity
+                  %span Capacity
+                %div
+                  %strong= campsite.car_capacity
+                  %span Cars
+              - if campsite.notes.present?
+                %p.campsite-notes
+                  %strong Notes:
+                  = campsite.notes
+            .campsite-participant-groups
+              .confirmed-signups-section
+                %h4 Confirmed participants
+                - if campsite.confirmed_signups.any?
+                  %ul.participant-list
+                    - campsite.confirmed_signups.each do |signup|
+                      %li= signup.public_participant_name
+                - else
+                  %p.muted No confirmed participants yet.
+              - if campsite.waitlisted_signups.any?
+                .waitlisted-signups-section
+                  %h4 Waitlist
+                  %ul.participant-list
+                    - campsite.waitlisted_signups.each do |signup|
+                      %li= signup.public_participant_name
     - else
       %p.muted No campsite reservations have been added yet.
   %section.panel

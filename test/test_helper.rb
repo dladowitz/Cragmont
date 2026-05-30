@@ -15,7 +15,7 @@ module ActiveSupport
     SIGNATURE_DATA_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=".freeze
 
     def waiver_signature_params
-      { trip_signup: { waiver_signature_data: SIGNATURE_DATA_URL, waiver_acknowledged_at: Time.current.iso8601 } }
+      { campsite_signup: { waiver_signature_data: SIGNATURE_DATA_URL, waiver_acknowledged_at: Time.current.iso8601 } }
     end
 
     def attach_test_waiver_to(signup)
@@ -37,7 +37,7 @@ module ActiveSupport
       )
       signup.waiver_signature_image.attach(io: StringIO.new(signature.bytes), filename: "signature.png", content_type: "image/png")
       signup.waiver_document.attach(
-        io: StringIO.new(TripSignupWaiverPdf.new(trip_signup: signup, signature_png: signature.bytes).render),
+        io: StringIO.new(CampsiteSignupWaiverPdf.new(campsite_signup: signup, signature_png: signature.bytes).render),
         filename: signup.waiver_document_filename,
         content_type: "application/pdf"
       )

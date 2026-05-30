@@ -1,6 +1,6 @@
 require "test_helper"
 
-class PublicTripSignupTest < ActionDispatch::IntegrationTest
+class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   test "root renders and links to trips" do
     get root_url
 
@@ -34,12 +34,13 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     assert_select ".stats", text: /Total capacity/
     assert_select ".stats .success-stat", text: /10/
     assert_select ".stats .success-stat", text: /Spaces available/
-    assert_select "td", text: "A12"
-    assert_select ".campsite-notes-row", text: /Close to bathrooms/
+    assert_select "#campsite-#{campsites(:yosemite_a).id}", text: /Upper Pines/
+    assert_select "#campsite-#{campsites(:yosemite_a).id}", text: /site A12/
+    assert_select "#campsite-#{campsites(:yosemite_a).id}", text: /Close to bathrooms/
   end
 
   test "logged out signup redirects to login" do
-    post trip_trip_signup_url(trips(:yosemite))
+    post signup_url_for
 
     assert_redirected_to new_session_url
   end
@@ -72,20 +73,21 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_url
   end
 
-  test "logged in user can sign up for a trip" do
+  test "logged in user can sign up for a campsite" do
     log_in_as(users(:sam))
 
-    assert_difference "TripSignup.count", 1 do
-      post trip_trip_signup_url(trips(:yosemite)), params: waiver_signature_params
+    assert_difference "CampsiteSignup.count", 1 do
+      post signup_url_for, params: waiver_signature_params
     end
 
     assert_redirected_to trip_url(trips(:yosemite))
-    signup = TripSignup.find_by(trip: trips(:yosemite), user: users(:sam))
+    signup = CampsiteSignup.find_by(trip: trips(:yosemite), user: users(:sam))
+    assert_equal campsites(:yosemite_a), signup.campsite
     assert signup.confirmed?
     assert signup.waiver_signed?
     assert signup.waiver_signature_image.attached?
     assert signup.waiver_document.attached?
-    assert_match(/\A\d{4}-\d{2}-\d{2}-Sam-Lee-Yosemite-Valley-Spring-#{signup.id}\.pdf\z/, signup.waiver_document.filename.to_s)
+    assert_match(/\A\d{4}-\d{2}-\d{2}-Sam-Lee-Yosemite-Valley-Spring-A12-#{signup.id}\.pdf\z/, signup.waiver_document.filename.to_s)
     assert_equal users(:sam).full_name, signup.waiver_signer_name
     assert signup.waiver_acknowledged_at.present?
     assert_equal TripSignupWaiver.acknowledgement_text, signup.waiver_acknowledgement_text
@@ -95,18 +97,18 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
   test "logged in user can sign up with minors" do
     log_in_as(users(:sam))
 
-    assert_difference "TripSignup.count", 1 do
-      assert_difference "TripSignupMinor.count", 2 do
-        post trip_trip_signup_url(trips(:yosemite)), params: waiver_signature_params_with_minors(
+    assert_difference "CampsiteSignup.count", 1 do
+      assert_difference "CampsiteSignupMinor.count", 2 do
+        post signup_url_for, params: waiver_signature_params_with_minors(
           { first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child" },
           { first_name: "Nora", last_name: "Lee", age: 14, relationship: "Niece" }
         )
       end
     end
 
-    signup = TripSignup.find_by!(trip: trips(:yosemite), user: users(:sam))
+    signup = CampsiteSignup.find_by!(trip: trips(:yosemite), user: users(:sam))
     assert signup.confirmed?
-    assert_equal 2, signup.trip_signup_minors.size
+    assert_equal 2, signup.campsite_signup_minors.size
     assert_includes signup.waiver_acknowledgement_text, TripSignupWaiver::MINOR_RESPONSIBILITY_TEXT
     assert_includes signup.waiver_text, TripSignupWaiver::MINOR_RESPONSIBILITY_TEXT
     assert signup.waiver_document.attached?
@@ -115,8 +117,8 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
   test "signup with minors requires minor information" do
     log_in_as(users(:sam))
 
-    assert_no_difference [ "TripSignup.count", "TripSignupMinor.count" ] do
-      post trip_trip_signup_url(trips(:yosemite)), params: waiver_signature_params_with_minors
+    assert_no_difference [ "CampsiteSignup.count", "CampsiteSignupMinor.count" ] do
+      post signup_url_for, params: waiver_signature_params_with_minors
     end
 
     assert_redirected_to trip_url(trips(:yosemite))
@@ -126,8 +128,8 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
   test "signup with minors rejects incomplete minor information" do
     log_in_as(users(:sam))
 
-    assert_no_difference [ "TripSignup.count", "TripSignupMinor.count" ] do
-      post trip_trip_signup_url(trips(:yosemite)), params: waiver_signature_params_with_minors(
+    assert_no_difference [ "CampsiteSignup.count", "CampsiteSignupMinor.count" ] do
+      post signup_url_for, params: waiver_signature_params_with_minors(
         { first_name: "Mika", last_name: "", age: 12, relationship: "Child" }
       )
     end
@@ -138,8 +140,8 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
   test "signup with minors rejects more than two minors" do
     log_in_as(users(:sam))
 
-    assert_no_difference [ "TripSignup.count", "TripSignupMinor.count" ] do
-      post trip_trip_signup_url(trips(:yosemite)), params: waiver_signature_params_with_minors(
+    assert_no_difference [ "CampsiteSignup.count", "CampsiteSignupMinor.count" ] do
+      post signup_url_for, params: waiver_signature_params_with_minors(
         { first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child" },
         { first_name: "Nora", last_name: "Lee", age: 14, relationship: "Niece" },
         { first_name: "Tali", last_name: "Lee", age: 10, relationship: "Child" }
@@ -152,8 +154,8 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
   test "signup with minors rejects adult age" do
     log_in_as(users(:sam))
 
-    assert_no_difference [ "TripSignup.count", "TripSignupMinor.count" ] do
-      post trip_trip_signup_url(trips(:yosemite)), params: waiver_signature_params_with_minors(
+    assert_no_difference [ "CampsiteSignup.count", "CampsiteSignupMinor.count" ] do
+      post signup_url_for, params: waiver_signature_params_with_minors(
         { first_name: "Mika", last_name: "Lee", age: 18, relationship: "Child" }
       )
     end
@@ -164,8 +166,8 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
   test "logged in user cannot sign up without signing waiver" do
     log_in_as(users(:sam))
 
-    assert_no_difference "TripSignup.count" do
-      post trip_trip_signup_url(trips(:yosemite)), params: { trip_signup: { waiver_acknowledged_at: Time.current.iso8601 } }
+    assert_no_difference "CampsiteSignup.count" do
+      post signup_url_for, params: { campsite_signup: { waiver_acknowledged_at: Time.current.iso8601 } }
     end
 
     assert_redirected_to trip_url(trips(:yosemite))
@@ -175,8 +177,8 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
   test "logged in user cannot sign up without agreeing to acknowledgement" do
     log_in_as(users(:sam))
 
-    assert_no_difference "TripSignup.count" do
-      post trip_trip_signup_url(trips(:yosemite)), params: { trip_signup: { waiver_signature_data: SIGNATURE_DATA_URL } }
+    assert_no_difference "CampsiteSignup.count" do
+      post signup_url_for, params: { campsite_signup: { waiver_signature_data: SIGNATURE_DATA_URL } }
     end
 
     assert_redirected_to trip_url(trips(:yosemite))
@@ -186,64 +188,64 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
   test "logged in user cannot sign up with malformed signature" do
     log_in_as(users(:sam))
 
-    assert_no_difference "TripSignup.count" do
-      post trip_trip_signup_url(trips(:yosemite)), params: { trip_signup: { waiver_signature_data: "not-a-signature", waiver_acknowledged_at: Time.current.iso8601 } }
+    assert_no_difference "CampsiteSignup.count" do
+      post signup_url_for, params: { campsite_signup: { waiver_signature_data: "not-a-signature", waiver_acknowledged_at: Time.current.iso8601 } }
     end
 
     assert_redirected_to trip_url(trips(:yosemite))
     assert_equal "Please sign the waiver before signing up.", flash[:alert]
   end
 
-  test "duplicate signup is blocked" do
-    TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
+  test "duplicate signup for another campsite in the same trip is blocked" do
+    CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
     log_in_as(users(:sam))
 
-    assert_no_difference "TripSignup.count" do
-      post trip_trip_signup_url(trips(:yosemite)), params: waiver_signature_params
+    assert_no_difference "CampsiteSignup.count" do
+      post signup_url_for(campsites(:yosemite_b)), params: waiver_signature_params
     end
 
     assert_redirected_to trip_url(trips(:yosemite))
   end
 
-  test "confirmed user can remove themself from a trip" do
-    signup = TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
+  test "confirmed user can remove themself from a campsite" do
+    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
     log_in_as(users(:sam))
 
-    assert_difference "TripSignup.count", -1 do
-      delete trip_trip_signup_url(trips(:yosemite))
+    assert_difference "CampsiteSignup.count", -1 do
+      delete signup_url_for
     end
 
     assert_redirected_to trip_url(trips(:yosemite))
-    assert_nil TripSignup.find_by(id: signup.id)
+    assert_nil CampsiteSignup.find_by(id: signup.id)
   end
 
-  test "waitlisted user can remove themself from a trip" do
-    signup = TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
+  test "waitlisted user can remove themself from a campsite" do
+    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
     signup.waitlisted!
     log_in_as(users(:sam))
 
-    assert_difference "TripSignup.count", -1 do
-      delete trip_trip_signup_url(trips(:yosemite))
+    assert_difference "CampsiteSignup.count", -1 do
+      delete signup_url_for
     end
 
     assert_redirected_to trip_url(trips(:yosemite))
-    assert_nil TripSignup.find_by(id: signup.id)
+    assert_nil CampsiteSignup.find_by(id: signup.id)
   end
 
   test "trip detail shows remove modal for signed in participant" do
-    TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
+    CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
     log_in_as(users(:sam))
 
     get trip_url(trips(:yosemite))
 
     assert_response :success
-    assert_select "button", text: "Remove me from this trip"
-    assert_select "dialog.signup-modal h2", text: "Remove yourself from this trip?"
-    assert_select "form[action='#{trip_trip_signup_path(trips(:yosemite))}'][method='post']", text: /Remove me from this trip/
+    assert_select "button", text: "Remove me from this campsite"
+    assert_select "dialog.signup-modal h2", text: "Remove yourself from this campsite?"
+    assert_select "form[action='#{signup_path_for}'][method='post']", text: /Remove me from this campsite/
   end
 
   test "trip detail shows waitlist remove modal for signed in waitlisted participant" do
-    signup = TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
+    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
     signup.waitlisted!
     log_in_as(users(:sam))
 
@@ -252,7 +254,7 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "button", text: "Remove me from the waitlist"
     assert_select "dialog.signup-modal h2", text: "Remove yourself from the waitlist?"
-    assert_select "form[action='#{trip_trip_signup_path(trips(:yosemite))}'][method='post']", text: /Remove me from the waitlist/
+    assert_select "form[action='#{signup_path_for}'][method='post']", text: /Remove me from the waitlist/
   end
 
   test "trip detail shows signup modal for logged in non participant" do
@@ -261,7 +263,7 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     get trip_url(trips(:yosemite))
 
     assert_response :success
-    assert_select "button", text: "Sign up for this trip"
+    assert_select "button", text: "Sign up for this campsite"
     assert_select "dialog.signup-modal"
     assert_select ".signup-kind-options", text: /I am signing up for myself/
     assert_select ".signup-kind-options", text: /I am signing up for myself and minors/
@@ -273,127 +275,103 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
     assert_select ".waiver-text", text: /YOU ARE GIVING UP IMPORTANT LEGAL RIGHTS/
     assert_select "canvas.signature-pad"
     assert_select "button", text: "Clear signature"
-    assert_select "input[type='hidden'][name='trip_signup[waiver_signature_data]']"
-    assert_select "input[type='hidden'][name='trip_signup[waiver_acknowledged_at]']"
-    assert_select "form[action='#{trip_trip_signup_path(trips(:yosemite))}'][method='post']", text: /Pay Now and Sign Up/
+    assert_select "input[type='hidden'][name='campsite_signup[waiver_signature_data]']"
+    assert_select "input[type='hidden'][name='campsite_signup[waiver_acknowledged_at]']"
+    assert_select "form[action='#{signup_path_for}'][method='post']", text: /Pay Now and Sign Up/
   end
 
-  test "trip detail shows waitlist signup button when no spaces are available" do
-    trip = trips(:yosemite)
-    trip.total_participant_capacity.times do |index|
-      TripSignup.create!(trip: trip, user: User.create!(
-        first_name: "Confirmed",
-        last_name: "WaitlistButton#{index}",
-        email: "waitlist-button#{index}@example.com",
-        password: "password"
-      ))
-    end
+  test "trip detail disables other campsite signup buttons after signup" do
+    CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
     log_in_as(users(:sam))
 
-    get trip_url(trip)
+    get trip_url(trips(:yosemite))
 
     assert_response :success
-    assert_select "button", text: "Sign up for the waitlist"
-    assert_select "button", text: "Sign up for this trip", count: 0
-    assert_select ".trip-title-line .status", text: "Trip Full"
-    assert_select ".stats .danger-stat", text: /0/
-    assert_select ".stats .danger-stat", text: /Spaces available/
-    assert_select ".signup-modal h2", text: "Sign up for WAITLIST"
-    assert_select "form[action='#{trip_trip_signup_path(trip)}'][method='post']", text: /Sign up for Waitlist/
-    assert_select "form[action='#{trip_trip_signup_path(trip)}'][method='post']", text: /Pay Now and Sign Up/, count: 0
+    assert_select "#campsite-#{campsites(:yosemite_a).id}", text: /You are confirmed for this campsite/
+    assert_select "#campsite-#{campsites(:yosemite_b).id}" do
+      assert_select "button[disabled]", text: "Already signed up"
+      assert_select ".muted", text: /already signed up for another campsite/
+    end
+  end
+
+  test "trip detail shows waitlist signup button when campsite has no spaces available" do
+    fill_campsite_capacity(campsites(:yosemite_a), "waitlist-button")
+    log_in_as(users(:sam))
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "#campsite-#{campsites(:yosemite_a).id}" do
+      assert_select "button", text: "Sign up for the waitlist"
+      assert_select ".danger-stat", text: /0/
+      assert_select ".signup-modal h2", text: "Sign up for campsite waitlist"
+    end
+    assert_select "form[action='#{signup_path_for}'][method='post']", text: /Sign up for Waitlist/
+    assert_select "form[action='#{signup_path_for}'][method='post']", text: /Pay Now and Sign Up/, count: 0
   end
 
   test "logged in user can sign waiver and join waitlist" do
-    trip = trips(:yosemite)
-    trip.total_participant_capacity.times do |index|
-      TripSignup.create!(trip: trip, user: User.create!(
-        first_name: "Confirmed",
-        last_name: "WaitlistSignup#{index}",
-        email: "waitlist-signup#{index}@example.com",
-        password: "password"
-      ))
-    end
+    fill_campsite_capacity(campsites(:yosemite_a), "waitlist-signup")
     log_in_as(users(:sam))
 
-    assert_difference "TripSignup.count", 1 do
-      post trip_trip_signup_url(trip), params: waiver_signature_params
+    assert_difference "CampsiteSignup.count", 1 do
+      post signup_url_for, params: waiver_signature_params
     end
 
-    signup = TripSignup.find_by!(trip: trip, user: users(:sam))
+    signup = CampsiteSignup.find_by!(trip: trips(:yosemite), user: users(:sam))
     assert signup.waitlisted?
     assert signup.waiver_signed?
   end
 
   test "minor under configured age limit does not consume capacity" do
-    trip = trips(:yosemite)
-    9.times do |index|
-      TripSignup.create!(trip: trip, user: User.create!(
-        first_name: "Confirmed",
-        last_name: "UnderCapacity#{index}",
-        email: "under-capacity#{index}@example.com",
-        password: "password"
-      ))
-    end
+    campsite = campsites(:yosemite_a)
+    fill_campsite_capacity(campsite, "under-capacity", count: campsite.participant_capacity - 1)
     log_in_as(users(:sam))
 
-    post trip_trip_signup_url(trip), params: waiver_signature_params_with_minors(
+    post signup_url_for, params: waiver_signature_params_with_minors(
       { first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child" }
     )
 
-    signup = TripSignup.find_by!(trip: trip, user: users(:sam))
+    signup = CampsiteSignup.find_by!(trip: trips(:yosemite), user: users(:sam))
     assert signup.confirmed?
-    assert_equal 10, trip.reload.confirmed_signup_count
-    assert_equal 1, trip.confirmed_uncounted_minor_count
+    assert_equal 6, campsite.reload.confirmed_signup_count
+    assert_equal 1, campsite.confirmed_uncounted_minor_count
   end
 
   test "minor at configured age limit consumes capacity" do
-    trip = trips(:yosemite)
-    8.times do |index|
-      TripSignup.create!(trip: trip, user: User.create!(
-        first_name: "Confirmed",
-        last_name: "TeenCapacity#{index}",
-        email: "teen-capacity#{index}@example.com",
-        password: "password"
-      ))
-    end
+    campsite = campsites(:yosemite_a)
+    fill_campsite_capacity(campsite, "teen-capacity", count: campsite.participant_capacity - 2)
     log_in_as(users(:sam))
 
-    post trip_trip_signup_url(trip), params: waiver_signature_params_with_minors(
+    post signup_url_for, params: waiver_signature_params_with_minors(
       { first_name: "Nora", last_name: "Lee", age: 13, relationship: "Niece" }
     )
 
-    signup = TripSignup.find_by!(trip: trip, user: users(:sam))
+    signup = CampsiteSignup.find_by!(trip: trips(:yosemite), user: users(:sam))
     assert signup.confirmed?
-    assert_equal 10, trip.reload.confirmed_signup_count
-    assert_equal 0, trip.available_participant_capacity
+    assert_equal 6, campsite.reload.confirmed_signup_count
+    assert_equal 0, campsite.available_participant_capacity
   end
 
   test "whole group is waitlisted when capacity cannot fit counting minors" do
-    trip = trips(:yosemite)
-    8.times do |index|
-      TripSignup.create!(trip: trip, user: User.create!(
-        first_name: "Confirmed",
-        last_name: "GroupWaitlist#{index}",
-        email: "group-waitlist#{index}@example.com",
-        password: "password"
-      ))
-    end
+    campsite = campsites(:yosemite_a)
+    fill_campsite_capacity(campsite, "group-waitlist", count: campsite.participant_capacity - 1)
     log_in_as(users(:sam))
 
-    post trip_trip_signup_url(trip), params: waiver_signature_params_with_minors(
+    post signup_url_for, params: waiver_signature_params_with_minors(
       { first_name: "Mika", last_name: "Lee", age: 13, relationship: "Child" },
       { first_name: "Nora", last_name: "Lee", age: 14, relationship: "Niece" }
     )
 
-    signup = TripSignup.find_by!(trip: trip, user: users(:sam))
+    signup = CampsiteSignup.find_by!(trip: trips(:yosemite), user: users(:sam))
     assert signup.waitlisted?
-    assert_equal 8, trip.reload.confirmed_signup_count
+    assert_equal 5, campsite.reload.confirmed_signup_count
   end
 
   test "trip detail shows almost full warning at sixty percent capacity" do
     trip = trips(:yosemite)
     6.times do |index|
-      TripSignup.create!(trip: trip, user: User.create!(
+      CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: User.create!(
         first_name: "Almost",
         last_name: "FullView#{index}",
         email: "almost-full-view#{index}@example.com",
@@ -411,7 +389,7 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public participant list abbreviates names and hides contact details" do
-    TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
+    CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
 
     get trip_url(trips(:yosemite))
 
@@ -422,8 +400,8 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public participant list summarizes minors without names" do
-    signup = TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
-    signup.trip_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
+    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup.campsite_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
 
     get trip_url(trips(:yosemite))
 
@@ -433,8 +411,8 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public stats split out uncounted minors" do
-    signup = TripSignup.create!(trip: trips(:yosemite), user: users(:sam))
-    signup.trip_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
+    signup = CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup.campsite_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
 
     get trip_url(trips(:yosemite))
 
@@ -447,24 +425,17 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
 
   test "public trip detail shows waitlisted users separately" do
     trip = trips(:yosemite)
-    trip.total_participant_capacity.times do |index|
-      TripSignup.create!(trip: trip, user: User.create!(
-        first_name: "Confirmed",
-        last_name: "Participant#{index}",
-        email: "public-confirmed#{index}@example.com",
-        password: "password"
-      ))
-    end
+    fill_campsite_capacity(campsites(:yosemite_a), "public-confirmed")
     waitlisted_user = User.create!(first_name: "Willa", last_name: "Wait", email: "willa@example.com", password: "password")
-    TripSignup.create!(trip: trip, user: waitlisted_user)
+    CampsiteSignup.create!(campsite: campsites(:yosemite_a), user: waitlisted_user)
 
     get trip_url(trip)
 
     assert_response :success
-    assert_select ".waitlist", text: /Waitlist/
-    assert_select ".waitlist", text: /Willa W./
-    assert_select ".waitlist", text: /Willa Wait/, count: 0
-    assert_select ".waitlist", text: /willa@example.com/, count: 0
+    assert_select ".waitlisted-signups-section", text: /Waitlist/
+    assert_select ".waitlisted-signups-section", text: /Willa W./
+    assert_select ".waitlisted-signups-section", text: /Willa Wait/, count: 0
+    assert_select ".waitlisted-signups-section", text: /willa@example.com/, count: 0
   end
 
   private
@@ -476,10 +447,32 @@ class PublicTripSignupTest < ActionDispatch::IntegrationTest
 
   def waiver_signature_params_with_minors(*minor_attributes)
     params = waiver_signature_params.deep_dup
-    params[:trip_signup][:signup_kind] = "with_minors"
-    params[:trip_signup][:trip_signup_minors_attributes] = minor_attributes.each_with_index.to_h do |attributes, index|
+    params[:campsite_signup][:signup_kind] = "with_minors"
+    params[:campsite_signup][:campsite_signup_minors_attributes] = minor_attributes.each_with_index.to_h do |attributes, index|
       [ index.to_s, attributes ]
     end
     params
+  end
+
+  def signup_url_for(campsite = campsites(:yosemite_a))
+    trip_campsite_campsite_signup_url(campsite.trip, campsite)
+  end
+
+  def signup_path_for(campsite = campsites(:yosemite_a))
+    trip_campsite_campsite_signup_path(campsite.trip, campsite)
+  end
+
+  def fill_campsite_capacity(campsite, prefix, count: campsite.participant_capacity)
+    count.times do |index|
+      CampsiteSignup.create!(
+        campsite: campsite,
+        user: User.create!(
+          first_name: "Confirmed",
+          last_name: "#{prefix.camelize}#{index}",
+          email: "#{prefix}-#{campsite.id}-#{index}@example.com",
+          password: "password"
+        )
+      )
+    end
   end
 end

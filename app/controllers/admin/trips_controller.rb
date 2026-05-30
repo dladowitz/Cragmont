@@ -3,14 +3,11 @@ class Admin::TripsController < ApplicationController
   before_action :set_users, only: %i[new create edit update]
 
   def index
-    @trips = Trip.includes(:campsite_coordinator, { trip_signups: :trip_signup_minors }, campsites: :campground).order(start_date: :asc, name: :asc)
+    @trips = Trip.includes(:campsite_coordinator, { campsite_signups: :campsite_signup_minors }, campsites: :campground).order(start_date: :asc, name: :asc)
   end
 
   def show
-    @campsites_by_campground = @trip.campsites.includes(:campground).order(:arrival_date, :site_number).group_by(&:campground)
-    trip_signups = @trip.trip_signups.includes(:user, :trip_signup_minors).order(created_at: :asc)
-    @confirmed_signups = trip_signups.confirmed
-    @waitlisted_signups = trip_signups.waitlisted
+    @campsites_by_campground = @trip.campsites.includes(:campground, campsite_signups: [ :user, :campsite_signup_minors ]).order(:arrival_date, :site_number).group_by(&:campground)
   end
 
   def new

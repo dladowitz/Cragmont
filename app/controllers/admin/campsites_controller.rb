@@ -29,8 +29,11 @@ class Admin::CampsitesController < ApplicationController
   end
 
   def destroy
-    @campsite.destroy
-    redirect_to admin_trip_path(@trip), notice: "Campsite was deleted.", status: :see_other
+    if @campsite.destroy
+      redirect_to admin_trip_path(@trip), notice: "Campsite was deleted.", status: :see_other
+    else
+      redirect_to admin_trip_path(@trip), alert: "Campsite cannot be deleted while participants are signed up.", status: :see_other
+    end
   end
 
   private
