@@ -5,7 +5,11 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     get admin_trips_url
 
     assert_response :success
-    assert_select "h1", "Trips"
+    assert_select "h1", "Admin Dashboard"
+    assert_select ".admin-public-link", "Public Site"
+    assert_select ".admin-nav a", text: "Trips"
+    assert_select ".admin-nav a", text: "Public Site", count: 0
+    assert_select "h2", "Trips"
     assert_select "th", text: "Participant Capacity"
     assert_select "th", text: "Signed Up"
     assert_select "td", text: /Yosemite Valley Spring/
@@ -23,7 +27,9 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     get admin_trip_url(trips(:yosemite))
 
     assert_response :success
-    assert_select "h1", "Yosemite Valley Spring"
+    assert_select "h1", "Admin Dashboard"
+    assert_select ".admin-public-link", "Public Site"
+    assert_select ".trip-summary-header", text: /Yosemite Valley Spring/
     assert_select ".coordinator-summary", text: /Alex Rivera/
     assert_select ".coordinator-summary", text: /alex@example.com/
     assert_select ".coordinator-summary", text: /555-0100/

@@ -5,7 +5,8 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     get admin_users_url
 
     assert_response :success
-    assert_select "h1", "Users"
+    assert_select "h1", "Admin Dashboard"
+    assert_select "h2", "User directory"
     assert_select "td", text: "Alex Rivera"
   end
 
@@ -13,7 +14,8 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     get admin_user_url(users(:alex))
 
     assert_response :success
-    assert_select "h1", "Alex Rivera"
+    assert_select "h1", "Admin Dashboard"
+    assert_select ".panel-header", text: /Alex Rivera/
     assert_select ".details-list dt", text: "Club member"
     assert_select ".details-list dd", text: "Yes"
     assert_select "form[data-turbo-confirm='Are you sure you want to delete this user?']"

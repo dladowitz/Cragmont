@@ -32,6 +32,10 @@ body {
   line-height: 1.5;
 }
 
+body.admin-body {
+  background: #e7f1edc9;
+}
+
 a {
   color: var(--accent);
   font-weight: 650;
@@ -45,11 +49,15 @@ textarea {
 }
 
 .admin-header,
-.public-header,
-.public-main,
 .panel,
 .flash-messages {
-  width: min(1120px, calc(100% - 32px));
+  width: min(1280px, calc(100% - 32px));
+  margin-inline: auto;
+}
+
+.public-header,
+.public-main {
+  width: min(1280px, calc(100% - 32px));
   margin-inline: auto;
 }
 
@@ -64,6 +72,18 @@ textarea {
 .admin-header h1 {
   margin: 0;
   font-size: 2rem;
+}
+
+.admin-brand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+}
+
+.admin-body .admin-header h1,
+.admin-body .admin-header .eyebrow {
+  color: var(--accent-dark);
 }
 
 .eyebrow {
@@ -87,6 +107,13 @@ textarea {
   gap: 24px;
   align-items: center;
   padding: 24px 0 18px;
+}
+
+.public-brand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
 }
 
 .site-name {
@@ -118,6 +145,7 @@ textarea {
 }
 
 .public-nav a,
+.public-admin-link,
 .nav-button {
   display: inline-flex;
   align-items: center;
@@ -141,6 +169,7 @@ textarea {
 }
 
 .admin-nav a,
+.admin-public-link,
 .button,
 input[type="submit"] {
   display: inline-flex;
@@ -157,7 +186,8 @@ input[type="submit"] {
 }
 
 .button.secondary,
-.admin-nav a {
+.admin-nav a,
+.admin-public-link {
   background: #fff;
   color: var(--accent-dark);
 }
@@ -212,6 +242,15 @@ input[type="submit"]:disabled {
   object-position: center;
 }
 
+.home-hero-caption {
+  position: absolute;
+  right: clamp(16px, 5vw, 48px);
+  bottom: clamp(16px, 4vw, 36px);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.9rem;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+}
+
 .home-hero-copy {
   width: min(1120px, calc(100% - 32px));
   margin-inline: auto;
@@ -249,6 +288,10 @@ input[type="submit"]:disabled {
   background: var(--panel);
 }
 
+.public-main > .panel {
+  width: 100%;
+}
+
 .panel-header {
   display: flex;
   justify-content: space-between;
@@ -272,21 +315,29 @@ input[type="submit"]:disabled {
   padding: 16px;
   border: 1px solid;
   border-radius: 8px;
-  border-color: #9bd0ba;
-  background: #ecf8f2;
+  border-color: #91d8bd;
+  background: #fff;
 }
 
 .waitlisted-signups-section {
   padding: 16px;
   border: 1px solid;
   border-radius: 8px;
-  border-color: #efd77a;
-  background: #fff8db;
+  border-color: #f1c84d;
+  background: #fff;
 }
 
 .confirmed-signups-section h4,
 .waitlisted-signups-section h4 {
   margin: 0 0 10px;
+}
+
+.confirmed-signups-section h4 {
+  color: #006b12;
+}
+
+.waitlisted-signups-section h4 {
+  color: #b47a00;
 }
 
 .trip-overview {
@@ -400,7 +451,7 @@ input[type="submit"]:disabled {
   display: grid;
   gap: 16px;
   padding: 18px;
-  border: 1px solid var(--line);
+  border: 3px solid var(--line);
   border-left: 4px solid var(--accent);
   border-radius: 8px;
   background: #fff;
@@ -417,7 +468,7 @@ input[type="submit"]:disabled {
 .admin-campsite-card:focus-within {
   border-color: #c7ddd4;
   border-left-color: var(--accent-dark);
-  background: #fbfffc;
+  background: #fafafa;
   box-shadow: 0 8px 20px rgb(31 41 51 / 8%);
   transform: translateY(-1px);
 }

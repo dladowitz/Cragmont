@@ -11,7 +11,7 @@ Rails.application.routes.draw do
   end
 
   namespace :admin do
-    root "dashboard#index"
+    root to: redirect("/admin/trips")
     resource :settings, only: %i[show update]
     resources :users
     resources :campgrounds

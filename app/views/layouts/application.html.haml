@@ -15,7 +15,7 @@
     %link{:href => "/icon.png?v=4", :rel => "apple-touch-icon"}/
     = stylesheet_link_tag :app, "data-turbo-track": "reload"
     = javascript_importmap_tags
-  %body
+  %body{ class: ("admin-body" if controller_path.start_with?("admin/")) }
     - if notice.present? || alert.present?
       .flash-messages
         - if notice.present?

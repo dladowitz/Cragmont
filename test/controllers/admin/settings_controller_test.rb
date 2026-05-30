@@ -5,7 +5,8 @@ class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
     get admin_settings_url
 
     assert_response :success
-    assert_select "h1", "Settings"
+    assert_select "h1", "Admin Dashboard"
+    assert_select "h2", "Settings"
     assert_select "label", text: "Age limit of uncounted minors"
     assert_select "label", text: "Campsite weekend fee"
     assert_select "label", text: "Campsite extra night fee"

@@ -1,5 +1,7 @@
 = render "admin/shared/header", title: "Settings"
 %section.panel
+  %div
+    %h2 Settings
   = form_with model: @site_setting, url: admin_settings_path, method: :patch, class: "admin-form" do |form|
     = render "admin/shared/errors", record: @site_setting
     .form-grid

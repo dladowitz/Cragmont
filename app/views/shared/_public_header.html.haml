@@ -1,13 +1,15 @@
 %body
   %header.public-header
-    = link_to root_path, class: "site-name" do
-      %span Cragmont
-      %small Climbing Club
+    .public-brand
+      = link_to root_path, class: "site-name" do
+        %span Cragmont
+        %small Climbing Club
+      - if user_signed_in?
+        = link_to "Admin", admin_root_path, class: "public-admin-link"
     %nav.public-nav
       - if user_signed_in?
         %span= current_user.full_name
         = link_to "Trips", trips_path
-        = link_to "Organize", admin_root_path
         = button_to "Log out", session_path, method: :delete, class: "nav-button"
       - else
         = link_to "Trips", trips_path

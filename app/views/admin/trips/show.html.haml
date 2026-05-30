@@ -2,8 +2,9 @@
 %section.panel.trip-overview
   .panel-header.trip-summary-header
     .trip-summary-copy
+      %h2= @trip.name
       .trip-location-line
-        %h2= @trip.location
+        %p= @trip.location
         %span.eyebrow= @trip.status.titleize
       %p
         = @trip.start_date.to_fs(:long)

@@ -26,10 +26,10 @@
             %dl.date-pair
               %div
                 %dt Arrival
-                %dd= trip.start_date.to_fs(:long)
+                %dd= trip.start_date.strftime("%b %d, %Y")
               %div
                 %dt Checkout
-                %dd= trip.end_date.to_fs(:long)
+                %dd= trip.end_date.strftime("%b %d, %Y")
           %td= trip.campsite_count
           %td= trip.total_participant_capacity
           %td= trip.confirmed_signup_count
