@@ -109,10 +109,10 @@
                     = render "signup_table", signups: campsite.confirmed_signups
                   - else
                     %p.muted No confirmed participants yet.
-                - if campsite.waitlisted_signups.any?
-                  .waitlisted-signups-section
-                    %h4 Waitlisted participants
-                    = render "signup_table", signups: campsite.waitlisted_signups
+    - if @waitlisted_signups.any?
+      .waitlisted-signups-section.trip-waitlist-section
+        %h3 Trip waitlist
+        = render "signup_table", signups: @waitlisted_signups, waitlist: true, trip: @trip
   - else
     .empty-state
       %p No campsites have been added to this trip yet.

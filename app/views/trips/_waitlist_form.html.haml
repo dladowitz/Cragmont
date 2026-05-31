@@ -1,0 +1,39 @@
+- modal_id = "campsite-waitlist-#{campsite.id}"
+%div{"data-controller" => "modal"}
+  %button.button{"data-action" => "modal#open", :type => "button"} Join waitlist
+  %dialog.signup-modal{"aria-labelledby" => modal_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+    .signup-modal-content
+      %div
+        %h2{id: modal_id} Join trip waitlist
+        %p
+          = campsite.campground.name
+          site #{campsite.site_number}
+      = form_with url: trip_campsite_campsite_signup_path(trip, campsite), method: :post, class: "waitlist-form", data: { controller: "waitlist-form" } do
+        = hidden_field_tag "campsite_signup[intent]", "join_waitlist"
+        %fieldset.signup-kind-options
+          %legend Who are you joining for?
+          %label
+            = radio_button_tag "campsite_signup[signup_kind]", "self", true, id: "campsite_#{campsite.id}_waitlist_kind_self", data: { waitlist_form_target: "signupKind", action: "waitlist-form#toggleMinorFields" }
+            %span I am joining for myself
+          %label
+            = radio_button_tag "campsite_signup[signup_kind]", "with_minors", false, id: "campsite_#{campsite.id}_waitlist_kind_with_minors", data: { waitlist_form_target: "signupKind", action: "waitlist-form#toggleMinorFields" }
+            %span I am joining for myself and minors (max 2)
+        %section.minor-fields{"data-waitlist-form-target" => "minorFields", :hidden => ""}
+          %h3 Minor information
+          - 2.times do |index|
+            .minor-field-row
+              %div
+                = label_tag "campsite_#{campsite.id}_waitlist_minor_#{index}_first_name", "First name"
+                = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][first_name]", "", id: "campsite_#{campsite.id}_waitlist_minor_#{index}_first_name"
+              %div
+                = label_tag "campsite_#{campsite.id}_waitlist_minor_#{index}_last_name", "Last name"
+                = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][last_name]", "", id: "campsite_#{campsite.id}_waitlist_minor_#{index}_last_name"
+              %div
+                = label_tag "campsite_#{campsite.id}_waitlist_minor_#{index}_age", "Age"
+                = number_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][age]", "", id: "campsite_#{campsite.id}_waitlist_minor_#{index}_age", min: 0, max: 17
+              %div
+                = label_tag "campsite_#{campsite.id}_waitlist_minor_#{index}_relationship", "Relationship"
+                = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][relationship]", "", id: "campsite_#{campsite.id}_waitlist_minor_#{index}_relationship", placeholder: "Parent, Guardian, Uncle, etc"
+        .form-actions
+          %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
+          = button_tag "Join waitlist", type: :submit, class: "button"

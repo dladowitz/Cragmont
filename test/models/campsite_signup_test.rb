@@ -5,9 +5,16 @@ class CampsiteSignupTest < ActiveSupport::TestCase
     signup = CampsiteSignup.new
 
     assert_not signup.valid?
-    assert_includes signup.errors[:campsite], "must exist"
+    assert_includes signup.errors[:campsite], "can't be blank"
     assert_includes signup.errors[:trip], "must exist"
     assert_includes signup.errors[:user], "must exist"
+  end
+
+  test "waitlisted signup can be trip level without campsite or dates" do
+    signup = CampsiteSignup.new(trip: trips(:yosemite), user: users(:sam), status: "waitlisted")
+
+    assert signup.valid?
+    assert_equal "Not chosen yet", signup.attendance_date_range
   end
 
   test "requires known status" do

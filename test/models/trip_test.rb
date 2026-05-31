@@ -99,4 +99,105 @@ class TripTest < ActiveSupport::TestCase
     assert trip.almost_full?
     assert_not trip.capacity_full?
   end
+
+  test "waitlist priority favors members before signup date" do
+    trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+    campsite.lock_signups!
+    non_member = User.create!(
+      first_name: "Older",
+      last_name: "Guest",
+      email: "older-guest@example.com",
+      password: "password",
+      member: false
+    )
+    member = User.create!(
+      first_name: "Later",
+      last_name: "Member",
+      email: "later-member@example.com",
+      password: "password",
+      member: true
+    )
+    older_signup = create_waitlisted_signup!(trip: trip, user: non_member, created_at: 2.days.ago)
+    member_signup = create_waitlisted_signup!(trip: trip, user: member, created_at: 1.day.ago)
+
+    assert_equal [ member_signup, older_signup ], trip.waitlisted_signups.to_a
+
+    trip.mark_next_waitlisted_signup_eligible!
+
+    assert member_signup.reload.waitlist_eligible?
+    assert_not older_signup.reload.waitlist_eligible?
+  end
+
+  test "waitlist priority keeps member date order" do
+    trip = trips(:yosemite)
+    older_member = User.create!(
+      first_name: "Older",
+      last_name: "Member",
+      email: "older-member@example.com",
+      password: "password",
+      member: true
+    )
+    later_member = User.create!(
+      first_name: "Later",
+      last_name: "Member",
+      email: "later-member-order@example.com",
+      password: "password",
+      member: true
+    )
+    older_signup = create_waitlisted_signup!(trip: trip, user: older_member, created_at: 2.days.ago)
+    later_signup = create_waitlisted_signup!(trip: trip, user: later_member, created_at: 1.day.ago)
+
+    assert_equal [ older_signup, later_signup ], trip.waitlisted_signups.to_a
+  end
+
+  test "waitlist confirmation campsites require allowed signup status" do
+    trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+    campsite.lock_signups!
+    signup = create_waitlisted_signup!(trip: trip, user: users(:sam))
+
+    assert_empty trip.waitlist_confirmation_campsites_for(signup)
+
+    signup.update!(waitlist_eligible_at: Time.current)
+
+    assert_equal [ campsite ], trip.waitlist_confirmation_campsites_for(signup)
+  end
+
+  test "waitlist eligibility skips parties that cannot fit open capacity" do
+    trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+    fill_count = campsite.participant_capacity - 1
+    fill_count.times do |index|
+      create_campsite_signup!(campsite: campsite, user: User.create!(
+        first_name: "Confirmed",
+        last_name: "SkipFit#{index}",
+        email: "confirmed-skip-fit#{index}@example.com",
+        password: "password"
+      ))
+    end
+    campsite.lock_signups!
+    large_party_user = User.create!(
+      first_name: "Large",
+      last_name: "Party",
+      email: "large-party@example.com",
+      password: "password",
+      member: true
+    )
+    small_party_user = User.create!(
+      first_name: "Small",
+      last_name: "Party",
+      email: "small-party@example.com",
+      password: "password",
+      member: false
+    )
+    large_party_signup = create_waitlisted_signup!(trip: trip, user: large_party_user, created_at: 2.days.ago)
+    large_party_signup.campsite_signup_minors.create!(first_name: "Teen", last_name: "Party", age: 13, relationship: "Child")
+    small_party_signup = create_waitlisted_signup!(trip: trip, user: small_party_user, created_at: 1.day.ago)
+
+    trip.mark_next_waitlisted_signup_eligible!
+
+    assert_not large_party_signup.reload.waitlist_eligible?
+    assert small_party_signup.reload.waitlist_eligible?
+  end
 end

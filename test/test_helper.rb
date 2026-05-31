@@ -36,6 +36,16 @@ module ActiveSupport
       )
     end
 
+    def create_waitlisted_signup!(trip:, user:, **attributes)
+      CampsiteSignup.create!(
+        {
+          trip: trip,
+          user: user,
+          status: "waitlisted"
+        }.merge(attributes)
+      )
+    end
+
     def attach_test_waiver_to(signup)
       signature = WaiverSignatureData.new(SIGNATURE_DATA_URL)
       waiver_text = TripSignupWaiver.text

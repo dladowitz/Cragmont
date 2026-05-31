@@ -7,7 +7,17 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", "Admin Dashboard"
     assert_select "h2", "User directory"
-    assert_select "td", text: "Alex Rivera"
+    assert_select "a", text: "Alex Rivera"
+    assert_select "tr", text: /Alex Rivera/ do
+      assert_select ".member-icon[aria-label='Club member']", count: 1
+      assert_select ".visually-hidden", text: "Club member"
+      assert_select "td", text: "Yes"
+    end
+    assert_select "tr", text: /Sam Lee/ do
+      assert_select ".member-icon", count: 0
+      assert_select ".member-icon-placeholder", count: 1
+      assert_select "td", text: "No"
+    end
   end
 
   test "can view user details" do

@@ -77,4 +77,28 @@ class CampsiteTest < ActiveSupport::TestCase
     assert campsite.capacity_full?
     assert_equal 0, campsite.available_participant_capacity
   end
+
+  test "locked campsite requires waitlist even when space is open" do
+    campsite = campsites(:yosemite_a)
+
+    assert campsite.direct_signup_available?
+    assert_not campsite.waitlist_signup_required?
+
+    campsite.lock_signups!
+
+    assert campsite.signups_locked?
+    assert_not campsite.direct_signup_available?
+    assert campsite.waitlist_signup_required?
+  end
+
+  test "locked campsite can be available for waitlist confirmation" do
+    campsite = campsites(:yosemite_a)
+    signup = create_waitlisted_signup!(trip: trips(:yosemite), user: users(:sam))
+
+    assert_not campsite.available_for_waitlist_confirmation?(signup)
+
+    campsite.lock_signups!
+
+    assert campsite.available_for_waitlist_confirmation?(signup)
+  end
 end

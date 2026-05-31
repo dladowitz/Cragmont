@@ -17,6 +17,10 @@ Rails.application.routes.draw do
     resources :campgrounds
     resources :trips do
       resources :campsites, except: %i[index show]
+      resources :campsite_signups, only: [] do
+        patch :make_waitlist_eligible, on: :member
+        patch :revoke_waitlist_eligibility, on: :member
+      end
     end
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

@@ -1,90 +1,26 @@
-- waitlist_signup = campsite.capacity_full?
-- signup_button_text = waitlist_signup ? "Sign up for the waitlist" : "Sign up for this campsite"
-- modal_title = waitlist_signup ? "Sign up for campsite waitlist" : "Sign up for this campsite"
-- modal_submit_text = waitlist_signup ? "Sign up for Waitlist" : "Pay Now and Sign Up"
-- signature_id = "campsite-signup-signature-#{campsite.id}"
-- arrival_id = "campsite-signup-arrival-#{campsite.id}"
-- checkout_id = "campsite-signup-checkout-#{campsite.id}"
-%div{"data-controller" => "modal"}
+- confirm_waitlist = local_assigns.fetch(:confirm_waitlist, false)
+- waitlist_direct_signup = local_assigns.fetch(:waitlist_direct_signup, false)
+- waitlist_direct_signup_text = "Signup for campsite"
+- default_signup_button_text = confirm_waitlist ? "Confirm your spot" : (waitlist_direct_signup ? waitlist_direct_signup_text : "Sign up for this campsite")
+- signup_button_text = local_assigns.fetch(:signup_button_text, default_signup_button_text)
+- default_modal_title = waitlist_direct_signup ? "Signup for campsite" : signup_button_text
+- modal_title = local_assigns.fetch(:modal_title, default_modal_title)
+- modal_submit_text = confirm_waitlist ? "Pay Now and Confirm" : "Pay Now and Sign Up"
+- signup_intent = confirm_waitlist ? "confirm_waitlist" : (waitlist_direct_signup ? "waitlist_direct_signup" : "direct_signup")
+- dom_id_suffix = local_assigns.fetch(:dom_id_suffix, campsite.id)
+%div{class: ("waitlist-direct-signup-control" if waitlist_direct_signup), "data-controller" => "modal"}
   %button.button{"data-action" => "modal#open", :type => "button"}= signup_button_text
   %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
     .signup-modal-content
       %div
-        %h2= modal_title
+        .signup-modal-title-line
+          %h2= modal_title
+          - if waitlist_direct_signup
+            %p.muted This will remove you from the waitlist
         %p
           = campsite.campground.name
           site #{campsite.site_number}
         %p
           = campsite.arrival_date.to_fs(:long)
           to #{campsite.checkout_date.to_fs(:long)}
-      = form_with url: trip_campsite_campsite_signup_path(trip, campsite), method: :post, class: "waiver-form", data: { controller: "signature" } do
-        %section.signup-kind-step{"data-signature-target" => "signupStep"}
-          %section.attendance-fields
-            %div
-              %h3 Attendance dates
-              %p.muted Choose the nights you will stay at this campsite.
-            .attendance-date-row
-              .field
-                = label_tag arrival_id, "Arrival date"
-                = date_field_tag "campsite_signup[arrival_date]", nil, id: arrival_id, min: campsite.arrival_date, max: campsite.checkout_date - 1.day, required: true, data: { signature_target: "arrivalDate", action: "input->signature#checkAttendanceDates" }
-              .field
-                = label_tag checkout_id, "Checkout date"
-                = date_field_tag "campsite_signup[checkout_date]", nil, id: checkout_id, min: campsite.arrival_date + 1.day, max: campsite.checkout_date, required: true, data: { signature_target: "checkoutDate", action: "input->signature#checkAttendanceDates" }
-          %fieldset.signup-kind-options
-            %legend Who are you signing up?
-            %label
-              = radio_button_tag "campsite_signup[signup_kind]", "self", true, id: "campsite_#{campsite.id}_signup_kind_self", data: { signature_target: "signupKind", action: "signature#toggleMinorFields" }
-              %span I am signing up for myself
-            %label
-              = radio_button_tag "campsite_signup[signup_kind]", "with_minors", false, id: "campsite_#{campsite.id}_signup_kind_with_minors", data: { signature_target: "signupKind", action: "signature#toggleMinorFields" }
-              %span I am signing up for myself and minors (max 2)
-          %section.minor-fields{"data-signature-target" => "minorFields", :hidden => ""}
-            %h3 Minor information
-            - 2.times do |index|
-              .minor-field-row
-                %div
-                  = label_tag "campsite_#{campsite.id}_signup_minor_#{index}_first_name", "First name"
-                  = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][first_name]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_first_name", data: ({ required_for_minor: "true" } if index.zero?)
-                %div
-                  = label_tag "campsite_#{campsite.id}_signup_minor_#{index}_last_name", "Last name"
-                  = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][last_name]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_last_name", data: ({ required_for_minor: "true" } if index.zero?)
-                %div
-                  = label_tag "campsite_#{campsite.id}_signup_minor_#{index}_age", "Age"
-                  = number_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][age]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_age", min: 0, max: 17, data: ({ required_for_minor: "true" } if index.zero?)
-                %div
-                  = label_tag "campsite_#{campsite.id}_signup_minor_#{index}_relationship", "Relationship"
-                  = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][relationship]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_relationship", placeholder: "Parent, Guardian, Uncle, etc", data: ({ required_for_minor: "true" } if index.zero?)
-          .form-actions
-            %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
-            %button.button{"data-action" => "signature#showAcknowledgement", :type => "button"} Next
-        %section.waiver-intro{"data-signature-target" => "intro", :hidden => ""}
-          .waiver-intro-copy
-            - TripSignupWaiver.acknowledgement_blocks.each do |block|
-              %p= block
-          .form-actions
-            %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
-            %button.button{"data-action" => "signature#showWaiver", :type => "button"} Agree and Sign Waiver
-        %div{"data-signature-target" => "waiverStep", :hidden => ""}
-          %section.waiver-text{"data-action" => "scroll->signature#checkWaiverScroll", "data-signature-target" => "waiver"}
-            .waiver-document
-              - TripSignupWaiver.blocks.each_with_index do |block, index|
-                - if TripSignupWaiver.title_block?(index)
-                  %h3.waiver-title= block
-                - elsif TripSignupWaiver.warning_block?(index)
-                  %p.waiver-warning= block
-                - elsif TripSignupWaiver.summary_heading_block?(index)
-                  %h4.waiver-summary-heading= block
-                - else
-                  %p= block
-          .signature-field
-            .signature-label-row
-              %label{:for => signature_id} Signature
-              %span You must view all the text to sign
-            %canvas.signature-pad{id: signature_id, "data-signature-target" => "canvas", :height => "120", :width => "560"}
-            = hidden_field_tag "campsite_signup[waiver_signature_data]", "", data: { signature_target: "input" }
-            = hidden_field_tag "campsite_signup[waiver_acknowledged_at]", "", data: { signature_target: "acknowledgementInput" }
-          .form-actions.waiver-signature-actions
-            %button.button.secondary{"data-action" => "signature#clear", :type => "button"} Clear signature
-            .waiver-signature-submit-actions
-              %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
-              = button_tag modal_submit_text, type: :submit, class: "button", data: { signature_target: "submit" }, disabled: true
+      = render "campsite_signup_form_fields", trip: trip, campsite: campsite, confirm_waitlist: confirm_waitlist, waitlist_direct_signup: waitlist_direct_signup, modal_submit_text: modal_submit_text, signup_intent: signup_intent, dom_id_suffix: dom_id_suffix
