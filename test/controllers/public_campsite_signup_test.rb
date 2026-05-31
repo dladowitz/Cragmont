@@ -63,6 +63,15 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_not User.order(:created_at).last.member?
   end
 
+  test "registration form has password visibility controls" do
+    get new_registration_url
+
+    assert_response :success
+    assert_select ".password-visibility-field[data-controller='password-visibility']", count: 2
+    assert_select "button.password-visibility-toggle[aria-label='Show password']", count: 2
+    assert_select "input[type='password'][data-password-visibility-target='input']", count: 2
+  end
+
   test "user can log in and log out" do
     post session_url, params: { email: "ALEX@EXAMPLE.COM", password: "password" }
 

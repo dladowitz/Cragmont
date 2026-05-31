@@ -8,7 +8,7 @@
         = link_to "Admin", admin_root_path, class: "public-admin-link"
     %nav.public-nav
       - if user_signed_in?
-        %span= current_user.full_name
+        = link_to current_user.full_name, profile_path
         = link_to "Trips", trips_path
         = button_to "Log out", session_path, method: :delete, class: "nav-button"
       - else

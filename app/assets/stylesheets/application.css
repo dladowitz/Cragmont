@@ -1578,6 +1578,41 @@ th {
   gap: 6px;
 }
 
+.password-visibility-field {
+  position: relative;
+}
+
+.password-visibility-field input {
+  width: 100%;
+  padding-right: 54px;
+}
+
+.password-visibility-toggle {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent-dark);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.password-visibility-toggle:hover,
+.password-visibility-toggle:focus-visible {
+  color: var(--accent);
+}
+
+.password-visibility-icon {
+  display: inline-flex;
+}
+
 label {
   font-weight: 700;
 }
