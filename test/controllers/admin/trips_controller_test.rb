@@ -22,6 +22,14 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     attach_test_waiver_to(signup)
     waitlisted_user = User.create!(first_name: "Willa", last_name: "Wait", email: "willa-admin@example.com", password: "password")
     waitlisted_signup = create_waitlisted_signup!(trip: trips(:yosemite), user: waitlisted_user)
+    waitlisted_guest = User.create!(
+      first_name: "Gina",
+      last_name: "Guest",
+      email: "willa-admin-guest@example.com",
+      password: User::DEFAULT_GUEST_PASSWORD,
+      default_password: true
+    )
+    create_waitlisted_signup!(trip: trips(:yosemite), user: waitlisted_guest, guest_of_signup: waitlisted_signup, guest_position: 1)
     allowed_user = User.create!(first_name: "Zora", last_name: "Allowed", email: "zora-admin@example.com", password: "password")
     create_waitlisted_signup!(trip: trips(:yosemite), user: allowed_user, waitlist_eligible_at: Time.current)
 
@@ -72,11 +80,38 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select "td", text: "Sam Lee"
       assert_select "th", text: "Dates"
       assert_select "th", text: "Attendance", count: 0
-      assert_select "td", text: "Jun 13-Jun 15"
+      assert_select "td", text: "6/13-6/15"
+      assert_select "td", text: "Jun 13-Jun 15", count: 0
       assert_select ".missing-value", text: "Missing", count: 0
       assert_select "td", text: "Willa Wait", count: 0
-      assert_select ".admin-minor-list", text: /Mika Lee, age 12, Child/
-      assert_select "td", text: "555-0101"
+      assert_select ".admin-minor-list .minor-info-control button.info-link-button[data-action='modal#open']", text: "Mika Lee"
+      assert_select "dialog.minor-info-modal" do
+        assert_select "h2", "Minor information"
+        assert_select "dt", "Name"
+        assert_select "dd", "Mika Lee"
+        assert_select "dt", "Age"
+        assert_select "dd", "12"
+        assert_select "dt", "Added by"
+        assert_select "dd", "Sam Lee"
+        assert_select "dt", "Relationship"
+        assert_select "dd", "Child"
+        assert_select "button[data-action='modal#close']", text: "Close"
+      end
+      assert_select "th", text: "Info"
+      assert_select "th", text: "Email", count: 0
+      assert_select "th", text: "Phone", count: 0
+      assert_select ".participant-info-control button.info-link-button[data-action='modal#open']", text: "View"
+      assert_select "dialog.participant-info-modal" do
+        assert_select "h2", "Participant info"
+        assert_select "p", "Sam Lee"
+        assert_select "dt", "Email"
+        assert_select "a[href='mailto:sam@example.com']", text: "sam@example.com"
+        assert_select "dt", "Phone"
+        assert_select "dd", "555-0101"
+        assert_select "dt", "Membership"
+        assert_select "dd", "Non-member"
+        assert_select "button[data-action='modal#close']", text: "Close"
+      end
       assert_select "th", text: "Waiver"
       assert_select "th", text: "Move to Waitlist"
       assert_select "th", text: "Remove"
@@ -94,8 +129,11 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_select ".trip-waitlist-section" do
       assert_select "h3", "Trip waitlist"
-      assert_select "td", text: "Willa Wait"
+      assert_select "tbody > tr", count: 2
+      assert_select "td", text: /Willa Wait/
+      assert_select "td", text: /1 guest: Gina Guest/
       assert_select "td", text: "Zora Allowed"
+      assert_select "td", text: "Gina Guest", count: 0
       assert_select "th", text: "Attendance", count: 0
       assert_select "td", text: "Not chosen yet", count: 0
       assert_select "th", text: /Allow Signup/
@@ -186,6 +224,43 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select "button.copy-link-button .copy-icon svg"
       assert_select "button.copy-link-button .check-icon svg"
       assert_select "button[data-action='copyable-modal#close']", text: "Close"
+    end
+  end
+
+  test "trip details links guest missing waiver to guest password and waiver collection modal" do
+    primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    guest_user = User.create!(
+      first_name: "Gina",
+      last_name: "Guest",
+      email: "admin-guest-link@example.com",
+      password: User::DEFAULT_GUEST_PASSWORD,
+      default_password: true
+    )
+    guest_signup = create_campsite_signup!(
+      campsite: campsites(:yosemite_a),
+      user: guest_user,
+      guest_of_signup: primary_signup,
+      guest_position: 1,
+      arrival_date: primary_signup.arrival_date,
+      checkout_date: primary_signup.checkout_date
+    )
+    guest_link = trip_url(
+      trips(:yosemite),
+      complete_signup: guest_signup.signed_id(purpose: :complete_guest_details),
+      anchor: "campsite-#{guest_signup.campsite_id}"
+    )
+
+    get admin_trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select ".confirmed-signups-section" do
+      assert_select "td", text: /Gina Guest/
+      assert_select "td", text: /Added by Sam Lee/
+      assert_select "button.missing-value.missing-link[data-action='copyable-modal#open']", text: "Missing"
+      assert_select "dialog.missing-details-modal", text: /We need to collect waiver and attendance dates from this guest\./
+      assert_select "dialog.missing-details-modal", text: /Share this link with the guest so they can sign the waiver and select dates:/
+      assert_select "a.missing-details-link[href='#{guest_link}']", text: "Waiver and Date Selection Link"
+      assert_select "td", text: "Follows primary"
     end
   end
 

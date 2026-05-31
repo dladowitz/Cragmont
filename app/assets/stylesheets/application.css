@@ -1009,6 +1009,11 @@ td span {
   font-weight: 700;
 }
 
+.waitlist-transition-note {
+  color: var(--accent);
+  font-size: 1.25rem;
+}
+
 .participant-details-campsite-summary {
   display: grid;
   gap: 2px;
@@ -1084,6 +1089,20 @@ td span {
   gap: 18px;
 }
 
+.capacity-warning {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  background: #fff7ed;
+  color: #92400e;
+  font-weight: 750;
+}
+
+.capacity-warning[hidden] {
+  display: none;
+}
+
 .attendance-fields {
   display: grid;
   gap: 14px;
@@ -1126,12 +1145,14 @@ td span {
   font-weight: 700;
 }
 
-.signup-kind-options input[type="radio"] {
+.signup-kind-options input[type="radio"],
+.signup-kind-options input[type="checkbox"] {
   width: auto;
   padding: 0;
 }
 
-.minor-fields {
+.minor-fields,
+.guest-fields {
   display: grid;
   gap: 14px;
   padding: 18px;
@@ -1140,21 +1161,73 @@ td span {
   background: #fbfaf7;
 }
 
-.minor-fields[hidden] {
+.minor-fields[hidden],
+.guest-fields[hidden] {
   display: none;
 }
 
-.minor-fields h3 {
+.minor-fields h3,
+.guest-fields h3 {
   margin: 0;
 }
 
-.minor-field-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 88px 1fr;
-  gap: 12px;
+.section-limit {
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 700;
 }
 
-.minor-field-row label {
+.add-person-link {
+  justify-self: start;
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent-dark);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.625em;
+  font-weight: 750;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+[data-party-row][hidden] {
+  display: none;
+}
+
+.minor-field-row,
+.guest-field-row {
+  display: grid;
+  grid-template-columns: 32px 1fr 1fr 88px 1fr;
+  gap: 12px;
+  align-items: end;
+}
+
+.guest-field-row {
+  grid-template-columns: 32px repeat(4, minmax(0, 1fr));
+}
+
+.remove-person-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-bottom: 6px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.minor-field-row label,
+.guest-field-row label {
   display: block;
   margin-bottom: 4px;
   color: var(--muted);
@@ -1162,7 +1235,8 @@ td span {
   font-weight: 750;
 }
 
-.minor-field-row input {
+.minor-field-row input,
+.guest-field-row input {
   width: 100%;
   min-height: 40px;
   padding: 8px 10px;
@@ -1320,11 +1394,29 @@ td span {
   font-weight: 700;
 }
 
+.confirmed-participants-table {
+  margin-top: 10px;
+}
+
+.public-added-by {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
 .admin-minor-list {
   display: grid;
   gap: 4px;
   margin: 0;
-  padding-left: 18px;
+  padding-left: 0;
+  list-style: none;
+}
+
+.admin-linked-party-summary {
+  display: block;
+  margin-top: 4px;
 }
 
 .user-name-cell {
@@ -1721,6 +1813,16 @@ textarea {
   cursor: pointer;
 }
 
+.info-link-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-weight: 750;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .campground-group {
   margin-top: 28px;
 }
@@ -1844,6 +1946,7 @@ textarea {
   .stats,
   .attendance-date-row,
   .minor-field-row,
+  .guest-field-row,
   .trip-card {
     grid-template-columns: 1fr;
   }

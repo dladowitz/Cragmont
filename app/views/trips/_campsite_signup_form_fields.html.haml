@@ -6,13 +6,21 @@
 - signature_id = "campsite-signup-signature-#{dom_id_suffix}"
 - arrival_id = "campsite-signup-arrival-#{dom_id_suffix}"
 - checkout_id = "campsite-signup-checkout-#{dom_id_suffix}"
-= form_with url: trip_campsite_campsite_signup_path(trip, campsite), method: :post, class: "waiver-form", data: { controller: "signature" } do
+- minors_toggle_id = "campsite-signup-minors-toggle-#{dom_id_suffix}"
+- guests_toggle_id = "campsite-signup-guests-toggle-#{dom_id_suffix}"
+- attendance_help_text = "Choose the nights you will stay at this campsite."
+- if complete_existing_signup && existing_signup&.guest? && existing_signup.guest_of_signup.present?
+  - attendance_help_text = "Confirm (or change) the nights #{existing_signup.guest_of_signup.user.first_name} has selected for you."
+= form_with url: trip_campsite_campsite_signup_path(trip, campsite), method: :post, class: "waiver-form", data: { controller: "signature", signature_available_participant_capacity_value: campsite.available_participant_capacity, signature_uncounted_minor_age_limit_value: trip.uncounted_minor_age_limit, signature_show_capacity_warning_value: !waitlisted_signup } do
   = hidden_field_tag "campsite_signup[intent]", signup_intent
   %section.signup-kind-step{"data-signature-target" => "signupStep"}
+    - unless waitlisted_signup
+      %p.capacity-warning{"data-signature-target" => "capacityWarning", :hidden => ""}
+        You've exceeded the space available for this campsite. Your party will be placed on the waitlist.
     %section.attendance-fields
       %div
         %h3 Attendance dates
-        %p.muted Choose the nights you will stay at this campsite.
+        %p.muted= attendance_help_text
       .attendance-date-row
         .field
           = label_tag arrival_id, "Arrival date"
@@ -22,29 +30,55 @@
           = date_field_tag "campsite_signup[checkout_date]", existing_signup&.checkout_date, id: checkout_id, min: campsite.arrival_date + 1.day, max: campsite.checkout_date, required: true, data: { signature_target: "checkoutDate", action: "input->signature#checkAttendanceDates" }
     - unless waitlisted_signup
       %fieldset.signup-kind-options
-        %legend Who are you signing up?
+        %legend.visually-hidden Additional participants
         %label
-          = radio_button_tag "campsite_signup[signup_kind]", "self", true, id: "campsite_#{campsite.id}_signup_kind_self", data: { signature_target: "signupKind", action: "signature#toggleMinorFields" }
-          %span I am signing up for myself
+          = check_box_tag "campsite_signup[with_guests]", "1", false, id: guests_toggle_id, data: { signature_target: "guestToggle", action: "signature#togglePartyFields" }
+          %span Add adult
         %label
-          = radio_button_tag "campsite_signup[signup_kind]", "with_minors", false, id: "campsite_#{campsite.id}_signup_kind_with_minors", data: { signature_target: "signupKind", action: "signature#toggleMinorFields" }
-          %span I am signing up for myself and minors (max 2)
-      %section.minor-fields{"data-signature-target" => "minorFields", :hidden => ""}
-        %h3 Minor information
+          = check_box_tag "campsite_signup[with_minors]", "1", false, id: minors_toggle_id, data: { signature_target: "minorToggle", action: "signature#togglePartyFields" }
+          %span Add minors (under 18)
+      %section.guest-fields{"data-party-fields" => "guest", "data-required-dataset-key" => "requiredForGuest", "data-signature-target" => "guestFields", :hidden => ""}
+        %h3
+          Adult information
+          %span.section-limit (Max #{CampsiteSignup::MAX_GUESTS_PER_SIGNUP})
+        - CampsiteSignup::MAX_GUESTS_PER_SIGNUP.times do |index|
+          .guest-field-row{"data-party-row" => "", "data-party-row-visible" => (index.zero? ? "true" : "false"), hidden: !index.zero?}
+            %button.remove-person-button{"aria-label" => "Remove guest", "data-action" => "signature#removePartyRow", type: "button"} X
+            %div
+              = label_tag "campsite_#{campsite.id}_signup_guest_#{index}_first_name", "First name"
+              = text_field_tag "campsite_signup[guest_attributes][#{index}][first_name]", "", id: "campsite_#{campsite.id}_signup_guest_#{index}_first_name", data: { required_for_guest: "true" }
+            %div
+              = label_tag "campsite_#{campsite.id}_signup_guest_#{index}_last_name", "Last name"
+              = text_field_tag "campsite_signup[guest_attributes][#{index}][last_name]", "", id: "campsite_#{campsite.id}_signup_guest_#{index}_last_name", data: { required_for_guest: "true" }
+            %div
+              = label_tag "campsite_#{campsite.id}_signup_guest_#{index}_email", "Email"
+              = email_field_tag "campsite_signup[guest_attributes][#{index}][email]", "", id: "campsite_#{campsite.id}_signup_guest_#{index}_email", data: { required_for_guest: "true" }
+            %div
+              = label_tag "campsite_#{campsite.id}_signup_guest_#{index}_phone", "Phone"
+              = telephone_field_tag "campsite_signup[guest_attributes][#{index}][phone]", "", id: "campsite_#{campsite.id}_signup_guest_#{index}_phone"
+          - if index.zero? && CampsiteSignup::MAX_GUESTS_PER_SIGNUP > 1
+            %button.add-person-link{"data-action" => "signature#revealPartyRow", "data-add-party-row" => "", type: "button"} Add another adult
+      %section.minor-fields{"data-party-fields" => "minor", "data-required-dataset-key" => "requiredForMinor", "data-signature-target" => "minorFields", :hidden => ""}
+        %h3
+          Minor information
+          %span.section-limit (Max 2)
         - 2.times do |index|
-          .minor-field-row
+          .minor-field-row{"data-party-row" => "", "data-party-row-visible" => (index.zero? ? "true" : "false"), hidden: !index.zero?}
+            %button.remove-person-button{"aria-label" => "Remove minor", "data-action" => "signature#removePartyRow", type: "button"} X
             %div
               = label_tag "campsite_#{campsite.id}_signup_minor_#{index}_first_name", "First name"
-              = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][first_name]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_first_name", data: ({ required_for_minor: "true" } if index.zero?)
+              = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][first_name]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_first_name", data: { required_for_minor: "true" }
             %div
               = label_tag "campsite_#{campsite.id}_signup_minor_#{index}_last_name", "Last name"
-              = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][last_name]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_last_name", data: ({ required_for_minor: "true" } if index.zero?)
+              = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][last_name]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_last_name", data: { required_for_minor: "true" }
             %div
               = label_tag "campsite_#{campsite.id}_signup_minor_#{index}_age", "Age"
-              = number_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][age]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_age", min: 0, max: 17, data: ({ required_for_minor: "true" } if index.zero?)
+              = number_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][age]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_age", min: 0, max: 17, data: { required_for_minor: "true", action: "input->signature#updateCapacityWarning" }
             %div
               = label_tag "campsite_#{campsite.id}_signup_minor_#{index}_relationship", "Relationship"
-              = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][relationship]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_relationship", placeholder: "Parent, Guardian, Uncle, etc", data: ({ required_for_minor: "true" } if index.zero?)
+              = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][relationship]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_relationship", placeholder: "Parent, Guardian, Uncle, etc", data: { required_for_minor: "true" }
+          - if index.zero?
+            %button.add-person-link{"data-action" => "signature#revealPartyRow", "data-add-party-row" => "", type: "button"} Add another minor
     .form-actions
       %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
       %button.button{"data-action" => "signature#showAcknowledgement", :type => "button"} Next

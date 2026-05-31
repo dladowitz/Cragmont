@@ -7,7 +7,9 @@ Rails.application.routes.draw do
 
   resources :trips, only: %i[index show] do
     resources :campsites, only: [] do
-      resource :campsite_signup, only: %i[create destroy]
+      resource :campsite_signup, only: %i[create destroy] do
+        patch :guest_password
+      end
     end
   end
 

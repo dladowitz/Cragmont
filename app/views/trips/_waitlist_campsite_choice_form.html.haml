@@ -1,11 +1,14 @@
 - modal_id = "waitlist-campsite-choice-#{signup.id}"
 - choice_name = "waitlist_campsite_choice_#{signup.id}"
+- waitlist_signup_has_party = signup.includes_guests? || signup.includes_minors?
+- waitlist_note_text = waitlist_signup_has_party ? "This will move your party from the waitlist to confirmed" : "This will move you from the waitlist to confirmed"
 %div.waitlist-campsite-choice{"data-controller" => "modal campsite-choice"}
   %button.button{"data-action" => "modal#open", :type => "button"} Signup
   %dialog.signup-modal{"aria-labelledby" => modal_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
     .signup-modal-content
       %div
         %h2{id: modal_id} Signup
+        %p.waitlist-transition-note= waitlist_note_text
         %p.muted Choose a campsite, then enter the dates you will attend.
       - if campsites.many?
         %fieldset.campsite-choice-options{"data-campsite-choice-target" => "chooser"}

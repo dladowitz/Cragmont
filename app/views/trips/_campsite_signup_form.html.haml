@@ -8,6 +8,10 @@
 - modal_submit_text = confirm_waitlist ? "Pay Now and Confirm" : "Pay Now and Sign Up"
 - signup_intent = confirm_waitlist ? "confirm_waitlist" : (waitlist_direct_signup ? "waitlist_direct_signup" : "direct_signup")
 - dom_id_suffix = local_assigns.fetch(:dom_id_suffix, campsite.id)
+- waitlist_move_confirmation = confirm_waitlist || waitlist_direct_signup
+- waitlist_signup = local_assigns.fetch(:waitlist_signup, @current_signup)
+- waitlist_signup_has_party = waitlist_signup&.includes_guests? || waitlist_signup&.includes_minors?
+- waitlist_note_text = waitlist_signup_has_party ? "This will move your party from the waitlist to confirmed" : "This will move you from the waitlist to confirmed"
 %div{class: ("waitlist-direct-signup-control" if waitlist_direct_signup), "data-controller" => "modal"}
   %button.button{"data-action" => "modal#open", :type => "button"}= signup_button_text
   %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
@@ -15,8 +19,8 @@
       %div
         .signup-modal-title-line
           %h2= modal_title
-          - if waitlist_direct_signup
-            %p.muted This will remove you from the waitlist
+          - if waitlist_move_confirmation
+            %p.waitlist-transition-note= waitlist_note_text
         %p
           = campsite.campground.name
           site #{campsite.site_number}

@@ -61,9 +61,9 @@ class Trip < ApplicationRecord
   end
 
   def waitlisted_signups
-    campsite_signups.waitlisted
+    campsite_signups.primary.waitlisted
       .joins(:user)
-      .includes(:user, :campsite_signup_minors)
+      .includes(:user, :campsite_signup_minors, guest_signups: :user)
       .order(Arel.sql("CASE WHEN users.member THEN 0 ELSE 1 END"), :created_at)
   end
 

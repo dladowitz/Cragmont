@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_30_220000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_31_090100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -52,6 +52,57 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_30_220000) do
     t.index ["name"], name: "index_campgrounds_on_name"
   end
 
+  create_table "campsite_signup_minors", force: :cascade do |t|
+    t.integer "age", null: false
+    t.bigint "campsite_signup_id", null: false
+    t.datetime "created_at", null: false
+    t.string "first_name", null: false
+    t.string "last_name", null: false
+    t.string "relationship", null: false
+    t.datetime "updated_at", null: false
+    t.index ["age"], name: "index_campsite_signup_minors_on_age"
+    t.index ["campsite_signup_id"], name: "index_campsite_signup_minors_on_campsite_signup_id"
+  end
+
+  create_table "campsite_signups", force: :cascade do |t|
+    t.date "arrival_date"
+    t.bigint "campsite_id"
+    t.date "checkout_date"
+    t.datetime "created_at", null: false
+    t.bigint "guest_of_signup_id"
+    t.integer "guest_position"
+    t.string "status", default: "confirmed", null: false
+    t.bigint "trip_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.datetime "waitlist_eligible_at"
+    t.datetime "waiver_acknowledged_at"
+    t.text "waiver_acknowledgement_text"
+    t.string "waiver_acknowledgement_text_digest"
+    t.string "waiver_ip_address"
+    t.string "waiver_signature_digest"
+    t.datetime "waiver_signed_at"
+    t.string "waiver_signer_name"
+    t.text "waiver_text"
+    t.string "waiver_text_digest"
+    t.string "waiver_user_agent"
+    t.index ["arrival_date"], name: "index_campsite_signups_on_arrival_date"
+    t.index ["campsite_id"], name: "index_campsite_signups_on_campsite_id"
+    t.index ["checkout_date"], name: "index_campsite_signups_on_checkout_date"
+    t.index ["guest_of_signup_id", "guest_position"], name: "index_campsite_signups_on_guest_signup_position", where: "(guest_of_signup_id IS NOT NULL)"
+    t.index ["guest_of_signup_id"], name: "index_campsite_signups_on_guest_of_signup_id"
+    t.index ["status"], name: "index_campsite_signups_on_status"
+    t.index ["trip_id", "user_id"], name: "index_campsite_signups_on_trip_id_and_user_id", unique: true
+    t.index ["trip_id"], name: "index_campsite_signups_on_trip_id"
+    t.index ["user_id"], name: "index_campsite_signups_on_user_id"
+    t.index ["waitlist_eligible_at"], name: "index_campsite_signups_on_waitlist_eligible_at"
+    t.index ["waiver_acknowledged_at"], name: "index_campsite_signups_on_waiver_acknowledged_at"
+    t.index ["waiver_acknowledgement_text_digest"], name: "index_campsite_signups_on_waiver_acknowledgement_text_digest"
+    t.index ["waiver_signature_digest"], name: "index_campsite_signups_on_waiver_signature_digest"
+    t.index ["waiver_signed_at"], name: "index_campsite_signups_on_waiver_signed_at"
+    t.index ["waiver_text_digest"], name: "index_campsite_signups_on_waiver_text_digest"
+  end
+
   create_table "campsites", force: :cascade do |t|
     t.date "arrival_date", null: false
     t.bigint "campground_id", null: false
@@ -82,20 +133,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_30_220000) do
     t.datetime "updated_at", null: false
   end
 
-  create_table "campsite_signup_minors", force: :cascade do |t|
+  create_table "trip_signup_minors", force: :cascade do |t|
     t.integer "age", null: false
     t.datetime "created_at", null: false
     t.string "first_name", null: false
     t.string "last_name", null: false
     t.string "relationship", null: false
-    t.bigint "campsite_signup_id", null: false
+    t.bigint "trip_signup_id", null: false
     t.datetime "updated_at", null: false
-    t.index ["age"], name: "index_campsite_signup_minors_on_age"
-    t.index ["campsite_signup_id"], name: "index_campsite_signup_minors_on_campsite_signup_id"
+    t.index ["age"], name: "index_trip_signup_minors_on_age"
+    t.index ["trip_signup_id"], name: "index_trip_signup_minors_on_trip_signup_id"
   end
 
-  create_table "campsite_signups", force: :cascade do |t|
-    t.bigint "campsite_id"
+  create_table "trip_signups", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "status", default: "confirmed", null: false
     t.bigint "trip_id", null: false
@@ -111,22 +161,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_30_220000) do
     t.text "waiver_text"
     t.string "waiver_text_digest"
     t.string "waiver_user_agent"
-    t.date "arrival_date"
-    t.date "checkout_date"
-    t.datetime "waitlist_eligible_at"
-    t.index ["arrival_date"], name: "index_campsite_signups_on_arrival_date"
-    t.index ["campsite_id"], name: "index_campsite_signups_on_campsite_id"
-    t.index ["checkout_date"], name: "index_campsite_signups_on_checkout_date"
-    t.index ["status"], name: "index_campsite_signups_on_status"
-    t.index ["trip_id", "user_id"], name: "index_campsite_signups_on_trip_id_and_user_id", unique: true
-    t.index ["trip_id"], name: "index_campsite_signups_on_trip_id"
-    t.index ["user_id"], name: "index_campsite_signups_on_user_id"
-    t.index ["waitlist_eligible_at"], name: "index_campsite_signups_on_waitlist_eligible_at"
-    t.index ["waiver_acknowledged_at"], name: "index_campsite_signups_on_waiver_acknowledged_at"
-    t.index ["waiver_acknowledgement_text_digest"], name: "index_campsite_signups_on_waiver_acknowledgement_text_digest"
-    t.index ["waiver_signature_digest"], name: "index_campsite_signups_on_waiver_signature_digest"
-    t.index ["waiver_signed_at"], name: "index_campsite_signups_on_waiver_signed_at"
-    t.index ["waiver_text_digest"], name: "index_campsite_signups_on_waiver_text_digest"
+    t.index ["status"], name: "index_trip_signups_on_status"
+    t.index ["trip_id", "user_id"], name: "index_trip_signups_on_trip_id_and_user_id", unique: true
+    t.index ["trip_id"], name: "index_trip_signups_on_trip_id"
+    t.index ["user_id"], name: "index_trip_signups_on_user_id"
+    t.index ["waiver_acknowledged_at"], name: "index_trip_signups_on_waiver_acknowledged_at"
+    t.index ["waiver_acknowledgement_text_digest"], name: "index_trip_signups_on_waiver_acknowledgement_text_digest"
+    t.index ["waiver_signature_digest"], name: "index_trip_signups_on_waiver_signature_digest"
+    t.index ["waiver_signed_at"], name: "index_trip_signups_on_waiver_signed_at"
+    t.index ["waiver_text_digest"], name: "index_trip_signups_on_waiver_text_digest"
   end
 
   create_table "trips", force: :cascade do |t|
@@ -146,6 +189,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_30_220000) do
 
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.boolean "default_password", default: false, null: false
     t.string "email"
     t.string "first_name", null: false
     t.string "last_name", null: false
@@ -158,12 +202,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_30_220000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "campsites", "campgrounds"
-  add_foreign_key "campsites", "trips"
-  add_foreign_key "campsites", "users", column: "registered_by_id"
   add_foreign_key "campsite_signup_minors", "campsite_signups"
+  add_foreign_key "campsite_signups", "campsite_signups", column: "guest_of_signup_id"
   add_foreign_key "campsite_signups", "campsites"
   add_foreign_key "campsite_signups", "trips"
   add_foreign_key "campsite_signups", "users"
+  add_foreign_key "campsites", "campgrounds"
+  add_foreign_key "campsites", "trips"
+  add_foreign_key "campsites", "users", column: "registered_by_id"
+  add_foreign_key "trip_signup_minors", "trip_signups"
   add_foreign_key "trips", "users", column: "campsite_coordinator_id"
 end

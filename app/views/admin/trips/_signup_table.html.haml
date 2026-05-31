@@ -13,8 +13,7 @@
       - unless waitlist
         %th Dates
       %th Minors
-      %th Email
-      %th Phone
+      %th Info
       - if waitlist
         %th
           %span.tooltip-heading.info-tooltip{aria: { label: allowed_signup_tooltip }, tabindex: "0"}
@@ -40,9 +39,19 @@
       - signup_trip = trip || signup.trip
       - missing_dates = !waitlist && (signup.arrival_date.blank? || signup.checkout_date.blank?)
       - missing_waiver = !waitlist && !signup.waiver_signed?
-      - participant_details_link = trip_url(signup_trip, complete_signup: signup.signed_id(purpose: :complete_participant_details), anchor: "campsite-#{signup.campsite_id}") unless waitlist
+      - details_link_purpose = signup.guest? ? :complete_guest_details : :complete_participant_details
+      - details_person_label = signup.guest? ? "guest" : "participant"
+      - participant_details_link = trip_url(signup_trip, complete_signup: signup.signed_id(purpose: details_link_purpose), anchor: "campsite-#{signup.campsite_id}") unless waitlist
       %tr{data: (waitlist ? {} : { controller: "copyable-modal" })}
-        %td= signup.user.full_name
+        %td
+          = signup.user.full_name
+          - if waitlist && signup.includes_guests?
+            - guest_names = signup.guest_signups.map { |guest_signup| guest_signup.user.full_name }.to_sentence
+            %span.muted.admin-linked-party-summary
+              = "#{signup.guest_signups.size} #{'guest'.pluralize(signup.guest_signups.size)}: #{guest_names}"
+          - if signup.guest?
+            %span.muted
+              Added by #{signup.guest_of_signup.user.full_name}
         - if waitlist
           %td
             - if signup.user.member?
@@ -52,19 +61,59 @@
         - unless waitlist
           %td
             - if !missing_dates
-              = signup.attendance_date_range
+              = signup.compact_attendance_date_range
             - else
               %button.missing-value.missing-link{"data-action" => "copyable-modal#open", type: "button"} Missing
         %td
           - if signup.campsite_signup_minors.any?
             %ul.admin-minor-list
-              - signup.campsite_signup_minors.each do |minor|
+              - signup.campsite_signup_minors.each_with_index do |minor, index|
                 %li
-                  = "#{minor.full_name}, age #{minor.age}, #{minor.relationship}"
+                  - minor_info_modal_id = "minor-info-#{signup.id}-#{minor.id || index}"
+                  %div.minor-info-control{"data-controller" => "modal"}
+                    %button.info-link-button{"aria-controls" => minor_info_modal_id, "data-action" => "modal#open", type: "button"}= minor.full_name
+                    %dialog.signup-modal.minor-info-modal{id: minor_info_modal_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                      .signup-modal-content
+                        %div
+                          %h2 Minor information
+                        %dl.details-list
+                          %div
+                            %dt Name
+                            %dd= minor.full_name
+                          %div
+                            %dt Age
+                            %dd= minor.age
+                          %div
+                            %dt Added by
+                            %dd= signup.user.full_name
+                          %div
+                            %dt Relationship
+                            %dd= minor.relationship
+                        .form-actions
+                          %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
           - else
             %span.muted None
-        %td= signup.user.email.presence || "None"
-        %td= signup.user.phone.presence || "None"
+        %td
+          - participant_info_modal_id = "participant-info-#{signup.id}"
+          %div.participant-info-control{"data-controller" => "modal"}
+            %button.info-link-button{"aria-controls" => participant_info_modal_id, "data-action" => "modal#open", type: "button"} View
+            %dialog.signup-modal.participant-info-modal{id: participant_info_modal_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+              .signup-modal-content
+                %div
+                  %h2 Participant info
+                  %p.muted= signup.user.full_name
+                %dl.details-list
+                  %div
+                    %dt Email
+                    %dd= signup.user.email.present? ? mail_to(signup.user.email) : "None"
+                  %div
+                    %dt Phone
+                    %dd= signup.user.phone.presence || "None"
+                  %div
+                    %dt Membership
+                    %dd= signup.user.member? ? "Member" : "Non-member"
+                .form-actions
+                  %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
         - if waitlist
           %td
             - if signup.waitlist_eligible?
@@ -120,8 +169,8 @@
                 .signup-modal-content
                   %div
                     %h2 Missing participant details
-                    %p We need to collect waiver and attendance dates from this participant.
-                    %p Share this link with the participant so they can sign the waiver and select dates:
+                    %p We need to collect waiver and attendance dates from this #{details_person_label}.
+                    %p Share this link with the #{details_person_label} so they can sign the waiver and select dates:
                   .missing-details-link-row
                     = link_to "Waiver and Date Selection Link", participant_details_link, class: "missing-details-link", "data-copyable-modal-target" => "source"
                     %button.button.secondary.copy-link-button{"data-action" => "copyable-modal#copy", type: "button"}
@@ -136,16 +185,19 @@
                   .form-actions
                     %button.button.secondary{"data-action" => "copyable-modal#close", type: "button"} Close
           %td
-            %div{"data-controller" => "modal"}
-              %button.button.secondary{"data-action" => "modal#open", :type => "button"} Waitlist
-              %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
-                .confirmation-modal-content
-                  %div
-                    %h2 Move #{signup.user.full_name} to the waitlist?
-                    %p This will remove their campsite assignment and attendance dates.
-                  .form-actions
-                    %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
-                    = button_to "Waitlist", move_to_waitlist_admin_trip_campsite_signup_path(signup_trip, signup), method: :patch, class: "button secondary"
+            - if signup.guest?
+              %span.muted Follows primary
+            - else
+              %div{"data-controller" => "modal"}
+                %button.button.secondary{"data-action" => "modal#open", :type => "button"} Waitlist
+                %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                  .confirmation-modal-content
+                    %div
+                      %h2 Move #{signup.user.full_name} to the waitlist?
+                      %p This will remove their campsite assignment and attendance dates.
+                    .form-actions
+                      %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
+                      = button_to "Waitlist", move_to_waitlist_admin_trip_campsite_signup_path(signup_trip, signup), method: :patch, class: "button secondary"
           %td
             %div{"data-controller" => "modal"}
               %button.button.danger.secondary{"data-action" => "modal#open", :type => "button"} Remove

@@ -3,7 +3,9 @@ class Admin::CampsiteSignupsController < ApplicationController
     trip = Trip.find(params[:trip_id])
     signup = trip.campsite_signups.find(params[:id])
 
-    if signup.confirmed?
+    if signup.guest?
+      redirect_to admin_trip_path(trip), alert: "Guests follow the primary participant signup."
+    elsif signup.confirmed?
       redirect_to admin_trip_path(trip), alert: "#{signup.user.full_name} is already confirmed for this trip."
     elsif signup.update(waitlist_eligible_at: Time.current)
       redirect_to admin_trip_path(trip), notice: "#{signup.user.full_name} can now confirm an open campsite spot."
@@ -43,7 +45,9 @@ class Admin::CampsiteSignupsController < ApplicationController
     trip = Trip.find(params[:trip_id])
     signup = trip.campsite_signups.find(params[:id])
 
-    if signup.waitlisted?
+    if signup.guest?
+      redirect_to admin_trip_path(trip), alert: "Guests follow the primary participant signup."
+    elsif signup.waitlisted?
       redirect_to admin_trip_path(trip), alert: "#{signup.user.full_name} is already on the waitlist."
     elsif move_confirmed_signup_to_waitlist(signup)
       redirect_to admin_trip_path(trip), notice: "#{signup.user.full_name} was moved to the waitlist."
@@ -86,6 +90,15 @@ class Admin::CampsiteSignupsController < ApplicationController
         checkout_date: nil,
         waitlist_eligible_at: nil
       )
+      signup.guest_signups.each do |guest_signup|
+        guest_signup.update!(
+          campsite: campsite,
+          status: "confirmed",
+          arrival_date: nil,
+          checkout_date: nil,
+          waitlist_eligible_at: nil
+        )
+      end
       campsite.lock_signups_if_full!
       moved = true
     end
@@ -111,6 +124,15 @@ class Admin::CampsiteSignupsController < ApplicationController
         checkout_date: nil,
         waitlist_eligible_at: nil
       )
+      signup.guest_signups.each do |guest_signup|
+        guest_signup.update!(
+          campsite: nil,
+          status: "waitlisted",
+          arrival_date: nil,
+          checkout_date: nil,
+          waitlist_eligible_at: nil
+        )
+      end
       moved = true
     end
 

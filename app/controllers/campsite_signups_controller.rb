@@ -3,6 +3,7 @@ require "stringio"
 
 class CampsiteSignupsController < ApplicationController
   before_action :require_login
+  skip_before_action :require_login, only: :guest_password
 
   def create
     trip = Trip.published.find(params[:trip_id])
@@ -46,16 +47,37 @@ class CampsiteSignupsController < ApplicationController
     end
   end
 
+  def guest_password
+    trip = Trip.published.find(params[:trip_id])
+    campsite = trip.campsites.find(params[:campsite_id])
+    signup = find_guest_completion_signup(trip, campsite)
+
+    if signup.blank?
+      redirect_to trip_path(trip), alert: "This guest waiver link is invalid."
+    elsif !signup.user.default_password?
+      log_in_guest(signup)
+      redirect_to trip_path(trip, complete_signup: params[:complete_signup], anchor: "campsite-#{campsite.id}")
+    elsif update_guest_password(signup)
+      log_in_guest(signup)
+      redirect_to trip_path(trip, complete_signup: params[:complete_signup], anchor: "campsite-#{campsite.id}"), notice: "Your password has been updated."
+    else
+      redirect_to trip_path(trip, complete_signup: params[:complete_signup], anchor: "campsite-#{campsite.id}"), alert: signup.user.errors.full_messages.to_sentence
+    end
+  end
+
   private
 
   def join_waitlist(trip, campsite, signup)
     minor_attributes = normalized_minor_attributes
+    guest_attributes = normalized_guest_attributes
 
     if !campsite.waitlist_signup_required?
       redirect_to trip_path(trip), alert: "This campsite still has space. Please sign up for the campsite directly."
     elsif signing_up_with_minors? && minor_attributes.empty?
       redirect_to trip_path(trip), alert: "Please enter minor information before joining the waitlist."
-    elsif create_waitlist_signup(signup, minor_attributes)
+    elsif signing_up_with_guests? && guest_attributes.empty?
+      redirect_to trip_path(trip), alert: "Please enter guest information before joining the waitlist."
+    elsif create_waitlist_signup(signup, minor_attributes, guest_attributes)
       campsite.lock_signups! if campsite.capacity_full?
       redirect_to trip_path(trip), notice: "You have been added to the waitlist for this trip."
     else
@@ -65,27 +87,30 @@ class CampsiteSignupsController < ApplicationController
 
   def create_confirmed_signup(trip, campsite, signup)
     minor_attributes = normalized_minor_attributes
+    guest_attributes = normalized_guest_attributes
 
     if !campsite.direct_signup_available?
       redirect_to trip_path(trip), alert: "This campsite is using the waitlist."
     elsif signing_up_with_minors? && minor_attributes.empty?
       redirect_to trip_path(trip), alert: "Please enter minor information before signing up."
-    elsif !campsite_has_room_for?(campsite, minor_attributes)
-      join_waitlist_from_full_party(trip, signup, minor_attributes)
+    elsif signing_up_with_guests? && guest_attributes.empty?
+      redirect_to trip_path(trip), alert: "Please enter guest information before signing up."
+    elsif !campsite_has_room_for?(campsite, minor_attributes, guest_attributes)
+      join_waitlist_from_full_party(trip, signup, minor_attributes, guest_attributes)
     else
-      create_signup_with_confirmation(trip, campsite, signup, minor_attributes)
+      create_signup_with_confirmation(trip, campsite, signup, minor_attributes, guest_attributes)
     end
   end
 
-  def join_waitlist_from_full_party(trip, signup, minor_attributes)
-    if create_waitlist_signup(signup, minor_attributes)
+  def join_waitlist_from_full_party(trip, signup, minor_attributes, guest_attributes)
+    if create_waitlist_signup(signup, minor_attributes, guest_attributes)
       redirect_to trip_path(trip), notice: "There is not enough space for your party, so you have been added to the waitlist for this trip."
     else
       redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
     end
   end
 
-  def create_signup_with_confirmation(trip, campsite, signup, minor_attributes)
+  def create_signup_with_confirmation(trip, campsite, signup, minor_attributes, guest_attributes)
     signature = WaiverSignatureData.new(signup_params[:waiver_signature_data])
     acknowledged_at = waiver_acknowledged_at
 
@@ -95,7 +120,7 @@ class CampsiteSignupsController < ApplicationController
       redirect_to trip_path(trip), alert: "Please sign the waiver before signing up."
     elsif !attendance_dates_present?(signup)
       redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
-    elsif create_signup_with_waiver(signup, campsite, signature, acknowledged_at, minor_attributes)
+    elsif create_signup_with_waiver(signup, campsite, signature, acknowledged_at, minor_attributes, guest_attributes)
       redirect_to trip_path(trip), notice: "You are confirmed for this campsite."
     else
       redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
@@ -171,12 +196,19 @@ class CampsiteSignupsController < ApplicationController
     params.fetch(:campsite_signup, {}).permit(
       :intent,
       :signup_kind,
+      :with_minors,
+      :with_guests,
       :arrival_date,
       :checkout_date,
       :waiver_signature_data,
       :waiver_acknowledged_at,
-      campsite_signup_minors_attributes: %i[first_name last_name age relationship]
+      campsite_signup_minors_attributes: %i[first_name last_name age relationship],
+      guest_attributes: %i[first_name last_name email phone]
     )
+  end
+
+  def guest_password_params
+    params.fetch(:user, {}).permit(:password, :password_confirmation)
   end
 
   def attendance_params
@@ -213,7 +245,11 @@ class CampsiteSignupsController < ApplicationController
   end
 
   def signing_up_with_minors?
-    signup_params[:signup_kind] == "with_minors"
+    signup_params[:with_minors] == "1" || signup_params[:signup_kind] == "with_minors"
+  end
+
+  def signing_up_with_guests?
+    signup_params[:with_guests] == "1"
   end
 
   def normalized_minor_attributes
@@ -228,33 +264,65 @@ class CampsiteSignupsController < ApplicationController
     end
   end
 
-  def campsite_has_room_for?(campsite, minor_attributes)
+  def normalized_guest_attributes
+    return [] unless signing_up_with_guests?
+
+    raw_attributes = signup_params[:guest_attributes] || {}
+    raw_attributes.values.filter_map do |attributes|
+      cleaned = attributes.to_h.transform_values { |value| value.to_s.strip }
+      next if cleaned.values.all?(&:blank?)
+
+      cleaned[:email] = cleaned[:email].to_s.downcase
+      cleaned
+    end
+  end
+
+  def campsite_has_room_for?(campsite, minor_attributes, guest_attributes)
     capacity_count = 1 + minor_attributes.count { |attributes| attributes[:age].to_i >= SiteSetting.current.uncounted_minor_age_limit }
+    capacity_count += guest_attributes.size
     campsite.available_participant_capacity >= capacity_count
   end
 
   def campsite_has_room_for_waitlisted_signup?(campsite, signup)
-    campsite.available_participant_capacity >= signup.capacity_count
+    campsite.available_participant_capacity >= signup.party_capacity_count
   end
 
-  def create_waitlist_signup(signup, minor_attributes)
+  def create_waitlist_signup(signup, minor_attributes, guest_attributes)
     CampsiteSignup.transaction do
       signup.status = "waitlisted"
       minor_attributes.each { |attributes| signup.campsite_signup_minors.build(attributes) }
       signup.save!
+      create_guest_signups!(signup, guest_attributes, status: "waitlisted")
     end
     true
   rescue ActiveRecord::RecordInvalid
     false
   end
 
-  def create_signup_with_waiver(signup, campsite, signature, acknowledged_at, minor_attributes)
+  def create_signup_with_waiver(signup, campsite, signature, acknowledged_at, minor_attributes, guest_attributes)
     CampsiteSignup.transaction do
       campsite.lock!
-      signup.assign_attributes(attendance_params.merge(campsite: campsite, status: "confirmed"))
+      unless campsite_has_room_for?(campsite, minor_attributes, guest_attributes)
+        signup.errors.add(:base, "There is not enough space for your party at this campsite")
+        raise ActiveRecord::RecordInvalid.new(signup)
+      end
+
+      signup.assign_attributes(attendance_params.merge(
+        campsite: campsite,
+        status: "confirmed",
+        waitlist_eligible_at: nil
+      ))
       minor_attributes.each { |attributes| signup.campsite_signup_minors.build(attributes) }
       signup.save!
       attach_waiver!(signup, signature, acknowledged_at)
+      create_guest_signups!(
+        signup,
+        guest_attributes,
+        status: "confirmed",
+        campsite: campsite,
+        arrival_date: signup.arrival_date,
+        checkout_date: signup.checkout_date
+      )
       campsite.lock_signups_if_full!
     end
     true
@@ -274,9 +342,14 @@ class CampsiteSignupsController < ApplicationController
         raise ActiveRecord::Rollback
       end
 
-      signup.assign_attributes(attendance_params.merge(campsite: campsite, status: "confirmed"))
+      signup.assign_attributes(attendance_params.merge(
+        campsite: campsite,
+        status: "confirmed",
+        waitlist_eligible_at: nil
+      ))
       signup.save!
       attach_waiver!(signup, signature, acknowledged_at)
+      move_guest_signups_to_campsite!(signup, campsite, signup.arrival_date, signup.checkout_date)
       campsite.lock_signups_if_full!
       confirmed = true
     end
@@ -305,6 +378,7 @@ class CampsiteSignupsController < ApplicationController
       ))
       signup.save!
       attach_waiver!(signup, signature, acknowledged_at)
+      move_guest_signups_to_campsite!(signup, campsite, signup.arrival_date, signup.checkout_date)
       campsite.lock_signups_if_full!
       confirmed = true
     end
@@ -324,6 +398,101 @@ class CampsiteSignupsController < ApplicationController
     true
   rescue ActiveRecord::RecordInvalid
     false
+  end
+
+  def create_guest_signups!(signup, guest_attributes, status:, campsite: nil, arrival_date: nil, checkout_date: nil)
+    return if guest_attributes.empty?
+
+    validate_guest_attributes!(signup, guest_attributes)
+
+    guest_attributes.each_with_index do |attributes, index|
+      guest_user = guest_user_for!(signup, attributes)
+      signup.trip.campsite_signups.create!(
+        user: guest_user,
+        guest_of_signup: signup,
+        guest_position: index + 1,
+        status: status,
+        campsite: campsite,
+        arrival_date: arrival_date,
+        checkout_date: checkout_date
+      )
+    end
+  end
+
+  def validate_guest_attributes!(signup, guest_attributes)
+    if guest_attributes.size > CampsiteSignup::MAX_GUESTS_PER_SIGNUP
+      signup.errors.add(:base, "You can add up to #{CampsiteSignup::MAX_GUESTS_PER_SIGNUP} guests")
+    end
+
+    emails = guest_attributes.map { |attributes| attributes[:email].to_s.downcase }
+    signup.errors.add(:base, "Guest emails must be unique") if emails.uniq.size != emails.size
+
+    guest_attributes.each_with_index do |attributes, index|
+      row_label = "Guest #{index + 1}"
+      signup.errors.add(:base, "#{row_label} first name can't be blank") if attributes[:first_name].blank?
+      signup.errors.add(:base, "#{row_label} last name can't be blank") if attributes[:last_name].blank?
+      signup.errors.add(:base, "#{row_label} email can't be blank") if attributes[:email].blank?
+    end
+
+    raise ActiveRecord::RecordInvalid.new(signup) if signup.errors.any?
+  end
+
+  def guest_user_for!(signup, attributes)
+    email = attributes[:email].to_s.downcase
+    user = User.find_by(email: email)
+
+    if user.present?
+      if user == current_user || signup.trip.campsite_signups.where(user: user).where.not(id: signup.id).exists?
+        signup.errors.add(:base, "#{user.full_name} is already signed up for this trip")
+        raise ActiveRecord::RecordInvalid.new(signup)
+      end
+
+      return user
+    end
+
+    User.create!(
+      first_name: attributes[:first_name],
+      last_name: attributes[:last_name],
+      email: email,
+      phone: attributes[:phone],
+      member: false,
+      password: User::DEFAULT_GUEST_PASSWORD,
+      password_confirmation: User::DEFAULT_GUEST_PASSWORD,
+      default_password: true
+    )
+  rescue ActiveRecord::RecordInvalid => error
+    error.record.errors.full_messages.each { |message| signup.errors.add(:base, "Guest #{message}") } if error.record.is_a?(User)
+    raise ActiveRecord::RecordInvalid.new(signup)
+  end
+
+  def move_guest_signups_to_campsite!(signup, campsite, arrival_date, checkout_date)
+    signup.guest_signups.each do |guest_signup|
+      guest_signup.update!(
+        campsite: campsite,
+        status: "confirmed",
+        arrival_date: arrival_date,
+        checkout_date: checkout_date,
+        waitlist_eligible_at: nil
+      )
+    end
+  end
+
+  def find_guest_completion_signup(trip, campsite)
+    signup = CampsiteSignup.includes(:campsite, :user).find_signed(params[:complete_signup], purpose: :complete_guest_details)
+    return if signup.blank?
+    return if signup.trip_id != trip.id || signup.campsite_id != campsite.id
+    return unless signup.guest?
+
+    signup
+  end
+
+  def update_guest_password(signup)
+    signup.user.update(guest_password_params.merge(default_password: false))
+  end
+
+  def log_in_guest(signup)
+    session[:user_id] = signup.user_id
+    @current_user = signup.user
   end
 
   def attach_waiver!(signup, signature, acknowledged_at)

@@ -56,7 +56,7 @@ class Campsite < ApplicationRecord
   end
 
   def available_for_waitlist_confirmation?(signup)
-    signups_locked? && available_participant_capacity >= signup.capacity_count
+    available_participant_capacity >= signup.party_capacity_count
   end
 
   def confirmed_signups

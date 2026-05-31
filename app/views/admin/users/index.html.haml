@@ -12,6 +12,7 @@
           %th Email
           %th Phone
           %th Member
+          %th Default Password
       %tbody
         - @users.each do |user|
           %tr
@@ -28,6 +29,7 @@
             %td= user.email.presence || tag.span("None")
             %td= user.phone.presence || tag.span("None")
             %td= user.member? ? "Yes" : "No"
+            %td= user.default_password? ? "Yes" : "No"
   - else
     .empty-state
       %p No users have been added yet.

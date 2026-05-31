@@ -50,7 +50,7 @@
           - signed_up_for_this_campsite = current_confirmed_signup && @current_signup.campsite_id == campsite.id
           - signed_up_for_another_campsite = current_confirmed_signup && @current_signup.campsite_id != campsite.id
           - waitlist_confirmation_available = current_waitlisted_signup && @waitlist_confirmation_campsite_ids.include?(campsite.id)
-          - waitlist_direct_signup_available = current_waitlisted_signup && campsite.direct_signup_available? && campsite.available_participant_capacity >= @current_signup.capacity_count
+          - waitlist_direct_signup_available = current_waitlisted_signup && campsite.direct_signup_available? && campsite.available_participant_capacity >= @current_signup.party_capacity_count
           - locked_with_open_spots = campsite.signups_locked? && campsite.available_participant_capacity.positive?
           %section.campsite-card{id: "campsite-#{campsite.id}"}
             .campsite-card-header
@@ -130,9 +130,29 @@
               .confirmed-signups-section
                 %h4 Confirmed participants
                 - if campsite.confirmed_signups.any?
-                  %ul.participant-list
-                    - campsite.confirmed_signups.each do |signup|
-                      %li= signup.public_participant_name
+                  %table.confirmed-participants-table
+                    %thead
+                      %tr
+                        %th Participant
+                        %th Member
+                        %th Dates
+                        %th Minors
+                    %tbody
+                      - campsite.confirmed_signups.each do |signup|
+                        %tr
+                          %td
+                            = signup.user.public_name
+                            - if signup.guest?
+                              %span.public-added-by
+                                Added by #{signup.guest_of_signup.user.public_name}
+                          %td= signup.user.member? ? "Member" : "Non-member"
+                          %td= signup.attendance_date_range
+                          %td
+                            - minor_age_summary = signup.public_minor_age_summary(age_limit: @trip.uncounted_minor_age_limit)
+                            - if minor_age_summary == "None"
+                              %span.muted None
+                            - else
+                              = minor_age_summary
                 - else
                   %p.muted No confirmed participants yet.
       - if @waitlisted_signups.any?
@@ -191,4 +211,7 @@
     - else
       %p.muted Unassigned
   - if @completion_signup.present?
-    = render "participant_details_modal", trip: @trip, signup: @completion_signup
+    - if @completion_signup.guest? && @completion_signup.user.default_password?
+      = render "guest_password_modal", trip: @trip, signup: @completion_signup, token: @guest_completion_token
+    - else
+      = render "participant_details_modal", trip: @trip, signup: @completion_signup

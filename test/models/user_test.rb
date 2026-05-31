@@ -29,6 +29,22 @@ class UserTest < ActiveSupport::TestCase
     assert_not user.authenticate("wrong-password")
   end
 
+  test "default password flag is explicit and clears when password changes" do
+    user = User.create!(
+      first_name: "Guest",
+      last_name: "Climber",
+      email: "guest-climber@example.com",
+      password: User::DEFAULT_GUEST_PASSWORD,
+      default_password: true
+    )
+
+    assert user.default_password?
+
+    user.update!(password: "new-password", password_confirmation: "new-password")
+
+    assert_not user.default_password?
+  end
+
   test "rejects duplicate nonblank email case insensitively" do
     user = User.new(first_name: "Duplicate", last_name: "Email", email: "ALEX@EXAMPLE.COM", password: "password")
 
