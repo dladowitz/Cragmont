@@ -316,6 +316,23 @@ input[type="submit"]:disabled {
   color: var(--muted);
 }
 
+.campsite-form-panel {
+  padding-top: 18px;
+}
+
+.campsite-form-panel .panel-header {
+  margin-bottom: 12px;
+}
+
+.campsite-form-panel .panel-header h2 {
+  margin-bottom: 0;
+}
+
+.campsite-form-panel .trip-title-line p {
+  margin-bottom: 0;
+  font-size: 1.05rem;
+}
+
 .confirmed-signups-section {
   padding: 16px;
   border: 1px solid;
@@ -523,6 +540,14 @@ input[type="submit"]:disabled {
   align-items: center;
 }
 
+.form-actions .danger-form-action {
+  margin-left: auto;
+}
+
+.hidden-delete-form {
+  display: none;
+}
+
 .table-actions {
   white-space: nowrap;
 }
@@ -539,6 +564,22 @@ input[type="submit"]:disabled {
 .table-actions [data-controller="modal"] {
   display: inline-block;
   margin-left: 10px;
+}
+
+.table-actions .campsite-registration {
+  margin-top: 12px;
+  color: var(--muted);
+  line-height: 1.35;
+  text-align: left;
+  white-space: normal;
+}
+
+.table-actions .campsite-registration p {
+  margin: 0;
+}
+
+.table-actions .campsite-registration .small-link {
+  font-size: 0.9rem;
 }
 
 .disabled-tooltip {
@@ -622,6 +663,10 @@ input[type="submit"]:disabled {
     transform 160ms ease;
 }
 
+.admin-campsite-card {
+  gap: 12px;
+}
+
 .campsite-card:hover,
 .campsite-card:focus-within,
 .admin-campsite-card:hover,
@@ -663,9 +708,28 @@ input[type="submit"]:disabled {
   gap: 4px;
 }
 
+.campsite-heading-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.campsite-heading-line p {
+  font-size: 0.95rem;
+}
+
 .campsite-card-summary .date-pair,
 .admin-campsite-card-header .date-pair {
   margin-top: 16px;
+}
+
+.admin-campsite-card-header .date-pair {
+  margin-top: 8px;
+}
+
+.admin-campsite-card .campsite-stats {
+  margin-top: 2px;
 }
 
 .campsite-lock-notice {

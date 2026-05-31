@@ -46,21 +46,25 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".campground-group", count: 0
     assert_select ".admin-campsite-card-header h4", text: "Upper Pines site A12"
     assert_select ".admin-campsite-card-header p", text: "Yosemite National Park"
+    assert_select ".campsite-registration", text: /Site registered by:\s*Alex Rivera/
+    assert_select "#admin-campsite-#{campsites(:yosemite_b).id}" do
+      assert_select ".campsite-registration", text: /Site registered by:/
+      assert_select ".campsite-registration", text: /Registration #/
+      assert_select ".campsite-registration a[href='#{edit_admin_trip_campsite_path(trips(:yosemite), campsites(:yosemite_b))}']", text: "Update", count: 2
+    end
     assert_select "a.button.secondary", text: "Add campsite"
-    assert_select ".table-actions a.button.secondary", text: "Edit"
+    assert_select ".table-actions a.button.secondary", text: "Edit Campsite"
     assert_select "dialog.confirmation-modal", text: /This will not remove signed-up participants from the trip\./, count: 0
     assert_select "#admin-campsite-#{campsites(:yosemite_a).id}" do
-      assert_select ".table-actions > .disabled-tooltip[aria-label='Cannot delete campsite with participants signed up. Remove them or move to the waitlist first']" do
-        assert_select "button.button.danger.secondary[disabled]", text: "Delete"
-      end
+      assert_select ".table-actions button", text: "Delete", count: 0
       assert_select ".table-actions > [data-controller='modal']", count: 0
       assert_select "dialog.confirmation-modal", text: /Delete campsite\?/, count: 0
       assert_select "form[action='#{admin_trip_campsite_path(trips(:yosemite), campsites(:yosemite_a))}']", count: 0
     end
     assert_select "#admin-campsite-#{campsites(:yosemite_b).id}" do
-      assert_select ".table-actions [data-controller='modal'] button.button.danger.secondary", text: "Delete"
-      assert_select "dialog.confirmation-modal", text: /Delete campsite\?/
-      assert_select "dialog.confirmation-modal form[action='#{admin_trip_campsite_path(trips(:yosemite), campsites(:yosemite_b))}']"
+      assert_select ".table-actions button", text: "Delete", count: 0
+      assert_select "dialog.confirmation-modal", text: /Delete campsite\?/, count: 0
+      assert_select "form[action='#{admin_trip_campsite_path(trips(:yosemite), campsites(:yosemite_b))}']", count: 0
     end
     assert_select ".campsite-notes", text: /Close to bathrooms/
     assert_select ".confirmed-signups-section" do

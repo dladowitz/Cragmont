@@ -2,6 +2,7 @@ class Admin::CampsitesController < ApplicationController
   before_action :set_trip
   before_action :set_campsite, only: %i[edit update destroy]
   before_action :set_campgrounds, only: %i[new create edit update]
+  before_action :set_users, only: %i[new create edit update]
 
   def new
     @campsite = @trip.campsites.new
@@ -50,9 +51,15 @@ class Admin::CampsitesController < ApplicationController
     @campgrounds = Campground.order(:name)
   end
 
+  def set_users
+    @users = User.order(:last_name, :first_name)
+  end
+
   def campsite_params
     params.require(:campsite).permit(
       :campground_id,
+      :registered_by_id,
+      :registration_number,
       :site_number,
       :arrival_date,
       :checkout_date,

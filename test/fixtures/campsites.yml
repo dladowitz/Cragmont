@@ -6,6 +6,8 @@ yosemite_a:
   checkout_date: 2026-06-15
   participant_capacity: 6
   car_capacity: 2
+  registered_by: alex
+  registration_number: YO-2026-A12
   notes: Close to bathrooms.
 
 yosemite_b:
