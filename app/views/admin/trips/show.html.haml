@@ -26,7 +26,6 @@
           = simple_format(@trip.description)
     .actions
       = link_to "Edit trip", edit_admin_trip_path(@trip), class: "button secondary"
-      = button_to "Delete trip", admin_trip_path(@trip), method: :delete, class: "button danger"
   .stats
     - if @trip.confirmed_uncounted_minor_count.positive?
       .split-signup-stat
@@ -74,6 +73,7 @@
                   %dt Checkout
                   %dd= campsite.checkout_date.to_fs(:long)
             %div.table-actions
+              = render "add_participant_modal", trip: @trip, campsite: campsite, users: @users, trip_participant_user_ids: @trip_participant_user_ids
               = link_to "Edit Campsite", edit_admin_trip_campsite_path(@trip, campsite), class: "button secondary"
               .campsite-registration
                 %p

@@ -13,6 +13,9 @@
         %div
           %dt Club member
           %dd= @user.member? ? "Yes" : "No"
+        %div
+          %dt Default Password
+          %dd= @user.default_password? ? "Yes" : "No"
     .actions
       = link_to "Edit user", edit_admin_user_path(@user), class: "button secondary"
       = button_to "Delete user",                                                        |

@@ -26,13 +26,13 @@
             .guest-field-row{"data-party-row" => "", "data-party-row-visible" => (index.zero? ? "true" : "false"), hidden: !index.zero?}
               %button.remove-person-button{"aria-label" => "Remove guest", "data-action" => "waitlist-form#removePartyRow", type: "button"} X
               %div
-                = label_tag "campsite_#{campsite.id}_waitlist_guest_#{index}_first_name", "First name"
+                = required_label_tag "campsite_#{campsite.id}_waitlist_guest_#{index}_first_name", "First name"
                 = text_field_tag "campsite_signup[guest_attributes][#{index}][first_name]", "", id: "campsite_#{campsite.id}_waitlist_guest_#{index}_first_name", data: { required_for_guest: "true" }
               %div
-                = label_tag "campsite_#{campsite.id}_waitlist_guest_#{index}_last_name", "Last name"
+                = required_label_tag "campsite_#{campsite.id}_waitlist_guest_#{index}_last_name", "Last name"
                 = text_field_tag "campsite_signup[guest_attributes][#{index}][last_name]", "", id: "campsite_#{campsite.id}_waitlist_guest_#{index}_last_name", data: { required_for_guest: "true" }
               %div
-                = label_tag "campsite_#{campsite.id}_waitlist_guest_#{index}_email", "Email"
+                = required_label_tag "campsite_#{campsite.id}_waitlist_guest_#{index}_email", "Email"
                 = email_field_tag "campsite_signup[guest_attributes][#{index}][email]", "", id: "campsite_#{campsite.id}_waitlist_guest_#{index}_email", data: { required_for_guest: "true" }
               %div
                 = label_tag "campsite_#{campsite.id}_waitlist_guest_#{index}_phone", "Phone"
@@ -47,16 +47,16 @@
             .minor-field-row{"data-party-row" => "", "data-party-row-visible" => (index.zero? ? "true" : "false"), hidden: !index.zero?}
               %button.remove-person-button{"aria-label" => "Remove minor", "data-action" => "waitlist-form#removePartyRow", type: "button"} X
               %div
-                = label_tag "campsite_#{campsite.id}_waitlist_minor_#{index}_first_name", "First name"
+                = required_label_tag "campsite_#{campsite.id}_waitlist_minor_#{index}_first_name", "First name"
                 = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][first_name]", "", id: "campsite_#{campsite.id}_waitlist_minor_#{index}_first_name", data: { required_for_minor: "true" }
               %div
-                = label_tag "campsite_#{campsite.id}_waitlist_minor_#{index}_last_name", "Last name"
+                = required_label_tag "campsite_#{campsite.id}_waitlist_minor_#{index}_last_name", "Last name"
                 = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][last_name]", "", id: "campsite_#{campsite.id}_waitlist_minor_#{index}_last_name", data: { required_for_minor: "true" }
               %div
-                = label_tag "campsite_#{campsite.id}_waitlist_minor_#{index}_age", "Age"
+                = required_label_tag "campsite_#{campsite.id}_waitlist_minor_#{index}_age", "Age"
                 = number_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][age]", "", id: "campsite_#{campsite.id}_waitlist_minor_#{index}_age", min: 0, max: 17, data: { required_for_minor: "true" }
               %div
-                = label_tag "campsite_#{campsite.id}_waitlist_minor_#{index}_relationship", "Relationship"
+                = required_label_tag "campsite_#{campsite.id}_waitlist_minor_#{index}_relationship", "Relationship"
                 = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][relationship]", "", id: "campsite_#{campsite.id}_waitlist_minor_#{index}_relationship", placeholder: "Parent, Guardian, Uncle, etc", data: { required_for_minor: "true" }
             - if index.zero?
               %button.add-person-link{"data-action" => "waitlist-form#revealPartyRow", "data-add-party-row" => "", type: "button"} Add another minor

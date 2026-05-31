@@ -10,7 +10,10 @@ export default class extends Controller {
     }
   }
 
-  open() {
+  open(event) {
+    event?.preventDefault()
+    if (this.dialogTarget.open) return
+
     this.dialogTarget.showModal()
   }
 

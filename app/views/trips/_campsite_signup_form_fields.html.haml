@@ -23,10 +23,10 @@
         %p.muted= attendance_help_text
       .attendance-date-row
         .field
-          = label_tag arrival_id, "Arrival date"
+          = required_label_tag arrival_id, "Arrival date"
           = date_field_tag "campsite_signup[arrival_date]", existing_signup&.arrival_date, id: arrival_id, min: campsite.arrival_date, max: campsite.checkout_date - 1.day, required: true, data: { signature_target: "arrivalDate", action: "input->signature#checkAttendanceDates" }
         .field
-          = label_tag checkout_id, "Checkout date"
+          = required_label_tag checkout_id, "Checkout date"
           = date_field_tag "campsite_signup[checkout_date]", existing_signup&.checkout_date, id: checkout_id, min: campsite.arrival_date + 1.day, max: campsite.checkout_date, required: true, data: { signature_target: "checkoutDate", action: "input->signature#checkAttendanceDates" }
     - unless waitlisted_signup
       %fieldset.signup-kind-options
@@ -45,13 +45,13 @@
           .guest-field-row{"data-party-row" => "", "data-party-row-visible" => (index.zero? ? "true" : "false"), hidden: !index.zero?}
             %button.remove-person-button{"aria-label" => "Remove guest", "data-action" => "signature#removePartyRow", type: "button"} X
             %div
-              = label_tag "campsite_#{campsite.id}_signup_guest_#{index}_first_name", "First name"
+              = required_label_tag "campsite_#{campsite.id}_signup_guest_#{index}_first_name", "First name"
               = text_field_tag "campsite_signup[guest_attributes][#{index}][first_name]", "", id: "campsite_#{campsite.id}_signup_guest_#{index}_first_name", data: { required_for_guest: "true" }
             %div
-              = label_tag "campsite_#{campsite.id}_signup_guest_#{index}_last_name", "Last name"
+              = required_label_tag "campsite_#{campsite.id}_signup_guest_#{index}_last_name", "Last name"
               = text_field_tag "campsite_signup[guest_attributes][#{index}][last_name]", "", id: "campsite_#{campsite.id}_signup_guest_#{index}_last_name", data: { required_for_guest: "true" }
             %div
-              = label_tag "campsite_#{campsite.id}_signup_guest_#{index}_email", "Email"
+              = required_label_tag "campsite_#{campsite.id}_signup_guest_#{index}_email", "Email"
               = email_field_tag "campsite_signup[guest_attributes][#{index}][email]", "", id: "campsite_#{campsite.id}_signup_guest_#{index}_email", data: { required_for_guest: "true" }
             %div
               = label_tag "campsite_#{campsite.id}_signup_guest_#{index}_phone", "Phone"
@@ -66,16 +66,16 @@
           .minor-field-row{"data-party-row" => "", "data-party-row-visible" => (index.zero? ? "true" : "false"), hidden: !index.zero?}
             %button.remove-person-button{"aria-label" => "Remove minor", "data-action" => "signature#removePartyRow", type: "button"} X
             %div
-              = label_tag "campsite_#{campsite.id}_signup_minor_#{index}_first_name", "First name"
+              = required_label_tag "campsite_#{campsite.id}_signup_minor_#{index}_first_name", "First name"
               = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][first_name]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_first_name", data: { required_for_minor: "true" }
             %div
-              = label_tag "campsite_#{campsite.id}_signup_minor_#{index}_last_name", "Last name"
+              = required_label_tag "campsite_#{campsite.id}_signup_minor_#{index}_last_name", "Last name"
               = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][last_name]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_last_name", data: { required_for_minor: "true" }
             %div
-              = label_tag "campsite_#{campsite.id}_signup_minor_#{index}_age", "Age"
+              = required_label_tag "campsite_#{campsite.id}_signup_minor_#{index}_age", "Age"
               = number_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][age]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_age", min: 0, max: 17, data: { required_for_minor: "true", action: "input->signature#updateCapacityWarning" }
             %div
-              = label_tag "campsite_#{campsite.id}_signup_minor_#{index}_relationship", "Relationship"
+              = required_label_tag "campsite_#{campsite.id}_signup_minor_#{index}_relationship", "Relationship"
               = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][relationship]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_relationship", placeholder: "Parent, Guardian, Uncle, etc", data: { required_for_minor: "true" }
           - if index.zero?
             %button.add-person-link{"data-action" => "signature#revealPartyRow", "data-add-party-row" => "", type: "button"} Add another minor
@@ -103,7 +103,9 @@
             %p= block
     .signature-field
       .signature-label-row
-        %label{:for => signature_id} Signature
+        %label{:for => signature_id}
+          Signature
+          = required_marker
         %span You must view all the text to sign
       %canvas.signature-pad{id: signature_id, "data-signature-target" => "canvas", :height => "120", :width => "560"}
       = hidden_field_tag "campsite_signup[waiver_signature_data]", "", data: { signature_target: "input" }

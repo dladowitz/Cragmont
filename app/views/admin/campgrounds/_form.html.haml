@@ -2,10 +2,10 @@
   = render "admin/shared/errors", record: campground
   .form-grid
     .field
-      = form.label :name
+      = required_label form, :name
       = form.text_field :name, required: true
     .field
-      = form.label :location
+      = required_label form, :location
       = form.text_field :location, required: true
   .field
     = form.label :website

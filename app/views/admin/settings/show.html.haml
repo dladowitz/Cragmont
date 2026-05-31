@@ -6,8 +6,8 @@
     = render "admin/shared/errors", record: @site_setting
     .form-grid
       %div
-        = form.label :uncounted_minor_age_limit, "Age limit of uncounted minors"
-        = form.number_field :uncounted_minor_age_limit, min: 0, max: 17
+        = required_label form, :uncounted_minor_age_limit, "Age limit of uncounted minors"
+        = form.number_field :uncounted_minor_age_limit, min: 0, max: 17, required: true
       %div
         = form.label :campsite_weekend_fee, "Campsite weekend fee"
         .currency-field

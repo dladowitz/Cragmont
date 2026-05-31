@@ -21,12 +21,23 @@ class TripsController < ApplicationController
   end
 
   def participant_details_signup
-    return if !user_signed_in? || params[:complete_signup].blank?
+    return if params[:complete_signup].blank?
 
     signup = CampsiteSignup.includes(:campsite).find_signed(params[:complete_signup], purpose: :complete_participant_details)
     return if signup.blank?
-    return if signup.trip_id != @trip.id || signup.user_id != current_user.id
+    return if signup.trip_id != @trip.id
     return if !signup.confirmed? || signup.campsite.blank?
+    if signup.user.default_password?
+      @participant_completion_token = params[:complete_signup]
+      return signup
+    end
+
+    if user_signed_in?
+      return if signup.user_id != current_user.id
+    else
+      log_in_completion_signup(signup)
+    end
+
     return if signup.arrival_date.present? && signup.checkout_date.present? && signup.waiver_signed?
 
     signup
@@ -43,11 +54,15 @@ class TripsController < ApplicationController
     @guest_completion_token = params[:complete_signup]
     return signup if signup.user.default_password?
 
-    session[:user_id] = signup.user_id
-    @current_user = signup.user
-    @current_signup = signup
+    log_in_completion_signup(signup)
     return if signup.arrival_date.present? && signup.checkout_date.present? && signup.waiver_signed?
 
     signup
+  end
+
+  def log_in_completion_signup(signup)
+    session[:user_id] = signup.user_id
+    @current_user = signup.user
+    @current_signup = signup
   end
 end

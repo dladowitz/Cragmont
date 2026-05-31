@@ -1,6 +1,177 @@
 require "test_helper"
 
 class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
+  test "can add existing account participant directly to campsite" do
+    trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+
+    assert_difference "CampsiteSignup.count", 1 do
+      post admin_trip_campsite_signups_url(trip), params: {
+        campsite_signup: {
+          campsite_id: campsite.id,
+          participant_account_status: "existing",
+          user_id: users(:sam).id
+        }
+      }
+    end
+
+    assert_redirected_to admin_trip_url(trip, anchor: "admin-campsite-#{campsite.id}")
+    assert_equal "On belay! Sam Lee was added to Upper Pines site A12.", flash[:notice]
+    signup = CampsiteSignup.order(:created_at).last
+    assert signup.confirmed?
+    assert_equal trip, signup.trip
+    assert_equal campsite, signup.campsite
+    assert_equal users(:sam), signup.user
+    assert_nil signup.arrival_date
+    assert_nil signup.checkout_date
+    assert_not signup.waiver_signed?
+  end
+
+  test "can create account and add participant directly to campsite" do
+    trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+
+    assert_difference "User.count", 1 do
+      assert_difference "CampsiteSignup.count", 1 do
+        post admin_trip_campsite_signups_url(trip), params: {
+          campsite_signup: {
+            campsite_id: campsite.id,
+            participant_account_status: "new",
+            new_user: {
+              first_name: "Morgan",
+              last_name: "Chen",
+              email: "morgan-direct@example.com",
+              phone: "555-0199"
+            }
+          }
+        }
+      end
+    end
+
+    user = User.find_by!(email: "morgan-direct@example.com")
+    signup = CampsiteSignup.find_by!(trip: trip, user: user)
+    assert_redirected_to admin_trip_url(trip, anchor: "admin-campsite-#{campsite.id}")
+    assert_equal "On belay! Morgan Chen's account was created and they were added to Upper Pines site A12.", flash[:notice]
+    assert_equal "555-0199", user.phone
+    assert user.default_password?
+    assert user.authenticate(User::DEFAULT_GUEST_PASSWORD)
+    assert signup.confirmed?
+    assert_equal campsite, signup.campsite
+    assert_nil signup.arrival_date
+    assert_nil signup.checkout_date
+  end
+
+  test "direct campsite add can confirm participant over capacity" do
+    trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+    campsite.participant_capacity.times do |index|
+      create_campsite_signup!(
+        campsite: campsite,
+        user: User.create!(
+          first_name: "Full",
+          last_name: "Camper#{index}",
+          email: "full-direct-#{index}@example.com",
+          password: "password"
+        )
+      )
+    end
+    participant = User.create!(
+      first_name: "Over",
+      last_name: "Capacity",
+      email: "over-capacity@example.com",
+      password: "password"
+    )
+
+    assert_difference "CampsiteSignup.confirmed.count", 1 do
+      post admin_trip_campsite_signups_url(trip), params: {
+        campsite_signup: {
+          campsite_id: campsite.id,
+          participant_account_status: "existing",
+          user_id: participant.id
+        }
+      }
+    end
+
+    assert_redirected_to admin_trip_url(trip, anchor: "admin-campsite-#{campsite.id}")
+    signup = CampsiteSignup.find_by!(trip: trip, user: participant)
+    assert signup.confirmed?
+    assert_equal campsite, signup.campsite
+    assert campsite.reload.signups_locked?
+  end
+
+  test "does not add existing account participant without selecting user" do
+    assert_no_difference "CampsiteSignup.count" do
+      post admin_trip_campsite_signups_url(trips(:yosemite)), params: {
+        campsite_signup: {
+          campsite_id: campsites(:yosemite_a).id,
+          participant_account_status: "existing",
+          user_id: ""
+        }
+      }
+    end
+
+    assert_redirected_to admin_trip_url(trips(:yosemite))
+    assert_equal "Wow, that was a whipper. Choose a participant before stepping onto this campsite.", flash[:alert]
+  end
+
+  test "does not create account without required participant fields" do
+    assert_no_difference [ "User.count", "CampsiteSignup.count" ] do
+      post admin_trip_campsite_signups_url(trips(:yosemite)), params: {
+        campsite_signup: {
+          campsite_id: campsites(:yosemite_a).id,
+          participant_account_status: "new",
+          new_user: {
+            first_name: "Morgan",
+            last_name: "",
+            email: ""
+          }
+        }
+      }
+    end
+
+    assert_redirected_to admin_trip_url(trips(:yosemite))
+    assert_equal "Wow, that was a whipper. Last name and Email can't be blank.", flash[:alert]
+  end
+
+  test "does not add participant already signed up for trip" do
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+
+    assert_no_difference "CampsiteSignup.count" do
+      post admin_trip_campsite_signups_url(trips(:yosemite)), params: {
+        campsite_signup: {
+          campsite_id: campsites(:yosemite_b).id,
+          participant_account_status: "existing",
+          user_id: users(:sam).id
+        }
+      }
+    end
+
+    assert_redirected_to admin_trip_url(trips(:yosemite))
+    assert_equal "Wow, that was a whipper. User is already signed up for this trip", flash[:alert]
+  end
+
+  test "new account path shows friendly message when email is already signed up for trip" do
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+
+    assert_no_difference [ "User.count", "CampsiteSignup.count" ] do
+      post admin_trip_campsite_signups_url(trips(:yosemite)), params: {
+        campsite_signup: {
+          campsite_id: campsites(:yosemite_b).id,
+          participant_account_status: "new",
+          new_user: {
+            first_name: "Samuel",
+            last_name: "Duplicate",
+            email: " SAM@example.com ",
+            phone: "555-0190"
+          }
+        }
+      }
+    end
+
+    assert_redirected_to admin_trip_url(trips(:yosemite))
+    assert_equal "We saw that foot slip. This person is already signed up for the trip", flash[:alert]
+  end
+
   test "can mark waitlisted participant eligible" do
     participant = User.create!(
       first_name: "Willa",
