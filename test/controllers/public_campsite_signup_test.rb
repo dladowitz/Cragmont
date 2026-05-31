@@ -256,8 +256,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "waitlisted user can remove themself from a campsite" do
-    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
-    signup.waitlisted!
+    signup = create_waitlisted_signup!(trip: trips(:yosemite), user: users(:sam))
     log_in_as(users(:sam))
 
     assert_difference "CampsiteSignup.count", -1 do
@@ -281,17 +280,17 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "form[action='#{signup_path_for}'][method='post']", text: /Remove me from this campsite/
   end
 
-  test "trip detail shows waitlist remove modal for signed in waitlisted participant" do
-    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
-    signup.waitlisted!
+  test "trip detail shows waitlist remove action in waitlist table for signed in waitlisted participant" do
+    create_waitlisted_signup!(trip: trips(:yosemite), user: users(:sam))
     log_in_as(users(:sam))
 
     get trip_url(trips(:yosemite))
 
     assert_response :success
-    assert_select "button", text: "Remove me from the waitlist"
-    assert_select "dialog.signup-modal h2", text: "Remove yourself from the waitlist?"
-    assert_select "form[action='#{signup_path_for}'][method='post']", text: /Remove me from the waitlist/
+    assert_select ".campsite-card button", text: "Remove me from the waitlist", count: 0
+    assert_select ".trip-waitlist-section button.button.danger", text: "Remove Me"
+    assert_select ".trip-waitlist-section dialog.signup-modal h2", text: "Remove me from the waitlist"
+    assert_select ".trip-waitlist-section form[action='#{signup_path_for}'][method='post']", text: /Remove Me/
   end
 
   test "trip detail shows signup modal for logged in non participant" do
@@ -343,25 +342,77 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "#campsite-#{campsites(:yosemite_a).id}" do
-      assert_select "button", text: "Sign up for the waitlist"
+      assert_select "button", text: "Join waitlist"
       assert_select ".danger-stat", text: /0/
-      assert_select ".signup-modal h2", text: "Sign up for campsite waitlist"
+      assert_select ".campsite-lock-notice", count: 0
+      assert_select ".signup-modal h2", text: "Join trip waitlist"
+      assert_select ".waitlist-form .minor-fields[hidden]", text: /Minor information/
     end
-    assert_select "form[action='#{signup_path_for}'][method='post']", text: /Sign up for Waitlist/
+    assert_select "#campsite-#{campsites(:yosemite_b).id}" do
+      assert_select "button", text: "Sign up for this campsite"
+    end
+    assert_select "form[action='#{signup_path_for}'][method='post']", text: /Join waitlist/
     assert_select "form[action='#{signup_path_for}'][method='post']", text: /Pay Now and Sign Up/, count: 0
   end
 
-  test "logged in user can sign waiver and join waitlist" do
+  test "logged in user can join waitlist without dates or waiver" do
     fill_campsite_capacity(campsites(:yosemite_a), "waitlist-signup")
     log_in_as(users(:sam))
 
     assert_difference "CampsiteSignup.count", 1 do
-      post signup_url_for, params: waiver_signature_params
+      post signup_url_for, params: waitlist_signup_params
     end
 
     signup = CampsiteSignup.find_by!(trip: trips(:yosemite), user: users(:sam))
     assert signup.waitlisted?
+    assert_nil signup.campsite
+    assert_nil signup.arrival_date
+    assert_nil signup.checkout_date
+    assert_not signup.waiver_signed?
+  end
+
+  test "waitlisted user can sign up for a different open campsite" do
+    full_campsite = campsites(:yosemite_a)
+    open_campsite = campsites(:yosemite_b)
+    fill_campsite_capacity(full_campsite, "waitlisted-open-campsite")
+    log_in_as(users(:sam))
+
+    post signup_url_for(full_campsite), params: waitlist_signup_params
+    signup = CampsiteSignup.find_by!(trip: trips(:yosemite), user: users(:sam))
+    assert signup.waitlisted?
+    assert_nil signup.campsite
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "#campsite-#{full_campsite.id}" do
+      assert_select "button[disabled]", text: "On waitlist"
+    end
+    assert_select "#campsite-#{open_campsite.id}" do
+      assert_select "button", text: "Signup for campsite"
+      assert_select ".signup-modal-title-line p.muted", text: "This will remove you from the waitlist"
+      assert_select "input[type='hidden'][name='campsite_signup[intent]'][value='waitlist_direct_signup']"
+    end
+
+    params = waiver_signature_params.deep_dup
+    params[:campsite_signup][:intent] = "waitlist_direct_signup"
+    params[:campsite_signup][:arrival_date] = open_campsite.arrival_date.to_s
+    params[:campsite_signup][:checkout_date] = open_campsite.checkout_date.to_s
+
+    assert_no_difference "CampsiteSignup.count" do
+      post signup_url_for(open_campsite), params: params
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite))
+    assert_equal "You are confirmed for this campsite.", flash[:notice]
+    signup.reload
+    assert signup.confirmed?
+    assert_equal open_campsite, signup.campsite
+    assert_equal open_campsite.arrival_date, signup.arrival_date
+    assert_equal open_campsite.checkout_date, signup.checkout_date
+    assert_not signup.waitlist_eligible?
     assert signup.waiver_signed?
+    assert_empty trips(:yosemite).waitlisted_signups.where(user: users(:sam))
   end
 
   test "minor under configured age limit does not consume capacity" do
@@ -406,7 +457,134 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
     signup = CampsiteSignup.find_by!(trip: trips(:yosemite), user: users(:sam))
     assert signup.waitlisted?
+    assert_nil signup.campsite
+    assert_nil signup.arrival_date
+    assert_nil signup.checkout_date
     assert_equal 5, campsite.reload.confirmed_signup_count
+  end
+
+  test "locked campsite with open space keeps direct signup closed" do
+    campsite = campsites(:yosemite_a)
+    campsite.update!(signups_locked_at: Time.zone.local(2026, 5, 1, 10))
+    log_in_as(users(:sam))
+
+    assert_no_difference "CampsiteSignup.count" do
+      post signup_url_for(campsite), params: waiver_signature_params
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite))
+    assert_equal "This campsite is using the waitlist.", flash[:alert]
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "#campsite-#{campsite.id}" do
+      assert_select ".campsite-card-header > div:not(.campsite-signup-action) > .campsite-lock-notice", count: 0
+      assert_select ".campsite-signup-action .campsite-lock-notice", text: /Spots filled on 5\/2026\.\s+Waitlisted sign ups only/
+      assert_select "button", text: "Join waitlist"
+    end
+  end
+
+  test "eligible waitlisted participant can confirm an open locked campsite spot" do
+    campsite = campsites(:yosemite_a)
+    campsite.update!(signups_locked_at: Time.current)
+    create_waitlisted_signup!(trip: trips(:yosemite), user: users(:sam), waitlist_eligible_at: Time.current)
+    log_in_as(users(:sam))
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "#campsite-#{campsite.id}" do
+      assert_select ".spot-open-message", text: "A spot has opened up!"
+      assert_select "button", text: "Confirm your spot"
+      assert_select "form[action='#{signup_path_for(campsite)}'][method='post']", text: /Pay Now and Confirm/
+    end
+    assert_select ".trip-waitlist-section tbody tr" do
+      assert_select "td", text: "Yes"
+      assert_select "button", text: "Signup"
+      assert_select "input[type='hidden'][name='campsite_signup[intent]'][value='confirm_waitlist']"
+    end
+
+    params = waiver_signature_params.deep_dup
+    params[:campsite_signup][:intent] = "confirm_waitlist"
+
+    assert_no_difference "CampsiteSignup.count" do
+      post signup_url_for(campsite), params: params
+    end
+
+    signup = CampsiteSignup.find_by!(trip: trips(:yosemite), user: users(:sam))
+    assert signup.confirmed?
+    assert_equal campsite, signup.campsite
+    assert_equal campsite.arrival_date, signup.arrival_date
+    assert_equal campsite.checkout_date, signup.checkout_date
+    assert signup.waiver_signed?
+  end
+
+  test "eligible waitlisted participant can choose between open locked campsites" do
+    first_campsite = campsites(:yosemite_a)
+    second_campsite = campsites(:yosemite_b)
+    first_campsite.update!(signups_locked_at: Time.current)
+    second_campsite.update!(signups_locked_at: Time.current)
+    create_waitlisted_signup!(trip: trips(:yosemite), user: users(:sam), waitlist_eligible_at: Time.current)
+    log_in_as(users(:sam))
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select ".trip-waitlist-section tbody tr" do
+      assert_select "button", text: "Signup"
+      assert_select ".campsite-choice-options[data-campsite-choice-target='chooser'] legend", text: "Choose campsite"
+      assert_select ".campsite-choice-option", text: /site A12/
+      assert_select ".campsite-choice-option", text: /site A13/
+      assert_select ".campsite-choice-option input[type='radio'][checked]", count: 0
+      assert_select ".campsite-choice-panel[hidden]", count: 2
+      assert_select ".campsite-choice-summary button", text: "Change campsite"
+      assert_select "form[action='#{signup_path_for(first_campsite)}'][method='post']" do
+        assert_select "input[type='hidden'][name='campsite_signup[intent]'][value='confirm_waitlist']"
+      end
+      assert_select "form[action='#{signup_path_for(second_campsite)}'][method='post']" do
+        assert_select "input[type='hidden'][name='campsite_signup[intent]'][value='confirm_waitlist']"
+      end
+    end
+  end
+
+  test "ineligible waitlisted participant does not see confirm action for open locked campsite spot" do
+    campsite = campsites(:yosemite_a)
+    campsite.update!(signups_locked_at: Time.current)
+    create_waitlisted_signup!(trip: trips(:yosemite), user: users(:sam))
+    log_in_as(users(:sam))
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "#campsite-#{campsite.id}" do
+      assert_select ".spot-open-message", count: 0
+      assert_select "button", text: "Confirm your spot", count: 0
+      assert_select "button[disabled]", text: "On waitlist"
+    end
+    assert_select ".trip-waitlist-section tbody tr" do
+      assert_select "td", text: "No"
+      assert_select "button", text: "Signup", count: 0
+    end
+  end
+
+  test "waitlist confirmation fails if capacity disappears" do
+    campsite = campsites(:yosemite_a)
+    fill_campsite_capacity(campsite, "confirm-race")
+    campsite.lock_signups!
+    create_waitlisted_signup!(trip: trips(:yosemite), user: users(:sam), waitlist_eligible_at: Time.current)
+    log_in_as(users(:sam))
+
+    params = waiver_signature_params.deep_dup
+    params[:campsite_signup][:intent] = "confirm_waitlist"
+
+    post signup_url_for(campsite), params: params
+
+    assert_redirected_to trip_url(trips(:yosemite))
+    assert_equal "That campsite spot is no longer available.", flash[:alert]
+    signup = CampsiteSignup.find_by!(trip: trips(:yosemite), user: users(:sam))
+    assert signup.waitlisted?
+    assert_nil signup.campsite
   end
 
   test "trip detail shows almost full warning at sixty percent capacity" do
@@ -466,15 +644,38 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
   test "public trip detail shows waitlisted users separately" do
     trip = trips(:yosemite)
-    fill_campsite_capacity(campsites(:yosemite_a), "public-confirmed")
     waitlisted_user = User.create!(first_name: "Willa", last_name: "Wait", email: "willa@example.com", password: "password")
-    create_campsite_signup!(campsite: campsites(:yosemite_a), user: waitlisted_user)
+    willa_joined_at = Time.zone.local(2026, 5, 2, 9, 15)
+    alex_joined_at = Time.zone.local(2026, 5, 3, 16, 45)
+    campsites(:yosemite_a).lock_signups!
+    create_waitlisted_signup!(trip: trip, user: waitlisted_user, created_at: willa_joined_at)
+    create_waitlisted_signup!(trip: trip, user: users(:alex), created_at: alex_joined_at, waitlist_eligible_at: Time.current)
 
     get trip_url(trip)
 
     assert_response :success
-    assert_select ".waitlisted-signups-section", text: /Waitlist/
-    assert_select ".waitlisted-signups-section", text: /Willa W\. \(Jun 12-Jun 15\)/
+    assert_select ".trip-waitlist-section", text: /Trip waitlist/
+    assert_select ".trip-waitlist-note", text: "Waitlist priority goes to club members"
+    assert_select ".trip-waitlist-section table.waitlist-table"
+    waitlist_headers = css_select(".trip-waitlist-section th").map { |header| header.text.strip }
+    assert_equal [ "Priority", "Participant", "Member", "Joined Waitlist", "Able to signup", "", "" ], waitlist_headers
+    assert_select ".trip-waitlist-section tbody tr:first-child" do
+      assert_select "td", text: "1"
+      assert_select "td", text: "Alex R."
+      assert_select "td", text: "Member"
+      assert_select "td", text: alex_joined_at.strftime("%B %-d, %Y %-l:%M %p")
+      assert_select "td", text: "Yes"
+      assert_select "button", text: "Signup", count: 0
+    end
+    assert_select ".trip-waitlist-section tbody tr:last-child" do
+      assert_select "td", text: "2"
+      assert_select "td", text: "Willa W."
+      assert_select "td", text: "Non-member"
+      assert_select "td", text: willa_joined_at.strftime("%B %-d, %Y %-l:%M %p")
+      assert_select "td", text: "No"
+      assert_select "button", text: "Signup", count: 0
+    end
+    assert_select ".trip-waitlist-section .participant-list", count: 0
     assert_select ".waitlisted-signups-section", text: /Willa Wait/, count: 0
     assert_select ".waitlisted-signups-section", text: /willa@example.com/, count: 0
   end
@@ -501,6 +702,15 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
   def signup_path_for(campsite = campsites(:yosemite_a))
     trip_campsite_campsite_signup_path(campsite.trip, campsite)
+  end
+
+  def waitlist_signup_params
+    {
+      campsite_signup: {
+        intent: "join_waitlist",
+        signup_kind: "self"
+      }
+    }
   end
 
   def fill_campsite_capacity(campsite, prefix, count: campsite.participant_capacity)

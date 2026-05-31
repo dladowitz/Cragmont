@@ -60,7 +60,32 @@ class Trip < ApplicationRecord
     confirmed_signup_count.to_f / total_participant_capacity >= 0.6
   end
 
+  def waitlisted_signups
+    campsite_signups.waitlisted
+      .joins(:user)
+      .includes(:user, :campsite_signup_minors)
+      .order(Arel.sql("CASE WHEN users.member THEN 0 ELSE 1 END"), :created_at)
+  end
+
+  def waitlist_confirmation_campsites_for(signup)
+    return [] unless signup&.waitlist_eligible?
+
+    waitlist_open_campsites_for(signup)
+  end
+
+  def mark_next_waitlisted_signup_eligible!
+    signup = waitlisted_signups.where(waitlist_eligible_at: nil).detect do |waitlisted_signup|
+      waitlist_open_campsites_for(waitlisted_signup).any?
+    end
+
+    signup&.update!(waitlist_eligible_at: Time.current)
+  end
+
   private
+
+  def waitlist_open_campsites_for(signup)
+    campsites.select { |campsite| campsite.available_for_waitlist_confirmation?(signup) }
+  end
 
   def confirmed_signups_with_minors
     return campsite_signups.select(&:confirmed?) if campsite_signups.loaded?

@@ -1,17 +1,33 @@
+- waitlist = local_assigns.fetch(:waitlist, false)
+- trip = local_assigns[:trip]
 %table
   %thead
     %tr
       %th Participant
-      %th Attendance
+      - if waitlist
+        %th Member
+      - unless waitlist
+        %th Attendance
       %th Minors
       %th Email
       %th Phone
-      %th Waiver
+      - if waitlist
+        %th Allowed to Signup
+        %th
+      - else
+        %th Waiver
   %tbody
     - signups.each do |signup|
       %tr
         %td= signup.user.full_name
-        %td= signup.attendance_date_range
+        - if waitlist
+          %td
+            - if signup.user.member?
+              %span.status.member-status Member
+            - else
+              %span.muted Non-member
+        - unless waitlist
+          %td= signup.attendance_date_range
         %td
           - if signup.campsite_signup_minors.any?
             %ul.admin-minor-list
@@ -22,13 +38,25 @@
             %span.muted None
         %td= signup.user.email.presence || "None"
         %td= signup.user.phone.presence || "None"
-        %td
-          - if signup.waiver_signed?
-            .waiver-download
-              - signed_on = signup.waiver_signed_at.strftime("%m/%d/%y")
-              = link_to rails_blob_path(signup.waiver_document, disposition: "attachment"), class: "waiver-download-link", aria: { label: "Download waiver signed on #{signed_on}" } do
-                %span= signed_on
-                %svg.waiver-download-icon{ aria: { hidden: "true" }, fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg" }
-                  %path{ d: "M12 3v12m0 0 4-4m-4 4-4-4M5 21h14", stroke: "currentColor", "stroke-linecap" => "round", "stroke-linejoin" => "round", "stroke-width" => "2" }
-          - else
-            %span.muted Missing
+        - if waitlist
+          %td
+            - if signup.waitlist_eligible?
+              %span.status Yes
+            - else
+              %span.muted No
+          %td
+            - if signup.waitlist_eligible?
+              = button_to "Revoke Signup Ability", revoke_waitlist_eligibility_admin_trip_campsite_signup_path(trip, signup), method: :patch, class: "button secondary"
+            - else
+              = button_to "Allow Participant to Signup", make_waitlist_eligible_admin_trip_campsite_signup_path(trip, signup), method: :patch, class: "button secondary"
+        - else
+          %td
+            - if signup.waiver_signed?
+              .waiver-download
+                - signed_on = signup.waiver_signed_at.strftime("%m/%d/%y")
+                = link_to rails_blob_path(signup.waiver_document, disposition: "attachment"), class: "waiver-download-link", aria: { label: "Download waiver signed on #{signed_on}" } do
+                  %span= signed_on
+                  %svg.waiver-download-icon{ aria: { hidden: "true" }, fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg" }
+                    %path{ d: "M12 3v12m0 0 4-4m-4 4-4-4M5 21h14", stroke: "currentColor", "stroke-linecap" => "round", "stroke-linejoin" => "round", "stroke-width" => "2" }
+            - else
+              %span.muted Missing

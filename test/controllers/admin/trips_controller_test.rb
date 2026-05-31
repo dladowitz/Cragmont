@@ -21,8 +21,9 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     signup.campsite_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
     attach_test_waiver_to(signup)
     waitlisted_user = User.create!(first_name: "Willa", last_name: "Wait", email: "willa-admin@example.com", password: "password")
-    waitlisted_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: waitlisted_user)
-    waitlisted_signup.waitlisted!
+    create_waitlisted_signup!(trip: trips(:yosemite), user: waitlisted_user)
+    allowed_user = User.create!(first_name: "Zora", last_name: "Allowed", email: "zora-admin@example.com", password: "password")
+    create_waitlisted_signup!(trip: trips(:yosemite), user: allowed_user, waitlist_eligible_at: Time.current)
 
     get admin_trip_url(trips(:yosemite))
 
@@ -60,10 +61,20 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select "th", text: "Status", count: 0
       assert_select ".status.confirmed-status", count: 0
     end
-    assert_select ".waitlisted-signups-section" do
-      assert_select "h4", "Waitlisted participants"
+    assert_select ".trip-waitlist-section" do
+      assert_select "h3", "Trip waitlist"
       assert_select "td", text: "Willa Wait"
-      assert_select "td", text: "Jun 12-Jun 15"
+      assert_select "td", text: "Zora Allowed"
+      assert_select "th", text: "Attendance", count: 0
+      assert_select "td", text: "Not chosen yet", count: 0
+      assert_select "th", text: "Allowed to Signup"
+      assert_select "th", text: "Eligibility", count: 0
+      assert_select "th", text: "Action", count: 0
+      assert_select "td", text: "Non-member"
+      assert_select "td", text: "No"
+      assert_select "td", text: "Yes"
+      assert_select "button", text: "Allow Participant to Signup"
+      assert_select "button", text: "Revoke Signup Ability"
       assert_select "td", text: "Sam Lee", count: 0
       assert_select "th", text: "Status", count: 0
       assert_select ".status.waitlisted-status", count: 0

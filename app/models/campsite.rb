@@ -34,6 +34,30 @@ class Campsite < ApplicationRecord
     available_participant_capacity.zero?
   end
 
+  def signups_locked?
+    signups_locked_at.present?
+  end
+
+  def direct_signup_available?
+    !signups_locked? && available_participant_capacity.positive?
+  end
+
+  def waitlist_signup_required?
+    signups_locked? || capacity_full?
+  end
+
+  def lock_signups!
+    update!(signups_locked_at: Time.current) if signups_locked_at.blank?
+  end
+
+  def lock_signups_if_full!
+    lock_signups! if capacity_full?
+  end
+
+  def available_for_waitlist_confirmation?(signup)
+    signups_locked? && available_participant_capacity >= signup.capacity_count
+  end
+
   def confirmed_signups
     campsite_signups.confirmed.includes(:user, :campsite_signup_minors).order(created_at: :asc)
   end

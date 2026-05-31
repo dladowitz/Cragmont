@@ -15,7 +15,16 @@
       %tbody
         - @users.each do |user|
           %tr
-            %td= link_to user.full_name, admin_user_path(user)
+            %td
+              .user-name-cell
+                - if user.member?
+                  %span.member-icon{"aria-label" => "Club member", :title => "Club member"}
+                    %svg{ aria: { hidden: "true" }, fill: "currentColor", height: "16", viewbox: "0 0 24 24", width: "16", xmlns: "http://www.w3.org/2000/svg" }
+                      %path{ d: "M12 2.75 14.95 8.7l6.57.95-4.76 4.64 1.12 6.55L12 17.75l-5.88 3.09 1.12-6.55-4.76-4.64 6.57-.95L12 2.75Z" }
+                    %span.visually-hidden Club member
+                - else
+                  %span.member-icon-placeholder{"aria-hidden" => "true"}
+                = link_to user.full_name, admin_user_path(user)
             %td= user.email.presence || tag.span("None")
             %td= user.phone.presence || tag.span("None")
             %td= user.member? ? "Yes" : "No"

@@ -170,6 +170,8 @@ export default class extends Controller {
   }
 
   toggleMinorFields() {
+    if (!this.hasMinorFieldsTarget || !this.hasSignupKindTarget) return
+
     const selected = this.minorSignupSelected()
     this.minorFieldsTarget.hidden = !selected
     this.minorFieldsTarget.querySelectorAll("input").forEach((input) => {
@@ -181,10 +183,14 @@ export default class extends Controller {
   }
 
   minorSignupSelected() {
+    if (!this.hasSignupKindTarget) return false
+
     return this.signupKindTargets.find((input) => input.checked)?.value === "with_minors"
   }
 
   firstMinorRowComplete() {
+    if (!this.hasMinorFieldsTarget) return true
+
     return Array.from(this.minorFieldsTarget.querySelectorAll("[data-required-for-minor='true']"))
       .every((input) => input.checkValidity())
   }

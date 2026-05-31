@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_30_061000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_30_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -60,11 +60,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_30_061000) do
     t.datetime "created_at", null: false
     t.text "notes"
     t.integer "participant_capacity", null: false
+    t.datetime "signups_locked_at"
     t.string "site_number", null: false
     t.bigint "trip_id", null: false
     t.datetime "updated_at", null: false
     t.index ["arrival_date"], name: "index_campsites_on_arrival_date"
     t.index ["campground_id"], name: "index_campsites_on_campground_id"
+    t.index ["signups_locked_at"], name: "index_campsites_on_signups_locked_at"
     t.index ["trip_id"], name: "index_campsites_on_trip_id"
   end
 
@@ -90,7 +92,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_30_061000) do
   end
 
   create_table "campsite_signups", force: :cascade do |t|
-    t.bigint "campsite_id", null: false
+    t.bigint "campsite_id"
     t.datetime "created_at", null: false
     t.string "status", default: "confirmed", null: false
     t.bigint "trip_id", null: false
@@ -106,8 +108,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_30_061000) do
     t.text "waiver_text"
     t.string "waiver_text_digest"
     t.string "waiver_user_agent"
-    t.date "arrival_date", null: false
-    t.date "checkout_date", null: false
+    t.date "arrival_date"
+    t.date "checkout_date"
+    t.datetime "waitlist_eligible_at"
     t.index ["arrival_date"], name: "index_campsite_signups_on_arrival_date"
     t.index ["campsite_id"], name: "index_campsite_signups_on_campsite_id"
     t.index ["checkout_date"], name: "index_campsite_signups_on_checkout_date"
@@ -115,6 +118,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_30_061000) do
     t.index ["trip_id", "user_id"], name: "index_campsite_signups_on_trip_id_and_user_id", unique: true
     t.index ["trip_id"], name: "index_campsite_signups_on_trip_id"
     t.index ["user_id"], name: "index_campsite_signups_on_user_id"
+    t.index ["waitlist_eligible_at"], name: "index_campsite_signups_on_waitlist_eligible_at"
     t.index ["waiver_acknowledged_at"], name: "index_campsite_signups_on_waiver_acknowledged_at"
     t.index ["waiver_acknowledgement_text_digest"], name: "index_campsite_signups_on_waiver_acknowledgement_text_digest"
     t.index ["waiver_signature_digest"], name: "index_campsite_signups_on_waiver_signature_digest"

@@ -45,16 +45,28 @@
     - if @campsites.any?
       .campsite-card-list
         - @campsites.each do |campsite|
-          - signed_up_for_this_campsite = @current_signup&.campsite_id == campsite.id
-          - signed_up_for_another_campsite = @current_signup.present? && !signed_up_for_this_campsite
+          - current_confirmed_signup = @current_signup&.confirmed?
+          - current_waitlisted_signup = @current_signup&.waitlisted?
+          - signed_up_for_this_campsite = current_confirmed_signup && @current_signup.campsite_id == campsite.id
+          - signed_up_for_another_campsite = current_confirmed_signup && @current_signup.campsite_id != campsite.id
+          - waitlist_confirmation_available = current_waitlisted_signup && @waitlist_confirmation_campsite_ids.include?(campsite.id)
+          - waitlist_direct_signup_available = current_waitlisted_signup && campsite.direct_signup_available? && campsite.available_participant_capacity >= @current_signup.capacity_count
+          - locked_with_open_spots = campsite.signups_locked? && campsite.available_participant_capacity.positive?
           %section.campsite-card{id: "campsite-#{campsite.id}"}
             .campsite-card-header
-              %div
+              .campsite-card-summary
                 %h3
                   = campsite.campground.name
                   site #{campsite.site_number}
                 %p= campsite.campground.location
-              .campsite-signup-action
+                %dl.date-pair
+                  %div
+                    %dt Arrival
+                    %dd= campsite.arrival_date.to_fs(:long)
+                  %div
+                    %dt Checkout
+                    %dd= campsite.checkout_date.to_fs(:long)
+              .campsite-signup-action{class: ("waitlisted-campsite-action" if current_waitlisted_signup)}
                 - if signed_up_for_this_campsite
                   %strong
                     You are #{@current_signup.status} for this campsite.
@@ -74,19 +86,30 @@
                           = button_to remove_button_text, trip_campsite_campsite_signup_path(@trip, campsite), method: :delete, class: "button danger"
                 - elsif signed_up_for_another_campsite
                   %button.button.secondary{:disabled => true, :type => "button"} Already signed up
-                  %p.muted You are already signed up for another campsite on this trip.
+                  %p.muted.already-signed-up-note You are already signed up for another campsite on this trip.
+                - elsif current_waitlisted_signup
+                  .waitlist-action-buttons
+                    - if waitlist_confirmation_available
+                      .waitlist-confirm-action
+                        %p.spot-open-message A spot has opened up!
+                        = render "campsite_signup_form", trip: @trip, campsite: campsite, confirm_waitlist: true
+                    - elsif waitlist_direct_signup_available
+                      = render "campsite_signup_form", trip: @trip, campsite: campsite, waitlist_direct_signup: true
+                    - else
+                      %button.button.secondary{:disabled => true, :type => "button"} On waitlist
                 - elsif user_signed_in?
-                  = render "campsite_signup_form", trip: @trip, campsite: campsite
+                  - if campsite.waitlist_signup_required?
+                    = render "waitlist_form", trip: @trip, campsite: campsite
+                    - if locked_with_open_spots
+                      %p.campsite-lock-notice
+                        Spots filled on #{campsite.signups_locked_at.strftime("%-m/%Y")}.
+                        %br
+                        Waitlisted sign ups only
+                  - else
+                    = render "campsite_signup_form", trip: @trip, campsite: campsite
                 - else
                   = link_to "Log in to sign up", new_session_path, class: "button"
             .campsite-card-details
-              %dl.date-pair
-                %div
-                  %dt Arrival
-                  %dd= campsite.arrival_date.to_fs(:long)
-                %div
-                  %dt Checkout
-                  %dd= campsite.checkout_date.to_fs(:long)
               .stats.campsite-stats
                 %div
                   %strong= campsite.confirmed_signup_count
@@ -113,12 +136,44 @@
                       %li= signup.public_participant_name
                 - else
                   %p.muted No confirmed participants yet.
-              - if campsite.waitlisted_signups.any?
-                .waitlisted-signups-section
-                  %h4 Waitlist
-                  %ul.participant-list
-                    - campsite.waitlisted_signups.each do |signup|
-                      %li= signup.public_participant_name
+      - if @waitlisted_signups.any?
+        .waitlisted-signups-section.trip-waitlist-section
+          .trip-waitlist-heading
+            %h3 Trip waitlist
+            %p.trip-waitlist-note Waitlist priority goes to club members
+          %table.waitlist-table
+            %thead
+              %tr
+                %th.waitlist-priority-column Priority
+                %th Participant
+                %th Member
+                %th Joined Waitlist
+                %th Able to signup
+                %th.waitlist-signup-action-column{aria: { label: "Waitlist signup action" }}
+                %th.waitlist-action-column{aria: { label: "Waitlist actions" }}
+            %tbody
+              - @waitlisted_signups.each_with_index do |signup, index|
+                - signup_confirmation_campsites = @trip.waitlist_confirmation_campsites_for(signup)
+                %tr
+                  %td.waitlist-priority-column= index + 1
+                  %td= signup.public_waitlist_name
+                  %td= signup.user.member? ? "Member" : "Non-member"
+                  %td= signup.created_at.in_time_zone.strftime("%B %-d, %Y %-l:%M %p")
+                  %td= signup_confirmation_campsites.any? ? "Yes" : "No"
+                  %td.waitlist-signup-action-column
+                    - if @current_signup&.waitlisted? && signup.id == @current_signup.id && signup_confirmation_campsites.any?
+                      = render "waitlist_campsite_choice_form", trip: @trip, signup: signup, campsites: signup_confirmation_campsites
+                  %td.waitlist-action-column
+                    - if @current_signup&.waitlisted? && signup.id == @current_signup.id
+                      %div{"data-controller" => "modal"}
+                        %button.button.danger{"data-action" => "modal#open", :type => "button"} Remove From Waitlist
+                        %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                          .signup-modal-content
+                            %div
+                              %h2 Remove me from the waitlist
+                            .form-actions
+                              %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
+                              = button_to "Remove Me", trip_campsite_campsite_signup_path(@trip, @campsites.first), method: :delete, class: "button danger"
     - else
       %p.muted No campsite reservations have been added yet.
   %section.panel

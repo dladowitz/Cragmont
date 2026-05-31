@@ -2,7 +2,7 @@ class CampsiteSignup < ApplicationRecord
   STATUSES = %w[confirmed waitlisted].freeze
 
   belongs_to :trip
-  belongs_to :campsite
+  belongs_to :campsite, optional: true
   belongs_to :user
   has_many :campsite_signup_minors, dependent: :destroy
   has_one_attached :waiver_document
@@ -11,7 +11,8 @@ class CampsiteSignup < ApplicationRecord
   enum :status, STATUSES.index_with(&:itself), default: "confirmed"
 
   validates :status, presence: true, inclusion: { in: STATUSES }
-  validates :arrival_date, :checkout_date, presence: true
+  validates :campsite, presence: true, if: :confirmed?
+  validates :arrival_date, :checkout_date, presence: true, if: :confirmed?
   validates :user_id, uniqueness: { scope: :trip_id, message: "is already signed up for this trip" }
   validates_associated :campsite_signup_minors
   validate :minor_limit
@@ -26,13 +27,15 @@ class CampsiteSignup < ApplicationRecord
   end
 
   def public_participant_name
-    name = if includes_minors?
+    "#{public_waitlist_name} (#{attendance_date_range})"
+  end
+
+  def public_waitlist_name
+    if includes_minors?
       "#{user.public_name} + #{campsite_signup_minors.size} #{'minor'.pluralize(campsite_signup_minors.size)}"
     else
       user.public_name
     end
-
-    "#{name} (#{attendance_date_range})"
   end
 
   def capacity_count
@@ -50,9 +53,13 @@ class CampsiteSignup < ApplicationRecord
   end
 
   def attendance_date_range
-    return "Dates pending" if arrival_date.blank? || checkout_date.blank?
+    return "Not chosen yet" if arrival_date.blank? || checkout_date.blank?
 
     "#{format_attendance_date(arrival_date)}-#{format_attendance_date(checkout_date)}"
+  end
+
+  def waitlist_eligible?
+    waitlist_eligible_at.present?
   end
 
   def waiver_signed?
@@ -114,7 +121,8 @@ class CampsiteSignup < ApplicationRecord
 
   def assign_capacity_status
     return if campsite.blank?
+    return if waitlisted?
 
-    self.status = campsite.available_participant_capacity >= capacity_count ? "confirmed" : "waitlisted"
+    self.status = campsite.direct_signup_available? && campsite.available_participant_capacity >= capacity_count ? "confirmed" : "waitlisted"
   end
 end
