@@ -20,6 +20,9 @@ Rails.application.routes.draw do
       resources :campsite_signups, only: [] do
         patch :make_waitlist_eligible, on: :member
         patch :revoke_waitlist_eligibility, on: :member
+        patch :move_to_campsite, on: :member
+        patch :move_to_waitlist, on: :member
+        delete :remove_from_campsite, on: :member
       end
     end
   end

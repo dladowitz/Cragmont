@@ -113,12 +113,11 @@ class CampsiteSignupTest < ActiveSupport::TestCase
     assert_equal "2026-05-25-Sam-Lee-Yosemite-Valley-Spring-A12-#{signup.id}.pdf", signup.waiver_document_filename
   end
 
-  test "requires attendance dates" do
+  test "confirmed signup can be assigned to a campsite before dates are chosen" do
     signup = CampsiteSignup.new(campsite: campsites(:yosemite_a), user: users(:sam))
 
-    assert_not signup.valid?
-    assert_includes signup.errors[:arrival_date], "can't be blank"
-    assert_includes signup.errors[:checkout_date], "can't be blank"
+    assert signup.valid?
+    assert_equal "Not chosen yet", signup.attendance_date_range
   end
 
   test "attendance dates must be within campsite dates" do

@@ -320,6 +320,57 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "form[action='#{signup_path_for}'][method='post']", text: /Pay Now and Sign Up/
   end
 
+  test "shared details link opens completion modal for signed in participant" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam), arrival_date: nil, checkout_date: nil)
+    log_in_as(users(:sam))
+
+    get trip_url(trips(:yosemite), complete_signup: signup.signed_id(purpose: :complete_participant_details))
+
+    assert_response :success
+    assert_select "[data-controller='modal'][data-modal-open-value='true']" do
+      assert_select "dialog.signup-modal"
+      assert_select "h2", "You've been added to the Yosemite Valley Spring trip."
+      assert_select "p", "Please select dates you will be attending"
+      assert_select ".participant-details-campsite-summary", text: /Upper Pines site A12/
+      assert_select ".participant-details-campsite-summary", text: /Available June 12, 2026 to June 15, 2026/
+      assert_select "form[action='#{signup_path_for}'][method='post']" do
+        assert_select "input[type='hidden'][name='campsite_signup[intent]'][value='complete_participant_details']"
+        assert_select "input[type='date'][name='campsite_signup[arrival_date]'][required]"
+        assert_select "input[type='date'][name='campsite_signup[checkout_date]'][required]"
+        assert_select ".signup-kind-options", count: 0
+        assert_select "button", text: "Next"
+        assert_select ".waiver-intro", text: /not a teaching or instructional organization/
+        assert_select "button", text: "Agree and Sign Waiver"
+        assert_select ".waiver-text", text: /READ THIS DOCUMENT CAREFULLY BEFORE SIGNING/
+        assert_select "canvas.signature-pad"
+        assert_select "button", text: "Complete"
+      end
+    end
+  end
+
+  test "admin-added participant can submit dates and waiver from shared details flow" do
+    campsite = campsites(:yosemite_a)
+    signup = create_campsite_signup!(campsite: campsite, user: users(:sam), arrival_date: nil, checkout_date: nil)
+    log_in_as(users(:sam))
+    params = waiver_signature_params.deep_dup
+    params[:campsite_signup][:intent] = "complete_participant_details"
+    params[:campsite_signup][:arrival_date] = "2026-06-13"
+    params[:campsite_signup][:checkout_date] = "2026-06-15"
+
+    assert_no_difference "CampsiteSignup.count" do
+      post signup_url_for(campsite), params: params
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite))
+    assert_equal "Your trip details have been submitted.", flash[:notice]
+    signup.reload
+    assert_equal Date.new(2026, 6, 13), signup.arrival_date
+    assert_equal Date.new(2026, 6, 15), signup.checkout_date
+    assert signup.waiver_signed?
+    assert signup.waiver_signature_image.attached?
+    assert signup.waiver_document.attached?
+  end
+
   test "trip detail disables other campsite signup buttons after signup" do
     create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     log_in_as(users(:sam))

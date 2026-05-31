@@ -190,3 +190,5 @@
           %dd= @trip.campsite_coordinator.phone.presence || "None"
     - else
       %p.muted Unassigned
+  - if @completion_signup.present?
+    = render "participant_details_modal", trip: @trip, signup: @completion_signup

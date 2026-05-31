@@ -82,4 +82,15 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to admin_trip_url(trips(:yosemite))
   end
+
+  test "cannot delete campsite with participants signed up" do
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+
+    assert_no_difference "Campsite.count" do
+      delete admin_trip_campsite_url(trips(:yosemite), campsites(:yosemite_a))
+    end
+
+    assert_redirected_to admin_trip_url(trips(:yosemite))
+    assert_equal "Cannot delete campsite with participants signed up. Remove them or move to the waitlist first", flash[:alert]
+  end
 end

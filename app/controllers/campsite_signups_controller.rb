@@ -13,8 +13,12 @@ class CampsiteSignupsController < ApplicationController
       confirm_waitlisted_signup(trip, campsite, signup)
     elsif signup.persisted? && signing_up_from_waitlist?
       confirm_open_campsite_signup_from_waitlist(trip, campsite, signup)
+    elsif signup.persisted? && completing_participant_details?
+      complete_participant_details(trip, campsite, signup)
     elsif signup.persisted?
       redirect_to trip_path(trip), alert: "You are already signed up for this trip."
+    elsif completing_participant_details?
+      redirect_to trip_path(trip), alert: "You are not a participant on this trip."
     elsif joining_waitlist?
       join_waitlist(trip, campsite, signup)
     else
@@ -89,6 +93,8 @@ class CampsiteSignupsController < ApplicationController
       redirect_to trip_path(trip), alert: "Please agree to the waiver acknowledgement before signing up."
     elsif !signature.valid?
       redirect_to trip_path(trip), alert: "Please sign the waiver before signing up."
+    elsif !attendance_dates_present?(signup)
+      redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
     elsif create_signup_with_waiver(signup, campsite, signature, acknowledged_at, minor_attributes)
       redirect_to trip_path(trip), notice: "You are confirmed for this campsite."
     else
@@ -110,6 +116,8 @@ class CampsiteSignupsController < ApplicationController
       redirect_to trip_path(trip), alert: "Please agree to the waiver acknowledgement before confirming your spot."
     elsif !signature.valid?
       redirect_to trip_path(trip), alert: "Please sign the waiver before confirming your spot."
+    elsif !attendance_dates_present?(signup)
+      redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
     elsif confirm_waitlist_signup_with_waiver(signup, campsite, signature, acknowledged_at)
       redirect_to trip_path(trip), notice: "You are confirmed for this campsite."
     else
@@ -131,8 +139,29 @@ class CampsiteSignupsController < ApplicationController
       redirect_to trip_path(trip), alert: "Please agree to the waiver acknowledgement before signing up."
     elsif !signature.valid?
       redirect_to trip_path(trip), alert: "Please sign the waiver before signing up."
+    elsif !attendance_dates_present?(signup)
+      redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
     elsif confirm_open_campsite_signup_with_waiver(signup, campsite, signature, acknowledged_at)
       redirect_to trip_path(trip), notice: "You are confirmed for this campsite."
+    else
+      redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
+    end
+  end
+
+  def complete_participant_details(trip, campsite, signup)
+    signature = WaiverSignatureData.new(signup_params[:waiver_signature_data])
+    acknowledged_at = waiver_acknowledged_at
+
+    if !signup.confirmed? || signup.campsite != campsite
+      redirect_to trip_path(trip), alert: "You are not assigned to this campsite."
+    elsif acknowledged_at.blank?
+      redirect_to trip_path(trip), alert: "Please agree to the waiver acknowledgement before completing your trip details."
+    elsif !signature.valid?
+      redirect_to trip_path(trip), alert: "Please sign the waiver before completing your trip details."
+    elsif !attendance_dates_present?(signup)
+      redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
+    elsif complete_participant_details_with_waiver(signup, signature, acknowledged_at)
+      redirect_to trip_path(trip), notice: "Your trip details have been submitted."
     else
       redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
     end
@@ -154,6 +183,13 @@ class CampsiteSignupsController < ApplicationController
     signup_params.slice(:arrival_date, :checkout_date)
   end
 
+  def attendance_dates_present?(signup)
+    signup.errors.add(:arrival_date, :blank) if signup_params[:arrival_date].blank?
+    signup.errors.add(:checkout_date, :blank) if signup_params[:checkout_date].blank?
+
+    signup.errors[:arrival_date].empty? && signup.errors[:checkout_date].empty?
+  end
+
   def joining_waitlist?
     signup_params[:intent] == "join_waitlist"
   end
@@ -164,6 +200,10 @@ class CampsiteSignupsController < ApplicationController
 
   def signing_up_from_waitlist?
     signup_params[:intent] == "waitlist_direct_signup"
+  end
+
+  def completing_participant_details?
+    signup_params[:intent] == "complete_participant_details"
   end
 
   def waiver_acknowledged_at
@@ -270,6 +310,18 @@ class CampsiteSignupsController < ApplicationController
     end
 
     confirmed
+  rescue ActiveRecord::RecordInvalid
+    false
+  end
+
+  def complete_participant_details_with_waiver(signup, signature, acknowledged_at)
+    CampsiteSignup.transaction do
+      signup.lock!
+      signup.assign_attributes(attendance_params)
+      signup.save!
+      attach_waiver!(signup, signature, acknowledged_at)
+    end
+    true
   rescue ActiveRecord::RecordInvalid
     false
   end
