@@ -1,4 +1,6 @@
 class User < ApplicationRecord
+  DEFAULT_GUEST_PASSWORD = "Cragmont!".freeze
+
   has_secure_password validations: false
 
   has_many :coordinated_trips,
@@ -20,6 +22,8 @@ class User < ApplicationRecord
   validates :password, presence: true, on: :create
   validates :email, uniqueness: { case_sensitive: false }, allow_blank: true
 
+  before_save :clear_default_password_after_password_change, if: :password_digest_changed?
+
   def full_name
     "#{first_name} #{last_name}"
   end
@@ -35,5 +39,11 @@ class User < ApplicationRecord
       campsite_signups.destroy_all
       destroy!
     end
+  end
+
+  private
+
+  def clear_default_password_after_password_change
+    self.default_password = false unless new_record?
   end
 end

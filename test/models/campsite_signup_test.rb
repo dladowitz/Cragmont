@@ -15,6 +15,7 @@ class CampsiteSignupTest < ActiveSupport::TestCase
 
     assert signup.valid?
     assert_equal "Not chosen yet", signup.attendance_date_range
+    assert_equal "Not chosen yet", signup.compact_attendance_date_range
   end
 
   test "requires known status" do
@@ -106,6 +107,92 @@ class CampsiteSignupTest < ActiveSupport::TestCase
     assert_equal 1, signup.uncounted_minor_count
   end
 
+  test "summarizes public minor age categories" do
+    signup = CampsiteSignup.new(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup.campsite_signup_minors.build(first_name: "Young", last_name: "Minor", age: 9, relationship: "Child")
+    signup.campsite_signup_minors.build(first_name: "Teen", last_name: "Minor", age: 12, relationship: "Child")
+
+    assert_equal "1 under 10yrs and 1 over 10yrs", signup.public_minor_age_summary(age_limit: 10)
+  end
+
+  test "primary signup can have multiple guests" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    first_guest = User.create!(first_name: "First", last_name: "Guest", email: "first-guest@example.com", password: "password")
+    second_guest = User.create!(first_name: "Second", last_name: "Guest", email: "second-guest@example.com", password: "password")
+
+    first_guest_signup = create_campsite_signup!(
+      campsite: campsites(:yosemite_a),
+      user: first_guest,
+      guest_of_signup: signup,
+      guest_position: 1
+    )
+    second_guest_signup = create_campsite_signup!(
+      campsite: campsites(:yosemite_a),
+      user: second_guest,
+      guest_of_signup: signup,
+      guest_position: 2
+    )
+
+    assert_equal [ first_guest_signup, second_guest_signup ], signup.guest_signups.to_a
+    assert first_guest_signup.guest?
+    assert_equal signup, first_guest_signup.primary_signup
+  end
+
+  test "limits primary signup to two guests" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    2.times do |index|
+      create_campsite_signup!(
+        campsite: campsites(:yosemite_a),
+        user: User.create!(first_name: "Allowed", last_name: "Guest#{index}", email: "allowed-guest-#{index}@example.com", password: "password"),
+        guest_of_signup: signup,
+        guest_position: index + 1
+      )
+    end
+
+    extra_guest_signup = CampsiteSignup.new(
+      campsite: campsites(:yosemite_a),
+      user: User.create!(first_name: "Extra", last_name: "Guest", email: "extra-guest@example.com", password: "password"),
+      guest_of_signup: signup,
+      guest_position: 3
+    )
+
+    assert_not extra_guest_signup.valid?
+    assert_includes extra_guest_signup.errors[:guest_of_signup], "cannot have more than 2 guests"
+  end
+
+  test "guest cannot be linked to another guest" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    guest_signup = create_campsite_signup!(
+      campsite: campsites(:yosemite_a),
+      user: User.create!(first_name: "First", last_name: "Guest", email: "nested-first@example.com", password: "password"),
+      guest_of_signup: signup,
+      guest_position: 1
+    )
+    nested_guest_signup = CampsiteSignup.new(
+      campsite: campsites(:yosemite_a),
+      user: User.create!(first_name: "Nested", last_name: "Guest", email: "nested-second@example.com", password: "password"),
+      guest_of_signup: guest_signup,
+      guest_position: 1
+    )
+
+    assert_not nested_guest_signup.valid?
+    assert_includes nested_guest_signup.errors[:guest_of_signup], "must be a primary participant signup"
+  end
+
+  test "party capacity includes linked guests" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup.campsite_signup_minors.create!(first_name: "Teen", last_name: "Minor", age: 13, relationship: "Child")
+    create_campsite_signup!(
+      campsite: campsites(:yosemite_a),
+      user: User.create!(first_name: "Capacity", last_name: "Guest", email: "capacity-guest@example.com", password: "password"),
+      guest_of_signup: signup,
+      guest_position: 1
+    )
+
+    assert_equal 2, signup.capacity_count
+    assert_equal 3, signup.party_capacity_count
+  end
+
   test "builds waiver document filename from signed date participant and campsite" do
     signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     signup.waiver_signed_at = Time.zone.local(2026, 5, 25)
@@ -157,5 +244,6 @@ class CampsiteSignupTest < ActiveSupport::TestCase
 
     assert_equal 2, signup.night_count
     assert_equal "Jun 13-Jun 15", signup.attendance_date_range
+    assert_equal "6/13-6/15", signup.compact_attendance_date_range
   end
 end

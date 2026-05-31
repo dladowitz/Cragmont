@@ -1,15 +1,24 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
+  static values = {
+    availableParticipantCapacity: Number,
+    showCapacityWarning: Boolean,
+    uncountedMinorAgeLimit: Number
+  }
+
   static targets = [
     "acknowledgementInput",
     "arrivalDate",
+    "capacityWarning",
     "canvas",
     "checkoutDate",
+    "guestFields",
+    "guestToggle",
     "input",
     "intro",
     "minorFields",
-    "signupKind",
+    "minorToggle",
     "signupStep",
     "submit",
     "waiver",
@@ -34,7 +43,8 @@ export default class extends Controller {
     window.addEventListener("touchcancel", this.boundStop)
     this.resize()
     this.clear()
-    this.toggleMinorFields()
+    this.togglePartyFields()
+    this.updateCapacityWarning()
     this.checkWaiverScroll()
     window.addEventListener("resize", this.boundResize)
   }
@@ -123,7 +133,12 @@ export default class extends Controller {
     this.checkAttendanceDates()
     if (!this.element.reportValidity()) return
 
-    if (this.minorSignupSelected() && !this.firstMinorRowComplete()) {
+    if (this.minorSignupSelected() && !this.requiredFieldsComplete(this.minorFieldsTarget, "requiredForMinor")) {
+      this.element.reportValidity()
+      return
+    }
+
+    if (this.guestSignupSelected() && !this.requiredFieldsComplete(this.guestFieldsTarget, "requiredForGuest")) {
       this.element.reportValidity()
       return
     }
@@ -169,30 +184,166 @@ export default class extends Controller {
     this.submitTarget.disabled = !this.waiverRead || !this.signed
   }
 
-  toggleMinorFields() {
-    if (!this.hasMinorFieldsTarget || !this.hasSignupKindTarget) return
-
-    const selected = this.minorSignupSelected()
-    this.minorFieldsTarget.hidden = !selected
-    this.minorFieldsTarget.querySelectorAll("input").forEach((input) => {
-      input.disabled = !selected
-    })
-    this.minorFieldsTarget.querySelectorAll("[data-required-for-minor='true']").forEach((input) => {
-      input.required = selected
-    })
+  togglePartyFields() {
+    this.toggleFieldGroup(this.hasMinorFieldsTarget ? this.minorFieldsTarget : null, this.minorSignupSelected(), "requiredForMinor")
+    this.toggleFieldGroup(this.hasGuestFieldsTarget ? this.guestFieldsTarget : null, this.guestSignupSelected(), "requiredForGuest")
+    this.updateCapacityWarning()
   }
 
   minorSignupSelected() {
-    if (!this.hasSignupKindTarget) return false
+    if (!this.hasMinorToggleTarget) return false
 
-    return this.signupKindTargets.find((input) => input.checked)?.value === "with_minors"
+    return this.minorToggleTarget.checked
   }
 
-  firstMinorRowComplete() {
-    if (!this.hasMinorFieldsTarget) return true
+  guestSignupSelected() {
+    if (!this.hasGuestToggleTarget) return false
 
-    return Array.from(this.minorFieldsTarget.querySelectorAll("[data-required-for-minor='true']"))
+    return this.guestToggleTarget.checked
+  }
+
+  toggleFieldGroup(group, selected, requiredDatasetKey) {
+    if (!group) return
+
+    group.hidden = !selected
+    const rows = Array.from(group.querySelectorAll("[data-party-row]"))
+
+    rows.forEach((row, index) => {
+      if (!selected) {
+        row.hidden = index !== 0
+        row.dataset.partyRowVisible = index === 0 ? "true" : "false"
+      } else if (index === 0) {
+        row.hidden = false
+        row.dataset.partyRowVisible = "true"
+      }
+
+      const rowActive = selected && !row.hidden
+      row.querySelectorAll("input").forEach((input) => {
+        input.disabled = !rowActive
+        input.required = rowActive && input.dataset[requiredDatasetKey] === "true"
+        if (!rowActive) input.value = ""
+      })
+    })
+
+    this.updateAddButton(group, selected)
+    this.updateCapacityWarning()
+  }
+
+  requiredFieldsComplete(group, requiredDatasetKey) {
+    if (!group) return true
+
+    return Array.from(group.querySelectorAll(`[data-${this.kebabCase(requiredDatasetKey)}='true']`))
       .every((input) => input.checkValidity())
+  }
+
+  revealPartyRow(event) {
+    const group = event.currentTarget.closest("[data-party-fields]")
+    if (!group) return
+
+    const hiddenRow = Array.from(group.querySelectorAll("[data-party-row]"))
+      .find((row) => row.hidden)
+    if (!hiddenRow) return
+
+    hiddenRow.hidden = false
+    hiddenRow.dataset.partyRowVisible = "true"
+    this.toggleFieldGroup(group, true, group.dataset.requiredDatasetKey)
+    this.updateCapacityWarning()
+  }
+
+  removePartyRow(event) {
+    const row = event.currentTarget.closest("[data-party-row]")
+    const group = event.currentTarget.closest("[data-party-fields]")
+    if (!row || !group) return
+
+    const visibleRows = Array.from(group.querySelectorAll("[data-party-row]"))
+      .filter((partyRow) => !partyRow.hidden)
+    const firstRow = visibleRows[0]
+    const removingOnlyVisibleRow = visibleRows.length === 1
+
+    if (row === firstRow && removingOnlyVisibleRow) {
+      this.setGroupToggle(group, false)
+      this.toggleFieldGroup(group, false, group.dataset.requiredDatasetKey)
+      this.updateCapacityWarning()
+      return
+    }
+
+    if (row === firstRow) {
+      this.copyRowValues(visibleRows[1], firstRow)
+      this.clearRow(visibleRows[1])
+      visibleRows[1].hidden = true
+      visibleRows[1].dataset.partyRowVisible = "false"
+    } else {
+      this.clearRow(row)
+      row.hidden = true
+      row.dataset.partyRowVisible = "false"
+    }
+
+    this.toggleFieldGroup(group, true, group.dataset.requiredDatasetKey)
+    this.updateCapacityWarning()
+  }
+
+  updateAddButton(group, selected) {
+    const addButton = group.querySelector("[data-add-party-row]")
+    if (!addButton) return
+
+    const rows = Array.from(group.querySelectorAll("[data-party-row]"))
+    addButton.hidden = !selected || rows.every((row) => !row.hidden)
+  }
+
+  setGroupToggle(group, checked) {
+    if (group.dataset.partyFields === "guest" && this.hasGuestToggleTarget) {
+      this.guestToggleTarget.checked = checked
+    } else if (group.dataset.partyFields === "minor" && this.hasMinorToggleTarget) {
+      this.minorToggleTarget.checked = checked
+    }
+  }
+
+  copyRowValues(sourceRow, targetRow) {
+    const sourceInputs = Array.from(sourceRow.querySelectorAll("input"))
+    const targetInputs = Array.from(targetRow.querySelectorAll("input"))
+
+    targetInputs.forEach((input, index) => {
+      input.value = sourceInputs[index]?.value || ""
+    })
+  }
+
+  clearRow(row) {
+    row.querySelectorAll("input").forEach((input) => {
+      input.value = ""
+    })
+  }
+
+  updateCapacityWarning() {
+    if (!this.hasCapacityWarningTarget || !this.showCapacityWarningValue) return
+
+    this.capacityWarningTarget.hidden = this.partyCapacityCount() <= this.availableParticipantCapacityValue
+  }
+
+  partyCapacityCount() {
+    return 1 + this.visibleAdultCount() + this.capacityCountedMinorCount()
+  }
+
+  visibleAdultCount() {
+    if (!this.hasGuestFieldsTarget || this.guestFieldsTarget.hidden) return 0
+
+    return Array.from(this.guestFieldsTarget.querySelectorAll("[data-party-row]"))
+      .filter((row) => !row.hidden).length
+  }
+
+  capacityCountedMinorCount() {
+    if (!this.hasMinorFieldsTarget || this.minorFieldsTarget.hidden) return 0
+
+    return Array.from(this.minorFieldsTarget.querySelectorAll("[data-party-row]"))
+      .filter((row) => !row.hidden)
+      .filter((row) => {
+        const age = Number.parseInt(row.querySelector("input[type='number']")?.value || "", 10)
+
+        return Number.isInteger(age) && age >= this.uncountedMinorAgeLimitValue
+      }).length
+  }
+
+  kebabCase(value) {
+    return value.replace(/[A-Z]/g, (character) => `-${character.toLowerCase()}`)
   }
 
   point(event) {

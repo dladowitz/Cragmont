@@ -83,6 +83,42 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     assert_equal campsite.participant_capacity + 1, campsite.confirmed_signup_count
   end
 
+  test "moving waitlisted participant to campsite moves linked guests" do
+    trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+    primary = User.create!(
+      first_name: "Morgan",
+      last_name: "Waitlist",
+      email: "morgan-linked-waitlist@example.com",
+      password: "password"
+    )
+    guest = User.create!(
+      first_name: "Gina",
+      last_name: "Guest",
+      email: "gina-linked-waitlist@example.com",
+      password: User::DEFAULT_GUEST_PASSWORD,
+      default_password: true
+    )
+    signup = create_waitlisted_signup!(trip: trip, user: primary)
+    guest_signup = create_waitlisted_signup!(trip: trip, user: guest, guest_of_signup: signup, guest_position: 1)
+
+    patch move_to_campsite_admin_trip_campsite_signup_url(trip, signup), params: {
+      campsite_signup: {
+        campsite_id: campsite.id
+      }
+    }
+
+    assert_redirected_to admin_trip_url(trip)
+    signup.reload
+    guest_signup.reload
+    assert signup.confirmed?
+    assert guest_signup.confirmed?
+    assert_equal campsite, guest_signup.campsite
+    assert_nil guest_signup.arrival_date
+    assert_nil guest_signup.checkout_date
+    assert guest_signup.user.default_password?
+  end
+
   test "does not move confirmed participant to campsite" do
     signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
 
@@ -113,6 +149,33 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     assert_nil signup.checkout_date
     assert_not signup.waitlist_eligible?
     assert campsite.reload.signups_locked?
+  end
+
+  test "moving confirmed primary participant to waitlist moves linked guests" do
+    campsite = campsites(:yosemite_a)
+    primary_signup = create_campsite_signup!(campsite: campsite, user: users(:sam))
+    guest_user = User.create!(
+      first_name: "Gina",
+      last_name: "Guest",
+      email: "gina-confirmed-move@example.com",
+      password: User::DEFAULT_GUEST_PASSWORD,
+      default_password: true
+    )
+    guest_signup = create_campsite_signup!(
+      campsite: campsite,
+      user: guest_user,
+      guest_of_signup: primary_signup,
+      guest_position: 1
+    )
+
+    patch move_to_waitlist_admin_trip_campsite_signup_url(trips(:yosemite), primary_signup)
+
+    assert_redirected_to admin_trip_url(trips(:yosemite))
+    assert primary_signup.reload.waitlisted?
+    assert guest_signup.reload.waitlisted?
+    assert_nil guest_signup.campsite
+    assert_nil guest_signup.arrival_date
+    assert_nil guest_signup.checkout_date
   end
 
   test "does not move waitlisted participant to waitlist" do

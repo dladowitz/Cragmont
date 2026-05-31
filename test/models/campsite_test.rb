@@ -91,14 +91,21 @@ class CampsiteTest < ActiveSupport::TestCase
     assert campsite.waitlist_signup_required?
   end
 
-  test "locked campsite can be available for waitlist confirmation" do
+  test "campsite can be available for waitlist confirmation when party fits" do
     campsite = campsites(:yosemite_a)
     signup = create_waitlisted_signup!(trip: trips(:yosemite), user: users(:sam))
 
-    assert_not campsite.available_for_waitlist_confirmation?(signup)
-
-    campsite.lock_signups!
-
     assert campsite.available_for_waitlist_confirmation?(signup)
+
+    campsite.participant_capacity.times do |index|
+      create_campsite_signup!(campsite: campsite, user: User.create!(
+        first_name: "Confirmed",
+        last_name: "WaitlistFit#{index}",
+        email: "confirmed-waitlist-fit-#{index}@example.com",
+        password: "password"
+      ))
+    end
+
+    assert_not campsite.reload.available_for_waitlist_confirmation?(signup)
   end
 end

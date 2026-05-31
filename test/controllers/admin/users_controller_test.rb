@@ -7,6 +7,7 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", "Admin Dashboard"
     assert_select "h2", "User directory"
+    assert_select "th", text: "Default Password"
     assert_select "a", text: "Alex Rivera"
     assert_select "tr", text: /Alex Rivera/ do
       assert_select ".member-icon[aria-label='Club member']", count: 1
@@ -18,6 +19,24 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
       assert_select ".member-icon-placeholder", count: 1
       assert_select "td", text: "No"
     end
+  end
+
+  test "users index shows default password status" do
+    guest = User.create!(
+      first_name: "Gina",
+      last_name: "Guest",
+      email: "admin-default-password@example.com",
+      password: User::DEFAULT_GUEST_PASSWORD,
+      default_password: true
+    )
+
+    get admin_users_url
+
+    assert_response :success
+    assert_select "tr", text: /Gina Guest/ do
+      assert_select "td", text: "Yes"
+    end
+    assert guest.default_password?
   end
 
   test "can view user details" do

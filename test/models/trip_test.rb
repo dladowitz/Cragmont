@@ -154,29 +154,73 @@ class TripTest < ActiveSupport::TestCase
   test "waitlist confirmation campsites require allowed signup status" do
     trip = trips(:yosemite)
     campsite = campsites(:yosemite_a)
-    campsite.lock_signups!
     signup = create_waitlisted_signup!(trip: trip, user: users(:sam))
 
     assert_empty trip.waitlist_confirmation_campsites_for(signup)
 
     signup.update!(waitlist_eligible_at: Time.current)
 
-    assert_equal [ campsite ], trip.waitlist_confirmation_campsites_for(signup)
+    assert_equal trip.campsites.map(&:id).sort, trip.waitlist_confirmation_campsites_for(signup).map(&:id).sort
   end
 
-  test "waitlist eligibility skips parties that cannot fit open capacity" do
+  test "waitlisted guests are summarized under primary signup" do
+    trip = trips(:yosemite)
+    primary_signup = create_waitlisted_signup!(trip: trip, user: users(:sam))
+    guest_user = User.create!(
+      first_name: "Gina",
+      last_name: "Guest",
+      email: "trip-waitlist-guest@example.com",
+      password: User::DEFAULT_GUEST_PASSWORD,
+      default_password: true
+    )
+    create_waitlisted_signup!(trip: trip, user: guest_user, guest_of_signup: primary_signup, guest_position: 1)
+
+    assert_equal [ primary_signup ], trip.waitlisted_signups.to_a
+    assert_equal "Sam L. + Gina G.", primary_signup.public_waitlist_name
+  end
+
+  test "waitlist confirmation uses full party capacity including guests" do
     trip = trips(:yosemite)
     campsite = campsites(:yosemite_a)
     fill_count = campsite.participant_capacity - 1
     fill_count.times do |index|
       create_campsite_signup!(campsite: campsite, user: User.create!(
         first_name: "Confirmed",
-        last_name: "SkipFit#{index}",
-        email: "confirmed-skip-fit#{index}@example.com",
+        last_name: "GuestCapacity#{index}",
+        email: "confirmed-guest-capacity-#{index}@example.com",
         password: "password"
       ))
     end
     campsite.lock_signups!
+    primary_signup = create_waitlisted_signup!(trip: trip, user: users(:sam), waitlist_eligible_at: Time.current)
+    guest_user = User.create!(
+      first_name: "Gina",
+      last_name: "Guest",
+      email: "trip-capacity-guest@example.com",
+      password: User::DEFAULT_GUEST_PASSWORD,
+      default_password: true
+    )
+    create_waitlisted_signup!(trip: trip, user: guest_user, guest_of_signup: primary_signup, guest_position: 1)
+
+    confirmation_campsites = trip.waitlist_confirmation_campsites_for(primary_signup)
+    assert_not_includes confirmation_campsites, campsite
+    assert_includes confirmation_campsites, campsites(:yosemite_b)
+  end
+
+  test "waitlist eligibility skips parties that cannot fit open capacity" do
+    trip = trips(:yosemite)
+    trip.campsites.each do |campsite|
+      fill_count = campsite.participant_capacity - 1
+      fill_count.times do |index|
+        create_campsite_signup!(campsite: campsite, user: User.create!(
+          first_name: "Confirmed",
+          last_name: "SkipFit#{campsite.id}#{index}",
+          email: "confirmed-skip-fit-#{campsite.id}-#{index}@example.com",
+          password: "password"
+        ))
+      end
+      campsite.lock_signups!
+    end
     large_party_user = User.create!(
       first_name: "Large",
       last_name: "Party",
