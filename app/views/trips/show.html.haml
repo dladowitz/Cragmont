@@ -85,7 +85,6 @@
                           %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
                           = button_to remove_button_text, trip_campsite_campsite_signup_path(@trip, campsite), method: :delete, class: "button danger"
                 - elsif signed_up_for_another_campsite
-                  %button.button.secondary{:disabled => true, :type => "button"} Already signed up
                   %p.muted.already-signed-up-note You are already signed up for another campsite on this trip.
                 - elsif current_waitlisted_signup
                   .waitlist-action-buttons

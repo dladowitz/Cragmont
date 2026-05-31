@@ -329,7 +329,6 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "#campsite-#{campsites(:yosemite_a).id}", text: /You are confirmed for this campsite/
     assert_select "#campsite-#{campsites(:yosemite_b).id}" do
-      assert_select "button[disabled]", text: "Already signed up"
       assert_select ".muted", text: /already signed up for another campsite/
     end
   end
