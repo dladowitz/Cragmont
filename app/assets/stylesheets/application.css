@@ -197,6 +197,11 @@ input[type="submit"] {
   background: var(--danger);
 }
 
+.button.danger.secondary {
+  background: #fff;
+  color: var(--danger);
+}
+
 .button:disabled,
 input[type="submit"]:disabled {
   cursor: not-allowed;
@@ -536,6 +541,47 @@ input[type="submit"]:disabled {
   margin-left: 10px;
 }
 
+.disabled-tooltip {
+  position: relative;
+  display: inline-block;
+  margin-left: 10px;
+  cursor: not-allowed;
+}
+
+.disabled-tooltip .button:disabled {
+  pointer-events: none;
+}
+
+.disabled-tooltip::after {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(340px, 70vw);
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--accent-dark);
+  box-shadow: 0 10px 28px rgb(31 41 51 / 20%);
+  color: #fff;
+  content: attr(aria-label);
+  font-size: 0.95rem;
+  font-weight: 750;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  text-align: left;
+  transform: translateY(4px);
+  transition: opacity 140ms ease, transform 140ms ease;
+  white-space: normal;
+}
+
+.disabled-tooltip:hover::after,
+.disabled-tooltip:focus::after,
+.disabled-tooltip:focus-visible::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .campsites-panel {
   padding-top: 16px;
 }
@@ -547,10 +593,6 @@ input[type="submit"]:disabled {
 .campsites-panel-header h2 {
   margin-bottom: 0;
   line-height: 1.05;
-}
-
-.campsites-panel-header + .campground-group {
-  margin-top: 0;
 }
 
 .campsites-panel table {
@@ -602,23 +644,27 @@ input[type="submit"]:disabled {
 .campsite-card-header h3,
 .admin-campsite-card-header h4,
 .campsite-card-header p,
+.admin-campsite-card-header p,
 .campground-group h3,
 .campground-group p {
   margin: 0;
 }
 
 .campsite-card-header p,
+.admin-campsite-card-header p,
 .campground-group p,
 .campsite-notes {
   color: var(--muted);
 }
 
-.campsite-card-summary {
+.campsite-card-summary,
+.admin-campsite-card-header > div:first-child {
   display: grid;
   gap: 4px;
 }
 
-.campsite-card-summary .date-pair {
+.campsite-card-summary .date-pair,
+.admin-campsite-card-header .date-pair {
   margin-top: 16px;
 }
 
@@ -899,6 +945,16 @@ td span {
   font-weight: 700;
 }
 
+.participant-details-campsite-summary {
+  display: grid;
+  gap: 2px;
+  margin-top: 14px;
+}
+
+.participant-details-campsite-summary span {
+  color: var(--muted);
+}
+
 .signup-modal p,
 .confirmation-modal p {
   max-width: none;
@@ -909,6 +965,39 @@ td span {
 .signup-modal .form-actions,
 .confirmation-modal .form-actions {
   justify-content: end;
+}
+
+.admin-campsite-choice-list {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-campsite-choice-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfaf7;
+}
+
+.admin-campsite-choice-copy,
+.admin-campsite-choice-stats {
+  display: grid;
+  gap: 2px;
+}
+
+.admin-campsite-choice-stats {
+  grid-template-columns: repeat(2, auto);
+  gap: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.admin-campsite-choice-stats strong {
+  color: var(--text);
 }
 
 .signup-modal form,
@@ -1255,6 +1344,68 @@ th {
   text-transform: uppercase;
 }
 
+.tooltip-heading {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.info-tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-dark);
+  cursor: help;
+}
+
+.info-tooltip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.78rem;
+  font-weight: 850;
+  line-height: 1;
+  text-transform: none;
+}
+
+.info-tooltip-box {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  left: 50%;
+  width: min(300px, 70vw);
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--accent-dark);
+  box-shadow: 0 10px 28px rgb(31 41 51 / 20%);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 750;
+  letter-spacing: 0;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  text-align: left;
+  text-transform: none;
+  transform: translate(-50%, 4px);
+  transition: opacity 140ms ease, transform 140ms ease;
+  white-space: normal;
+}
+
+.info-tooltip:hover .info-tooltip-box,
+.info-tooltip:focus .info-tooltip-box,
+.info-tooltip:focus-visible .info-tooltip-box {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
 .status {
   display: inline-block;
   padding: 3px 8px;
@@ -1263,6 +1414,63 @@ th {
   color: var(--accent-dark);
   font-size: 0.85rem;
   font-weight: 750;
+}
+
+.missing-value {
+  color: var(--danger);
+  font-weight: 750;
+}
+
+.missing-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.missing-details-link-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.missing-details-link {
+  color: var(--accent-dark);
+  font-weight: 750;
+}
+
+.copy-link-button {
+  gap: 5px;
+  min-height: 28px;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  transition: box-shadow 120ms ease, transform 120ms ease;
+}
+
+.copy-link-button:active {
+  box-shadow: inset 0 2px 5px rgb(31 41 51 / 16%);
+  transform: translateY(1px);
+}
+
+.copy-link-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.copy-link-button .check-icon {
+  display: none;
+}
+
+.copy-link-button.is-copied .copy-icon {
+  display: none;
+}
+
+.copy-link-button.is-copied .check-icon {
+  display: inline-flex;
 }
 
 .danger-status {
@@ -1522,6 +1730,15 @@ textarea {
 
   .trip-waitlist-section {
     margin-left: 0;
+  }
+
+  .admin-campsite-choice-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .admin-campsite-choice-stats {
+    grid-template-columns: 1fr;
   }
 
   .form-grid,

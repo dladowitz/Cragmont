@@ -1,0 +1,23 @@
+- campsite = signup.campsite
+%div{"data-controller" => "modal", "data-modal-open-value" => "true"}
+  %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+    .signup-modal-content
+      %div
+        %h2 You've been added to the #{trip.name} trip.
+        %p Please select dates you will be attending
+        .participant-details-campsite-summary
+          %strong
+            = campsite.campground.name
+            site #{campsite.site_number}
+          %span
+            Available #{campsite.arrival_date.to_fs(:long)} to #{campsite.checkout_date.to_fs(:long)}
+      = render "campsite_signup_form_fields",
+        trip: trip,
+        campsite: campsite,
+        signup: signup,
+        confirm_waitlist: false,
+        waitlist_direct_signup: false,
+        complete_existing_signup: true,
+        modal_submit_text: "Complete",
+        signup_intent: "complete_participant_details",
+        dom_id_suffix: "complete-#{signup.id}"

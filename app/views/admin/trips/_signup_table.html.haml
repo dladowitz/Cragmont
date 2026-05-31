@@ -1,5 +1,9 @@
 - waitlist = local_assigns.fetch(:waitlist, false)
 - trip = local_assigns[:trip]
+- campsites = Array(local_assigns[:campsites])
+- allowed_signup_tooltip = "Participants can sign themselves up from the waitlist"
+- update_signup_tooltip = "Enable participant to sign themselves up from the waitlist"
+- add_campsite_tooltip = "Adds a participant directly to a campsite"
 %table
   %thead
     %tr
@@ -7,18 +11,37 @@
       - if waitlist
         %th Member
       - unless waitlist
-        %th Attendance
+        %th Dates
       %th Minors
       %th Email
       %th Phone
       - if waitlist
-        %th Allowed to Signup
         %th
+          %span.tooltip-heading.info-tooltip{aria: { label: allowed_signup_tooltip }, tabindex: "0"}
+            %span Allow Signup
+            %span.info-tooltip-icon{aria: { hidden: "true" }} i
+            %span.info-tooltip-box{role: "tooltip"}= allowed_signup_tooltip
+        %th
+          %span.tooltip-heading.info-tooltip{aria: { label: update_signup_tooltip }, tabindex: "0"}
+            %span Update Signup Ability
+            %span.info-tooltip-icon{aria: { hidden: "true" }} i
+            %span.info-tooltip-box{role: "tooltip"}= update_signup_tooltip
+        %th
+          %span.tooltip-heading.info-tooltip{aria: { label: add_campsite_tooltip }, tabindex: "0"}
+            %span Add to Campsite
+            %span.info-tooltip-icon{aria: { hidden: "true" }} i
+            %span.info-tooltip-box{role: "tooltip"}= add_campsite_tooltip
       - else
         %th Waiver
+        %th Move to Waitlist
+        %th Remove
   %tbody
     - signups.each do |signup|
-      %tr
+      - signup_trip = trip || signup.trip
+      - missing_dates = !waitlist && (signup.arrival_date.blank? || signup.checkout_date.blank?)
+      - missing_waiver = !waitlist && !signup.waiver_signed?
+      - participant_details_link = trip_url(signup_trip, complete_signup: signup.signed_id(purpose: :complete_participant_details), anchor: "campsite-#{signup.campsite_id}") unless waitlist
+      %tr{data: (waitlist ? {} : { controller: "copyable-modal" })}
         %td= signup.user.full_name
         - if waitlist
           %td
@@ -27,7 +50,11 @@
             - else
               %span.muted Non-member
         - unless waitlist
-          %td= signup.attendance_date_range
+          %td
+            - if !missing_dates
+              = signup.attendance_date_range
+            - else
+              %button.missing-value.missing-link{"data-action" => "copyable-modal#open", type: "button"} Missing
         %td
           - if signup.campsite_signup_minors.any?
             %ul.admin-minor-list
@@ -46,9 +73,37 @@
               %span.muted No
           %td
             - if signup.waitlist_eligible?
-              = button_to "Revoke Signup Ability", revoke_waitlist_eligibility_admin_trip_campsite_signup_path(trip, signup), method: :patch, class: "button secondary"
+              = button_to "Revoke Signup", revoke_waitlist_eligibility_admin_trip_campsite_signup_path(trip, signup), method: :patch, class: "button secondary"
             - else
-              = button_to "Allow Participant to Signup", make_waitlist_eligible_admin_trip_campsite_signup_path(trip, signup), method: :patch, class: "button secondary"
+              = button_to "Allow Signup", make_waitlist_eligible_admin_trip_campsite_signup_path(trip, signup), method: :patch, class: "button secondary"
+          %td
+            %div{"data-controller" => "modal"}
+              %button.button.secondary{"data-action" => "modal#open", :type => "button"} Add
+              %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                .signup-modal-content
+                  %div
+                    %h2 Add #{signup.user.full_name} to a campsite
+                    %p.muted Admins can add waitlisted participants even when a campsite is at capacity.
+                  .admin-campsite-choice-list
+                    - campsites.each do |campsite|
+                      .admin-campsite-choice-row
+                        .admin-campsite-choice-copy
+                          %strong
+                            = campsite.campground.name
+                            site #{campsite.site_number}
+                          %span.muted
+                            = campsite.arrival_date.strftime("%b %-d")
+                            to #{campsite.checkout_date.strftime("%b %-d")}
+                        .admin-campsite-choice-stats
+                          %span
+                            %strong= campsite.confirmed_signup_count
+                            signed up
+                          %span
+                            %strong= campsite.participant_capacity
+                            capacity
+                        = button_to "Add", move_to_campsite_admin_trip_campsite_signup_path(trip, signup), method: :patch, params: { campsite_signup: { campsite_id: campsite.id } }, class: "button secondary"
+                  .form-actions
+                    %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
         - else
           %td
             - if signup.waiver_signed?
@@ -59,4 +114,46 @@
                   %svg.waiver-download-icon{ aria: { hidden: "true" }, fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg" }
                     %path{ d: "M12 3v12m0 0 4-4m-4 4-4-4M5 21h14", stroke: "currentColor", "stroke-linecap" => "round", "stroke-linejoin" => "round", "stroke-width" => "2" }
             - else
-              %span.muted Missing
+              %button.missing-value.missing-link{"data-action" => "copyable-modal#open", type: "button"} Missing
+            - if missing_dates || missing_waiver
+              %dialog.signup-modal.missing-details-modal{"data-action" => "click->copyable-modal#closeOnBackdrop", "data-copyable-modal-target" => "dialog"}
+                .signup-modal-content
+                  %div
+                    %h2 Missing participant details
+                    %p We need to collect waiver and attendance dates from this participant.
+                    %p Share this link with the participant so they can sign the waiver and select dates:
+                  .missing-details-link-row
+                    = link_to "Waiver and Date Selection Link", participant_details_link, class: "missing-details-link", "data-copyable-modal-target" => "source"
+                    %button.button.secondary.copy-link-button{"data-action" => "copyable-modal#copy", type: "button"}
+                      %span.copy-link-icon.copy-icon{aria: { hidden: "true" }}
+                        %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
+                          %rect{height: "12", rx: "2", stroke: "currentColor", "stroke-width" => "2", width: "12", x: "8", y: "8"}
+                          %path{d: "M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2", stroke: "currentColor", "stroke-linecap" => "round", "stroke-width" => "2"}
+                      %span.copy-link-icon.check-icon{aria: { hidden: "true" }}
+                        %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
+                          %path{d: "M20 6 9 17l-5-5", stroke: "currentColor", "stroke-linecap" => "round", "stroke-linejoin" => "round", "stroke-width" => "2.5"}
+                      %span Copy link
+                  .form-actions
+                    %button.button.secondary{"data-action" => "copyable-modal#close", type: "button"} Close
+          %td
+            %div{"data-controller" => "modal"}
+              %button.button.secondary{"data-action" => "modal#open", :type => "button"} Waitlist
+              %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                .confirmation-modal-content
+                  %div
+                    %h2 Move #{signup.user.full_name} to the waitlist?
+                    %p This will remove their campsite assignment and attendance dates.
+                  .form-actions
+                    %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
+                    = button_to "Waitlist", move_to_waitlist_admin_trip_campsite_signup_path(signup_trip, signup), method: :patch, class: "button secondary"
+          %td
+            %div{"data-controller" => "modal"}
+              %button.button.danger.secondary{"data-action" => "modal#open", :type => "button"} Remove
+              %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                .confirmation-modal-content
+                  %div
+                    %h2 Remove #{signup.user.full_name} from this campsite?
+                    %p This will remove their signup from the trip.
+                  .form-actions
+                    %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
+                    = button_to "Remove", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, class: "button danger"

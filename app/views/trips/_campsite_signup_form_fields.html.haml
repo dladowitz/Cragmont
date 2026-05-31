@@ -1,4 +1,8 @@
-- waitlisted_signup = confirm_waitlist || waitlist_direct_signup
+- confirm_waitlist = local_assigns.fetch(:confirm_waitlist, false)
+- waitlist_direct_signup = local_assigns.fetch(:waitlist_direct_signup, false)
+- complete_existing_signup = local_assigns.fetch(:complete_existing_signup, false)
+- existing_signup = local_assigns[:signup]
+- waitlisted_signup = confirm_waitlist || waitlist_direct_signup || complete_existing_signup
 - signature_id = "campsite-signup-signature-#{dom_id_suffix}"
 - arrival_id = "campsite-signup-arrival-#{dom_id_suffix}"
 - checkout_id = "campsite-signup-checkout-#{dom_id_suffix}"
@@ -12,10 +16,10 @@
       .attendance-date-row
         .field
           = label_tag arrival_id, "Arrival date"
-          = date_field_tag "campsite_signup[arrival_date]", nil, id: arrival_id, min: campsite.arrival_date, max: campsite.checkout_date - 1.day, required: true, data: { signature_target: "arrivalDate", action: "input->signature#checkAttendanceDates" }
+          = date_field_tag "campsite_signup[arrival_date]", existing_signup&.arrival_date, id: arrival_id, min: campsite.arrival_date, max: campsite.checkout_date - 1.day, required: true, data: { signature_target: "arrivalDate", action: "input->signature#checkAttendanceDates" }
         .field
           = label_tag checkout_id, "Checkout date"
-          = date_field_tag "campsite_signup[checkout_date]", nil, id: checkout_id, min: campsite.arrival_date + 1.day, max: campsite.checkout_date, required: true, data: { signature_target: "checkoutDate", action: "input->signature#checkAttendanceDates" }
+          = date_field_tag "campsite_signup[checkout_date]", existing_signup&.checkout_date, id: checkout_id, min: campsite.arrival_date + 1.day, max: campsite.checkout_date, required: true, data: { signature_target: "checkoutDate", action: "input->signature#checkAttendanceDates" }
     - unless waitlisted_signup
       %fieldset.signup-kind-options
         %legend Who are you signing up?

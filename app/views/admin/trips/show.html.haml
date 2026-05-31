@@ -54,65 +54,69 @@
   .panel-header.campsites-panel-header
     %div
       %h2 Campsites
-    = link_to "Add campsite", new_admin_trip_campsite_path(@trip), class: "button"
-  - if @campsites_by_campground.any?
-    - @campsites_by_campground.each do |campground, campsites|
-      .campground-group
-        %h3= campground.name
-        %p= campground.location
-        .admin-campsite-list
-          - campsites.each do |campsite|
-            %section.admin-campsite-card
-              .admin-campsite-card-header
+    = link_to "Add campsite", new_admin_trip_campsite_path(@trip), class: "button secondary"
+  - if @campsites.any?
+    .admin-campsite-list
+      - @campsites.each do |campsite|
+        - campsite_has_participants = campsite.campsite_signups.any?
+        - delete_blocked_message = "Cannot delete campsite with participants signed up. Remove them or move to the waitlist first"
+        %section.admin-campsite-card{id: "admin-campsite-#{campsite.id}"}
+          .admin-campsite-card-header
+            %div
+              %h4
+                = campsite.campground.name
+                site #{campsite.site_number}
+              %p= campsite.campground.location
+              %dl.date-pair
                 %div
-                  %h4 Site #{campsite.site_number}
-                  %dl.date-pair
-                    %div
-                      %dt Arrival
-                      %dd= campsite.arrival_date.to_fs(:long)
-                    %div
-                      %dt Checkout
-                      %dd= campsite.checkout_date.to_fs(:long)
-                %div.table-actions
-                  = link_to "Edit", edit_admin_trip_campsite_path(@trip, campsite)
-                  %div{"data-controller" => "modal"}
-                    %button.link-button{"data-action" => "modal#open", :type => "button"} Delete
-                    %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
-                      .confirmation-modal-content
-                        %div
-                          %h2 Delete campsite?
-                          %p This will not remove signed-up participants from the trip.
-                        .form-actions
-                          %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
-                          = button_to "Delete campsite", admin_trip_campsite_path(@trip, campsite), method: :delete, class: "button danger"
-              .stats.campsite-stats
+                  %dt Arrival
+                  %dd= campsite.arrival_date.to_fs(:long)
                 %div
-                  %strong= campsite.confirmed_signup_count
-                  %span Signed up
-                %div{:class => "availability-stat #{campsite.capacity_full? ? "danger-stat" : "success-stat"}"}
-                  %strong= campsite.available_participant_capacity
-                  %span Spaces available
-                %div
-                  %strong= campsite.participant_capacity
-                  %span Capacity
-                %div
-                  %strong= campsite.car_capacity
-                  %span Cars
-              - if campsite.notes.present?
-                %p.campsite-notes
-                  %strong Notes:
-                  = campsite.notes
-              .campsite-participant-groups
-                .confirmed-signups-section
-                  %h4 Confirmed participants
-                  - if campsite.confirmed_signups.any?
-                    = render "signup_table", signups: campsite.confirmed_signups
-                  - else
-                    %p.muted No confirmed participants yet.
-    - if @waitlisted_signups.any?
-      .waitlisted-signups-section.trip-waitlist-section
-        %h3 Trip waitlist
-        = render "signup_table", signups: @waitlisted_signups, waitlist: true, trip: @trip
+                  %dt Checkout
+                  %dd= campsite.checkout_date.to_fs(:long)
+            %div.table-actions
+              = link_to "Edit", edit_admin_trip_campsite_path(@trip, campsite), class: "button secondary"
+              - if campsite_has_participants
+                %span.disabled-tooltip{aria: { label: delete_blocked_message }, tabindex: "0", title: delete_blocked_message}
+                  %button.button.danger.secondary{disabled: true, type: "button"} Delete
+              - else
+                %div{"data-controller" => "modal"}
+                  %button.button.danger.secondary{"data-action" => "modal#open", :type => "button"} Delete
+                  %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                    .confirmation-modal-content
+                      %div
+                        %h2 Delete campsite?
+                      .form-actions
+                        %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
+                        = button_to "Delete campsite", admin_trip_campsite_path(@trip, campsite), method: :delete, class: "button danger"
+          .stats.campsite-stats
+            %div
+              %strong= campsite.confirmed_signup_count
+              %span Signed up
+            %div{:class => "availability-stat #{campsite.capacity_full? ? "danger-stat" : "success-stat"}"}
+              %strong= campsite.available_participant_capacity
+              %span Spaces available
+            %div
+              %strong= campsite.participant_capacity
+              %span Capacity
+            %div
+              %strong= campsite.car_capacity
+              %span Cars
+          - if campsite.notes.present?
+            %p.campsite-notes
+              %strong Notes:
+              = campsite.notes
+          .campsite-participant-groups
+            .confirmed-signups-section
+              %h4 Confirmed participants
+              - if campsite.confirmed_signups.any?
+                = render "signup_table", signups: campsite.confirmed_signups
+              - else
+                %p.muted No confirmed participants yet.
   - else
     .empty-state
       %p No campsites have been added to this trip yet.
+  - if @waitlisted_signups.any?
+    .waitlisted-signups-section.trip-waitlist-section
+      %h3 Trip waitlist
+      = render "signup_table", signups: @waitlisted_signups, waitlist: true, trip: @trip, campsites: @campsites

@@ -12,7 +12,6 @@ class CampsiteSignup < ApplicationRecord
 
   validates :status, presence: true, inclusion: { in: STATUSES }
   validates :campsite, presence: true, if: :confirmed?
-  validates :arrival_date, :checkout_date, presence: true, if: :confirmed?
   validates :user_id, uniqueness: { scope: :trip_id, message: "is already signed up for this trip" }
   validates_associated :campsite_signup_minors
   validate :minor_limit

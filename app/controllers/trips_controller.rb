@@ -11,11 +11,24 @@ class TripsController < ApplicationController
     @waitlisted_signups = @trip.waitlisted_signups
     @waitlist_confirmation_campsites = @current_signup&.waitlisted? ? @trip.waitlist_confirmation_campsites_for(@current_signup) : []
     @waitlist_confirmation_campsite_ids = @waitlist_confirmation_campsites.map(&:id)
+    @completion_signup = participant_details_signup
   end
 
   private
 
   def set_trip
     @trip = Trip.published.find(params[:id])
+  end
+
+  def participant_details_signup
+    return if !user_signed_in? || params[:complete_signup].blank?
+
+    signup = CampsiteSignup.includes(:campsite).find_signed(params[:complete_signup], purpose: :complete_participant_details)
+    return if signup.blank?
+    return if signup.trip_id != @trip.id || signup.user_id != current_user.id
+    return if !signup.confirmed? || signup.campsite.blank?
+    return if signup.arrival_date.present? && signup.checkout_date.present? && signup.waiver_signed?
+
+    signup
   end
 end
