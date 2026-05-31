@@ -27,8 +27,9 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_select "button", text: "Delete account"
     assert_select "dialog.confirmation-modal", text: /Are you sure you want to delete your account\?/
     assert_select "dialog.confirmation-modal", text: /This will delete all history and current trips/
-    assert_select "label[for='confirmation_text']", text: "Type Delete Me to Confirm"
-    assert_select "input[name='confirmation_text']"
+    assert_select "label[for='confirmation_text']", text: /Type Delete Me to Confirm/
+    assert_select "label[for='confirmation_text'] .required-marker", text: "*"
+    assert_select "input[name='confirmation_text'][required]"
     assert_select "input[type='submit'][disabled]", value: "Delete account"
     assert_select "a", text: "Yosemite Valley Spring"
   end

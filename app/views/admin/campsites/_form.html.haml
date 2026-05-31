@@ -3,10 +3,10 @@
   - if campgrounds.any?
     .form-grid
       .field
-        = form.label :campground_id, "Campground"
+        = required_label form, :campground_id, "Campground"
         = form.collection_select :campground_id, campgrounds, :id, :name, { prompt: "Select a campground" }, required: true
       .field
-        = form.label :site_number
+        = required_label form, :site_number
         = form.text_field :site_number, required: true
       .field
         = form.label :registered_by_id, "Registered by"
@@ -15,16 +15,16 @@
         = form.label :registration_number
         = form.text_field :registration_number
       .field
-        = form.label :arrival_date
+        = required_label form, :arrival_date
         = form.date_field :arrival_date, min: trip.start_date, max: trip.end_date, required: true
       .field
-        = form.label :checkout_date
+        = required_label form, :checkout_date
         = form.date_field :checkout_date, min: trip.start_date, max: trip.end_date, required: true
       .field
-        = form.label :participant_capacity
+        = required_label form, :participant_capacity
         = form.number_field :participant_capacity, min: 0, max: 50, required: true
       .field
-        = form.label :car_capacity
+        = required_label form, :car_capacity
         = form.number_field :car_capacity, min: 0, required: true
     .field
       = form.label :notes

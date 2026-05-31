@@ -1,0 +1,67 @@
+- modal_id = "admin-add-participant-#{campsite.id}"
+- existing_option_id = "admin-add-participant-existing-#{campsite.id}"
+- new_option_id = "admin-add-participant-new-#{campsite.id}"
+- user_select_id = "admin-add-participant-user-#{campsite.id}"
+- first_name_id = "admin-add-participant-first-name-#{campsite.id}"
+- last_name_id = "admin-add-participant-last-name-#{campsite.id}"
+- email_id = "admin-add-participant-email-#{campsite.id}"
+- phone_id = "admin-add-participant-phone-#{campsite.id}"
+- signed_up_user_ids = Array(local_assigns[:trip_participant_user_ids])
+- user_options = users.map do |user|
+  - signed_up = signed_up_user_ids.include?(user.id)
+  - option_label = user.email.present? ? "#{user.full_name} (#{user.email})" : user.full_name
+  - option_label = "#{option_label} - already on trip" if signed_up
+  - [option_label, user.id, { disabled: signed_up }]
+%div{"data-controller" => "modal"}
+  %button.button.secondary{"aria-controls" => modal_id, "data-action" => "modal#open", type: "button"} Add Participant
+  %dialog.signup-modal.admin-add-participant-modal{id: modal_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+    .signup-modal-content
+      %div
+        %h2 Add participant
+        %p
+          = campsite.campground.name
+          site #{campsite.site_number}
+      = form_with url: admin_trip_campsite_signups_path(trip), method: :post, class: "admin-form admin-add-participant-form", data: { controller: "admin-participant" } do
+        = hidden_field_tag "campsite_signup[campsite_id]", campsite.id
+        %fieldset.signup-kind-options.admin-add-participant-options
+          %legend Participant account
+          %label{for: existing_option_id}
+            = radio_button_tag "campsite_signup[participant_account_status]", "existing", true, id: existing_option_id, data: { admin_participant_target: "option", action: "admin-participant#toggle" }
+            %span Participant has an account
+          %label{for: new_option_id}
+            = radio_button_tag "campsite_signup[participant_account_status]", "new", false, id: new_option_id, data: { admin_participant_target: "option", action: "admin-participant#toggle" }
+            %span Participant does not have an account
+        %section.admin-add-participant-fields{"data-admin-participant-target" => "existingFields"}
+          .field
+            = label_tag user_select_id do
+              Participant
+              %span.required-marker{"aria-hidden" => "true"} *
+              %span.visually-hidden required
+            = select_tag "campsite_signup[user_id]", options_for_select(user_options), include_blank: "Choose a participant", id: user_select_id, required: true, data: { admin_participant_target: "existingInput", required: "true" }
+        %section.admin-add-participant-fields{"data-admin-participant-target" => "newFields", hidden: true}
+          %h3 Create an account and add to campsite
+          .form-grid
+            .field
+              = label_tag first_name_id do
+                First name
+                %span.required-marker{"aria-hidden" => "true"} *
+                %span.visually-hidden required
+              = text_field_tag "campsite_signup[new_user][first_name]", "", id: first_name_id, required: true, disabled: true, data: { admin_participant_target: "newInput", required: "true" }
+            .field
+              = label_tag last_name_id do
+                Last name
+                %span.required-marker{"aria-hidden" => "true"} *
+                %span.visually-hidden required
+              = text_field_tag "campsite_signup[new_user][last_name]", "", id: last_name_id, required: true, disabled: true, data: { admin_participant_target: "newInput", required: "true" }
+            .field
+              = label_tag email_id do
+                Email
+                %span.required-marker{"aria-hidden" => "true"} *
+                %span.visually-hidden required
+              = email_field_tag "campsite_signup[new_user][email]", "", id: email_id, required: true, disabled: true, data: { admin_participant_target: "newInput", required: "true" }
+            .field
+              = label_tag phone_id, "Phone"
+              = telephone_field_tag "campsite_signup[new_user][phone]", "", id: phone_id, disabled: true, data: { admin_participant_target: "newInput" }
+        .form-actions
+          %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
+          = submit_tag "Add Participant", class: "button"

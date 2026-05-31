@@ -3,7 +3,7 @@ require "stringio"
 
 class CampsiteSignupsController < ApplicationController
   before_action :require_login
-  skip_before_action :require_login, only: :guest_password
+  skip_before_action :require_login, only: %i[guest_password participant_password]
 
   def create
     trip = Trip.published.find(params[:trip_id])
@@ -55,10 +55,28 @@ class CampsiteSignupsController < ApplicationController
     if signup.blank?
       redirect_to trip_path(trip), alert: "This guest waiver link is invalid."
     elsif !signup.user.default_password?
-      log_in_guest(signup)
+      log_in_signup(signup)
       redirect_to trip_path(trip, complete_signup: params[:complete_signup], anchor: "campsite-#{campsite.id}")
-    elsif update_guest_password(signup)
-      log_in_guest(signup)
+    elsif update_default_password(signup)
+      log_in_signup(signup)
+      redirect_to trip_path(trip, complete_signup: params[:complete_signup], anchor: "campsite-#{campsite.id}"), notice: "Your password has been updated."
+    else
+      redirect_to trip_path(trip, complete_signup: params[:complete_signup], anchor: "campsite-#{campsite.id}"), alert: signup.user.errors.full_messages.to_sentence
+    end
+  end
+
+  def participant_password
+    trip = Trip.published.find(params[:trip_id])
+    campsite = trip.campsites.find(params[:campsite_id])
+    signup = find_participant_completion_signup(trip, campsite)
+
+    if signup.blank?
+      redirect_to trip_path(trip), alert: "This participant waiver link is invalid."
+    elsif !signup.user.default_password?
+      log_in_signup(signup)
+      redirect_to trip_path(trip, complete_signup: params[:complete_signup], anchor: "campsite-#{campsite.id}")
+    elsif update_default_password(signup)
+      log_in_signup(signup)
       redirect_to trip_path(trip, complete_signup: params[:complete_signup], anchor: "campsite-#{campsite.id}"), notice: "Your password has been updated."
     else
       redirect_to trip_path(trip, complete_signup: params[:complete_signup], anchor: "campsite-#{campsite.id}"), alert: signup.user.errors.full_messages.to_sentence
@@ -486,11 +504,20 @@ class CampsiteSignupsController < ApplicationController
     signup
   end
 
-  def update_guest_password(signup)
+  def find_participant_completion_signup(trip, campsite)
+    signup = CampsiteSignup.includes(:campsite, :user).find_signed(params[:complete_signup], purpose: :complete_participant_details)
+    return if signup.blank?
+    return if signup.trip_id != trip.id || signup.campsite_id != campsite.id
+    return if signup.guest?
+
+    signup
+  end
+
+  def update_default_password(signup)
     signup.user.update(guest_password_params.merge(default_password: false))
   end
 
-  def log_in_guest(signup)
+  def log_in_signup(signup)
     session[:user_id] = signup.user_id
     @current_user = signup.user
   end

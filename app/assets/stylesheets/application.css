@@ -548,6 +548,15 @@ input[type="submit"]:disabled {
   display: none;
 }
 
+.disabled-modal-trigger {
+  display: inline-flex;
+  cursor: not-allowed;
+}
+
+.disabled-modal-trigger .button:disabled {
+  pointer-events: none;
+}
+
 .table-actions {
   white-space: nowrap;
 }
@@ -564,6 +573,11 @@ input[type="submit"]:disabled {
 .table-actions [data-controller="modal"] {
   display: inline-block;
   margin-left: 10px;
+}
+
+.admin-campsite-card-header .table-actions > [data-controller="modal"]:first-child {
+  margin-right: 10px;
+  margin-left: 0;
 }
 
 .table-actions .campsite-registration {
@@ -1067,6 +1081,35 @@ td span {
 
 .admin-campsite-choice-stats strong {
   color: var(--text);
+}
+
+.admin-add-participant-form {
+  gap: 16px;
+}
+
+.admin-add-participant-options label {
+  width: auto;
+}
+
+.admin-add-participant-fields {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfaf7;
+}
+
+.admin-add-participant-fields[hidden] {
+  display: none;
+}
+
+.admin-add-participant-fields h3 {
+  margin: 0;
+}
+
+.admin-add-participant-form .form-actions {
+  margin-top: 12px;
 }
 
 .signup-modal form,
@@ -1707,6 +1750,12 @@ th {
 
 label {
   font-weight: 700;
+}
+
+.required-marker {
+  margin-left: 2px;
+  color: var(--danger);
+  font-weight: 850;
 }
 
 .radio-field {

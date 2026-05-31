@@ -25,8 +25,8 @@
                 %p This will delete all history and current trips.
               = form_with url: profile_path, method: :delete, data: { controller: "confirmation-text", confirmation_text_phrase_value: "Delete Me" } do
                 .field
-                  = label_tag :confirmation_text, "Type Delete Me to Confirm"
-                  = text_field_tag :confirmation_text, "", data: { confirmation_text_target: "input", action: "input->confirmation-text#update" }, autocomplete: "off"
+                  = required_label_tag :confirmation_text, "Type Delete Me to Confirm"
+                  = text_field_tag :confirmation_text, "", required: true, data: { confirmation_text_target: "input", action: "input->confirmation-text#update" }, autocomplete: "off"
                 .form-actions
                   %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
                   = submit_tag "Delete account", class: "button danger", disabled: true, data: { confirmation_text_target: "submit" }

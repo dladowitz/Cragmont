@@ -47,8 +47,26 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_select ".panel-header", text: /Alex Rivera/
     assert_select ".details-list dt", text: "Club member"
     assert_select ".details-list dd", text: "Yes"
+    assert_select ".details-list dt", text: "Default Password"
+    assert_select ".details-list dd", text: "No"
     assert_select "form[data-turbo-confirm='Are you sure you want to delete this user?']"
     assert_select "a", text: "Yosemite Valley Spring"
+  end
+
+  test "user details show default password status" do
+    guest = User.create!(
+      first_name: "Gina",
+      last_name: "Guest",
+      email: "admin-default-password-detail@example.com",
+      password: User::DEFAULT_GUEST_PASSWORD,
+      default_password: true
+    )
+
+    get admin_user_url(guest)
+
+    assert_response :success
+    assert_select ".details-list dt", text: "Default Password"
+    assert_select ".details-list dd", text: "Yes"
   end
 
   test "can create user" do

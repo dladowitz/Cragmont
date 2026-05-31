@@ -2,10 +2,10 @@
   = render "admin/shared/errors", record: user
   .form-grid
     .field
-      = form.label :first_name
+      = required_label form, :first_name
       = form.text_field :first_name, required: true
     .field
-      = form.label :last_name
+      = required_label form, :last_name
       = form.text_field :last_name, required: true
     .field
       = form.label :email
@@ -14,10 +14,14 @@
       = form.label :phone
       = form.telephone_field :phone
     .field
-      = form.label :password
+      = form.label :password do
+        Password
+        = required_marker if user.new_record?
       = form.password_field :password, required: user.new_record?, autocomplete: "new-password"
     .field
-      = form.label :password_confirmation
+      = form.label :password_confirmation do
+        Password confirmation
+        = required_marker if user.new_record?
       = form.password_field :password_confirmation, required: user.new_record?, autocomplete: "new-password"
   %fieldset.radio-field
     %legend Club member

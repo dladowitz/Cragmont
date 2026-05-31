@@ -9,6 +9,7 @@ Rails.application.routes.draw do
     resources :campsites, only: [] do
       resource :campsite_signup, only: %i[create destroy] do
         patch :guest_password
+        patch :participant_password
       end
     end
   end
@@ -20,7 +21,7 @@ Rails.application.routes.draw do
     resources :campgrounds
     resources :trips do
       resources :campsites, except: %i[index show]
-      resources :campsite_signups, only: [] do
+      resources :campsite_signups, only: %i[create] do
         patch :make_waitlist_eligible, on: :member
         patch :revoke_waitlist_eligibility, on: :member
         patch :move_to_campsite, on: :member

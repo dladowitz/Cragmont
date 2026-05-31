@@ -2,10 +2,10 @@
   = render "admin/shared/errors", record: user
   .form-grid
     .field
-      = form.label :first_name
+      = required_label form, :first_name
       = form.text_field :first_name, required: true
     .field
-      = form.label :last_name
+      = required_label form, :last_name
       = form.text_field :last_name, required: true
     .field
       = form.label :email

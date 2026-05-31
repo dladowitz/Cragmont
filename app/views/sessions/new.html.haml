@@ -4,10 +4,10 @@
     %h1 Log in
     = form_with url: session_path, class: "admin-form" do |form|
       .field
-        = form.label :email
+        = required_label form, :email
         = form.email_field :email, required: true, autocomplete: "email"
       .field
-        = form.label :password
+        = required_label form, :password
         = form.password_field :password, required: true, autocomplete: "current-password"
       .form-actions
         = form.submit "Log in"

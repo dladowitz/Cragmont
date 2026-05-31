@@ -51,6 +51,8 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".stats", text: /Total capacity/
     assert_select ".stats", text: /Campsites/
     assert_select ".stats span", text: "Car capacity", count: 0
+    assert_select ".trip-summary-header .actions a.button.secondary", text: "Edit trip"
+    assert_select ".trip-summary-header .actions .button.danger", text: "Delete trip", count: 0
     assert_select ".campground-group", count: 0
     assert_select ".admin-campsite-card-header h4", text: "Upper Pines site A12"
     assert_select ".admin-campsite-card-header p", text: "Yosemite National Park"
@@ -65,12 +67,37 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select "dialog.confirmation-modal", text: /This will not remove signed-up participants from the trip\./, count: 0
     assert_select "#admin-campsite-#{campsites(:yosemite_a).id}" do
       assert_select ".table-actions button", text: "Delete", count: 0
-      assert_select ".table-actions > [data-controller='modal']", count: 0
+      assert_select ".table-actions > [data-controller='modal'] > button", text: "Add Participant"
+      assert_select "dialog.admin-add-participant-modal" do
+        assert_select "h2", "Add participant"
+        assert_select "p", text: /Upper Pines\s*site A12/
+        assert_select "form[action='#{admin_trip_campsite_signups_path(trips(:yosemite))}'][method='post']" do
+          assert_select "input[type='hidden'][name='campsite_signup[campsite_id]'][value='#{campsites(:yosemite_a).id}']"
+          assert_select "input[type='radio'][name='campsite_signup[participant_account_status]'][value='existing'][checked]"
+          assert_select "label", text: "Participant has an account"
+          assert_select "input[type='radio'][name='campsite_signup[participant_account_status]'][value='new']"
+          assert_select "label", text: "Participant does not have an account"
+          assert_select "select[name='campsite_signup[user_id]'][required]" do
+            assert_select "option[value='#{users(:alex).id}']", text: /Alex Rivera/
+            assert_select "option[value='#{users(:alex).id}'][disabled]", count: 0
+            assert_select "option[value='#{users(:sam).id}'][disabled]", text: /Sam Lee .* already on trip/
+          end
+          assert_select "section[data-admin-participant-target='newFields'][hidden]" do
+            assert_select "h3", "Create an account and add to campsite"
+            assert_select "input[type='text'][name='campsite_signup[new_user][first_name]'][required][disabled]"
+            assert_select "input[type='text'][name='campsite_signup[new_user][last_name]'][required][disabled]"
+            assert_select "input[type='email'][name='campsite_signup[new_user][email]'][required][disabled]"
+            assert_select "input[type='tel'][name='campsite_signup[new_user][phone]'][disabled]"
+          end
+          assert_select "input[type='submit'][value='Add Participant']"
+        end
+      end
       assert_select "dialog.confirmation-modal", text: /Delete campsite\?/, count: 0
       assert_select "form[action='#{admin_trip_campsite_path(trips(:yosemite), campsites(:yosemite_a))}']", count: 0
     end
     assert_select "#admin-campsite-#{campsites(:yosemite_b).id}" do
       assert_select ".table-actions button", text: "Delete", count: 0
+      assert_select ".table-actions > [data-controller='modal'] > button", text: "Add Participant"
       assert_select "dialog.confirmation-modal", text: /Delete campsite\?/, count: 0
       assert_select "form[action='#{admin_trip_campsite_path(trips(:yosemite), campsites(:yosemite_b))}']", count: 0
     end
@@ -339,9 +366,30 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "can render edit trip form" do
-    get edit_admin_trip_url(trips(:yosemite))
+    trip = trips(:jtree)
+
+    get edit_admin_trip_url(trip)
 
     assert_response :success
+    assert_select ".danger-form-action [data-controller='modal'] > button.button.danger.secondary", text: "Delete trip"
+    assert_select "dialog.confirmation-modal", text: /Delete trip\?/
+    assert_select "dialog.confirmation-modal", text: /This will delete the trip and its campsites\./
+    assert_select "button[form='delete-trip-#{trip.id}']", text: "Delete trip"
+    assert_select "form#delete-trip-#{trip.id}[action='#{admin_trip_path(trip)}']"
+  end
+
+  test "edit trip blocks deleting a trip with participants signed up" do
+    trip = trips(:yosemite)
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+
+    get edit_admin_trip_url(trip)
+
+    assert_response :success
+    assert_select ".danger-form-action .disabled-modal-trigger[aria-disabled='true'][role='button']", text: "Delete trip"
+    assert_select ".danger-form-action .disabled-modal-trigger button.button.danger.secondary[disabled]", text: "Delete trip"
+    assert_select "dialog.confirmation-modal", text: /Cannot delete a trip with participants signed up/
+    assert_select "button[form='delete-trip-#{trip.id}']", count: 0
+    assert_select "form#delete-trip-#{trip.id}", count: 0
   end
 
   test "can delete trip" do
@@ -352,5 +400,17 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to admin_trips_url
+  end
+
+  test "cannot delete trip with participants signed up" do
+    trip = trips(:yosemite)
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+
+    assert_no_difference "Trip.count" do
+      delete admin_trip_url(trip)
+    end
+
+    assert_redirected_to edit_admin_trip_url(trip)
+    assert_equal "Cannot delete a trip with participants signed up", flash[:alert]
   end
 end

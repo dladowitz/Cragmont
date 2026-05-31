@@ -449,6 +449,48 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "shared details link logs in waitlisted participant moved to campsite" do
+    campsite = campsites(:yosemite_a)
+    signup = create_waitlisted_signup!(trip: trips(:yosemite), user: users(:sam))
+    signup.update!(
+      campsite: campsite,
+      status: "confirmed",
+      arrival_date: nil,
+      checkout_date: nil,
+      waitlist_eligible_at: nil
+    )
+    token = signup.signed_id(purpose: :complete_participant_details)
+
+    get trip_url(trips(:yosemite), complete_signup: token)
+
+    assert_response :success
+    assert_select ".public-nav a[href='#{profile_path}']", text: "Sam Lee"
+    assert_select ".public-nav a", text: "Log in", count: 0
+    assert_select "[data-controller='modal'][data-modal-open-value='true']" do
+      assert_select "dialog.signup-modal"
+      assert_select "h2", "You've been added to the Yosemite Valley Spring trip."
+      assert_select "form[action='#{signup_path_for(campsite)}'][method='post']" do
+        assert_select "input[type='hidden'][name='campsite_signup[intent]'][value='complete_participant_details']"
+        assert_select "input[type='date'][name='campsite_signup[arrival_date]'][required]"
+        assert_select "input[type='date'][name='campsite_signup[checkout_date]'][required]"
+        assert_select "button", text: "Complete"
+      end
+    end
+
+    params = waiver_signature_params.deep_dup
+    params[:campsite_signup][:intent] = "complete_participant_details"
+    params[:campsite_signup][:arrival_date] = "2026-06-13"
+    params[:campsite_signup][:checkout_date] = "2026-06-15"
+
+    post signup_url_for(campsite), params: params
+
+    assert_redirected_to trip_url(trips(:yosemite))
+    signup.reload
+    assert_equal Date.new(2026, 6, 13), signup.arrival_date
+    assert_equal Date.new(2026, 6, 15), signup.checkout_date
+    assert signup.waiver_signed?
+  end
+
   test "admin-added participant can submit dates and waiver from shared details flow" do
     campsite = campsites(:yosemite_a)
     signup = create_campsite_signup!(campsite: campsite, user: users(:sam), arrival_date: nil, checkout_date: nil)
@@ -470,6 +512,54 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert signup.waiver_signed?
     assert signup.waiver_signature_image.attached?
     assert signup.waiver_document.attached?
+  end
+
+  test "admin-created participant shared link requires password setup before waiver completion" do
+    campsite = campsites(:yosemite_a)
+    participant = User.create!(
+      first_name: "Morgan",
+      last_name: "Direct",
+      email: "morgan-direct-link@example.com",
+      password: User::DEFAULT_GUEST_PASSWORD,
+      default_password: true
+    )
+    signup = create_campsite_signup!(campsite: campsite, user: participant, arrival_date: nil, checkout_date: nil)
+    token = signup.signed_id(purpose: :complete_participant_details)
+
+    get trip_url(trips(:yosemite), complete_signup: token)
+
+    assert_response :success
+    assert_select "[data-controller='modal'][data-modal-open-value='true']" do
+      assert_select "h2", "Set your password"
+      assert_select "form[action='#{participant_password_trip_campsite_campsite_signup_path(trips(:yosemite), campsite)}'][method='post']"
+      assert_select "input[type='hidden'][name='complete_signup'][value='#{token}']"
+      assert_select "input[type='password'][name='user[password]'][required]"
+    end
+    assert_select "form[action='#{signup_path_for(campsite)}'][method='post']", count: 0
+
+    patch participant_password_trip_campsite_campsite_signup_url(trips(:yosemite), campsite), params: {
+      complete_signup: token,
+      user: {
+        password: "participant-new-password",
+        password_confirmation: "participant-new-password"
+      }
+    }
+
+    assert_redirected_to trip_url(trips(:yosemite), complete_signup: token, anchor: "campsite-#{campsite.id}")
+    assert_not participant.reload.default_password?
+    assert participant.authenticate("participant-new-password")
+
+    follow_redirect!
+
+    assert_response :success
+    assert_select "[data-controller='modal'][data-modal-open-value='true']" do
+      assert_select "h2", "You've been added to the Yosemite Valley Spring trip."
+      assert_select "form[action='#{signup_path_for(campsite)}'][method='post']" do
+        assert_select "input[type='hidden'][name='campsite_signup[intent]'][value='complete_participant_details']"
+        assert_select "input[type='date'][name='campsite_signup[arrival_date]'][required]"
+        assert_select "input[type='date'][name='campsite_signup[checkout_date]'][required]"
+      end
+    end
   end
 
   test "guest shared link requires password setup before waiver completion" do

@@ -2,19 +2,19 @@
   = render "admin/shared/errors", record: trip
   .form-grid
     .field
-      = form.label :name
+      = required_label form, :name
       = form.text_field :name, required: true
     .field
-      = form.label :location
+      = required_label form, :location
       = form.text_field :location, required: true
     .field
-      = form.label :start_date
+      = required_label form, :start_date
       = form.date_field :start_date, required: true
     .field
-      = form.label :end_date
+      = required_label form, :end_date
       = form.date_field :end_date, required: true
     .field
-      = form.label :status
+      = required_label form, :status
       = form.select :status, Trip.statuses.keys.map { |status| [status.titleize, status] }, {}, required: true
     .field
       = form.label :campsite_coordinator_id, "Campsite coordinator"
@@ -25,3 +25,30 @@
   .form-actions
     = form.submit
     = link_to "Cancel", trip.persisted? ? admin_trip_path(trip) : admin_trips_path, class: "button secondary"
+    - if trip.persisted?
+      .danger-form-action
+        - if trip.campsite_signups.exists?
+          %div{"data-controller" => "modal"}
+            %span.disabled-modal-trigger{"aria-disabled" => "true", "data-action" => "click->modal#open keydown.enter->modal#open keydown.space->modal#open", role: "button", tabindex: "0", title: "Cannot delete a trip with participants signed up"}
+              %button.button.danger.secondary{disabled: true, type: "button"} Delete trip
+            %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+              .confirmation-modal-content
+                %div
+                  %h2 Cannot delete a trip with participants signed up
+                .form-actions
+                  %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+        - else
+          %div{"data-controller" => "modal"}
+            %button.button.danger.secondary{"data-action" => "modal#open", type: "button"} Delete trip
+            %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+              .confirmation-modal-content
+                %div
+                  %h2 Delete trip?
+                  %p This will delete the trip and its campsites.
+                .form-actions
+                  %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
+                  %button.button.danger{form: "delete-trip-#{trip.id}", type: "submit"} Delete trip
+
+- if trip.persisted? && !trip.campsite_signups.exists?
+  = form_with url: admin_trip_path(trip), method: :delete, html: { id: "delete-trip-#{trip.id}", class: "hidden-delete-form" } do
+    = hidden_field_tag :confirm_delete, "1"

@@ -211,7 +211,13 @@
     - else
       %p.muted Unassigned
   - if @completion_signup.present?
-    - if @completion_signup.guest? && @completion_signup.user.default_password?
-      = render "guest_password_modal", trip: @trip, signup: @completion_signup, token: @guest_completion_token
+    - if @completion_signup.user.default_password?
+      - if @completion_signup.guest?
+        - completion_token = @guest_completion_token
+        - password_path = guest_password_trip_campsite_campsite_signup_path(@trip, @completion_signup.campsite)
+      - else
+        - completion_token = @participant_completion_token
+        - password_path = participant_password_trip_campsite_campsite_signup_path(@trip, @completion_signup.campsite)
+      = render "guest_password_modal", trip: @trip, signup: @completion_signup, token: completion_token, password_path: password_path
     - else
       = render "participant_details_modal", trip: @trip, signup: @completion_signup
