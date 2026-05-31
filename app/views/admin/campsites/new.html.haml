@@ -1,7 +1,8 @@
 = render "admin/shared/header", title: "Add campsite"
-%section.panel
+%section.panel.campsite-form-panel
   .panel-header
     %div
-      %h2= @trip.name
-      %p= @trip.location
+      .trip-title-line
+        %h2= @trip.name
+        %p= @trip.location
   = render "form", trip: @trip, campsite: @campsite, campgrounds: @campgrounds

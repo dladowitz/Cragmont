@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_30_190000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_30_220000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -60,12 +60,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_30_190000) do
     t.datetime "created_at", null: false
     t.text "notes"
     t.integer "participant_capacity", null: false
+    t.bigint "registered_by_id"
+    t.string "registration_number"
     t.datetime "signups_locked_at"
     t.string "site_number", null: false
     t.bigint "trip_id", null: false
     t.datetime "updated_at", null: false
     t.index ["arrival_date"], name: "index_campsites_on_arrival_date"
     t.index ["campground_id"], name: "index_campsites_on_campground_id"
+    t.index ["registered_by_id"], name: "index_campsites_on_registered_by_id"
     t.index ["signups_locked_at"], name: "index_campsites_on_signups_locked_at"
     t.index ["trip_id"], name: "index_campsites_on_trip_id"
   end
@@ -157,6 +160,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_30_190000) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "campsites", "campgrounds"
   add_foreign_key "campsites", "trips"
+  add_foreign_key "campsites", "users", column: "registered_by_id"
   add_foreign_key "campsite_signup_minors", "campsite_signups"
   add_foreign_key "campsite_signups", "campsites"
   add_foreign_key "campsite_signups", "trips"

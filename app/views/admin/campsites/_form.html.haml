@@ -9,6 +9,12 @@
         = form.label :site_number
         = form.text_field :site_number, required: true
       .field
+        = form.label :registered_by_id, "Registered by"
+        = form.collection_select :registered_by_id, @users, :id, :full_name, { prompt: "Unassigned" }
+      .field
+        = form.label :registration_number
+        = form.text_field :registration_number
+      .field
         = form.label :arrival_date
         = form.date_field :arrival_date, min: trip.start_date, max: trip.end_date, required: true
       .field
@@ -26,7 +32,27 @@
     .form-actions
       = form.submit
       = link_to "Cancel", admin_trip_path(trip), class: "button secondary"
+      - if campsite.persisted?
+        - delete_blocked_message = "Cannot delete campsite with participants signed up. Remove them or move to the waitlist first"
+        .danger-form-action
+          - if campsite.campsite_signups.exists?
+            %span.disabled-tooltip{aria: { label: delete_blocked_message }, tabindex: "0", title: delete_blocked_message}
+              %button.button.danger.secondary{disabled: true, type: "button"} Delete campsite
+          - else
+            %div{"data-controller" => "modal"}
+              %button.button.danger.secondary{"data-action" => "modal#open", type: "button"} Delete campsite
+              %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                .confirmation-modal-content
+                  %div
+                    %h2 Delete campsite?
+                  .form-actions
+                    %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
+                    %button.button.danger{form: "delete-campsite-#{campsite.id}", type: "submit"} Delete campsite
   - else
     .empty-state
       %p Create a campground before adding campsites to this trip.
       = link_to "Add campground", new_admin_campground_path, class: "button"
+
+- if campsite.persisted?
+  = form_with url: admin_trip_campsite_path(trip, campsite), method: :delete, html: { id: "delete-campsite-#{campsite.id}", class: "hidden-delete-form" } do
+    = hidden_field_tag :confirm_delete, "1"

@@ -7,7 +7,7 @@ class Admin::TripsController < ApplicationController
   end
 
   def show
-    @campsites = @trip.campsites.includes(:campground, campsite_signups: [ :user, :campsite_signup_minors ]).order(:arrival_date, :site_number)
+    @campsites = @trip.campsites.includes(:campground, :registered_by, campsite_signups: [ :user, :campsite_signup_minors ]).order(:arrival_date, :site_number)
     @waitlisted_signups = @trip.waitlisted_signups
   end
 
