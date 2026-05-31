@@ -1,7 +1,7 @@
 class Campsite < ApplicationRecord
   belongs_to :trip
   belongs_to :campground
-  belongs_to :registered_by, class_name: "User", optional: true
+  belongs_to :registered_by, class_name: "User", optional: true, inverse_of: :registered_campsites
   has_many :campsite_signups, dependent: :restrict_with_error
   has_many :participants, through: :campsite_signups, source: :user
 
