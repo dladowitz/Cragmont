@@ -1,5 +1,5 @@
 yosemite_a:
-  trip: yosemite
+  trip_id: 1
   campground: upper_pines
   site_number: A12
   arrival_date: 2026-06-12
@@ -11,7 +11,7 @@ yosemite_a:
   notes: Close to bathrooms.
 
 yosemite_b:
-  trip: yosemite
+  trip_id: 1
   campground: upper_pines
   site_number: A13
   arrival_date: 2026-06-12
@@ -21,7 +21,7 @@ yosemite_b:
   notes: Shadier site.
 
 jtree_a:
-  trip: jtree
+  trip_id: 2
   campground: hidden_valley
   site_number: H4
   arrival_date: 2026-12-04

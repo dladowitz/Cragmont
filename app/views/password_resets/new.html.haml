@@ -1,0 +1,11 @@
+= render "shared/public_header"
+%main.public-main
+  %section.panel.auth-panel
+    %h1 Reset password
+    = form_with url: password_resets_path, class: "admin-form" do
+      .field
+        = required_label_tag :email, "Email"
+        = email_field_tag :email, params[:email], required: true, autocomplete: "email"
+      .form-actions
+        = submit_tag "Send reset link"
+        = link_to "Back to log in", new_session_path, class: "button secondary"

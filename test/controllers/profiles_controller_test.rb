@@ -16,6 +16,8 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     get profile_url
 
     assert_response :success
+    assert_select "body.profile-show-page"
+    assert_select ".background-image-caption", "Castle Valley, UT. Castleton Tower."
     assert_select "h1", "Alex Rivera"
     assert_select ".details-list dt", text: "Email"
     assert_select ".details-list dd", text: "alex@example.com"
@@ -40,6 +42,8 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     get edit_profile_url
 
     assert_response :success
+    assert_select "body.profile-edit-page"
+    assert_select ".background-image-caption", "Castle Valley, UT. Castleton Tower."
     assert_select "input[name='user[first_name]'][value='Alex']"
     assert_select "input[name='user[last_name]'][value='Rivera']"
     assert_select "input[name='user[email]'][value='alex@example.com']"

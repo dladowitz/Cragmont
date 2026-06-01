@@ -19,7 +19,9 @@
             - if trip.campsite_coordinator.present?
               = trip.campsite_coordinator.full_name
             - else
-              %span Unassigned
+              .coordinator-contact
+                %span.muted Not set yet
+                = link_to "Update", edit_admin_trip_path(trip)
           %td
             %span{ class: [ "status", "#{trip.status}-status" ] }= trip.status.titleize
           %td

@@ -19,7 +19,9 @@
             - if @trip.campsite_coordinator.phone.present?
               %span= @trip.campsite_coordinator.phone
         - else
-          %span.muted Unassigned
+          .coordinator-contact
+            %span.muted Not set yet
+            = link_to "Update", edit_admin_trip_path(@trip)
       - if @trip.description.present?
         .description
           %strong Notes:

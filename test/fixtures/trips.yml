@@ -1,4 +1,5 @@
 yosemite:
+  id: 1
   name: Yosemite Valley Spring
   location: Yosemite Valley, CA
   start_date: 2026-06-12
@@ -8,6 +9,7 @@ yosemite:
   campsite_coordinator: alex
 
 jtree:
+  id: 2
   name: Joshua Tree Winter
   location: Joshua Tree, CA
   start_date: 2026-12-04

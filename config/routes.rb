@@ -1,8 +1,11 @@
 Rails.application.routes.draw do
   root "home#index"
 
+  mount LetterOpenerWeb::Engine, at: "/letter_opener" if Rails.env.development?
+
   resource :registration, only: %i[new create]
   resource :session, only: %i[new create destroy]
+  resources :password_resets, only: %i[new create edit update], param: :token
   resource :profile, only: %i[show edit update destroy]
 
   resources :trips, only: %i[index show] do
@@ -27,6 +30,7 @@ Rails.application.routes.draw do
         patch :move_to_campsite, on: :member
         patch :move_to_waitlist, on: :member
         delete :remove_from_campsite, on: :member
+        delete :remove_from_waitlist, on: :member
       end
     end
   end

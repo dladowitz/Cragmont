@@ -1,10 +1,12 @@
+- content_for :body_class, "trips-index-page"
 = render "shared/public_header"
 %main.public-main
-  %section.panel
+  %section.panel.trips-index-panel
     .panel-header
       %div
-        %p.eyebrow Upcoming trips
+        %p.eyebrow Rack up
         %h1 Trips
+        %p.muted Pick your next pitch, grab a campsite, and get the crew moving.
     - if @trips.any?
       .trip-cards
         - @trips.each do |trip|
@@ -26,3 +28,4 @@
             = link_to "View trip", trip_path(trip), class: "button secondary"
     - else
       %p.muted No published trips are available right now.
+%p.background-image-caption Half Dome, Regular Northwest Face

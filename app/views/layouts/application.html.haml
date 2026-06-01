@@ -15,7 +15,13 @@
     %link{:href => "/icon.png?v=4", :rel => "apple-touch-icon"}/
     = stylesheet_link_tag :app, "data-turbo-track": "reload"
     = javascript_importmap_tags
-  %body{ class: ("admin-body" if controller_path.start_with?("admin/")) }
+  - environment_name = visible_environment_name
+  - body_classes = []
+  - body_classes << "admin-body" if controller_path.start_with?("admin/")
+  - body_classes << content_for(:body_class).to_s if content_for?(:body_class)
+  - body_classes << "has-environment-indicator" if environment_name.present?
+  - body_class = body_classes.join(" ").presence
+  %body{ class: body_class }
     - if notice.present? || alert.present?
       .flash-messages
         - if notice.present?
@@ -23,3 +29,8 @@
         - if alert.present?
           %p.flash.alert= alert
     = yield
+    - if environment_name.present?
+      %footer.environment-indicator{"aria-label" => "Environment indicator"}
+        %span= "Env: #{environment_name}"
+        - if show_letter_opener_link?
+          = link_to letter_opener_label, "/letter_opener"

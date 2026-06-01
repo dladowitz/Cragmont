@@ -2,8 +2,8 @@
 - trip = local_assigns[:trip]
 - campsites = Array(local_assigns[:campsites])
 - allowed_signup_tooltip = "Participants can sign themselves up from the waitlist"
-- update_signup_tooltip = "Enable participant to sign themselves up from the waitlist"
 - add_campsite_tooltip = "Adds a participant directly to a campsite"
+- remove_waitlist_tooltip = "Removes Participant from Waitlist"
 %table
   %thead
     %tr
@@ -17,19 +17,19 @@
       - if waitlist
         %th
           %span.tooltip-heading.info-tooltip{aria: { label: allowed_signup_tooltip }, tabindex: "0"}
-            %span Allow Signup
+            %span Self Signup
             %span.info-tooltip-icon{aria: { hidden: "true" }} i
             %span.info-tooltip-box{role: "tooltip"}= allowed_signup_tooltip
         %th
-          %span.tooltip-heading.info-tooltip{aria: { label: update_signup_tooltip }, tabindex: "0"}
-            %span Update Signup Ability
-            %span.info-tooltip-icon{aria: { hidden: "true" }} i
-            %span.info-tooltip-box{role: "tooltip"}= update_signup_tooltip
-        %th
           %span.tooltip-heading.info-tooltip{aria: { label: add_campsite_tooltip }, tabindex: "0"}
-            %span Add to Campsite
+            %span Campsite
             %span.info-tooltip-icon{aria: { hidden: "true" }} i
             %span.info-tooltip-box{role: "tooltip"}= add_campsite_tooltip
+        %th
+          %span.tooltip-heading.info-tooltip{aria: { label: remove_waitlist_tooltip }, tabindex: "0"}
+            %span Remove
+            %span.info-tooltip-icon{aria: { hidden: "true" }} i
+            %span.info-tooltip-box{role: "tooltip"}= remove_waitlist_tooltip
       - else
         %th Waiver
         %th Move to Waitlist
@@ -54,10 +54,9 @@
               Added by #{signup.guest_of_signup.user.full_name}
         - if waitlist
           %td
-            - if signup.user.member?
-              %span.status.member-status Member
-            - else
-              %span.muted Non-member
+            - member_status_text = signup.user.member? ? "Yes" : "No"
+            - member_status_class = signup.user.member? ? "status member-status" : "muted"
+            %span.admin-member-status{class: member_status_class}= member_status_text
         - unless waitlist
           %td
             - if !missing_dates
@@ -115,19 +114,24 @@
                 .form-actions
                   %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
         - if waitlist
+          %td.admin-self-signup-cell
+            .admin-self-signup-control
+              - if signup.waitlist_eligible?
+                %span.status.admin-self-signup-status Enabled
+                = button_to "Disable", revoke_waitlist_eligibility_admin_trip_campsite_signup_path(trip, signup), method: :patch, class: "button secondary admin-table-action-button"
+              - else
+                %span.status.danger-status.admin-self-signup-status Disabled
+                = button_to "Enable", make_waitlist_eligible_admin_trip_campsite_signup_path(trip, signup), method: :patch, class: "button secondary admin-table-action-button"
           %td
-            - if signup.waitlist_eligible?
-              %span.status Yes
-            - else
-              %span.muted No
-          %td
-            - if signup.waitlist_eligible?
-              = button_to "Revoke Signup", revoke_waitlist_eligibility_admin_trip_campsite_signup_path(trip, signup), method: :patch, class: "button secondary"
-            - else
-              = button_to "Allow Signup", make_waitlist_eligible_admin_trip_campsite_signup_path(trip, signup), method: :patch, class: "button secondary"
-          %td
-            %div{"data-controller" => "modal"}
-              %button.button.secondary{"data-action" => "modal#open", :type => "button"} Add
+            - preview_campsite = campsites.first
+            %div.admin-waitlist-campsite-control{"data-controller" => "modal"}
+              - if preview_campsite.present?
+                %span.admin-waitlist-campsite-name
+                  = preview_campsite.campground.name
+                  = preview_campsite.site_number
+              - else
+                %span.muted.admin-waitlist-campsite-name No campsite
+              %button.button.secondary.admin-table-action-button{"data-action" => "modal#open", :type => "button"} Add
               %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                 .signup-modal-content
                   %div
@@ -153,6 +157,17 @@
                         = button_to "Add", move_to_campsite_admin_trip_campsite_signup_path(trip, signup), method: :patch, params: { campsite_signup: { campsite_id: campsite.id } }, class: "button secondary"
                   .form-actions
                     %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
+          %td
+            %div{"data-controller" => "modal"}
+              %button.button.danger.secondary.admin-table-action-button{"data-action" => "modal#open", :type => "button"} Remove
+              %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                .confirmation-modal-content
+                  %div
+                    %h2 Remove #{signup.user.full_name} from the waitlist?
+                    %p This will remove their signup from the trip.
+                  .form-actions
+                    %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
+                    = button_to "Remove", remove_from_waitlist_admin_trip_campsite_signup_path(trip, signup), method: :delete, class: "button danger"
         - else
           %td
             - if signup.waiver_signed?

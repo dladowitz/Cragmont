@@ -6,14 +6,28 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", "Admin Dashboard"
-    assert_select ".admin-public-link", "Public Site"
+    assert_select ".admin-public-link", "Public View"
     assert_select ".admin-nav a", text: "Trips"
-    assert_select ".admin-nav a", text: "Public Site", count: 0
+    assert_select ".admin-nav a", text: "Public View", count: 0
+    assert_select ".admin-nav form[action='#{session_path}'][method='post']" do
+      assert_select "input[name='_method'][value='delete']"
+      assert_select "button.button.secondary", text: "Logout"
+    end
     assert_select "h2", "Trips"
     assert_select "th", text: "Participant Capacity"
     assert_select "th", text: "Signed Up"
     assert_select "td", text: /Yosemite Valley Spring/
     assert_select "td", text: "Alex Rivera"
+    assert_select "td", text: /Not set yet/
+    assert_select "td a[href='#{edit_admin_trip_path(trips(:jtree))}']", text: "Update"
+  end
+
+  test "trip details link to edit form when campsite coordinator is not set" do
+    get admin_trip_url(trips(:jtree))
+
+    assert_response :success
+    assert_select ".coordinator-summary", text: /Not set yet/
+    assert_select ".coordinator-summary a[href='#{edit_admin_trip_path(trips(:jtree))}']", text: "Update"
   end
 
   test "can view trip details with campsites" do
@@ -31,13 +45,13 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     )
     create_waitlisted_signup!(trip: trips(:yosemite), user: waitlisted_guest, guest_of_signup: waitlisted_signup, guest_position: 1)
     allowed_user = User.create!(first_name: "Zora", last_name: "Allowed", email: "zora-admin@example.com", password: "password")
-    create_waitlisted_signup!(trip: trips(:yosemite), user: allowed_user, waitlist_eligible_at: Time.current)
+    allowed_signup = create_waitlisted_signup!(trip: trips(:yosemite), user: allowed_user, waitlist_eligible_at: Time.current)
 
     get admin_trip_url(trips(:yosemite))
 
     assert_response :success
     assert_select "h1", "Admin Dashboard"
-    assert_select ".admin-public-link", "Public Site"
+    assert_select ".admin-public-link", "Public View"
     assert_select ".trip-summary-header", text: /Yosemite Valley Spring/
     assert_select ".coordinator-summary", text: /Alex Rivera/
     assert_select ".coordinator-summary", text: /alex@example.com/
@@ -163,31 +177,45 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select "td", text: "Gina Guest", count: 0
       assert_select "th", text: "Attendance", count: 0
       assert_select "td", text: "Not chosen yet", count: 0
-      assert_select "th", text: /Allow Signup/
+      assert_select "th", text: /Self Signup/
+      assert_select "th", text: /Can Signup/, count: 0
       assert_select "th", text: "Allowed to Signup", count: 0
-      assert_select ".tooltip-heading.info-tooltip[aria-label='Participants can sign themselves up from the waitlist']", text: /Allow Signup/
+      assert_select ".tooltip-heading.info-tooltip[aria-label='Participants can sign themselves up from the waitlist']", text: /Self Signup/
       assert_select ".tooltip-heading.info-tooltip[aria-label='Participants can sign themselves up from the waitlist']", text: /Participants can sign themselves up from the waitlist/
-      assert_select "th", text: /Update Signup Ability/
-      assert_select ".tooltip-heading.info-tooltip[aria-label='Enable participant to sign themselves up from the waitlist']", text: /Update Signup Ability/
-      assert_select ".tooltip-heading.info-tooltip[aria-label='Enable participant to sign themselves up from the waitlist']", text: /Enable participant to sign themselves up from the waitlist/
+      assert_select "th", text: /Signup Ability/, count: 0
+      assert_select ".tooltip-heading.info-tooltip[aria-label='Enable participant to sign themselves up from the waitlist']", count: 0
       assert_select "th", text: "Eligibility", count: 0
       assert_select "th", text: "Action", count: 0
-      assert_select "td", text: "Non-member"
-      assert_select "td", text: "No"
-      assert_select "td", text: "Yes"
-      assert_select "button", text: "Allow Signup"
+      assert_select ".admin-member-status", text: "No", count: 2
+      assert_select ".admin-member-status", text: "Member", count: 0
+      assert_select ".admin-member-status", text: "Non-member", count: 0
+      assert_select ".admin-self-signup-cell", count: 2
+      assert_select ".admin-self-signup-status", text: "Disabled"
+      assert_select ".admin-self-signup-status", text: "Enabled"
+      assert_select "button", text: "Enable"
+      assert_select "button", text: "Disable"
+      assert_select "form[action='#{make_waitlist_eligible_admin_trip_campsite_signup_path(trips(:yosemite), waitlisted_signup)}'] button", text: "Enable"
+      assert_select "form[action='#{revoke_waitlist_eligibility_admin_trip_campsite_signup_path(trips(:yosemite), allowed_signup)}'] button", text: "Disable"
+      assert_select ".admin-self-signup-control > .admin-self-signup-status:first-child", count: 2
+      assert_select ".admin-self-signup-control > form:last-child button.admin-table-action-button", count: 2
+      assert_select ".admin-self-signup-control > .admin-self-signup-status.danger-status", text: "Disabled"
+      assert_select "button", text: "Allow", count: 0
       assert_select "button", text: "Allow to Signup", count: 0
       assert_select "button[title='Enable participant to sign themselves up from the waitlist']", count: 0
       assert_select "button", text: "Allow Participant to Signup", count: 0
-      assert_select "button", text: "Revoke Signup"
+      assert_select "button", text: "Revoke", count: 0
       assert_select "button", text: "Revoke Signup Ability", count: 0
       assert_select "select[name='campsite_signup[campsite_id]']", count: 0
-      assert_select "th", text: /Add to Campsite/
-      assert_select ".tooltip-heading.info-tooltip[aria-label='Adds a participant directly to a campsite']", text: /Add to Campsite/
+      assert_select "th", text: /Campsite/
+      assert_select "th", text: /Add to Campsite/, count: 0
+      assert_select ".tooltip-heading.info-tooltip[aria-label='Adds a participant directly to a campsite']", text: /Campsite/
       assert_select ".tooltip-heading.info-tooltip[aria-label='Adds a participant directly to a campsite']", text: /Adds a participant directly to a campsite/
       assert_select "th", text: "Move to Campsite", count: 0
       assert_select "button", text: "Add to Campsite", count: 0
-      assert_select ".trip-waitlist-section tbody > tr > td > div[data-controller='modal'] > button", text: "Add", count: 2
+      assert_select ".admin-waitlist-campsite-name", text: "Upper Pines A12", count: 2
+      assert_select ".admin-waitlist-campsite-control > button.admin-table-action-button", text: "Add", count: 2
+      assert_select ".admin-waitlist-campsite-control > .admin-waitlist-campsite-name:first-child", text: "Upper Pines A12", count: 2
+      assert_select ".admin-waitlist-campsite-control > button.admin-table-action-button:nth-child(2)", text: "Add", count: 2
       assert_select "dialog.signup-modal", text: /Add Willa Wait to a campsite/
       assert_select ".admin-campsite-choice-row", text: /Upper Pines site A12/
       assert_select ".admin-campsite-choice-row", text: /Upper Pines site A13/
@@ -196,6 +224,14 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
         assert_select "input[name='campsite_signup[campsite_id]'][value='#{campsites(:yosemite_a).id}']"
         assert_select "button", text: "Add"
       end
+      assert_select "th", text: /Remove/
+      assert_select ".tooltip-heading.info-tooltip[aria-label='Removes Participant from Waitlist']", text: /Remove/
+      assert_select ".tooltip-heading.info-tooltip[aria-label='Removes Participant from Waitlist']", text: /Removes Participant from Waitlist/
+      assert_select "button", text: "Remove", count: 4
+      assert_select ".trip-waitlist-section tbody > tr > td > div[data-controller='modal'] > button.admin-table-action-button", text: "Remove", count: 2
+      assert_select "dialog.confirmation-modal", text: /Remove Willa Wait from the waitlist\?/
+      assert_select "dialog.confirmation-modal", text: /This will remove their signup from the trip\./
+      assert_select "dialog.confirmation-modal form[action='#{remove_from_waitlist_admin_trip_campsite_signup_path(trips(:yosemite), waitlisted_signup)}']"
       assert_select "td", text: "Sam Lee", count: 0
       assert_select "th", text: "Status", count: 0
       assert_select ".status.waitlisted-status", count: 0
@@ -348,7 +384,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_equal users(:sam), trips(:jtree).campsite_coordinator
   end
 
-  test "published trip requires campsite coordinator" do
+  test "can publish trip before campsite coordinator is known" do
     patch admin_trip_url(trips(:jtree)), params: {
       trip: {
         name: trips(:jtree).name,
@@ -361,8 +397,9 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       }
     }
 
-    assert_response :unprocessable_entity
-    assert_select ".form-errors", text: /Campsite coordinator can't be blank/
+    assert_redirected_to admin_trip_url(trips(:jtree))
+    assert trips(:jtree).reload.published?
+    assert_nil trips(:jtree).campsite_coordinator
   end
 
   test "can render edit trip form" do

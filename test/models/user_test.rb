@@ -45,6 +45,34 @@ class UserTest < ActiveSupport::TestCase
     assert_not user.default_password?
   end
 
+  test "generates password reset token and finds user with valid token" do
+    user = users(:alex)
+    token = user.generate_password_reset_token!
+
+    user.reload
+    assert user.password_reset_token_digest.present?
+    assert user.password_reset_sent_at.present?
+    assert_not_equal token, user.password_reset_token_digest
+    assert_equal user, User.find_by_password_reset_token(token)
+    assert_nil User.find_by_password_reset_token("wrong-token")
+  end
+
+  test "password reset token expires and clears after password change" do
+    user = users(:alex)
+    token = user.generate_password_reset_token!
+
+    user.update_column(:password_reset_sent_at, 24.hours.ago)
+    assert user.valid_password_reset_token?(token)
+
+    user.update_column(:password_reset_sent_at, 49.hours.ago)
+    assert_not user.valid_password_reset_token?(token)
+
+    user.update!(password: "new-password", password_confirmation: "new-password")
+
+    assert_nil user.password_reset_token_digest
+    assert_nil user.password_reset_sent_at
+  end
+
   test "rejects duplicate nonblank email case insensitively" do
     user = User.new(first_name: "Duplicate", last_name: "Email", email: "ALEX@EXAMPLE.COM", password: "password")
 
