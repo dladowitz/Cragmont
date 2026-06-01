@@ -24,6 +24,10 @@ module ApplicationHelper
     Rails.env.to_s.titleize
   end
 
+  def format_cents(cents)
+    number_to_currency(BigDecimal(cents.to_i.to_s) / 100)
+  end
+
   def show_letter_opener_link?
     Rails.env.development?
   end

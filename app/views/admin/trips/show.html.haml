@@ -121,3 +121,32 @@
     .waitlisted-signups-section.trip-waitlist-section
       %h3 Trip waitlist
       = render "signup_table", signups: @waitlisted_signups, waitlist: true, trip: @trip, campsites: @campsites
+%section.panel
+  .panel-header
+    %div
+      %h2 Reimbursements
+      %p.muted Record Venmo, Zelle, check, cash, or other trip expense payments.
+    = link_to "Add reimbursement", new_admin_trip_trip_reimbursement_path(@trip), class: "button secondary"
+  - if @trip_reimbursements.any?
+    %table
+      %thead
+        %tr
+          %th Recipient
+          %th Amount
+          %th Method
+          %th Date
+          %th Note
+          %th Actions
+      %tbody
+        - @trip_reimbursements.each do |reimbursement|
+          %tr
+            %td= reimbursement.recipient_name
+            %td= format_cents(reimbursement.amount_cents)
+            %td= reimbursement.payment_method.titleize
+            %td= reimbursement.paid_on.strftime("%-m/%-d/%y")
+            %td= reimbursement.note.presence || "None"
+            %td.table-actions
+              = link_to "Edit", edit_admin_trip_trip_reimbursement_path(@trip, reimbursement), class: "button secondary admin-table-action-button"
+              = button_to "Remove", admin_trip_trip_reimbursement_path(@trip, reimbursement), method: :delete, class: "button danger admin-table-action-button"
+  - else
+    %p.muted No reimbursements recorded yet.

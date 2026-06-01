@@ -1,6 +1,7 @@
 class CampsiteSignup < ApplicationRecord
   MAX_GUESTS_PER_SIGNUP = 2
-  STATUSES = %w[confirmed waitlisted].freeze
+  STATUSES = %w[pending_payment confirmed waitlisted canceled].freeze
+  CAPACITY_HOLDING_STATUSES = %w[pending_payment confirmed].freeze
 
   belongs_to :trip
   belongs_to :campsite, optional: true
@@ -16,15 +17,21 @@ class CampsiteSignup < ApplicationRecord
     dependent: :destroy,
     inverse_of: :guest_of_signup
   has_many :campsite_signup_minors, dependent: :destroy
+  has_many :payments,
+    class_name: "CampsiteSignupPayment",
+    dependent: :destroy,
+    inverse_of: :campsite_signup
   has_one_attached :waiver_document
   has_one_attached :waiver_signature_image
 
   enum :status, STATUSES.index_with(&:itself), default: "confirmed"
   scope :primary, -> { where(guest_of_signup_id: nil) }
   scope :guests, -> { where.not(guest_of_signup_id: nil) }
+  scope :capacity_holding, -> { where(status: CAPACITY_HOLDING_STATUSES) }
+  scope :active, -> { where.not(status: "canceled") }
 
   validates :status, presence: true, inclusion: { in: STATUSES }
-  validates :campsite, presence: true, if: :confirmed?
+  validates :campsite, presence: true, if: :capacity_holding?
   validates :user_id, uniqueness: { scope: :trip_id, message: "is already signed up for this trip" }
   validates :guest_position, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates_associated :campsite_signup_minors
@@ -113,6 +120,25 @@ class CampsiteSignup < ApplicationRecord
 
   def waitlist_eligible?
     waitlist_eligible_at.present?
+  end
+
+  def capacity_holding?
+    pending_payment? || confirmed?
+  end
+
+  def current_payment
+    payments.current_first.first
+  end
+
+  def payment_status
+    current_payment&.status || "unpaid"
+  end
+
+  def payment_paid_or_settled?
+    payment = current_payment
+    return false if payment.blank?
+
+    payment.paid? || payment.waived? || payment.manual_source?
   end
 
   def waiver_signed?
@@ -208,6 +234,7 @@ class CampsiteSignup < ApplicationRecord
   def assign_capacity_status
     return if campsite.blank?
     return if waitlisted?
+    return if pending_payment? || canceled?
 
     self.status = campsite.direct_signup_available? && campsite.available_participant_capacity >= capacity_count ? "confirmed" : "waitlisted"
   end

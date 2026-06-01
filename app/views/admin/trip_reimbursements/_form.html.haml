@@ -1,0 +1,23 @@
+= form_with model: [ :admin, trip, reimbursement ], class: "admin-form" do |form|
+  = render "admin/shared/errors", record: reimbursement
+  .form-grid
+    %div
+      = required_label form, :recipient_name
+      = form.text_field :recipient_name, required: true
+    %div
+      = required_label form, :amount
+      .currency-field
+        %span{"aria-hidden" => "true"} $
+        = form.number_field :amount, min: 0.01, step: 0.01, required: true
+    %div
+      = required_label form, :payment_method
+      = form.select :payment_method, TripReimbursement::PAYMENT_METHODS.map { |method| [ method.titleize, method ] }, {}, required: true
+    %div
+      = required_label form, :paid_on
+      = form.date_field :paid_on, required: true
+  .field
+    = form.label :note
+    = form.text_area :note, rows: 4
+  .form-actions
+    = form.submit "Save reimbursement", class: "button"
+    = link_to "Cancel", admin_trip_path(trip), class: "button secondary"

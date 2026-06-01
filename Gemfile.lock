@@ -112,6 +112,9 @@ GEM
       irb (~> 1.10)
       reline (>= 0.3.8)
     dotenv (3.2.0)
+    dotenv-rails (3.2.0)
+      dotenv (= 3.2.0)
+      railties (>= 6.1)
     drb (2.2.3)
     ed25519 (1.4.0)
     erb (6.0.4)
@@ -365,6 +368,7 @@ GEM
     stimulus-rails (1.3.4)
       railties (>= 6.0.0)
     stringio (3.2.0)
+    stripe (13.5.1)
     temple (0.10.4)
     thor (1.5.0)
     thruster (0.1.21)
@@ -419,6 +423,7 @@ DEPENDENCIES
   bundler-audit
   capybara
   debug
+  dotenv-rails (~> 3.1)
   haml-rails (~> 2.1)
   image_processing (~> 2.0)
   importmap-rails
@@ -436,6 +441,7 @@ DEPENDENCIES
   solid_cache
   solid_queue
   stimulus-rails
+  stripe (~> 13.1)
   thruster
   turbo-rails
   tzinfo-data
@@ -475,6 +481,7 @@ CHECKSUMS
   date (3.5.1) sha256=750d06384d7b9c15d562c76291407d89e368dda4d4fff957eb94962d325a0dc0
   debug (1.11.1) sha256=2e0b0ac6119f2207a6f8ac7d4a73ca8eb4e440f64da0a3136c30343146e952b6
   dotenv (3.2.0) sha256=e375b83121ea7ca4ce20f214740076129ab8514cd81378161f11c03853fe619d
+  dotenv-rails (3.2.0) sha256=657e25554ba622ffc95d8c4f1670286510f47f2edda9f68293c3f661b303beab
   drb (2.2.3) sha256=0b00d6fdb50995fe4a45dea13663493c841112e4068656854646f418fda13373
   ed25519 (1.4.0) sha256=16e97f5198689a154247169f3453ef4cfd3f7a47481fde0ae33206cdfdcac506
   erb (6.0.4) sha256=38e3803694be357fe2bfe312487c74beaf9fb4e5beb3e22498952fe1645b95d9
@@ -571,6 +578,7 @@ CHECKSUMS
   sshkit (1.25.0) sha256=c8c6543cdb60f91f1d277306d585dd11b6a064cb44eab0972827e4311ff96744
   stimulus-rails (1.3.4) sha256=765676ffa1f33af64ce026d26b48e8ffb2e0b94e0f50e9119e11d6107d67cb06
   stringio (3.2.0) sha256=c37cb2e58b4ffbd33fe5cd948c05934af997b36e0b6ca6fdf43afa234cf222e1
+  stripe (13.5.1) sha256=748e22cc6d84c944135298b865763524ff1192cee8bc7fd7baa987889a018eb3
   temple (0.10.4) sha256=b7a1e94b6f09038ab0b6e4fe0126996055da2c38bec53a8a336f075748fff72c
   thor (1.5.0) sha256=e3a9e55fe857e44859ce104a84675ab6e8cd59c650a49106a05f55f136425e73
   thruster (0.1.21) sha256=dc67928f36e5894844579a95e45637a5091db7a7ea05468ee8c2c6eb0a3f77cf

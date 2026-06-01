@@ -47,9 +47,10 @@
       .campsite-card-list
         - @campsites.each do |campsite|
           - current_confirmed_signup = @current_signup&.confirmed?
+          - current_pending_signup = @current_signup&.pending_payment?
           - current_waitlisted_signup = @current_signup&.waitlisted?
-          - signed_up_for_this_campsite = current_confirmed_signup && @current_signup.campsite_id == campsite.id
-          - signed_up_for_another_campsite = current_confirmed_signup && @current_signup.campsite_id != campsite.id
+          - signed_up_for_this_campsite = (current_confirmed_signup || current_pending_signup) && @current_signup.campsite_id == campsite.id
+          - signed_up_for_another_campsite = (current_confirmed_signup || current_pending_signup) && @current_signup.campsite_id != campsite.id
           - waitlist_confirmation_available = current_waitlisted_signup && @waitlist_confirmation_campsite_ids.include?(campsite.id)
           - waitlist_direct_signup_available = current_waitlisted_signup && campsite.direct_signup_available? && campsite.available_participant_capacity >= @current_signup.party_capacity_count
           - locked_with_open_spots = campsite.signups_locked? && campsite.available_participant_capacity.positive?
@@ -69,22 +70,27 @@
                     %dd= campsite.checkout_date.to_fs(:long)
               .campsite-signup-action{class: ("waitlisted-campsite-action" if current_waitlisted_signup)}
                 - if signed_up_for_this_campsite
-                  %strong
-                    You are #{@current_signup.status} for this campsite.
-                  %div{"data-controller" => "modal"}
-                    - remove_button_text = @current_signup.waitlisted? ? "Remove me from the waitlist" : "Remove me from this campsite"
-                    - remove_title = @current_signup.waitlisted? ? "Remove yourself from the waitlist?" : "Remove yourself from this campsite?"
-                    %button.button.danger{"data-action" => "modal#open", :type => "button"}= remove_button_text
-                    %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
-                      .signup-modal-content
-                        %div
-                          %h2= remove_title
-                          %p
-                            = campsite.campground.name
-                            site #{campsite.site_number}
-                        .form-actions
-                          %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
-                          = button_to remove_button_text, trip_campsite_campsite_signup_path(@trip, campsite), method: :delete, class: "button danger"
+                  - if current_pending_signup
+                    %strong Payment pending for this campsite.
+                    - if @current_signup.current_payment&.checkout_url.present?
+                      = link_to "Return to payment", @current_signup.current_payment.checkout_url, class: "button", target: "_blank", rel: "noopener"
+                  - else
+                    %strong
+                      You are #{@current_signup.status} for this campsite.
+                    %div{"data-controller" => "modal"}
+                      - remove_button_text = @current_signup.waitlisted? ? "Remove me from the waitlist" : "Remove me from this campsite"
+                      - remove_title = @current_signup.waitlisted? ? "Remove yourself from the waitlist?" : "Remove yourself from this campsite?"
+                      %button.button.danger{"data-action" => "modal#open", :type => "button"}= remove_button_text
+                      %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                        .signup-modal-content
+                          %div
+                            %h2= remove_title
+                            %p
+                              = campsite.campground.name
+                              site #{campsite.site_number}
+                          .form-actions
+                            %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
+                            = button_to remove_button_text, trip_campsite_campsite_signup_path(@trip, campsite), method: :delete, class: "button danger"
                 - elsif signed_up_for_another_campsite
                   %p.muted.already-signed-up-note You are already signed up for another campsite on this trip.
                 - elsif current_waitlisted_signup

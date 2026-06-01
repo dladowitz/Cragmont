@@ -28,7 +28,11 @@ class Campsite < ApplicationRecord
   end
 
   def available_participant_capacity
-    [ participant_capacity - confirmed_capacity_count, 0 ].max
+    [ participant_capacity - held_capacity_count, 0 ].max
+  end
+
+  def held_capacity_count
+    capacity_holding_signups_with_minors.sum(&:capacity_count)
   end
 
   def capacity_full?
@@ -67,12 +71,22 @@ class Campsite < ApplicationRecord
     campsite_signups.waitlisted.includes(:user, :campsite_signup_minors).order(created_at: :asc)
   end
 
+  def pending_payment_signups
+    campsite_signups.pending_payment.includes(:user, :campsite_signup_minors).order(created_at: :asc)
+  end
+
   private
 
   def confirmed_signups_with_minors
     return campsite_signups.select(&:confirmed?) if campsite_signups.loaded?
 
     campsite_signups.confirmed.includes(:campsite_signup_minors)
+  end
+
+  def capacity_holding_signups_with_minors
+    return campsite_signups.select(&:capacity_holding?) if campsite_signups.loaded?
+
+    campsite_signups.capacity_holding.includes(:campsite_signup_minors)
   end
 
   def checkout_date_after_arrival_date

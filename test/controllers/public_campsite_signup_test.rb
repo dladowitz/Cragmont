@@ -1,6 +1,17 @@
 require "test_helper"
 
 class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
+  FakeStripeCheckoutSessionCreator = Struct.new(:payment, :success_url, :cancel_url, keyword_init: true) do
+    def call
+      payment.update!(
+        stripe_checkout_session_id: "cs_test_#{payment.id}",
+        checkout_url: "https://checkout.stripe.test/#{payment.id}",
+        expires_at: 30.minutes.from_now
+      )
+      payment
+    end
+  end
+
   test "root renders and links to trips" do
     get root_url
 
@@ -124,6 +135,109 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert signup.waiver_acknowledged_at.present?
     assert_equal TripSignupWaiver.acknowledgement_text, signup.waiver_acknowledgement_text
     assert_equal TripSignupWaiver.text, signup.waiver_text
+  end
+
+  test "paid signup creates pending payment and confirms from Stripe webhook" do
+    SiteSetting.current.update!(first_two_nights_fee: "50", extra_night_fee: "10")
+    log_in_as(users(:sam))
+
+    with_fake_stripe_checkout do
+      assert_difference "CampsiteSignup.count", 1 do
+        assert_difference "CampsiteSignupPayment.count", 1 do
+          post signup_url_for, params: waiver_signature_params
+        end
+      end
+    end
+
+    signup = CampsiteSignup.find_by!(trip: trips(:yosemite), user: users(:sam))
+    payment = signup.current_payment
+    assert_redirected_to payment.checkout_url
+    assert signup.pending_payment?
+    assert_equal "pending", payment.status
+    assert_equal 60_00, payment.amount_cents
+    assert_equal "cs_test_#{payment.id}", payment.stripe_checkout_session_id
+    assert_equal 5, campsites(:yosemite_a).reload.available_participant_capacity
+
+    post stripe_webhooks_url, params: stripe_checkout_event("checkout.session.completed", payment, payment_intent: "pi_test_123"), headers: { "CONTENT_TYPE" => "application/json" }
+
+    assert_response :ok
+    assert signup.reload.confirmed?
+    assert payment.reload.paid?
+    assert_equal "pi_test_123", payment.stripe_payment_intent_id
+  end
+
+  test "expired paid signup releases pending hold" do
+    SiteSetting.current.update!(first_two_nights_fee: "50")
+    log_in_as(users(:sam))
+
+    with_fake_stripe_checkout do
+      post signup_url_for, params: waiver_signature_params
+    end
+
+    signup = CampsiteSignup.find_by!(trip: trips(:yosemite), user: users(:sam))
+    payment = signup.current_payment
+    assert signup.pending_payment?
+
+    post stripe_webhooks_url, params: stripe_checkout_event("checkout.session.expired", payment), headers: { "CONTENT_TYPE" => "application/json" }
+
+    assert_response :ok
+    assert signup.reload.canceled?
+    assert payment.reload.expired?
+    assert_equal 6, campsites(:yosemite_a).reload.available_participant_capacity
+  end
+
+  test "paid participant removal preserves canceled signup and refunds manual payment record" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup.payments.create!(
+      source: "manual",
+      status: "paid",
+      amount_cents: 1000,
+      manual_payment_method: "cash",
+      manual_paid_at: Time.current,
+      paid_at: Time.current
+    )
+    log_in_as(users(:sam))
+
+    assert_no_difference "CampsiteSignup.count" do
+      delete signup_url_for
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite))
+    assert signup.reload.canceled?
+    assert signup.current_payment.refunded?
+  end
+
+  test "guest cannot remove themselves from a paid party" do
+    primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    guest_user = User.create!(
+      first_name: "Gina",
+      last_name: "Guest",
+      email: "gina-paid-party@example.com",
+      password: "password"
+    )
+    guest_signup = create_campsite_signup!(
+      campsite: campsites(:yosemite_a),
+      user: guest_user,
+      guest_of_signup: primary_signup,
+      guest_position: 1
+    )
+    primary_signup.payments.create!(
+      source: "manual",
+      status: "paid",
+      amount_cents: 2000,
+      manual_payment_method: "cash",
+      manual_paid_at: Time.current,
+      paid_at: Time.current
+    )
+    log_in_as(guest_user)
+
+    assert_no_difference "CampsiteSignup.count" do
+      delete signup_url_for
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite))
+    assert_equal "Guests follow the primary participant signup for paid trips.", flash[:alert]
+    assert guest_signup.reload.confirmed?
   end
 
   test "logged in user can sign up with minors" do
@@ -1251,6 +1365,32 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
         signup_kind: "self"
       }
     }
+  end
+
+  def stripe_checkout_event(type, payment, payment_intent: nil)
+    {
+      id: "evt_test_#{payment.id}",
+      type: type,
+      data: {
+        object: {
+          id: payment.stripe_checkout_session_id,
+          object: "checkout.session",
+          payment_intent: payment_intent,
+          metadata: {
+            campsite_signup_payment_id: payment.id.to_s,
+            campsite_signup_id: payment.campsite_signup_id.to_s
+          }
+        }
+      }
+    }.to_json
+  end
+
+  def with_fake_stripe_checkout
+    original_creator = Rails.application.config.x.stripe_checkout_session_creator
+    Rails.application.config.x.stripe_checkout_session_creator = FakeStripeCheckoutSessionCreator
+    yield
+  ensure
+    Rails.application.config.x.stripe_checkout_session_creator = original_creator
   end
 
   def fill_campsite_capacity(campsite, prefix, count: campsite.participant_capacity)
