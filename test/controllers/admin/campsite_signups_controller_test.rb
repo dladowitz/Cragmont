@@ -1,6 +1,17 @@
 require "test_helper"
 
 class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
+  FakeStripeCheckoutSessionCreator = Struct.new(:payment, :success_url, :cancel_url, keyword_init: true) do
+    def call
+      payment.update!(
+        stripe_checkout_session_id: "cs_admin_test_#{payment.id}",
+        checkout_url: "https://checkout.stripe.test/admin/#{payment.id}",
+        expires_at: 30.minutes.from_now
+      )
+      payment
+    end
+  end
+
   test "can add existing account participant directly to campsite" do
     trip = trips(:yosemite)
     campsite = campsites(:yosemite_a)
@@ -455,5 +466,82 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_trip_url(trips(:yosemite))
     assert_equal "Wow, that was a whipper. Sam Lee is not on the waitlist.", flash[:alert]
     assert signup.reload.confirmed?
+  end
+
+  test "admin can mark no payment needed with required reason" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+
+    assert_difference "CampsiteSignupPayment.count", 1 do
+      patch mark_no_payment_needed_admin_trip_campsite_signup_url(trips(:yosemite), signup), params: {
+        payment: {
+          waived_reason: "Scholarship comp"
+        }
+      }
+    end
+
+    assert_redirected_to admin_trip_url(trips(:yosemite))
+    payment = signup.reload.current_payment
+    assert payment.waived?
+    assert_equal "Scholarship comp", payment.waived_reason
+  end
+
+  test "admin can mark participant already paid" do
+    SiteSetting.current.update!(first_two_nights_fee: "35", extra_night_fee: "5")
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+
+    assert_difference "CampsiteSignupPayment.count", 1 do
+      patch mark_already_paid_admin_trip_campsite_signup_url(trips(:yosemite), signup), params: {
+        payment: {
+          manual_payment_method: "venmo",
+          manual_paid_at: "2026-06-01T12:30",
+          note: "Paid David"
+        }
+      }
+    end
+
+    assert_redirected_to admin_trip_url(trips(:yosemite))
+    payment = signup.reload.current_payment
+    assert payment.manual_source?
+    assert payment.paid?
+    assert_equal 4000, payment.amount_cents
+    assert_equal "venmo", payment.manual_payment_method
+  end
+
+  test "admin can create Stripe payment link after details are complete" do
+    SiteSetting.current.update!(first_two_nights_fee: "35")
+    signup = attach_test_waiver_to(create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam)))
+
+    with_fake_stripe_checkout do
+      assert_difference "CampsiteSignupPayment.count", 1 do
+        patch create_payment_link_admin_trip_campsite_signup_url(trips(:yosemite), signup)
+      end
+    end
+
+    assert_redirected_to admin_trip_url(trips(:yosemite))
+    payment = signup.reload.current_payment
+    assert payment.pending?
+    assert_equal "https://checkout.stripe.test/admin/#{payment.id}", payment.checkout_url
+  end
+
+  test "removing paid participant cancels record instead of deleting it" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup.payments.create!(source: "manual", status: "paid", amount_cents: 1000, manual_payment_method: "cash", manual_paid_at: Time.current, paid_at: Time.current)
+
+    assert_no_difference "CampsiteSignup.count" do
+      delete remove_from_campsite_admin_trip_campsite_signup_url(trips(:yosemite), signup)
+    end
+
+    assert signup.reload.canceled?
+    assert signup.current_payment.refunded?
+  end
+
+  private
+
+  def with_fake_stripe_checkout
+    original_creator = Rails.application.config.x.stripe_checkout_session_creator
+    Rails.application.config.x.stripe_checkout_session_creator = FakeStripeCheckoutSessionCreator
+    yield
+  ensure
+    Rails.application.config.x.stripe_checkout_session_creator = original_creator
   end
 end

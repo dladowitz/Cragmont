@@ -31,6 +31,7 @@
             %span.info-tooltip-icon{aria: { hidden: "true" }} i
             %span.info-tooltip-box{role: "tooltip"}= remove_waitlist_tooltip
       - else
+        %th Payment
         %th Waiver
         %th Move to Waitlist
         %th Remove
@@ -169,6 +170,8 @@
                     %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
                     = button_to "Remove", remove_from_waitlist_admin_trip_campsite_signup_path(trip, signup), method: :delete, class: "button danger"
         - else
+          %td
+            = render "payment_controls", signup: signup, trip: signup_trip, missing_dates: missing_dates, missing_waiver: missing_waiver, participant_details_link: participant_details_link
           %td
             - if signup.waiver_signed?
               .waiver-download

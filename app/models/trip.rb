@@ -8,6 +8,7 @@ class Trip < ApplicationRecord
   has_many :campsites, dependent: :destroy
   has_many :campsite_signups, dependent: :destroy
   has_many :participants, through: :campsite_signups, source: :user
+  has_many :trip_reimbursements, dependent: :destroy
 
   enum :status, STATUSES.index_with(&:itself), default: "draft"
 
@@ -46,7 +47,11 @@ class Trip < ApplicationRecord
   end
 
   def available_participant_capacity
-    [ total_participant_capacity - confirmed_capacity_count, 0 ].max
+    [ total_participant_capacity - held_capacity_count, 0 ].max
+  end
+
+  def held_capacity_count
+    capacity_holding_signups_with_minors.sum(&:capacity_count)
   end
 
   def capacity_full?
@@ -90,6 +95,12 @@ class Trip < ApplicationRecord
     return campsite_signups.select(&:confirmed?) if campsite_signups.loaded?
 
     campsite_signups.confirmed.includes(:campsite_signup_minors)
+  end
+
+  def capacity_holding_signups_with_minors
+    return campsite_signups.select(&:capacity_holding?) if campsite_signups.loaded?
+
+    campsite_signups.capacity_holding.includes(:campsite_signup_minors)
   end
 
   def end_date_after_start_date

@@ -7,9 +7,10 @@ class Admin::TripsController < ApplicationController
   end
 
   def show
-    @campsites = @trip.campsites.includes(:campground, :registered_by, campsite_signups: [ :user, :campsite_signup_minors, { guest_of_signup: :user } ]).order(:arrival_date, :site_number)
+    @campsites = @trip.campsites.includes(:campground, :registered_by, campsite_signups: [ :payments, :user, :campsite_signup_minors, { guest_of_signup: :user } ]).order(:arrival_date, :site_number)
     @waitlisted_signups = @trip.waitlisted_signups
-    @trip_participant_user_ids = @trip.campsite_signups.distinct.pluck(:user_id)
+    @trip_participant_user_ids = @trip.campsite_signups.active.distinct.pluck(:user_id)
+    @trip_reimbursements = @trip.trip_reimbursements.order(paid_on: :desc, created_at: :desc)
   end
 
   def new

@@ -707,6 +707,25 @@ input[type="submit"]:disabled {
   line-height: 1.25;
 }
 
+.admin-payment-control {
+  display: grid;
+  gap: 6px;
+  align-items: start;
+  min-width: 150px;
+}
+
+.admin-payment-status,
+.admin-payment-amount {
+  width: fit-content;
+}
+
+.payment-admin-section {
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
 .campsite-card-list,
 .admin-campsite-list {
   display: grid;

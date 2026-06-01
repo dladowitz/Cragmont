@@ -18,8 +18,8 @@ class Admin::SettingsController < ApplicationController
   def site_setting_params
     params.require(:site_setting).permit(
       :uncounted_minor_age_limit,
-      :campsite_weekend_fee,
-      :campsite_extra_night_fee,
+      :first_two_nights_fee,
+      :extra_night_fee,
       :minor_fee
     )
   end
