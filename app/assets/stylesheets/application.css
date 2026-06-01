@@ -54,6 +54,13 @@ body.session-new-page {
     url("backgrounds/indian-creek-super-crack.jpg") center / cover fixed;
 }
 
+body.registration-new-page {
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgb(15 23 20 / 24%), rgb(15 23 20 / 64%)),
+    url("backgrounds/tuolumne-meadows-cathedral-peak.jpg") center / cover fixed;
+}
+
 body.trip-show-page {
   min-height: 100vh;
   background:
@@ -73,6 +80,8 @@ body.trips-index-page .site-name,
 body.trips-index-page .site-name small,
 body.session-new-page .site-name,
 body.session-new-page .site-name small,
+body.registration-new-page .site-name,
+body.registration-new-page .site-name small,
 body.trip-show-page .site-name,
 body.trip-show-page .site-name small,
 body.profile-show-page .site-name,
@@ -85,6 +94,7 @@ body.profile-edit-page .site-name small {
 
 body.trips-index-page .public-nav a,
 body.session-new-page .public-nav a,
+body.registration-new-page .public-nav a,
 body.trip-show-page .public-nav a,
 body.profile-show-page .public-nav a,
 body.profile-edit-page .public-nav a {
@@ -968,6 +978,13 @@ body.trips-index-page .trips-index-panel {
 body.session-new-page .auth-panel {
   border-color: rgb(255 255 255 / 56%);
   background: rgb(255 255 255 / 88%);
+  box-shadow: 0 24px 72px rgb(0 0 0 / 26%);
+  backdrop-filter: blur(6px);
+}
+
+body.registration-new-page .panel {
+  border-color: rgb(255 255 255 / 56%);
+  background: rgb(255 255 255 / 90%);
   box-shadow: 0 24px 72px rgb(0 0 0 / 26%);
   backdrop-filter: blur(6px);
 }

@@ -82,6 +82,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     get new_registration_url
 
     assert_response :success
+    assert_select "body.registration-new-page"
+    assert_select ".background-image-caption", "Tuolumne Meadows, Cathedral Peak"
     assert_select ".password-visibility-field[data-controller='password-visibility']", count: 2
     assert_select "button.password-visibility-toggle[aria-label='Show password']", count: 2
     assert_select "input[type='password'][data-password-visibility-target='input']", count: 2
