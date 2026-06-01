@@ -1,0 +1,49 @@
+- payment = signup.current_payment
+- payment_label = payment.present? ? payment.status.titleize : "Unpaid"
+- payment_amount = payment.present? ? format_cents(payment.amount_cents) : nil
+.admin-payment-control{"data-controller" => "modal"}
+  %span.status.admin-payment-status{class: ("danger-status" if payment&.failed?)}= payment_label
+  - if payment_amount.present?
+    %span.muted.admin-payment-amount= payment_amount
+  - if payment&.checkout_url.present? && payment.pending?
+    = link_to "Payment link", payment.checkout_url, class: "small-link", target: "_blank", rel: "noopener"
+  - unless payment&.paid? || payment&.waived? || payment&.refunded?
+    %button.button.secondary.admin-table-action-button{"data-action" => "modal#open", type: "button"} Update
+    %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+      .signup-modal-content
+        %div
+          %h2 Payment for #{signup.user.full_name}
+          - if missing_dates || missing_waiver
+            %p.muted Share the waiver and date selection link before creating a Stripe payment link.
+            = link_to "Waiver, date, and payment link", participant_details_link, class: "missing-details-link"
+        %section.payment-admin-section
+          %h3 No payment needed
+          = form_with url: mark_no_payment_needed_admin_trip_campsite_signup_path(trip, signup), method: :patch, class: "admin-form" do |form|
+            .field
+              = required_label_tag "payment_#{signup.id}_waived_reason", "Reason"
+              = text_area_tag "payment[waived_reason]", "", id: "payment_#{signup.id}_waived_reason", required: true, rows: 2
+            .form-actions
+              = submit_tag "Mark no payment needed", class: "button secondary"
+        %section.payment-admin-section
+          %h3 Already paid
+          = form_with url: mark_already_paid_admin_trip_campsite_signup_path(trip, signup), method: :patch, class: "admin-form" do |form|
+            .form-grid
+              %div
+                = required_label_tag "payment_#{signup.id}_manual_payment_method", "Method"
+                = select_tag "payment[manual_payment_method]", options_for_select([["Venmo", "venmo"], ["Zelle", "zelle"], ["Cash", "cash"], ["Check", "check"], ["Other", "other"]]), include_blank: "Choose method", id: "payment_#{signup.id}_manual_payment_method", required: true
+              %div
+                = required_label_tag "payment_#{signup.id}_manual_paid_at", "Paid at"
+                = datetime_field_tag "payment[manual_paid_at]", Time.current.strftime("%Y-%m-%dT%H:%M"), id: "payment_#{signup.id}_manual_paid_at", required: true
+            .field
+              = label_tag "payment_#{signup.id}_note", "Note"
+              = text_area_tag "payment[note]", "", id: "payment_#{signup.id}_note", rows: 2
+            .form-actions
+              = submit_tag "Mark already paid", class: "button secondary"
+        %section.payment-admin-section
+          %h3 Stripe payment link
+          - if missing_dates || missing_waiver
+            %p.muted Dates and waiver are required before creating a Stripe payment link.
+          - else
+            = button_to "Create payment link", create_payment_link_admin_trip_campsite_signup_path(trip, signup), method: :patch, class: "button secondary"
+        .form-actions
+          %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
