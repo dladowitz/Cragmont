@@ -3,9 +3,10 @@
     %div
       %p.eyebrow Cragmont
       %h1= "Admin Dashboard"
-    = link_to "Public Site", root_path, class: "admin-public-link"
+    = link_to "Public View", root_path, class: "admin-public-link"
   %nav.admin-nav{"aria-label" => "Admin navigation"}
     = link_to "Trips", admin_trips_path
     = link_to "Campgrounds", admin_campgrounds_path
     = link_to "Users", admin_users_path
     = link_to "Settings", admin_settings_path
+    = button_to "Logout", session_path, method: :delete, class: "button secondary"

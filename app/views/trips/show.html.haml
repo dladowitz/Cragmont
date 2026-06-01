@@ -1,3 +1,4 @@
+- content_for :body_class, "trip-show-page"
 = render "shared/public_header"
 %main.public-main
   %section.panel.trip-overview
@@ -167,21 +168,21 @@
                 %th Participant
                 %th Member
                 %th Joined Waitlist
-                %th Able to signup
-                %th.waitlist-signup-action-column{aria: { label: "Waitlist signup action" }}
+                %th Self Signup
+                %th.waitlist-availability-column Availability
                 %th.waitlist-action-column{aria: { label: "Waitlist actions" }}
             %tbody
               - @waitlisted_signups.each_with_index do |signup, index|
                 - signup_confirmation_campsites = @trip.waitlist_confirmation_campsites_for(signup)
+                - direct_signup_available = @campsites.any? { |campsite| campsite.direct_signup_available? && campsite.available_participant_capacity >= signup.party_capacity_count }
+                - signup_available_from_cards = signup_confirmation_campsites.any? || direct_signup_available
                 %tr
                   %td.waitlist-priority-column= index + 1
                   %td= signup.public_waitlist_name
                   %td= signup.user.member? ? "Member" : "Non-member"
-                  %td= signup.created_at.in_time_zone.strftime("%B %-d, %Y %-l:%M %p")
-                  %td= signup_confirmation_campsites.any? ? "Yes" : "No"
-                  %td.waitlist-signup-action-column
-                    - if @current_signup&.waitlisted? && signup.id == @current_signup.id && signup_confirmation_campsites.any?
-                      = render "waitlist_campsite_choice_form", trip: @trip, signup: signup, campsites: signup_confirmation_campsites
+                  %td= signup.created_at.in_time_zone.strftime("%-m/%-d/%y %-l:%M%P")
+                  %td= signup.waitlist_eligible? ? "Enabled" : "Disabled"
+                  %td.waitlist-availability-column= signup_available_from_cards ? "Yes" : "No"
                   %td.waitlist-action-column
                     - if @current_signup&.waitlisted? && signup.id == @current_signup.id
                       %div{"data-controller" => "modal"}
@@ -205,11 +206,8 @@
         %div
           %dt Email
           %dd= mail_to @trip.campsite_coordinator.email if @trip.campsite_coordinator.email.present?
-        %div
-          %dt Phone
-          %dd= @trip.campsite_coordinator.phone.presence || "None"
     - else
-      %p.muted Unassigned
+      %p.muted Not yet set
   - if @completion_signup.present?
     - if @completion_signup.user.default_password?
       - if @completion_signup.guest?
@@ -221,3 +219,4 @@
       = render "guest_password_modal", trip: @trip, signup: @completion_signup, token: completion_token, password_path: password_path
     - else
       = render "participant_details_modal", trip: @trip, signup: @completion_signup
+%p.background-image-caption Joshua Tree, IRS Wall

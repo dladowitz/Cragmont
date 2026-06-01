@@ -18,6 +18,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "a", text: "Yosemite Valley Spring"
     assert_select "a", text: "Joshua Tree Winter", count: 0
+    assert_select ".background-image-caption", "Half Dome, Regular Northwest Face"
   end
 
   test "public trip detail shows trip campsite and coordinator info" do
@@ -26,9 +27,11 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", "Yosemite Valley Spring"
     assert_select "h2", "Yosemite Valley, CA"
+    assert_select ".background-image-caption", "Joshua Tree, IRS Wall"
     assert_select "h2", "Campsite coordinator"
     assert_select ".details-list", text: /Alex Rivera/
     assert_select ".details-list", text: /alex@example.com/
+    assert_select ".details-list", text: /555-0100/, count: 0
     assert_select ".stats", text: /Signed up/
     assert_select ".stats", text: /Spaces available/
     assert_select ".stats", text: /Total capacity/
@@ -37,6 +40,18 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "#campsite-#{campsites(:yosemite_a).id}", text: /Upper Pines/
     assert_select "#campsite-#{campsites(:yosemite_a).id}", text: /site A12/
     assert_select "#campsite-#{campsites(:yosemite_a).id}", text: /Close to bathrooms/
+  end
+
+  test "public trip detail shows placeholder when campsite coordinator is not set" do
+    trips(:yosemite).update!(campsite_coordinator: nil)
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "h2", "Campsite coordinator"
+    assert_select "section.panel", text: /Not yet set/
+    assert_select ".details-list", text: /Alex Rivera/, count: 0
+    assert_select ".details-list", text: /555-0100/, count: 0
   end
 
   test "logged out signup redirects to login" do
@@ -783,8 +798,10 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_select ".signup-modal-title-line .waitlist-transition-note", text: "This will move your party from the waitlist to confirmed"
     end
     assert_select ".trip-waitlist-section tbody tr" do
-      assert_select "td", text: "Yes"
-      assert_select ".waitlist-transition-note", text: "This will move your party from the waitlist to confirmed"
+      assert_select "td:nth-child(5)", text: "Enabled"
+      assert_select "td:nth-child(6)", text: "Yes"
+      assert_select "button", text: "Signup", count: 0
+      assert_select ".waitlist-transition-note", count: 0
     end
   end
 
@@ -902,10 +919,11 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_select "form[action='#{signup_path_for(campsite)}'][method='post']", text: /Pay Now and Confirm/
     end
     assert_select ".trip-waitlist-section tbody tr" do
-      assert_select "td", text: "Yes"
-      assert_select "button", text: "Signup"
-      assert_select ".waitlist-transition-note", text: "This will move you from the waitlist to confirmed"
-      assert_select "input[type='hidden'][name='campsite_signup[intent]'][value='confirm_waitlist']"
+      assert_select "td:nth-child(5)", text: "Enabled"
+      assert_select "td:nth-child(6)", text: "Yes"
+      assert_select "button", text: "Signup", count: 0
+      assert_select ".waitlist-transition-note", count: 0
+      assert_select "input[type='hidden'][name='campsite_signup[intent]'][value='confirm_waitlist']", count: 0
     end
 
     params = waiver_signature_params.deep_dup
@@ -949,7 +967,9 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_select ".signup-modal-title-line .waitlist-transition-note", text: "This will move your party from the waitlist to confirmed"
     end
     assert_select ".trip-waitlist-section tbody tr" do
-      assert_select ".waitlist-transition-note", text: "This will move your party from the waitlist to confirmed"
+      assert_select "td:nth-child(5)", text: "Enabled"
+      assert_select "td:nth-child(6)", text: "Yes"
+      assert_select ".waitlist-transition-note", count: 0
     end
 
     params = waiver_signature_params.deep_dup
@@ -973,34 +993,6 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_not guest_signup.waiver_signed?
   end
 
-  test "eligible waitlisted participant can choose between open locked campsites" do
-    first_campsite = campsites(:yosemite_a)
-    second_campsite = campsites(:yosemite_b)
-    first_campsite.update!(signups_locked_at: Time.current)
-    second_campsite.update!(signups_locked_at: Time.current)
-    create_waitlisted_signup!(trip: trips(:yosemite), user: users(:sam), waitlist_eligible_at: Time.current)
-    log_in_as(users(:sam))
-
-    get trip_url(trips(:yosemite))
-
-    assert_response :success
-    assert_select ".trip-waitlist-section tbody tr" do
-      assert_select "button", text: "Signup"
-      assert_select ".campsite-choice-options[data-campsite-choice-target='chooser'] legend", text: "Choose campsite"
-      assert_select ".campsite-choice-option", text: /site A12/
-      assert_select ".campsite-choice-option", text: /site A13/
-      assert_select ".campsite-choice-option input[type='radio'][checked]", count: 0
-      assert_select ".campsite-choice-panel[hidden]", count: 2
-      assert_select ".campsite-choice-summary button", text: "Change campsite"
-      assert_select "form[action='#{signup_path_for(first_campsite)}'][method='post']" do
-        assert_select "input[type='hidden'][name='campsite_signup[intent]'][value='confirm_waitlist']"
-      end
-      assert_select "form[action='#{signup_path_for(second_campsite)}'][method='post']" do
-        assert_select "input[type='hidden'][name='campsite_signup[intent]'][value='confirm_waitlist']"
-      end
-    end
-  end
-
   test "ineligible waitlisted participant does not see confirm action for open locked campsite spot" do
     campsite = campsites(:yosemite_a)
     campsite.update!(signups_locked_at: Time.current)
@@ -1016,7 +1008,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_select "button[disabled]", text: "On waitlist"
     end
     assert_select ".trip-waitlist-section tbody tr" do
-      assert_select "td", text: "No"
+      assert_select "td:nth-child(5)", text: "Disabled"
+      assert_select "td:nth-child(6)", text: "Yes"
       assert_select "button", text: "Signup", count: 0
     end
   end
@@ -1183,21 +1176,23 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".trip-waitlist-note", text: "Waitlist priority goes to club members"
     assert_select ".trip-waitlist-section table.waitlist-table"
     waitlist_headers = css_select(".trip-waitlist-section th").map { |header| header.text.strip }
-    assert_equal [ "Priority", "Participant", "Member", "Joined Waitlist", "Able to signup", "", "" ], waitlist_headers
+    assert_equal [ "Priority", "Participant", "Member", "Joined Waitlist", "Self Signup", "Availability", "" ], waitlist_headers
     assert_select ".trip-waitlist-section tbody tr:first-child" do
       assert_select "td", text: "1"
       assert_select "td", text: "Alex R."
       assert_select "td", text: "Member"
-      assert_select "td", text: alex_joined_at.strftime("%B %-d, %Y %-l:%M %p")
-      assert_select "td", text: "Yes"
+      assert_select "td", text: alex_joined_at.strftime("%-m/%-d/%y %-l:%M%P")
+      assert_select "td:nth-child(5)", text: "Enabled"
+      assert_select "td:nth-child(6)", text: "Yes"
       assert_select "button", text: "Signup", count: 0
     end
     assert_select ".trip-waitlist-section tbody tr:last-child" do
       assert_select "td", text: "2"
       assert_select "td", text: "Willa W."
       assert_select "td", text: "Non-member"
-      assert_select "td", text: willa_joined_at.strftime("%B %-d, %Y %-l:%M %p")
-      assert_select "td", text: "No"
+      assert_select "td", text: willa_joined_at.strftime("%-m/%-d/%y %-l:%M%P")
+      assert_select "td:nth-child(5)", text: "Disabled"
+      assert_select "td:nth-child(6)", text: "Yes"
       assert_select "button", text: "Signup", count: 0
     end
     assert_select ".trip-waitlist-section .participant-list", count: 0

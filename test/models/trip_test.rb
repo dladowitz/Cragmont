@@ -27,15 +27,14 @@ class TripTest < ActiveSupport::TestCase
     assert_includes trip.errors[:end_date], "must be on or after the start date"
   end
 
-  test "published trip requires campsite coordinator" do
+  test "published trip can be created before campsite coordinator is known" do
     trip = trips(:yosemite)
     trip.campsite_coordinator = nil
 
-    assert_not trip.valid?
-    assert_includes trip.errors[:campsite_coordinator], "can't be blank"
+    assert trip.valid?
   end
 
-  test "draft and archived trips do not require campsite coordinator" do
+  test "draft and archived trips can also omit campsite coordinator" do
     trip = trips(:jtree)
     trip.campsite_coordinator = nil
 

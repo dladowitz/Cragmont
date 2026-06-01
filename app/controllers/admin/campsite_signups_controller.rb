@@ -83,6 +83,21 @@ class Admin::CampsiteSignupsController < ApplicationController
     end
   end
 
+  def remove_from_waitlist
+    trip = Trip.find(params[:trip_id])
+    signup = trip.campsite_signups.find(params[:id])
+
+    if signup.guest?
+      redirect_to admin_trip_path(trip), alert: "Guests follow the primary participant signup."
+    elsif signup.confirmed?
+      redirect_to admin_trip_path(trip), alert: "Wow, that was a whipper. #{signup.user.full_name} is not on the waitlist."
+    elsif remove_waitlisted_signup(signup)
+      redirect_to admin_trip_path(trip), notice: "Off belay! #{signup.user.full_name} was removed from the waitlist."
+    else
+      redirect_to admin_trip_path(trip), alert: signup.errors.full_messages.to_sentence
+    end
+  end
+
   private
 
   def add_participant_params
@@ -279,6 +294,24 @@ class Admin::CampsiteSignupsController < ApplicationController
 
       signup.destroy!
       signup.trip.mark_next_waitlisted_signup_eligible!
+      removed = true
+    end
+
+    removed
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotDestroyed
+    false
+  end
+
+  def remove_waitlisted_signup(signup)
+    removed = false
+
+    CampsiteSignup.transaction do
+      signup.lock!
+      trip = signup.trip
+      advance_waitlist = signup.waitlist_eligible?
+
+      signup.destroy!
+      trip.mark_next_waitlisted_signup_eligible! if advance_waitlist
       removed = true
     end
 

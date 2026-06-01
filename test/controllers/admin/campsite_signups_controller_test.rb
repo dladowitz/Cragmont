@@ -392,4 +392,68 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Sam Lee is not confirmed for a campsite.", flash[:alert]
     assert signup.reload.waitlisted?
   end
+
+  test "can remove waitlisted participant from waitlist" do
+    signup = create_waitlisted_signup!(trip: trips(:yosemite), user: users(:sam))
+
+    assert_difference "CampsiteSignup.count", -1 do
+      delete remove_from_waitlist_admin_trip_campsite_signup_url(trips(:yosemite), signup)
+    end
+
+    assert_redirected_to admin_trip_url(trips(:yosemite))
+    assert_equal "Off belay! Sam Lee was removed from the waitlist.", flash[:notice]
+    assert_nil CampsiteSignup.find_by(id: signup.id)
+  end
+
+  test "removing waitlisted participant removes linked guests" do
+    primary = create_waitlisted_signup!(trip: trips(:yosemite), user: users(:sam))
+    guest_user = User.create!(
+      first_name: "Gina",
+      last_name: "Guest",
+      email: "gina-waitlist-remove@example.com",
+      password: User::DEFAULT_GUEST_PASSWORD,
+      default_password: true
+    )
+    guest_signup = create_waitlisted_signup!(
+      trip: trips(:yosemite),
+      user: guest_user,
+      guest_of_signup: primary,
+      guest_position: 1
+    )
+
+    assert_difference "CampsiteSignup.count", -2 do
+      delete remove_from_waitlist_admin_trip_campsite_signup_url(trips(:yosemite), primary)
+    end
+
+    assert_nil CampsiteSignup.find_by(id: primary.id)
+    assert_nil CampsiteSignup.find_by(id: guest_signup.id)
+  end
+
+  test "removing eligible waitlisted participant advances next eligible signup" do
+    first_signup = create_waitlisted_signup!(trip: trips(:yosemite), user: users(:sam), waitlist_eligible_at: Time.current)
+    waiting_user = User.create!(
+      first_name: "Next",
+      last_name: "Climber",
+      email: "next-climber@example.com",
+      password: "password"
+    )
+    next_signup = create_waitlisted_signup!(trip: trips(:yosemite), user: waiting_user)
+
+    delete remove_from_waitlist_admin_trip_campsite_signup_url(trips(:yosemite), first_signup)
+
+    assert_redirected_to admin_trip_url(trips(:yosemite))
+    assert next_signup.reload.waitlist_eligible?
+  end
+
+  test "does not remove confirmed participant from waitlist" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+
+    assert_no_difference "CampsiteSignup.count" do
+      delete remove_from_waitlist_admin_trip_campsite_signup_url(trips(:yosemite), signup)
+    end
+
+    assert_redirected_to admin_trip_url(trips(:yosemite))
+    assert_equal "Wow, that was a whipper. Sam Lee is not on the waitlist.", flash[:alert]
+    assert signup.reload.confirmed?
+  end
 end

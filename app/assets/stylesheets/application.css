@@ -32,8 +32,76 @@ body {
   line-height: 1.5;
 }
 
+body.has-environment-indicator {
+  padding-bottom: 56px;
+}
+
 body.admin-body {
   background: #e7f1edc9;
+}
+
+body.trips-index-page {
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgb(15 23 20 / 28%), rgb(15 23 20 / 64%)),
+    url("backgrounds/half-dome-ledge.jpg") center / cover fixed;
+}
+
+body.session-new-page {
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgb(15 23 20 / 22%), rgb(15 23 20 / 62%)),
+    url("backgrounds/indian-creek-super-crack.jpg") center / cover fixed;
+}
+
+body.trip-show-page {
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgb(15 23 20 / 24%), rgb(15 23 20 / 64%)),
+    url("backgrounds/joshua-tree-irs-wall.jpg") center / cover fixed;
+}
+
+body.profile-show-page,
+body.profile-edit-page {
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgb(15 23 20 / 24%), rgb(15 23 20 / 64%)),
+    url("backgrounds/castle-valley-castleton-tower.jpg") center / cover fixed;
+}
+
+body.trips-index-page .site-name,
+body.trips-index-page .site-name small,
+body.session-new-page .site-name,
+body.session-new-page .site-name small,
+body.trip-show-page .site-name,
+body.trip-show-page .site-name small,
+body.profile-show-page .site-name,
+body.profile-show-page .site-name small,
+body.profile-edit-page .site-name,
+body.profile-edit-page .site-name small {
+  color: #fff;
+  text-shadow: 0 2px 10px rgb(0 0 0 / 42%);
+}
+
+body.trips-index-page .public-nav a,
+body.session-new-page .public-nav a,
+body.trip-show-page .public-nav a,
+body.profile-show-page .public-nav a,
+body.profile-edit-page .public-nav a {
+  border-color: rgb(255 255 255 / 72%);
+  background: rgb(255 255 255 / 88%);
+}
+
+.background-image-caption {
+  position: fixed;
+  right: clamp(16px, 5vw, 48px);
+  bottom: clamp(16px, 4vw, 36px);
+  z-index: 1;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.9rem;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
 }
 
 a {
@@ -99,6 +167,11 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  align-items: center;
+}
+
+.admin-nav form {
+  margin: 0;
 }
 
 .public-header {
@@ -397,81 +470,9 @@ input[type="submit"]:disabled {
   white-space: nowrap;
 }
 
-.waitlist-signup-action-column,
+.waitlist-availability-column,
 .waitlist-action-column {
   white-space: nowrap;
-}
-
-.waitlist-campsite-choice .signup-modal-content {
-  gap: 16px;
-}
-
-.campsite-choice-options {
-  display: grid;
-  gap: 10px;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fbfaf7;
-}
-
-.campsite-choice-options[hidden],
-.campsite-choice-panel[hidden] {
-  display: none;
-}
-
-.campsite-choice-options legend {
-  padding: 0 4px;
-  font-weight: 750;
-}
-
-.campsite-choice-option {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  width: fit-content;
-  max-width: 100%;
-  color: var(--text);
-  font-weight: 700;
-}
-
-.campsite-choice-option input[type="radio"] {
-  flex: 0 0 auto;
-  width: auto;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  margin-top: 0.35rem;
-}
-
-.campsite-choice-option span {
-  display: grid;
-  gap: 2px;
-}
-
-.campsite-choice-option small {
-  color: var(--muted);
-  font-size: 0.9rem;
-  font-weight: 650;
-}
-
-.campsite-choice-summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.campsite-choice-summary p {
-  font-weight: 700;
-}
-
-.trip-waitlist-section .waitlist-signup-action-column > [data-controller~="modal"] > .button {
-  border-color: var(--accent);
-  background: #fff;
-  color: var(--accent-dark);
 }
 
 .trip-waitlist-section .waitlist-action-column > [data-controller~="modal"] > .button.danger {
@@ -652,6 +653,48 @@ input[type="submit"]:disabled {
 
 .campsites-panel table {
   margin-top: 10px;
+}
+
+.admin-self-signup-cell {
+  min-width: 170px;
+}
+
+.admin-self-signup-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.admin-self-signup-control form {
+  margin: 0;
+}
+
+.admin-self-signup-control .admin-self-signup-status {
+  font-size: 75%;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.admin-table-action-button {
+  min-height: 30px;
+  padding: 4px 9px;
+  font-size: 0.82rem;
+  line-height: 1.1;
+}
+
+.admin-waitlist-campsite-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.admin-waitlist-campsite-name {
+  color: var(--muted);
+  font-size: 75%;
+  font-weight: 750;
+  line-height: 1.25;
 }
 
 .campsite-card-list,
@@ -913,6 +956,39 @@ td span {
 .trip-cards {
   display: grid;
   gap: 14px;
+}
+
+body.trips-index-page .trips-index-panel {
+  border-color: rgb(255 255 255 / 56%);
+  background: rgb(255 255 255 / 88%);
+  box-shadow: 0 24px 72px rgb(0 0 0 / 26%);
+  backdrop-filter: blur(6px);
+}
+
+body.session-new-page .auth-panel {
+  border-color: rgb(255 255 255 / 56%);
+  background: rgb(255 255 255 / 88%);
+  box-shadow: 0 24px 72px rgb(0 0 0 / 26%);
+  backdrop-filter: blur(6px);
+}
+
+body.trip-show-page .panel {
+  border-color: rgb(255 255 255 / 52%);
+  background: rgb(255 255 255 / 90%);
+  box-shadow: 0 20px 60px rgb(0 0 0 / 22%);
+  backdrop-filter: blur(6px);
+}
+
+body.profile-show-page .panel,
+body.profile-edit-page .panel {
+  border-color: rgb(255 255 255 / 52%);
+  background: rgb(255 255 255 / 90%);
+  box-shadow: 0 20px 60px rgb(0 0 0 / 22%);
+  backdrop-filter: blur(6px);
+}
+
+body.trips-index-page .trip-card {
+  background: rgb(255 255 255 / 82%);
 }
 
 .trip-card {
@@ -1524,6 +1600,10 @@ td span {
   max-width: 520px;
 }
 
+.auth-primary-action {
+  min-width: 130px;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -1851,6 +1931,29 @@ textarea {
 .flash.alert {
   border: 1px solid #f4b6ae;
   background: #fff4f2;
+}
+
+.environment-indicator {
+  position: fixed;
+  left: 16px;
+  bottom: 14px;
+  z-index: 30;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 7px 10px;
+  border: 1px solid #9bd0ba;
+  border-radius: 6px;
+  background: rgb(255 255 255 / 92%);
+  box-shadow: 0 8px 22px rgb(31 41 51 / 12%);
+  color: var(--accent-dark);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.environment-indicator a {
+  color: var(--accent);
+  font-size: 0.75rem;
 }
 
 .link-button {

@@ -15,7 +15,6 @@ class Trip < ApplicationRecord
 
   validates :name, :location, :start_date, :end_date, :status, presence: true
   validates :status, inclusion: { in: STATUSES }
-  validates :campsite_coordinator, presence: true, if: :published?
   validate :end_date_after_start_date
 
   def campsite_count
