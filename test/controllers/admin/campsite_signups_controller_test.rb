@@ -535,6 +535,22 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     assert signup.current_payment.refunded?
   end
 
+  test "admin can remove paid participant after campsite dates changed outside attendance dates" do
+    campsite = campsites(:yosemite_a)
+    signup = create_campsite_signup!(campsite: campsite, user: users(:sam))
+    signup.payments.create!(source: "manual", status: "paid", amount_cents: 1000, manual_payment_method: "cash", manual_paid_at: Time.current, paid_at: Time.current)
+    campsite.update_columns(arrival_date: campsite.arrival_date + 1.day, updated_at: Time.current)
+
+    assert_no_difference "CampsiteSignup.count" do
+      delete remove_from_campsite_admin_trip_campsite_signup_url(trips(:yosemite), signup)
+    end
+
+    assert_redirected_to admin_trip_url(trips(:yosemite))
+    assert_equal "Sam Lee was removed from Upper Pines site A12.", flash[:notice]
+    assert signup.reload.canceled?
+    assert signup.current_payment.refunded?
+  end
+
   private
 
   def with_fake_stripe_checkout

@@ -12,12 +12,17 @@
         %h2= modal_title
         - unless guest_signup
           %p Please select dates you will be attending
+        - if guest_signup
+          %p Please review and sign the waiver.
         .participant-details-campsite-summary
           %strong
             = campsite.campground.name
             site #{campsite.site_number}
           %span
-            Available #{campsite.arrival_date.to_fs(:long)} to #{campsite.checkout_date.to_fs(:long)}
+            - if guest_signup && signup.arrival_date.present? && signup.checkout_date.present?
+              Attending #{signup.arrival_date.to_fs(:long)} to #{signup.checkout_date.to_fs(:long)}
+            - else
+              Available #{campsite.arrival_date.to_fs(:long)} to #{campsite.checkout_date.to_fs(:long)}
       = render "campsite_signup_form_fields",
         trip: trip,
         campsite: campsite,
@@ -25,8 +30,9 @@
         confirm_waitlist: false,
         waitlist_direct_signup: false,
         complete_existing_signup: true,
+        waiver_only: guest_signup,
         modal_submit_text: "Complete",
-        payment_submit_text: "Pay Now and Complete",
+        payment_submit_text: (guest_signup ? "Complete" : "Pay Now and Complete"),
         free_submit_text: "Complete",
         signup_intent: "complete_participant_details",
         dom_id_suffix: "complete-#{signup.id}"

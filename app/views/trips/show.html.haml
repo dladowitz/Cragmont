@@ -141,9 +141,10 @@
                     %thead
                       %tr
                         %th Participant
-                        %th Member
-                        %th Dates
                         %th Minors
+                        %th Dates
+                        %th Waiver
+                        %th Membership
                     %tbody
                       - campsite.confirmed_signups.each do |signup|
                         %tr
@@ -152,14 +153,24 @@
                             - if signup.guest?
                               %span.public-added-by
                                 Added by #{signup.guest_of_signup.user.public_name}
-                          %td= signup.user.member? ? "Member" : "Non-member"
-                          %td= signup.attendance_date_range
                           %td
                             - minor_age_summary = signup.public_minor_age_summary(age_limit: @trip.uncounted_minor_age_limit)
                             - if minor_age_summary == "None"
                               %span.muted None
                             - else
                               = minor_age_summary
+                          %td= signup.attendance_date_range
+                          %td
+                            - waiver_missing = !signup.waiver_signed?
+                            - if waiver_missing
+                              - if user_signed_in? && signup.user_id == current_user.id
+                                - details_link_purpose = signup.guest? ? :complete_guest_details : :complete_participant_details
+                                = link_to "Missing", trip_path(@trip, complete_signup: signup.signed_id(purpose: details_link_purpose), anchor: "campsite-#{campsite.id}")
+                              - else
+                                Missing
+                            - else
+                              Signed
+                          %td= signup.user.member? ? "Member" : "Non-member"
                 - else
                   %p.muted No confirmed participants yet.
       - if @waitlisted_signups.any?

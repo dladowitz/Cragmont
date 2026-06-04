@@ -118,6 +118,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".campsite-notes", text: /Close to bathrooms/
     assert_select ".confirmed-signups-section" do
       assert_select "h4", "Confirmed participants"
+      assert_equal [ "Participant", "Minors", "Dates", "Payment", "Waiver", "Info", "Move to Waitlist", "Remove" ], css_select(".confirmed-signups-section > table th").map { |header| header.text.strip }
       assert_select "td", text: "Sam Lee"
       assert_select "th", text: "Dates"
       assert_select "th", text: "Attendance", count: 0
@@ -320,10 +321,50 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select "td", text: /Gina Guest/
       assert_select "td", text: /Added by Sam Lee/
       assert_select "button.missing-value.missing-link[data-action='copyable-modal#open']", text: "Missing"
-      assert_select "dialog.missing-details-modal", text: /We need to collect waiver and attendance dates from this guest\./
-      assert_select "dialog.missing-details-modal", text: /Share this link with the guest so they can sign the waiver and select dates:/
-      assert_select "a.missing-details-link[href='#{guest_link}']", text: "Waiver and Date Selection Link"
+      assert_select "dialog.missing-details-modal", text: /We need to collect a waiver from this guest\./
+      assert_select "dialog.missing-details-modal", text: /Share this link with the guest so they can sign the waiver:/
+      assert_select "a.missing-details-link[href='#{guest_link}']", text: "Waiver Link"
       assert_select "td", text: "Follows primary"
+    end
+  end
+
+  test "trip details shows guest paid by primary participant" do
+    primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    primary_signup.payments.create!(
+      source: "manual",
+      status: "paid",
+      amount_cents: 8000,
+      manual_payment_method: "venmo",
+      manual_paid_at: Time.current,
+      paid_at: Time.current
+    )
+    guest_user = User.create!(
+      first_name: "Gina",
+      last_name: "Guest",
+      email: "admin-guest-paid-by-primary@example.com",
+      password: User::DEFAULT_GUEST_PASSWORD
+    )
+    create_campsite_signup!(
+      campsite: campsites(:yosemite_a),
+      user: guest_user,
+      guest_of_signup: primary_signup,
+      guest_position: 1,
+      arrival_date: primary_signup.arrival_date,
+      checkout_date: primary_signup.checkout_date
+    )
+
+    get admin_trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select ".confirmed-signups-section tbody tr", text: /Sam Lee/ do
+      assert_select ".admin-payment-status", text: "Paid"
+      assert_select ".admin-payment-amount", text: "$80.00"
+    end
+    assert_select ".confirmed-signups-section tbody tr", text: /Gina Guest/ do
+      assert_select ".admin-payment-status", text: "Paid"
+      assert_select ".admin-payment-covered-by", text: "Paid by Sam Lee"
+      assert_select ".admin-payment-amount", count: 0
+      assert_select ".admin-payment-control button", text: "Update", count: 0
     end
   end
 

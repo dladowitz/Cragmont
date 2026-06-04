@@ -93,7 +93,7 @@ class CampsiteSignupsController < ApplicationController
     minor_attributes = normalized_minor_attributes
     guest_attributes = normalized_guest_attributes
 
-    if !campsite.waitlist_signup_required?
+    if !campsite.waitlist_signup_required? && campsite_has_room_for?(campsite, minor_attributes, guest_attributes)
       redirect_to trip_path(trip), alert: "This campsite still has space. Please sign up for the campsite directly."
     elsif signing_up_with_minors? && minor_attributes.empty?
       redirect_to trip_path(trip), alert: "Please enter minor information before joining the waitlist."
@@ -235,6 +235,12 @@ class CampsiteSignupsController < ApplicationController
       redirect_to trip_path(trip), alert: "Please agree to the waiver acknowledgement before completing your trip details."
     elsif !signature.valid?
       redirect_to trip_path(trip), alert: "Please sign the waiver before completing your trip details."
+    elsif signup.guest?
+      if complete_participant_details_with_waiver(signup, signature, acknowledged_at, update_attendance: false)
+        redirect_to trip_path(trip), notice: "Your waiver has been submitted."
+      else
+        redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
+      end
     elsif !attendance_dates_present?(signup)
       redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
     elsif complete_participant_details_with_waiver(signup, signature, acknowledged_at)
@@ -568,10 +574,10 @@ class CampsiteSignupsController < ApplicationController
     false
   end
 
-  def complete_participant_details_with_waiver(signup, signature, acknowledged_at)
+  def complete_participant_details_with_waiver(signup, signature, acknowledged_at, update_attendance: true)
     CampsiteSignup.transaction do
       signup.lock!
-      signup.assign_attributes(attendance_params)
+      signup.assign_attributes(attendance_params) if update_attendance
       signup.save!
       attach_waiver!(signup, signature, acknowledged_at)
     end
