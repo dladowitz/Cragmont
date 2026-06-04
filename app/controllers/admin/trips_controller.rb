@@ -39,7 +39,7 @@ class Admin::TripsController < ApplicationController
   end
 
   def destroy
-    if @trip.campsite_signups.exists?
+    if @trip.delete_blocked_by_participants?
       redirect_to edit_admin_trip_path(@trip), alert: "Cannot delete a trip with participants signed up", status: :see_other
       return
     end

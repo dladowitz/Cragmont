@@ -5,7 +5,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     def call
       payment.update!(
         stripe_checkout_session_id: "cs_test_#{payment.id}",
-        checkout_url: "https://checkout.stripe.test/#{payment.id}",
+        checkout_url: "https://checkout.stripe.com/c/pay/#{payment.id}",
         expires_at: 30.minutes.from_now
       )
       payment
@@ -158,12 +158,32 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_equal "cs_test_#{payment.id}", payment.stripe_checkout_session_id
     assert_equal 5, campsites(:yosemite_a).reload.available_participant_capacity
 
+    post signup_url_for, params: waiver_signature_params
+
+    assert_redirected_to payment.checkout_url
+
     post stripe_webhooks_url, params: stripe_checkout_event("checkout.session.completed", payment, payment_intent: "pi_test_123"), headers: { "CONTENT_TYPE" => "application/json" }
 
     assert_response :ok
     assert signup.reload.confirmed?
     assert payment.reload.paid?
     assert_equal "pi_test_123", payment.stripe_payment_intent_id
+  end
+
+  test "pending payment repeat signup refuses non Stripe checkout URL" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam), status: "pending_payment")
+    signup.payments.create!(
+      source: "stripe",
+      status: "pending",
+      amount_cents: 60_00,
+      checkout_url: "https://example.com/not-stripe"
+    )
+    log_in_as(users(:sam))
+
+    post signup_url_for, params: waiver_signature_params
+
+    assert_redirected_to trip_url(trips(:yosemite))
+    assert_equal "Payment checkout link is not available. Please try again.", flash[:alert]
   end
 
   test "expired paid signup releases pending hold" do
@@ -498,6 +518,21 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "form[action='#{signup_path_for}'][method='post']", text: /Remove me from this campsite/
   end
 
+  test "trip detail opens payment success modal after Stripe return" do
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam), status: "confirmed")
+    log_in_as(users(:sam))
+
+    get trip_url(trips(:yosemite), stripe_checkout: "success")
+
+    assert_response :success
+    assert_select "[data-controller='modal'][data-modal-open-value='true'] dialog.payment-success-modal" do
+      assert_select "h2", "Get stoked!"
+      assert_select "p", text: /Your trip to Yosemite Valley Spring is confirmed\./
+      assert_select "p", text: /We'll be sending you more info as the date gets closer\./
+      assert_select "p", text: /If you need to cancel make sure to do it at least seven days before the trip start for a refund\./
+    end
+  end
+
   test "trip detail shows waitlist remove action in waitlist table for signed in waitlisted participant" do
     create_waitlisted_signup!(trip: trips(:yosemite), user: users(:sam))
     log_in_as(users(:sam))
@@ -516,6 +551,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
     get trip_url(trips(:yosemite))
 
+    minor_age_limit = SiteSetting.current.uncounted_minor_age_limit
+
     assert_response :success
     assert_select "button", text: "Sign up for this campsite"
     assert_select "dialog.signup-modal"
@@ -528,7 +565,20 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "input[type='date'][name='campsite_signup[arrival_date]'][min='2026-06-12'][max='2026-06-14']"
     assert_select "input[type='date'][name='campsite_signup[checkout_date]'][required]"
     assert_select "input[type='date'][name='campsite_signup[checkout_date]'][min='2026-06-13'][max='2026-06-15']"
-    assert_select "form.waiver-form[data-signature-available-participant-capacity-value='6'][data-signature-show-capacity-warning-value='true']"
+    assert_select "form.waiver-form[data-turbo='false'][data-signature-available-participant-capacity-value='6'][data-signature-show-capacity-warning-value='true'][data-signature-first-two-nights-fee-cents-value='0'][data-signature-extra-night-fee-cents-value='0'][data-signature-minor-fee-cents-value='0'][data-signature-minor-extra-night-fee-cents-value='0']"
+    assert_select ".attendance-fields .payment-summary", count: 0
+    assert_select ".fee-fields" do
+      assert_select ".fee-section legend", "Adult Fees"
+      assert_select ".fee-section legend", "Minor Fees"
+      assert_select ".payment-due-section legend", "Payment Due"
+      assert_select ".fee-rate", text: /First 2 nights.*\$0\.00/
+      assert_select ".fee-rate", text: /Additional nights\s+\$0\.00/
+      assert_select ".fee-rate", text: /Ages 0 to #{minor_age_limit - 1}.*Free/
+      assert_select ".fee-rate", text: /Ages #{minor_age_limit} to 17.*\$0\.00/
+      assert_select ".fee-rate", text: /Additional nights\s+\$0\.00/
+      assert_select ".payment-line-items[data-signature-target='paymentLineItems'][hidden]"
+      assert_select ".payment-summary[data-signature-target='paymentSummary']", text: /Choose dates to see payment amount/
+    end
     assert_select ".capacity-warning[hidden]", text: /You've exceeded the space available for this campsite\. Your party will be placed on the waitlist\./, count: 2
     assert_select ".guest-fields", text: /Adult information\s+\(Max 2\)/
     assert_select ".guest-fields .guest-field-row", count: 4
@@ -548,6 +598,24 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "button", text: "Clear signature"
     assert_select "input[type='hidden'][name='campsite_signup[waiver_signature_data]']"
     assert_select "input[type='hidden'][name='campsite_signup[waiver_acknowledged_at]']"
+    assert_select "form[action='#{signup_path_for}'][method='post']", text: /Sign Up/
+    assert_select "form[action='#{signup_path_for}'][method='post']", text: /Pay Now and Sign Up/, count: 0
+  end
+
+  test "trip detail shows paid signup modal when trip fees are configured" do
+    SiteSetting.current.update!(first_two_nights_fee: "50", extra_night_fee: "10", minor_fee: "25", minor_extra_night_fee: "5")
+    log_in_as(users(:sam))
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "form.waiver-form[data-turbo='false'][data-signature-first-two-nights-fee-cents-value='5000'][data-signature-extra-night-fee-cents-value='1000'][data-signature-minor-fee-cents-value='2500'][data-signature-minor-extra-night-fee-cents-value='500'][data-signature-pay-submit-text-value='Pay Now and Sign Up'][data-signature-free-submit-text-value='Sign Up']"
+    assert_select ".fee-fields" do
+      assert_select ".fee-rate", text: /First 2 nights.*\$50\.00/
+      assert_select ".fee-rate", text: /Additional nights\s+\$10\.00/
+      assert_select ".fee-rate", text: /Ages #{SiteSetting.current.uncounted_minor_age_limit} to 17.*\$25\.00/
+      assert_select ".fee-rate", text: /Additional nights\s+\$5\.00/
+    end
     assert_select "form[action='#{signup_path_for}'][method='post']", text: /Pay Now and Sign Up/
   end
 
@@ -1032,7 +1100,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_select ".spot-open-message", text: "A spot has opened up!"
       assert_select "button", text: "Confirm your spot"
       assert_select ".signup-modal-title-line .waitlist-transition-note", text: "This will move you from the waitlist to confirmed"
-      assert_select "form[action='#{signup_path_for(campsite)}'][method='post']", text: /Pay Now and Confirm/
+      assert_select "form[action='#{signup_path_for(campsite)}'][method='post']", text: /Confirm/
     end
     assert_select ".trip-waitlist-section tbody tr" do
       assert_select "td:nth-child(5)", text: "Enabled"

@@ -27,7 +27,7 @@
     = link_to "Cancel", trip.persisted? ? admin_trip_path(trip) : admin_trips_path, class: "button secondary"
     - if trip.persisted?
       .danger-form-action
-        - if trip.campsite_signups.exists?
+        - if trip.delete_blocked_by_participants?
           %div{"data-controller" => "modal"}
             %span.disabled-modal-trigger{"aria-disabled" => "true", "data-action" => "click->modal#open keydown.enter->modal#open keydown.space->modal#open", role: "button", tabindex: "0", title: "Cannot delete a trip with participants signed up"}
               %button.button.danger.secondary{disabled: true, type: "button"} Delete trip
@@ -49,6 +49,6 @@
                   %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
                   %button.button.danger{form: "delete-trip-#{trip.id}", type: "submit"} Delete trip
 
-- if trip.persisted? && !trip.campsite_signups.exists?
+- if trip.persisted? && !trip.delete_blocked_by_participants?
   = form_with url: admin_trip_path(trip), method: :delete, html: { id: "delete-trip-#{trip.id}", class: "hidden-delete-form" } do
     = hidden_field_tag :confirm_delete, "1"

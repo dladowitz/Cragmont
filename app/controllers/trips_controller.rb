@@ -12,6 +12,7 @@ class TripsController < ApplicationController
     @waitlist_confirmation_campsites = @current_signup&.waitlisted? ? @trip.waitlist_confirmation_campsites_for(@current_signup) : []
     @waitlist_confirmation_campsite_ids = @waitlist_confirmation_campsites.map(&:id)
     @completion_signup = participant_details_signup || guest_details_signup
+    @show_payment_success_modal = payment_success_return?
   end
 
   private
@@ -64,5 +65,9 @@ class TripsController < ApplicationController
     session[:user_id] = signup.user_id
     @current_user = signup.user
     @current_signup = signup
+  end
+
+  def payment_success_return?
+    params[:stripe_checkout] == "success" && @current_signup&.confirmed?
   end
 end

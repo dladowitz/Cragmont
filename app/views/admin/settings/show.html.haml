@@ -9,20 +9,25 @@
         = required_label form, :uncounted_minor_age_limit, "Age limit of uncounted minors"
         = form.number_field :uncounted_minor_age_limit, min: 0, max: 17, required: true
       %div
-        = form.label :first_two_nights_fee, "First Two Nights Fee"
+        = form.label :first_two_nights_fee, "One or Two Nights"
         .currency-field
           %span{"aria-hidden" => "true"} $
-          = form.number_field :first_two_nights_fee, min: 0, step: 0.01
+          = form.number_field :first_two_nights_fee, min: 0, step: 0.01, value: number_with_precision(@site_setting.first_two_nights_fee, precision: 2)
       %div
-        = form.label :extra_night_fee, "Extra Night Fee"
+        = form.label :extra_night_fee, "Additional Nights Fee"
         .currency-field
           %span{"aria-hidden" => "true"} $
-          = form.number_field :extra_night_fee, min: 0, step: 0.01
+          = form.number_field :extra_night_fee, min: 0, step: 0.01, value: number_with_precision(@site_setting.extra_night_fee, precision: 2)
       %div
-        = form.label :minor_fee, "Minor fee"
+        = form.label :minor_fee, "Minor One or Two Nights"
         .currency-field
           %span{"aria-hidden" => "true"} $
-          = form.number_field :minor_fee, min: 0, step: 0.01
+          = form.number_field :minor_fee, min: 0, step: 0.01, value: number_with_precision(@site_setting.minor_fee, precision: 2)
+      %div
+        = form.label :minor_extra_night_fee, "Minor Additional Nights Fee"
+        .currency-field
+          %span{"aria-hidden" => "true"} $
+          = form.number_field :minor_extra_night_fee, min: 0, step: 0.01, value: number_with_precision(@site_setting.minor_extra_night_fee, precision: 2)
     %p.muted Fees are entered in dollars and stored in cents.
     .form-actions
       = form.submit "Save settings", class: "button"

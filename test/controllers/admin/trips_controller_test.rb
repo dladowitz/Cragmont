@@ -429,11 +429,53 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form#delete-trip-#{trip.id}", count: 0
   end
 
+  test "edit trip allows delete when only canceled payment history remains" do
+    trip = Trip.create!(
+      name: "Empty History Trip",
+      location: "Joshua Tree, CA",
+      start_date: Date.new(2026, 12, 10),
+      end_date: Date.new(2026, 12, 12),
+      status: "draft"
+    )
+    signup = CampsiteSignup.create!(trip: trip, user: users(:sam), status: "canceled")
+    signup.payments.create!(source: "manual", status: "refunded", amount_cents: 1000, refunded_amount_cents: 1000, manual_payment_method: "cash", manual_paid_at: Time.current, paid_at: Time.current)
+
+    get edit_admin_trip_url(trip)
+
+    assert_response :success
+    assert_select ".danger-form-action [data-controller='modal'] > button.button.danger.secondary", text: "Delete trip"
+    assert_select "dialog.confirmation-modal", text: /Delete trip\?/
+    assert_select "button[form='delete-trip-#{trip.id}']", text: "Delete trip"
+    assert_select "dialog.confirmation-modal", text: /Cannot delete a trip with participants signed up/, count: 0
+  end
+
   test "can delete trip" do
     trip = trips(:jtree)
 
     assert_difference "Trip.count", -1 do
       delete admin_trip_url(trip)
+    end
+
+    assert_redirected_to admin_trips_url
+  end
+
+  test "can delete trip with only canceled payment history" do
+    trip = Trip.create!(
+      name: "Canceled History Trip",
+      location: "Yosemite Valley, CA",
+      start_date: Date.new(2026, 7, 10),
+      end_date: Date.new(2026, 7, 12),
+      status: "draft"
+    )
+    signup = CampsiteSignup.create!(trip: trip, user: users(:sam), status: "canceled")
+    signup.payments.create!(source: "manual", status: "refunded", amount_cents: 1000, refunded_amount_cents: 1000, manual_payment_method: "cash", manual_paid_at: Time.current, paid_at: Time.current)
+
+    assert_difference "Trip.count", -1 do
+      assert_difference "CampsiteSignup.count", -1 do
+        assert_difference "CampsiteSignupPayment.count", -1 do
+          delete admin_trip_url(trip)
+        end
+      end
     end
 
     assert_redirected_to admin_trips_url

@@ -108,4 +108,23 @@ class CampsiteTest < ActiveSupport::TestCase
 
     assert_not campsite.reload.available_for_waitlist_confirmation?(signup)
   end
+
+  test "destroy is blocked by active signups but detaches canceled signups" do
+    campsite = campsites(:yosemite_a)
+    active_signup = create_campsite_signup!(campsite: campsite, user: users(:sam))
+    canceled_signup = create_campsite_signup!(campsite: campsite, user: users(:alex), status: "canceled")
+
+    assert_not campsite.destroy
+    assert_includes campsite.errors[:base], "Cannot delete campsite with participants signed up"
+    assert_equal campsite, canceled_signup.reload.campsite
+
+    active_signup.destroy!
+
+    assert_difference "Campsite.count", -1 do
+      assert_no_difference "CampsiteSignup.count" do
+        campsite.destroy
+      end
+    end
+    assert_nil canceled_signup.reload.campsite
+  end
 end

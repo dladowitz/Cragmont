@@ -1,0 +1,12 @@
+%div{"data-controller" => "modal", "data-modal-open-value" => "true"}
+  %dialog.signup-modal.payment-success-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+    .signup-modal-content.payment-success-modal-content
+      %div
+        %h2 Get stoked!
+        %p
+          Your trip to #{trip.name} is confirmed.
+        %p We'll be sending you more info as the date gets closer.
+        %br
+        %p If you need to cancel make sure to do it at least seven days before the trip start for a refund.
+      .form-actions
+        %button.button{"data-action" => "modal#close", type: "button"} Let's Go

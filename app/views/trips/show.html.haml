@@ -225,4 +225,6 @@
       = render "guest_password_modal", trip: @trip, signup: @completion_signup, token: completion_token, password_path: password_path
     - else
       = render "participant_details_modal", trip: @trip, signup: @completion_signup
+  - if @show_payment_success_modal
+    = render "payment_success_modal", trip: @trip
 %p.background-image-caption Joshua Tree, IRS Wall

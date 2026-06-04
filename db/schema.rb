@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_01_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_04_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -176,6 +176,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_01_110000) do
     t.datetime "created_at", null: false
     t.integer "extra_night_fee_cents", default: 0, null: false
     t.integer "first_two_nights_fee_cents", default: 0, null: false
+    t.integer "minor_extra_night_fee_cents", default: 0, null: false
     t.integer "minor_fee_cents", default: 0, null: false
     t.integer "uncounted_minor_age_limit", default: 13, null: false
     t.datetime "updated_at", null: false

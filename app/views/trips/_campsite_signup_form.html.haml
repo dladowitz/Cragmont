@@ -5,11 +5,15 @@
 - signup_button_text = local_assigns.fetch(:signup_button_text, default_signup_button_text)
 - default_modal_title = waitlist_direct_signup ? "Signup for campsite" : signup_button_text
 - modal_title = local_assigns.fetch(:modal_title, default_modal_title)
-- modal_submit_text = confirm_waitlist ? "Pay Now and Confirm" : "Pay Now and Sign Up"
+- payment_configured = SiteSetting.current.first_two_nights_fee_cents.positive? || SiteSetting.current.extra_night_fee_cents.positive? || SiteSetting.current.minor_fee_cents.positive? || SiteSetting.current.minor_extra_night_fee_cents.positive?
+- payment_submit_text = confirm_waitlist ? "Pay Now and Confirm" : "Pay Now and Sign Up"
+- free_submit_text = confirm_waitlist ? "Confirm" : "Sign Up"
+- modal_submit_text = payment_configured ? payment_submit_text : free_submit_text
 - signup_intent = confirm_waitlist ? "confirm_waitlist" : (waitlist_direct_signup ? "waitlist_direct_signup" : "direct_signup")
 - dom_id_suffix = local_assigns.fetch(:dom_id_suffix, campsite.id)
 - waitlist_move_confirmation = confirm_waitlist || waitlist_direct_signup
 - waitlist_signup = local_assigns.fetch(:waitlist_signup, @current_signup)
+- form_signup = waitlist_move_confirmation ? waitlist_signup : local_assigns[:signup]
 - waitlist_signup_has_party = waitlist_signup&.includes_guests? || waitlist_signup&.includes_minors?
 - waitlist_note_text = waitlist_signup_has_party ? "This will move your party from the waitlist to confirmed" : "This will move you from the waitlist to confirmed"
 %div{class: ("waitlist-direct-signup-control" if waitlist_direct_signup), "data-controller" => "modal"}
@@ -27,4 +31,4 @@
         %p
           = campsite.arrival_date.to_fs(:long)
           to #{campsite.checkout_date.to_fs(:long)}
-      = render "campsite_signup_form_fields", trip: trip, campsite: campsite, confirm_waitlist: confirm_waitlist, waitlist_direct_signup: waitlist_direct_signup, modal_submit_text: modal_submit_text, signup_intent: signup_intent, dom_id_suffix: dom_id_suffix
+      = render "campsite_signup_form_fields", trip: trip, campsite: campsite, signup: form_signup, confirm_waitlist: confirm_waitlist, waitlist_direct_signup: waitlist_direct_signup, modal_submit_text: modal_submit_text, payment_submit_text: payment_submit_text, free_submit_text: free_submit_text, signup_intent: signup_intent, dom_id_suffix: dom_id_suffix

@@ -5,7 +5,7 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     def call
       payment.update!(
         stripe_checkout_session_id: "cs_admin_test_#{payment.id}",
-        checkout_url: "https://checkout.stripe.test/admin/#{payment.id}",
+        checkout_url: "https://checkout.stripe.com/c/pay/admin-#{payment.id}",
         expires_at: 30.minutes.from_now
       )
       payment
@@ -520,7 +520,7 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_trip_url(trips(:yosemite))
     payment = signup.reload.current_payment
     assert payment.pending?
-    assert_equal "https://checkout.stripe.test/admin/#{payment.id}", payment.checkout_url
+    assert_equal "https://checkout.stripe.com/c/pay/admin-#{payment.id}", payment.checkout_url
   end
 
   test "removing paid participant cancels record instead of deleting it" do

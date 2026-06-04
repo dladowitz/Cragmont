@@ -35,7 +35,7 @@
       - if campsite.persisted?
         - delete_blocked_message = "Cannot delete campsite with participants signed up. Remove them or move to the waitlist first"
         .danger-form-action
-          - if campsite.campsite_signups.exists?
+          - if campsite.delete_blocked_by_participants?
             %span.disabled-tooltip{aria: { label: delete_blocked_message }, tabindex: "0", title: delete_blocked_message}
               %button.button.danger.secondary{disabled: true, type: "button"} Delete campsite
           - else

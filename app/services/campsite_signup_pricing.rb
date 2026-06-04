@@ -11,6 +11,8 @@ class CampsiteSignupPricing
     :counted_minor_unit_amount_cents,
     :first_two_nights_fee_cents,
     :extra_night_fee_cents,
+    :minor_fee_cents,
+    :minor_extra_night_fee_cents,
     :uncounted_minor_age_limit,
     :line_items
   ) do
@@ -31,6 +33,8 @@ class CampsiteSignupPricing
         "counted_minor_unit_amount_cents" => counted_minor_unit_amount_cents,
         "first_two_nights_fee_cents" => first_two_nights_fee_cents,
         "extra_night_fee_cents" => extra_night_fee_cents,
+        "minor_fee_cents" => minor_fee_cents,
+        "minor_extra_night_fee_cents" => minor_extra_night_fee_cents,
         "uncounted_minor_age_limit" => uncounted_minor_age_limit,
         "line_items" => line_items
       }
@@ -54,7 +58,7 @@ class CampsiteSignupPricing
     counted_minor_count = @minor_ages.count { |age| age >= @settings.uncounted_minor_age_limit }
     free_minor_count = @minor_ages.size - counted_minor_count
     adult_unit_amount_cents = @settings.first_two_nights_fee_cents + (@settings.extra_night_fee_cents * extra_night_count)
-    counted_minor_unit_amount_cents = (adult_unit_amount_cents / 2.0).ceil
+    counted_minor_unit_amount_cents = @settings.minor_fee_cents + (@settings.minor_extra_night_fee_cents * extra_night_count)
     adult_total_cents = adult_count * adult_unit_amount_cents
     counted_minor_total_cents = counted_minor_count * counted_minor_unit_amount_cents
     amount_cents = adult_total_cents + counted_minor_total_cents
@@ -71,6 +75,8 @@ class CampsiteSignupPricing
       counted_minor_unit_amount_cents: counted_minor_unit_amount_cents,
       first_two_nights_fee_cents: @settings.first_two_nights_fee_cents,
       extra_night_fee_cents: @settings.extra_night_fee_cents,
+      minor_fee_cents: @settings.minor_fee_cents,
+      minor_extra_night_fee_cents: @settings.minor_extra_night_fee_cents,
       uncounted_minor_age_limit: @settings.uncounted_minor_age_limit,
       line_items: line_items(adult_count, counted_minor_count, adult_unit_amount_cents, counted_minor_unit_amount_cents)
     )

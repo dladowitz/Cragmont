@@ -178,6 +178,32 @@ class TripTest < ActiveSupport::TestCase
     assert_equal "Sam L. + Gina G.", primary_signup.public_waitlist_name
   end
 
+  test "destroy is blocked by active signups but allows canceled history" do
+    trip = trips(:yosemite)
+    active_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+
+    assert_not trip.destroy
+    assert_includes trip.errors[:base], "Cannot delete a trip with participants signed up"
+    assert CampsiteSignup.exists?(active_signup.id)
+
+    history_trip = Trip.create!(
+      name: "Canceled History Trip",
+      location: "Yosemite Valley, CA",
+      start_date: Date.new(2026, 7, 10),
+      end_date: Date.new(2026, 7, 12),
+      status: "draft"
+    )
+    canceled_signup = CampsiteSignup.create!(trip: history_trip, user: users(:alex), status: "canceled")
+    canceled_signup.payments.create!(source: "manual", status: "refunded", amount_cents: 1000, refunded_amount_cents: 1000, manual_payment_method: "cash", manual_paid_at: Time.current, paid_at: Time.current)
+
+    assert_difference "Trip.count", -1 do
+      assert_difference "CampsiteSignup.count", -1 do
+        history_trip.destroy
+      end
+    end
+    assert_not CampsiteSignup.exists?(canceled_signup.id)
+  end
+
   test "waitlist confirmation uses full party capacity including guests" do
     trip = trips(:yosemite)
     campsite = campsites(:yosemite_a)
