@@ -17,7 +17,7 @@ class CampsiteSignupsController < ApplicationController
     elsif signup.persisted? && completing_participant_details?
       complete_participant_details(trip, campsite, signup)
     elsif signup.persisted? && signup.pending_payment? && signup.current_payment&.checkout_url.present?
-      redirect_to signup.current_payment.checkout_url, allow_other_host: true, status: :see_other
+      redirect_to_current_payment_checkout(signup, trip)
     elsif signup.persisted?
       redirect_to trip_path(trip), alert: "You are already signed up for this trip."
     elsif completing_participant_details?
@@ -152,7 +152,7 @@ class CampsiteSignupsController < ApplicationController
           redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
         end
       elsif create_signup_pending_payment(trip, campsite, signup, signature, acknowledged_at, minor_attributes, guest_attributes, pricing, previous_signup_status: nil)
-        redirect_to signup.current_payment.checkout_url, allow_other_host: true, status: :see_other
+        redirect_to_current_payment_checkout(signup, trip)
       else
         redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
       end
@@ -185,7 +185,7 @@ class CampsiteSignupsController < ApplicationController
           redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
         end
       elsif confirm_waitlist_signup_pending_payment(trip, campsite, signup, signature, acknowledged_at, pricing)
-        redirect_to signup.current_payment.checkout_url, allow_other_host: true, status: :see_other
+        redirect_to_current_payment_checkout(signup, trip)
       else
         redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
       end
@@ -218,7 +218,7 @@ class CampsiteSignupsController < ApplicationController
           redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
         end
       elsif confirm_waitlist_signup_pending_payment(trip, campsite, signup, signature, acknowledged_at, pricing)
-        redirect_to signup.current_payment.checkout_url, allow_other_host: true, status: :see_other
+        redirect_to_current_payment_checkout(signup, trip)
       else
         redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
       end
@@ -243,7 +243,7 @@ class CampsiteSignupsController < ApplicationController
       if pricing.free? || signup.payment_paid_or_settled?
         redirect_to trip_path(trip), notice: "Your trip details have been submitted."
       elsif create_checkout_for_existing_confirmed_signup(trip, campsite, signup, pricing)
-        redirect_to signup.current_payment.checkout_url, allow_other_host: true, status: :see_other
+        redirect_to_current_payment_checkout(signup, trip)
       else
         redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
       end
@@ -438,6 +438,25 @@ class CampsiteSignupsController < ApplicationController
       previous_signup_status: previous_signup_status
     )
     true
+  end
+
+  def redirect_to_current_payment_checkout(signup, trip)
+    checkout_url = verified_stripe_checkout_url(signup.current_payment&.checkout_url)
+
+    if checkout_url.present?
+      redirect_to checkout_url, allow_other_host: true, status: :see_other
+    else
+      redirect_to trip_path(trip), alert: "Payment checkout link is not available. Please try again.", status: :see_other
+    end
+  end
+
+  def verified_stripe_checkout_url(url)
+    uri = URI.parse(url.to_s)
+    return unless uri.is_a?(URI::HTTPS) && uri.host == "checkout.stripe.com"
+
+    uri.to_s
+  rescue URI::InvalidURIError
+    nil
   end
 
   def remove_or_cancel_signup!(signup)

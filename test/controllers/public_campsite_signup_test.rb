@@ -5,7 +5,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     def call
       payment.update!(
         stripe_checkout_session_id: "cs_test_#{payment.id}",
-        checkout_url: "https://checkout.stripe.test/#{payment.id}",
+        checkout_url: "https://checkout.stripe.com/c/pay/#{payment.id}",
         expires_at: 30.minutes.from_now
       )
       payment
@@ -168,6 +168,22 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert signup.reload.confirmed?
     assert payment.reload.paid?
     assert_equal "pi_test_123", payment.stripe_payment_intent_id
+  end
+
+  test "pending payment repeat signup refuses non Stripe checkout URL" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam), status: "pending_payment")
+    signup.payments.create!(
+      source: "stripe",
+      status: "pending",
+      amount_cents: 60_00,
+      checkout_url: "https://example.com/not-stripe"
+    )
+    log_in_as(users(:sam))
+
+    post signup_url_for, params: waiver_signature_params
+
+    assert_redirected_to trip_url(trips(:yosemite))
+    assert_equal "Payment checkout link is not available. Please try again.", flash[:alert]
   end
 
   test "expired paid signup releases pending hold" do
