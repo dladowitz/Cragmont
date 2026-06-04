@@ -10,6 +10,8 @@ class Trip < ApplicationRecord
   has_many :participants, through: :campsite_signups, source: :user
   has_many :trip_reimbursements, dependent: :destroy
 
+  before_destroy :ensure_no_active_signups, prepend: true
+
   enum :status, STATUSES.index_with(&:itself), default: "draft"
 
   scope :published_for_public, -> { published.order(start_date: :asc, name: :asc) }
@@ -71,6 +73,10 @@ class Trip < ApplicationRecord
       .order(Arel.sql("CASE WHEN users.member THEN 0 ELSE 1 END"), :created_at)
   end
 
+  def delete_blocked_by_participants?
+    campsite_signups.active.exists?
+  end
+
   def waitlist_confirmation_campsites_for(signup)
     return [] unless signup&.waitlist_eligible?
 
@@ -86,6 +92,13 @@ class Trip < ApplicationRecord
   end
 
   private
+
+  def ensure_no_active_signups
+    return unless delete_blocked_by_participants?
+
+    errors.add(:base, "Cannot delete a trip with participants signed up")
+    throw :abort
+  end
 
   def waitlist_open_campsites_for(signup)
     campsites.select { |campsite| campsite.available_for_waitlist_confirmation?(signup) }

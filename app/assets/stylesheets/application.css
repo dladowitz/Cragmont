@@ -1278,6 +1278,114 @@ body.trips-index-page .trip-card {
   gap: 12px;
 }
 
+.fee-fields {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfaf7;
+}
+
+.fee-fields h3,
+.fee-fields p {
+  margin: 0;
+}
+
+.fee-fields-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: baseline;
+}
+
+.fee-section-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.fee-section {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  margin: 0;
+  padding: 4px 12px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  min-inline-size: 0;
+}
+
+.fee-section legend {
+  padding-inline: 6px;
+  margin-bottom: 2px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.fee-rate {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-block: 2px;
+  color: var(--muted);
+}
+
+.fee-rate strong {
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.fee-note {
+  font-size: 0.75em;
+}
+
+.payment-due-section {
+  width: calc((100% - 14px) / 2);
+}
+
+.payment-line-items {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.payment-line-item {
+  display: grid;
+  gap: 2px;
+  color: var(--muted);
+}
+
+.payment-line-item-label {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.payment-line-item-details {
+  display: grid;
+  gap: 2px;
+}
+
+.payment-line-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
+  padding-left: 14px;
+  color: var(--muted);
+}
+
+.payment-line-detail strong {
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.fee-fields .payment-summary {
+  margin-top: 10px;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
 .signup-kind-options {
   display: grid;
   gap: 12px;
@@ -2133,10 +2241,15 @@ textarea {
   .form-grid,
   .stats,
   .attendance-date-row,
+  .fee-section-row,
   .minor-field-row,
   .guest-field-row,
   .trip-card {
     grid-template-columns: 1fr;
+  }
+
+  .payment-due-section {
+    width: 100%;
   }
 
   table {

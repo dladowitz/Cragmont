@@ -1,7 +1,7 @@
 class SiteSetting < ApplicationRecord
   validates :uncounted_minor_age_limit,
     numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 17 }
-  validates :first_two_nights_fee_cents, :extra_night_fee_cents, :minor_fee_cents,
+  validates :first_two_nights_fee_cents, :extra_night_fee_cents, :minor_fee_cents, :minor_extra_night_fee_cents,
     numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
   def self.current
@@ -30,6 +30,14 @@ class SiteSetting < ApplicationRecord
 
   def minor_fee=(value)
     self.minor_fee_cents = dollars_to_cents(value)
+  end
+
+  def minor_extra_night_fee
+    cents_to_decimal(minor_extra_night_fee_cents)
+  end
+
+  def minor_extra_night_fee=(value)
+    self.minor_extra_night_fee_cents = dollars_to_cents(value)
   end
 
   private

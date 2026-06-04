@@ -20,7 +20,8 @@ class Admin::SettingsController < ApplicationController
       :uncounted_minor_age_limit,
       :first_two_nights_fee,
       :extra_night_fee,
-      :minor_fee
+      :minor_fee,
+      :minor_extra_night_fee
     )
   end
 end

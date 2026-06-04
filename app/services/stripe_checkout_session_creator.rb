@@ -1,6 +1,6 @@
 class StripeCheckoutSessionCreator
   def self.create(**attributes)
-    creator_class = Rails.application.config.x.stripe_checkout_session_creator || self
+    creator_class = Rails.application.config.x.stripe_checkout_session_creator.presence || self
     creator_class.new(**attributes).call
   end
 

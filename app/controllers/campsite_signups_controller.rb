@@ -16,6 +16,8 @@ class CampsiteSignupsController < ApplicationController
       confirm_open_campsite_signup_from_waitlist(trip, campsite, signup)
     elsif signup.persisted? && completing_participant_details?
       complete_participant_details(trip, campsite, signup)
+    elsif signup.persisted? && signup.pending_payment? && signup.current_payment&.checkout_url.present?
+      redirect_to signup.current_payment.checkout_url, allow_other_host: true, status: :see_other
     elsif signup.persisted?
       redirect_to trip_path(trip), alert: "You are already signed up for this trip."
     elsif completing_participant_details?
