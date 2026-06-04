@@ -24,6 +24,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -1659,6 +1663,32 @@ body.trips-index-page .trip-card {
 
 .confirmed-participants-table {
   margin-top: 10px;
+  table-layout: fixed;
+}
+
+.confirmed-participants-table th:nth-child(1),
+.confirmed-participants-table td:nth-child(1) {
+  width: 25%;
+}
+
+.confirmed-participants-table th:nth-child(2),
+.confirmed-participants-table td:nth-child(2) {
+  width: 19%;
+}
+
+.confirmed-participants-table th:nth-child(3),
+.confirmed-participants-table td:nth-child(3) {
+  width: 20%;
+}
+
+.confirmed-participants-table th:nth-child(4),
+.confirmed-participants-table td:nth-child(4) {
+  width: 16%;
+}
+
+.confirmed-participants-table th:nth-child(5),
+.confirmed-participants-table td:nth-child(5) {
+  width: 20%;
 }
 
 .public-added-by {

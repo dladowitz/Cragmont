@@ -227,6 +227,56 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert signup.current_payment.refunded?
   end
 
+  test "paid participant can cancel after campsite dates changed outside attendance dates" do
+    campsite = campsites(:yosemite_a)
+    signup = create_campsite_signup!(campsite: campsite, user: users(:sam))
+    signup.payments.create!(
+      source: "manual",
+      status: "paid",
+      amount_cents: 1000,
+      manual_payment_method: "cash",
+      manual_paid_at: Time.current,
+      paid_at: Time.current
+    )
+    campsite.update_columns(arrival_date: campsite.arrival_date + 1.day, updated_at: Time.current)
+    log_in_as(users(:sam))
+
+    assert_no_difference "CampsiteSignup.count" do
+      delete signup_url_for
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite))
+    assert signup.reload.canceled?
+    assert signup.current_payment.refunded?
+  end
+
+  test "paid participant can sign up again after canceling" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup.payments.create!(
+      source: "manual",
+      status: "paid",
+      amount_cents: 1000,
+      manual_payment_method: "cash",
+      manual_paid_at: Time.current,
+      paid_at: Time.current
+    )
+    log_in_as(users(:sam))
+
+    assert_no_difference "CampsiteSignup.count" do
+      delete signup_url_for
+    end
+    assert signup.reload.canceled?
+
+    assert_difference "CampsiteSignup.count", 1 do
+      post signup_url_for(campsites(:yosemite_b)), params: waiver_signature_params
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite))
+    new_signup = CampsiteSignup.where(trip: trips(:yosemite), user: users(:sam)).order(:created_at).last
+    assert new_signup.confirmed?
+    assert_equal campsites(:yosemite_b), new_signup.campsite
+  end
+
   test "guest cannot remove themselves from a paid party" do
     primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     guest_user = User.create!(
@@ -563,11 +613,14 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "input[type='checkbox'][name='campsite_signup[with_guests]'][value='1']"
     assert_select "input[type='date'][name='campsite_signup[arrival_date]'][required]"
     assert_select "input[type='date'][name='campsite_signup[arrival_date]'][min='2026-06-12'][max='2026-06-14']"
+    assert_select "input[type='date'][name='campsite_signup[arrival_date]'][data-action*='click->signature#showDatePicker'][data-action*='focus->signature#showDatePicker']"
     assert_select "input[type='date'][name='campsite_signup[checkout_date]'][required]"
     assert_select "input[type='date'][name='campsite_signup[checkout_date]'][min='2026-06-13'][max='2026-06-15']"
-    assert_select "form.waiver-form[data-turbo='false'][data-signature-available-participant-capacity-value='6'][data-signature-show-capacity-warning-value='true'][data-signature-first-two-nights-fee-cents-value='0'][data-signature-extra-night-fee-cents-value='0'][data-signature-minor-fee-cents-value='0'][data-signature-minor-extra-night-fee-cents-value='0']"
+    assert_select "input[type='date'][name='campsite_signup[checkout_date]'][data-action*='click->signature#showDatePicker'][data-action*='focus->signature#showDatePicker']"
+    assert_select "form.waiver-form[data-turbo='false'][data-signature-available-participant-capacity-value='6'][data-signature-show-capacity-warning-value='true'][data-signature-direct-signup-intent-value='direct_signup'][data-signature-waitlist-intent-value='join_waitlist'][data-signature-next-submit-text-value='Next'][data-signature-waitlist-submit-text-value='Join waitlist'][data-signature-first-two-nights-fee-cents-value='0'][data-signature-extra-night-fee-cents-value='0'][data-signature-minor-fee-cents-value='0'][data-signature-minor-extra-night-fee-cents-value='0']"
+    assert_select "input[type='hidden'][name='campsite_signup[intent]'][value='direct_signup'][data-signature-target='intent']"
     assert_select ".attendance-fields .payment-summary", count: 0
-    assert_select ".fee-fields" do
+    assert_select ".fee-fields[data-signature-target='feeFields']" do
       assert_select ".fee-section legend", "Adult Fees"
       assert_select ".fee-section legend", "Minor Fees"
       assert_select ".payment-due-section legend", "Payment Due"
@@ -579,6 +632,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_select ".payment-line-items[data-signature-target='paymentLineItems'][hidden]"
       assert_select ".payment-summary[data-signature-target='paymentSummary']", text: /Choose dates to see payment amount/
     end
+    assert_select "button[data-action='signature#continueSignup'][data-signature-target='signupStepSubmit']", text: "Next"
     assert_select ".capacity-warning[hidden]", text: /You've exceeded the space available for this campsite\. Your party will be placed on the waitlist\./, count: 2
     assert_select ".guest-fields", text: /Adult information\s+\(Max 2\)/
     assert_select ".guest-fields .guest-field-row", count: 4
@@ -762,8 +816,17 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "guest shared link requires password setup before waiver completion" do
+    SiteSetting.current.update!(first_two_nights_fee: "50", extra_night_fee: "10")
     campsite = campsites(:yosemite_a)
     primary_signup = create_campsite_signup!(campsite: campsite, user: users(:sam), arrival_date: Date.new(2026, 6, 13), checkout_date: Date.new(2026, 6, 15))
+    primary_signup.payments.create!(
+      source: "manual",
+      status: "paid",
+      amount_cents: 12000,
+      manual_payment_method: "venmo",
+      manual_paid_at: Time.current,
+      paid_at: Time.current
+    )
     guest_user = User.create!(
       first_name: "Gina",
       last_name: "Guest",
@@ -810,12 +873,18 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "[data-controller='modal'][data-modal-open-value='true']" do
       assert_select "h2", "Gina Guest you've been added to the Yosemite Valley Spring trip by Sam Lee"
+      assert_select "p", text: "Please review and sign the waiver."
+      assert_select ".participant-details-campsite-summary", text: /Attending June 13, 2026 to June 15, 2026/
+      assert_select ".participant-details-campsite-summary", text: /Available June 12, 2026 to June 15, 2026/, count: 0
       assert_select "p", text: "Please select dates you will be attending", count: 0
       assert_select "form[action='#{signup_path_for(campsite)}'][method='post']" do
         assert_select "input[type='hidden'][name='campsite_signup[intent]'][value='complete_participant_details']"
-        assert_select ".attendance-fields", text: /Confirm \(or change\) the nights Sam has selected for you\./
-        assert_select "input[type='date'][name='campsite_signup[arrival_date]'][value='2026-06-13']"
-        assert_select "input[type='date'][name='campsite_signup[checkout_date]'][value='2026-06-15']"
+        assert_select ".attendance-fields", count: 0
+        assert_select ".fee-fields", count: 0
+        assert_select "input[type='date'][name='campsite_signup[arrival_date]']", count: 0
+        assert_select "input[type='date'][name='campsite_signup[checkout_date]']", count: 0
+        assert_select "button", text: "Complete"
+        assert_select "button", text: "Pay Now and Complete", count: 0
       end
     end
 
@@ -824,11 +893,14 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     params[:campsite_signup][:arrival_date] = "2026-06-14"
     params[:campsite_signup][:checkout_date] = "2026-06-15"
 
-    post signup_url_for(campsite), params: params
+    assert_no_difference "CampsiteSignupPayment.count" do
+      post signup_url_for(campsite), params: params
+    end
 
     assert_redirected_to trip_url(trips(:yosemite))
+    assert_equal "Your waiver has been submitted.", flash[:notice]
     guest_signup.reload
-    assert_equal Date.new(2026, 6, 14), guest_signup.arrival_date
+    assert_equal Date.new(2026, 6, 13), guest_signup.arrival_date
     assert_equal Date.new(2026, 6, 15), guest_signup.checkout_date
     assert guest_signup.waiver_signed?
   end
@@ -1065,6 +1137,39 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".trip-waitlist-section", text: /Gina Guest/, count: 0
   end
 
+  test "participant can join waitlist without waiver when selected party exceeds remaining capacity" do
+    campsite = campsites(:yosemite_a)
+    fill_campsite_capacity(campsite, "dynamic-party-waitlist", count: campsite.participant_capacity - 1)
+    log_in_as(users(:sam))
+
+    params = {
+      campsite_signup: {
+        intent: "join_waitlist",
+        with_guests: "1",
+        guest_attributes: {
+          "0" => { first_name: "Gina", last_name: "Guest", email: "dynamic-party-waitlist@example.com", phone: "" }
+        }
+      }
+    }
+
+    assert_difference "CampsiteSignup.count", 2 do
+      post signup_url_for(campsite), params: params
+    end
+
+    signup = CampsiteSignup.find_by!(trip: trips(:yosemite), user: users(:sam))
+    guest_signup = signup.guest_signups.first
+    assert_redirected_to trip_url(trips(:yosemite))
+    assert_equal "You have been added to the waitlist for this trip.", flash[:notice]
+    assert signup.waitlisted?
+    assert_nil signup.campsite
+    assert_nil signup.arrival_date
+    assert_nil signup.checkout_date
+    assert_not signup.waiver_signed?
+    assert guest_signup.waitlisted?
+    assert_nil guest_signup.campsite
+    assert_equal 5, campsite.reload.confirmed_signup_count
+  end
+
   test "locked campsite with open space keeps direct signup closed" do
     campsite = campsites(:yosemite_a)
     campsite.update!(signups_locked_at: Time.zone.local(2026, 5, 1, 10))
@@ -1246,17 +1351,57 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "#campsite-#{campsites(:yosemite_a).id}" do
       assert_select ".participant-list", count: 0
       assert_select "table.confirmed-participants-table"
-      assert_equal [ "Participant", "Member", "Dates", "Minors" ], css_select(".confirmed-participants-table th").map { |header| header.text.strip }
+      assert_equal [ "Participant", "Minors", "Dates", "Waiver", "Membership" ], css_select(".confirmed-participants-table th").map { |header| header.text.strip }
       assert_select ".confirmed-participants-table tbody tr", count: 1
       assert_select ".confirmed-participants-table tbody tr" do
         assert_select "td", text: "Sam L."
         assert_select "td", text: "Non-member"
         assert_select "td", text: "Jun 13-Jun 15"
+        assert_select "td", text: "Missing"
         assert_select "td", text: "None"
       end
+      assert_select ".confirmed-participants-table a", text: "Missing", count: 0
       assert_select ".confirmed-participants-table", text: /Sam Lee/, count: 0
       assert_select ".confirmed-participants-table", text: /555-0101/, count: 0
       assert_select ".confirmed-participants-table", text: /sam@example.com/, count: 0
+    end
+  end
+
+  test "public confirmed participants table links missing waiver only for the signed in participant" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    log_in_as(users(:sam))
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    expected_path = trip_path(
+      trips(:yosemite),
+      complete_signup: signup.signed_id(purpose: :complete_participant_details),
+      anchor: "campsite-#{campsites(:yosemite_a).id}"
+    )
+    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table a[href='#{expected_path}']", text: "Missing"
+  end
+
+  test "public confirmed participants table does not link missing waivers for other participants" do
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    log_in_as(users(:alex))
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table", text: /Missing/
+    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table a", text: "Missing", count: 0
+  end
+
+  test "public confirmed participants table shows signed waiver status" do
+    attach_test_waiver_to(create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam)))
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table tbody tr" do
+      assert_select "td", text: "Signed"
+      assert_select "td", text: "Missing", count: 0
     end
   end
 

@@ -32,14 +32,20 @@ class CampsiteSignup < ApplicationRecord
 
   validates :status, presence: true, inclusion: { in: STATUSES }
   validates :campsite, presence: true, if: :capacity_holding?
-  validates :user_id, uniqueness: { scope: :trip_id, message: "is already signed up for this trip" }
+  validates :user_id,
+    uniqueness: {
+      scope: :trip_id,
+      conditions: -> { active },
+      message: "is already signed up for this trip"
+    },
+    unless: :canceled?
   validates :guest_position, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates_associated :campsite_signup_minors
   validate :minor_limit
   validate :guest_link_is_valid
   validate :guest_limit_for_primary
   validate :campsite_belongs_to_trip
-  validate :attendance_dates_within_campsite_dates
+  validate :attendance_dates_within_campsite_dates, if: :capacity_holding?
 
   before_validation :assign_trip_from_campsite
   before_validation :assign_guest_trip

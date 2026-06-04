@@ -3,6 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static values = {
     availableParticipantCapacity: Number,
+    directSignupIntent: String,
     existingAdultGuestCount: Number,
     existingCountedMinorCount: Number,
     extraNightFeeCents: Number,
@@ -10,9 +11,12 @@ export default class extends Controller {
     freeSubmitText: String,
     minorExtraNightFeeCents: Number,
     minorFeeCents: Number,
+    nextSubmitText: String,
     paySubmitText: String,
     showCapacityWarning: Boolean,
-    uncountedMinorAgeLimit: Number
+    uncountedMinorAgeLimit: Number,
+    waitlistIntent: String,
+    waitlistSubmitText: String
   }
 
   static targets = [
@@ -21,15 +25,18 @@ export default class extends Controller {
     "capacityWarning",
     "canvas",
     "checkoutDate",
+    "feeFields",
     "guestFields",
     "guestToggle",
     "input",
+    "intent",
     "intro",
     "minorFields",
     "minorToggle",
     "paymentLineItems",
     "paymentSummary",
     "signupStep",
+    "signupStepSubmit",
     "submit",
     "waiver",
     "waiverStep"
@@ -140,7 +147,19 @@ export default class extends Controller {
     this.update()
   }
 
+  continueSignup() {
+    this.updateCapacityWarning()
+    if (this.waitlistFallbackActive()) {
+      this.prepareWaitlistFallback()
+      this.element.requestSubmit()
+      return
+    }
+
+    this.showAcknowledgement()
+  }
+
   showAcknowledgement() {
+    this.prepareDirectSignup()
     this.checkAttendanceDates()
     if (!this.element.reportValidity()) return
 
@@ -167,6 +186,17 @@ export default class extends Controller {
 
     this.checkoutDateTarget.setCustomValidity("Checkout date must be after the arrival date.")
     return false
+  }
+
+  showDatePicker(event) {
+    const input = event.currentTarget
+    if (typeof input.showPicker !== "function") return
+
+    try {
+      input.showPicker()
+    } catch (_error) {
+      input.focus()
+    }
   }
 
   showWaiver() {
@@ -330,9 +360,45 @@ export default class extends Controller {
   }
 
   updateCapacityWarning() {
-    if (!this.hasCapacityWarningTarget || !this.showCapacityWarningValue) return
+    if (this.hasCapacityWarningTarget && this.showCapacityWarningValue) {
+      this.capacityWarningTarget.hidden = !this.waitlistFallbackActive()
+    }
 
-    this.capacityWarningTarget.hidden = this.partyCapacityCount() <= this.availableParticipantCapacityValue
+    this.updateWaitlistFallbackControls()
+  }
+
+  updateWaitlistFallbackControls() {
+    if (this.waitlistFallbackActive()) {
+      this.prepareWaitlistFallback()
+    } else {
+      this.prepareDirectSignup()
+    }
+  }
+
+  prepareWaitlistFallback() {
+    if (this.hasFeeFieldsTarget) this.feeFieldsTarget.hidden = true
+    if (this.hasSignupStepSubmitTarget) this.signupStepSubmitTarget.textContent = this.waitlistSubmitTextValue
+    if (this.hasIntentTarget) this.intentTarget.value = this.waitlistIntentValue
+    this.toggleAttendanceDateRequirements(false)
+  }
+
+  prepareDirectSignup() {
+    if (this.hasFeeFieldsTarget) this.feeFieldsTarget.hidden = false
+    if (this.hasSignupStepSubmitTarget) this.signupStepSubmitTarget.textContent = this.nextSubmitTextValue
+    if (this.hasIntentTarget) this.intentTarget.value = this.directSignupIntentValue
+    this.toggleAttendanceDateRequirements(true)
+  }
+
+  waitlistFallbackActive() {
+    return this.showCapacityWarningValue && this.partyCapacityCount() > this.availableParticipantCapacityValue
+  }
+
+  toggleAttendanceDateRequirements(required) {
+    if (this.hasArrivalDateTarget) this.arrivalDateTarget.required = required
+    if (this.hasCheckoutDateTarget) {
+      this.checkoutDateTarget.required = required
+      if (!required) this.checkoutDateTarget.setCustomValidity("")
+    }
   }
 
   updatePaymentSummary() {

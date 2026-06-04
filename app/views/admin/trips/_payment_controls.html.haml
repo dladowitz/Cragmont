@@ -1,13 +1,18 @@
-- payment = signup.current_payment
+- payment_signup = signup.primary_signup
+- payment = payment_signup.current_payment
 - payment_label = payment.present? ? payment.status.titleize : "Unpaid"
-- payment_amount = payment.present? ? format_cents(payment.amount_cents) : nil
+- payment_amount = payment.present? && !signup.guest? ? format_cents(payment.amount_cents) : nil
+- covered_by_primary = signup.guest?
 .admin-payment-control{"data-controller" => "modal"}
   %span.status.admin-payment-status{class: ("danger-status" if payment&.failed?)}= payment_label
   - if payment_amount.present?
     %span.muted.admin-payment-amount= payment_amount
-  - if payment&.checkout_url.present? && payment.pending?
+  - if covered_by_primary
+    - covered_by_text = payment&.paid? ? "Paid by #{payment_signup.user.full_name}" : "Follows primary"
+    %span.muted.admin-payment-covered-by= covered_by_text
+  - if !covered_by_primary && payment&.checkout_url.present? && payment.pending?
     = link_to "Payment link", payment.checkout_url, class: "small-link", target: "_blank", rel: "noopener"
-  - unless payment&.paid? || payment&.waived? || payment&.refunded?
+  - unless covered_by_primary || payment&.paid? || payment&.waived? || payment&.refunded?
     %button.button.secondary.admin-table-action-button{"data-action" => "modal#open", type: "button"} Update
     %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
       .signup-modal-content
