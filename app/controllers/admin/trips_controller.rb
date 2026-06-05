@@ -1,9 +1,12 @@
 class Admin::TripsController < ApplicationController
-  before_action :set_trip, only: %i[show edit update destroy]
+  before_action :set_trip, only: %i[show edit update destroy restore]
+  before_action :ensure_trip_not_deleted, only: %i[edit update destroy]
   before_action :set_users, only: %i[show new create edit update]
 
   def index
-    @trips = Trip.includes(:campsite_coordinator, { campsite_signups: :campsite_signup_minors }, campsites: :campground).order(start_date: :asc, name: :asc)
+    @showing_deleted_trips = params[:filter] == "deleted"
+    trips_scope = @showing_deleted_trips ? Trip.deleted : Trip.active
+    @trips = trips_scope.includes(:campsite_coordinator, { campsite_signups: :campsite_signup_minors }, campsites: :campground).order(start_date: :asc, name: :asc)
   end
 
   def show
@@ -44,14 +47,25 @@ class Admin::TripsController < ApplicationController
       return
     end
 
-    @trip.destroy
-    redirect_to admin_trips_path, notice: "Trip was deleted.", status: :see_other
+    @trip.soft_delete!
+    redirect_to admin_trips_path, notice: "Trip was deleted. Transaction history is still on belay.", status: :see_other
+  end
+
+  def restore
+    @trip.restore!
+    redirect_to admin_trip_path(@trip), notice: "On belay! Trip was restored.", status: :see_other
   end
 
   private
 
   def set_trip
     @trip = Trip.find(params[:id])
+  end
+
+  def ensure_trip_not_deleted
+    return unless @trip.deleted?
+
+    redirect_to admin_trip_path(@trip), alert: "Restore this trip before making changes.", status: :see_other
   end
 
   def trip_params

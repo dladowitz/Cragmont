@@ -24,6 +24,8 @@ Rails.application.routes.draw do
     resources :users
     resources :campgrounds
     resources :trips do
+      patch :restore, on: :member
+      resources :transactions, only: :index, controller: "trip_transactions"
       resources :campsites, except: %i[index show]
       resources :campsite_signups, only: %i[create] do
         patch :make_waitlist_eligible, on: :member

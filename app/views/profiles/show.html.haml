@@ -32,8 +32,17 @@
                   %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
                   = submit_tag "Delete account", class: "button danger", disabled: true, data: { confirmation_text_target: "submit" }
   %section.panel
-    %h2 Coordinated trips
-    - if @coordinated_trips.any?
+    %h2 Transactions
+    = render "admin/trip_transactions/table",
+      ledger_entries: @ledger_entries,
+      empty_message: "No completed payments yet.",
+      show_trip: true,
+      show_source: false,
+      show_remaining_refundable: false,
+      show_waived_reason: false
+  - if @coordinated_trips.any?
+    %section.panel
+      %h2 Coordinated trips
       %table
         %thead
           %tr
@@ -43,6 +52,7 @@
             %th Campsites
             %th Participant Capacity
             %th Signed Up
+            %th Manage
         %tbody
           - @coordinated_trips.each do |trip|
             %tr
@@ -62,6 +72,5 @@
               %td= trip.campsite_count
               %td= trip.total_participant_capacity
               %td= trip.confirmed_signup_count
-    - else
-      %p.muted This user is not assigned as a campsite coordinator yet.
+              %td= link_to "Manage trip", admin_trip_path(trip), class: "button secondary admin-table-action-button"
 %p.background-image-caption Castle Valley, UT. Castleton Tower.

@@ -178,7 +178,7 @@ class TripTest < ActiveSupport::TestCase
     assert_equal "Sam L. + Gina G.", primary_signup.public_waitlist_name
   end
 
-  test "destroy is blocked by active signups but allows canceled history" do
+  test "destroy is blocked by active signups and soft delete preserves canceled history" do
     trip = trips(:yosemite)
     active_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
 
@@ -194,14 +194,19 @@ class TripTest < ActiveSupport::TestCase
       status: "draft"
     )
     canceled_signup = CampsiteSignup.create!(trip: history_trip, user: users(:alex), status: "canceled")
-    canceled_signup.payments.create!(source: "manual", status: "refunded", amount_cents: 1000, refunded_amount_cents: 1000, manual_payment_method: "cash", manual_paid_at: Time.current, paid_at: Time.current)
+    payment = canceled_signup.payments.create!(source: "manual", status: "refunded", amount_cents: 1000, refunded_amount_cents: 1000, manual_payment_method: "cash", manual_paid_at: Time.current, paid_at: Time.current)
 
-    assert_difference "Trip.count", -1 do
-      assert_difference "CampsiteSignup.count", -1 do
-        history_trip.destroy
+    assert_no_difference "Trip.count" do
+      assert_no_difference "CampsiteSignup.count" do
+        history_trip.soft_delete!
       end
     end
-    assert_not CampsiteSignup.exists?(canceled_signup.id)
+    assert history_trip.deleted?
+    assert CampsiteSignup.exists?(canceled_signup.id)
+    assert CampsiteSignupPayment.exists?(payment.id)
+
+    history_trip.restore!
+    assert_not history_trip.deleted?
   end
 
   test "waitlist confirmation uses full party capacity including guests" do

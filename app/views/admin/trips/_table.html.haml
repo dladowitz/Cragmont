@@ -9,6 +9,7 @@
         %th Campsites
         %th Participant Capacity
         %th Signed Up
+        %th Actions
     %tbody
       - trips.each do |trip|
         %tr
@@ -35,7 +36,10 @@
           %td= trip.campsite_count
           %td= trip.total_participant_capacity
           %td= trip.confirmed_signup_count
+          %td.table-actions
+            = link_to "Transactions", admin_trip_transactions_path(trip), class: "button secondary admin-table-action-button"
+            - if trip.deleted?
+              = button_to "Restore", restore_admin_trip_path(trip), method: :patch, class: "button admin-table-action-button"
 - else
   .empty-state
-    %p No trips have been added yet.
-    = link_to "New trip", new_admin_trip_path, class: "button"
+    %p No trips found.

@@ -32,6 +32,24 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".background-image-caption", "Half Dome, Regular Northwest Face"
   end
 
+  test "public pages hide deleted trips" do
+    trips(:yosemite).soft_delete!
+
+    get trips_url
+
+    assert_response :success
+    assert_select "a", text: "Yosemite Valley Spring", count: 0
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :not_found
+
+    log_in_as(users(:sam))
+    post signup_url_for
+
+    assert_response :not_found
+  end
+
   test "public trip detail shows trip campsite and coordinator info" do
     get trip_url(trips(:yosemite))
 
@@ -255,6 +273,29 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_redirected_to trip_url(trips(:yosemite))
       assert signup.reload.canceled?
       assert signup.current_payment.refunded?
+    end
+  end
+
+  test "paid participant stripe refund records participant initiator" do
+    travel_to Date.new(2026, 6, 5) do
+      signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+      payment = signup.payments.create!(
+        source: "stripe",
+        status: "paid",
+        amount_cents: 1000,
+        paid_at: Time.current,
+        stripe_payment_intent_id: "pi_participant_cancel"
+      )
+      stripe_refund = Struct.new(:id, :status).new("re_participant_cancel", "succeeded")
+      log_in_as(users(:sam))
+
+      with_fake_stripe_refund(stripe_refund) do
+        delete signup_url_for
+      end
+
+      refund = payment.refunds.reload.sole
+      assert refund.participant_initiated_by?
+      assert_equal "re_participant_cancel", refund.stripe_refund_id
     end
   end
 
@@ -1664,6 +1705,14 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     yield
   ensure
     Rails.application.config.x.stripe_checkout_session_creator = original_creator
+  end
+
+  def with_fake_stripe_refund(stripe_refund)
+    original_create = Stripe::Refund.method(:create)
+    Stripe::Refund.define_singleton_method(:create) { |_params| stripe_refund }
+    yield
+  ensure
+    Stripe::Refund.define_singleton_method(:create, original_create)
   end
 
   def fill_campsite_capacity(campsite, prefix, count: campsite.participant_capacity)

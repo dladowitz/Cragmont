@@ -36,6 +36,38 @@ class ApplicationHelperTest < ActionView::TestCase
     end
   end
 
+  test "stripe dashboard payment url uses test path outside production" do
+    with_env("STRIPE_ACCOUNT_ID" => "acct_test_123") do
+      with_rails_env("development") do
+        assert_equal(
+          "https://dashboard.stripe.com/acct_test_123/test/payments/pi_test_123",
+          stripe_dashboard_payment_url("pi_test_123")
+        )
+      end
+    end
+  end
+
+  test "stripe dashboard payment url skips test path in production" do
+    with_env("STRIPE_ACCOUNT_ID" => "acct_live_123") do
+      with_rails_env("production") do
+        assert_equal(
+          "https://dashboard.stripe.com/acct_live_123/payments/pi_live_123",
+          stripe_dashboard_payment_url("pi_live_123")
+        )
+      end
+    end
+  end
+
+  test "stripe dashboard payment url is blank without required ids" do
+    with_env("STRIPE_ACCOUNT_ID" => nil) do
+      assert_nil stripe_dashboard_payment_url("pi_test_123")
+    end
+
+    with_env("STRIPE_ACCOUNT_ID" => "acct_test_123") do
+      assert_nil stripe_dashboard_payment_url(nil)
+    end
+  end
+
   private
 
   def with_rails_env(env_name)
@@ -53,5 +85,18 @@ class ApplicationHelperTest < ActionView::TestCase
     yield
   ensure
     singleton_class.remove_method(:letter_opener_letters_location)
+  end
+
+  def with_env(values)
+    originals = values.keys.index_with { |key| ENV[key] }
+    values.each do |key, value|
+      value.nil? ? ENV.delete(key) : ENV[key] = value
+    end
+
+    yield
+  ensure
+    originals.each do |key, value|
+      value.nil? ? ENV.delete(key) : ENV[key] = value
+    end
   end
 end

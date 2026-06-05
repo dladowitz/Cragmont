@@ -14,7 +14,9 @@ class Trip < ApplicationRecord
 
   enum :status, STATUSES.index_with(&:itself), default: "draft"
 
-  scope :published_for_public, -> { published.order(start_date: :asc, name: :asc) }
+  scope :active, -> { where(deleted_at: nil) }
+  scope :deleted, -> { where.not(deleted_at: nil) }
+  scope :published_for_public, -> { active.published.order(start_date: :asc, name: :asc) }
 
   validates :name, :location, :start_date, :end_date, :status, presence: true
   validates :status, inclusion: { in: STATUSES }
@@ -75,6 +77,18 @@ class Trip < ApplicationRecord
 
   def delete_blocked_by_participants?
     campsite_signups.active.exists?
+  end
+
+  def deleted?
+    deleted_at.present?
+  end
+
+  def soft_delete!
+    update!(deleted_at: Time.current)
+  end
+
+  def restore!
+    update!(deleted_at: nil)
   end
 
   def waitlist_confirmation_campsites_for(signup)

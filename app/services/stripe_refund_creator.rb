@@ -1,8 +1,9 @@
 class StripeRefundCreator
-  def initialize(payment:, amount_cents:, reason:)
+  def initialize(payment:, amount_cents:, reason:, initiated_by: "system")
     @payment = payment
     @amount_cents = amount_cents
     @reason = reason
+    @initiated_by = initiated_by
   end
 
   def call
@@ -10,6 +11,7 @@ class StripeRefundCreator
       amount_cents: @amount_cents,
       currency: @payment.currency,
       reason: @reason,
+      initiated_by: @initiated_by,
       status: "pending"
     )
 

@@ -552,6 +552,73 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     assert signup.current_payment.refunded?
   end
 
+  test "admin stripe refund records admin initiator when removing paid participant" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    payment = signup.payments.create!(
+      source: "stripe",
+      status: "paid",
+      amount_cents: 1000,
+      paid_at: Time.current,
+      stripe_payment_intent_id: "pi_admin_remove"
+    )
+    stripe_refund = Struct.new(:id, :status).new("re_admin_remove", "succeeded")
+
+    with_fake_stripe_refund(stripe_refund) do
+      delete remove_from_campsite_admin_trip_campsite_signup_url(trips(:yosemite), signup), params: {
+        payment: {
+          issue_refund: "1"
+        }
+      }
+    end
+
+    refund = payment.refunds.reload.sole
+    assert refund.admin_initiated_by?
+    assert_equal "re_admin_remove", refund.stripe_refund_id
+  end
+
+  test "moving paid participant to waitlist does not refund by default" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    payment = signup.payments.create!(
+      source: "manual",
+      status: "paid",
+      amount_cents: 1000,
+      manual_payment_method: "cash",
+      manual_paid_at: Time.current,
+      paid_at: Time.current
+    )
+
+    patch move_to_waitlist_admin_trip_campsite_signup_url(trips(:yosemite), signup)
+
+    assert_redirected_to admin_trip_url(trips(:yosemite))
+    assert signup.reload.waitlisted?
+    assert_equal 0, payment.reload.refunded_amount_cents
+    assert payment.paid?
+  end
+
+  test "admin stripe refund records admin initiator when moving to waitlist with refund" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    payment = signup.payments.create!(
+      source: "stripe",
+      status: "paid",
+      amount_cents: 1000,
+      paid_at: Time.current,
+      stripe_payment_intent_id: "pi_admin_waitlist"
+    )
+    stripe_refund = Struct.new(:id, :status).new("re_admin_waitlist", "succeeded")
+
+    with_fake_stripe_refund(stripe_refund) do
+      patch move_to_waitlist_admin_trip_campsite_signup_url(trips(:yosemite), signup), params: {
+        payment: {
+          issue_refund: "1"
+        }
+      }
+    end
+
+    refund = payment.refunds.reload.sole
+    assert refund.admin_initiated_by?
+    assert_equal "re_admin_waitlist", refund.stripe_refund_id
+  end
+
   test "admin can override refund cutoff when removing paid participant" do
     travel_to Date.new(2026, 6, 6) do
       signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
@@ -598,5 +665,13 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     yield
   ensure
     Rails.application.config.x.stripe_checkout_session_creator = original_creator
+  end
+
+  def with_fake_stripe_refund(stripe_refund)
+    original_create = Stripe::Refund.method(:create)
+    Stripe::Refund.define_singleton_method(:create) { |_params| stripe_refund }
+    yield
+  ensure
+    Stripe::Refund.define_singleton_method(:create, original_create)
   end
 end

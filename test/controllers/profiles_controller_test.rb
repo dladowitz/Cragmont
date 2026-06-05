@@ -27,6 +27,9 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".details-list dd", text: "Yes"
     assert_select "a[href='#{edit_profile_path}']", text: "Edit profile"
     assert_select "button", text: "Delete account"
+    assert_select "h2", text: "Transactions"
+    assert_select ".transactions-table", count: 0
+    assert_select "p.muted", text: "No completed payments yet."
     assert_select "dialog.confirmation-modal", text: /Are you sure you want to delete your account\?/
     assert_select "dialog.confirmation-modal", text: /This will delete all history and current trips/
     assert_select "label[for='confirmation_text']", text: /Type Delete Me to Confirm/
@@ -34,6 +37,89 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='confirmation_text'][required]"
     assert_select "input[type='submit'][disabled]", value: "Delete account"
     assert_select "a", text: "Yosemite Valley Spring"
+    assert_select "a[href='#{admin_trip_path(trips(:yosemite))}']", text: "Manage trip"
+  end
+
+  test "profile hides coordinated trips section when user coordinates no trips" do
+    log_in_as(users(:sam))
+
+    get profile_url
+
+    assert_response :success
+    assert_select "h2", text: "Coordinated trips", count: 0
+    assert_select "p.muted", text: "This user is not assigned as a campsite coordinator yet.", count: 0
+  end
+
+  test "profile transactions show only completed payments for signed in user" do
+    user = users(:sam)
+    user_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: user)
+    user_signup.payments.create!(
+      source: "stripe",
+      status: "paid",
+      amount_cents: 4000,
+      paid_at: Time.zone.local(2026, 6, 1, 9, 0),
+      stripe_payment_intent_id: "pi_profile_sam"
+    )
+    user_signup.payments.create!(
+      source: "stripe",
+      status: "pending",
+      amount_cents: 9000
+    )
+    other_user = User.create!(
+      first_name: "Other",
+      last_name: "Participant",
+      email: "other-profile-transactions@example.com",
+      password: "password"
+    )
+    other_signup = create_campsite_signup!(campsite: campsites(:jtree_a), user: other_user)
+    other_signup.payments.create!(
+      source: "stripe",
+      status: "paid",
+      amount_cents: 7000,
+      paid_at: Time.zone.local(2026, 6, 1, 10, 0)
+    )
+    log_in_as(user)
+
+    with_env("STRIPE_ACCOUNT_ID" => "acct_profile_123") do
+      get profile_url
+    end
+
+    assert_response :success
+    assert_select "h2", text: "Transactions"
+    assert_select "table.transactions-table" do
+      transaction_rows = css_select("tbody").first.children.select { |child| child.element? && child.name == "tr" }
+
+      assert_equal [
+        "Trip",
+        "Participant",
+        "Amount Paid",
+        "Status",
+        "Paid At",
+        "Details"
+      ], css_select("thead").first.css("th").map { |header| header.text.strip }
+      assert_equal 1, transaction_rows.size
+      assert_select "a[href='#{trip_path(trips(:yosemite))}']", text: "Yosemite Valley Spring"
+      assert_select "td", text: "Sam Lee"
+      assert_select "td", text: "$40.00"
+      assert_select ".transaction-status", text: "Paid"
+      assert_select "button", text: "View"
+      assert_select "td", text: "$90.00", count: 0
+      assert_select "td", text: "$70.00", count: 0
+      assert_select "td", text: "Other Participant", count: 0
+    end
+    assert_select "dialog.transaction-details-modal", text: /Payment details/
+    assert_select "dialog.transaction-details-modal" do
+      assert_select "dt", text: "Trip"
+      assert_select "a[href='#{trip_path(trips(:yosemite))}']", text: "Yosemite Valley Spring"
+      assert_select "dt", text: "Participant"
+      assert_select "dt", text: "Status"
+      assert_select "dt", text: "Amount"
+      assert_select "dt", text: "Amount Refunded"
+      assert_select "dt", text: "Source", count: 0
+      assert_select "dt", text: "Remaining refundable", count: 0
+      assert_select "dt", text: "Waived reason", count: 0
+      assert_select "a[href='https://dashboard.stripe.com/acct_profile_123/test/payments/pi_profile_sam']", count: 0
+    end
   end
 
   test "profile edit excludes club member control" do
@@ -119,5 +205,18 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
 
   def log_in_as(user)
     post session_url, params: { email: user.email, password: "password" }
+  end
+
+  def with_env(values)
+    originals = values.keys.index_with { |key| ENV[key] }
+    values.each do |key, value|
+      value.nil? ? ENV.delete(key) : ENV[key] = value
+    end
+
+    yield
+  ensure
+    originals.each do |key, value|
+      value.nil? ? ENV.delete(key) : ENV[key] = value
+    end
   end
 end

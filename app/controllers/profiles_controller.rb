@@ -4,6 +4,7 @@ class ProfilesController < ApplicationController
   def show
     @user = current_user
     @coordinated_trips = @user.coordinated_trips.order(start_date: :asc, name: :asc)
+    @ledger_entries = TripTransactionLedger.for_user(@user)
   end
 
   def edit

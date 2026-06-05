@@ -1,5 +1,6 @@
 class Admin::TripReimbursementsController < ApplicationController
   before_action :set_trip
+  before_action :ensure_trip_not_deleted
   before_action :set_reimbursement, only: %i[edit update destroy]
 
   def new
@@ -36,6 +37,12 @@ class Admin::TripReimbursementsController < ApplicationController
 
   def set_trip
     @trip = Trip.find(params[:trip_id])
+  end
+
+  def ensure_trip_not_deleted
+    return unless @trip.deleted?
+
+    redirect_to admin_trip_path(@trip), alert: "Restore this trip before making changes.", status: :see_other
   end
 
   def set_reimbursement

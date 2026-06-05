@@ -1,0 +1,136 @@
+- show_source = local_assigns.fetch(:show_source, true)
+- show_remaining_refundable = local_assigns.fetch(:show_remaining_refundable, true)
+- show_waived_reason = local_assigns.fetch(:show_waived_reason, true)
+- show_trip = local_assigns.fetch(:show_trip, false)
+
+- if ledger_entries.any?
+  %table.transactions-table
+    %thead
+      %tr
+        - if show_trip
+          %th Trip
+        %th Participant
+        %th Amount Paid
+        %th Status
+        %th Paid At
+        %th Details
+    %tbody
+      - ledger_entries.each do |entry|
+        - payment = entry.payment
+        - status_label = entry.refunded? ? "Refunded" : (payment.pending? ? "Pending" : "Paid")
+        - status_class = entry.refunded? ? "danger-status" : (payment.pending? ? "warning-status" : nil)
+        - trip = payment.campsite_signup.trip
+        %tr
+          - if show_trip
+            %td= link_to trip.name, trip_path(trip)
+          %td= entry.participant_name
+          %td= format_cents(entry.amount_cents)
+          %td
+            %span.status.transaction-status{class: status_class}= status_label
+          %td= entry.occurred_at&.strftime("%-m/%-d/%y %l:%M %p") || "None"
+          %td
+            %div{"data-controller" => "modal"}
+              %button.button.secondary.admin-table-action-button{"data-action" => "modal#open", type: "button"} View
+              %dialog.signup-modal.transaction-details-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                .signup-modal-content
+                  %div
+                    %h2 Payment details
+                  .transaction-details-sections
+                    %dl.details-list.transaction-details-list
+                      - if show_trip
+                        %div
+                          %dt Trip
+                          %dd= link_to trip.name, trip_path(trip)
+                      %div
+                        %dt Participant
+                        %dd= entry.participant_name
+                      %div
+                        %dt Status
+                        %dd
+                          %span.status.transaction-status{class: status_class}= status_label
+                      %div
+                        %dt Paid at
+                        %dd= payment.paid_at&.strftime("%-m/%-d/%y %l:%M %p") || "None"
+                      %div
+                        %dt Admin created
+                        %dd= payment.created_by.present? ? "Yes" : "No"
+                      - if show_waived_reason
+                        %div
+                          %dt Waived reason
+                          %dd= payment.waived_reason.presence || "None"
+                      %div
+                        %dt Created at
+                        %dd= payment.created_at.strftime("%-m/%-d/%y %l:%M %p")
+                      %div
+                        %dt Updated at
+                        %dd= payment.updated_at.strftime("%-m/%-d/%y %l:%M %p")
+                      %div
+                        %dt Note
+                        %dd= payment.note.presence || "None"
+                    %dl.details-list.transaction-details-list
+                      %div
+                        %dt Amount
+                        %dd= format_cents(payment.amount_cents)
+                      %div
+                        %dt Amount Refunded
+                        %dd= format_cents(payment.refunded_amount_cents)
+                      - if show_remaining_refundable
+                        %div
+                          %dt Remaining refundable
+                          %dd= format_cents(payment.remaining_refundable_amount_cents)
+                      - if show_source
+                        %div
+                          %dt Source
+                          %dd
+                            - stripe_payment_url = stripe_dashboard_payment_url(payment.stripe_payment_intent_id)
+                            - if payment.stripe_source? && stripe_payment_url.present?
+                              = link_to payment.source.titleize, stripe_payment_url, target: "_blank", rel: "noopener"
+                            - else
+                              = payment.source.titleize
+                  %fieldset.transaction-fee-details
+                    %legend Fee details
+                    %table.transaction-fee-table
+                      %thead
+                        %tr
+                          %th Participant
+                          %th First 2 nights
+                          %th Additional nights
+                          %th Total
+                      %tbody
+                        - payment_fee_table_rows(payment).each do |row|
+                          %tr
+                            %td= row[:label]
+                            %td= row[:first_two_nights]
+                            %td= row[:additional_nights]
+                            %td= format_cents(row[:total_cents])
+                      %tfoot
+                        %tr
+                          %td{:colspan => 3}
+                          %td.transaction-fee-total= format_cents(payment.amount_cents)
+                  .transaction-refund-details
+                    %h3 Refunds
+                    - if entry.refunds.any?
+                      %table.transaction-refunds-table
+                        %thead
+                          %tr
+                            %th Amount
+                            %th Status
+                            %th Refunded At
+                            %th Initiated By
+                            %th Reason
+                            %th Failure
+                        %tbody
+                          - entry.refunds.each do |refund|
+                            %tr
+                              %td= format_cents(refund.amount_cents)
+                              %td= refund.status.titleize
+                              %td= refund.refunded_at&.strftime("%-m/%-d/%y %l:%M %p") || "None"
+                              %td= refund.initiated_by.titleize
+                              %td= refund.reason.presence || "None"
+                              %td= refund.failure_reason.presence || "None"
+                    - else
+                      %p.muted No refunds recorded for this payment.
+                  .form-actions
+                    %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+- else
+  %p.muted= empty_message

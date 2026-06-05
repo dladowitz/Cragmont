@@ -1,6 +1,15 @@
 require "test_helper"
 
 class Admin::TripReimbursementsControllerTest < ActionDispatch::IntegrationTest
+  test "admin can view new reimbursement form" do
+    get new_admin_trip_trip_reimbursement_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "form[action='#{admin_trip_trip_reimbursements_path(trips(:yosemite))}']"
+    amount_input = css_select("input[name='trip_reimbursement[amount]']").sole
+    assert_nil amount_input["value"]
+  end
+
   test "admin can record reimbursement" do
     assert_difference "TripReimbursement.count", 1 do
       post admin_trip_trip_reimbursements_url(trips(:yosemite)), params: {
