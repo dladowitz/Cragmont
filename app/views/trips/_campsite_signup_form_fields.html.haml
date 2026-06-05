@@ -2,6 +2,7 @@
 - waitlist_direct_signup = local_assigns.fetch(:waitlist_direct_signup, false)
 - complete_existing_signup = local_assigns.fetch(:complete_existing_signup, false)
 - waiver_only = local_assigns.fetch(:waiver_only, false)
+- hide_fee_fields = local_assigns.fetch(:hide_fee_fields, false)
 - existing_signup = local_assigns[:signup]
 - waitlisted_signup = confirm_waitlist || waitlist_direct_signup || complete_existing_signup
 - signature_id = "campsite-signup-signature-#{dom_id_suffix}"
@@ -85,7 +86,7 @@
               = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][relationship]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_relationship", placeholder: "Parent, Guardian, Uncle, etc", data: { required_for_minor: "true" }
           - if index.zero?
             %button.add-person-link{"data-action" => "signature#revealPartyRow", "data-add-party-row" => "", type: "button"} Add another minor
-    - unless waiver_only
+    - unless waiver_only || hide_fee_fields
       %section.fee-fields{"data-signature-target" => "feeFields"}
         .fee-section-row
           %fieldset.fee-section

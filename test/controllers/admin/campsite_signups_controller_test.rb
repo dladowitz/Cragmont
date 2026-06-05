@@ -42,6 +42,35 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     assert_not signup.waiver_signed?
   end
 
+  test "can add existing account participant as campsite coordinator with waived payment" do
+    trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+
+    assert_difference [ "CampsiteSignup.count", "CampsiteSignupPayment.count" ], 1 do
+      post admin_trip_campsite_signups_url(trip), params: {
+        campsite_signup: {
+          campsite_id: campsite.id,
+          participant_account_status: "existing",
+          user_id: users(:sam).id,
+          set_as_campsite_coordinator: "1"
+        }
+      }
+    end
+
+    signup = CampsiteSignup.find_by!(trip: trip, user: users(:sam))
+    payment = signup.current_payment
+    assert_redirected_to admin_trip_url(trip, anchor: "admin-campsite-#{campsite.id}")
+    assert_equal users(:sam), trip.reload.campsite_coordinator
+    assert signup.confirmed?
+    assert payment.waived?
+    assert_equal 0, payment.amount_cents
+    assert_equal 0, payment.remaining_refundable_amount_cents
+    assert_equal "campsite_coordinator_does_not_pay", payment.waived_reason
+    assert_equal users(:alex), payment.created_by
+    assert_equal 0, payment.pricing_snapshot.fetch("first_two_nights_fee_cents")
+    assert_equal 0, payment.pricing_snapshot.fetch("amount_cents")
+  end
+
   test "can create account and add participant directly to campsite" do
     trip = trips(:yosemite)
     campsite = campsites(:yosemite_a)
@@ -74,6 +103,43 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     assert_equal campsite, signup.campsite
     assert_nil signup.arrival_date
     assert_nil signup.checkout_date
+  end
+
+  test "can create account and add participant as campsite coordinator with waived payment" do
+    trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+
+    assert_difference "User.count", 1 do
+      assert_difference [ "CampsiteSignup.count", "CampsiteSignupPayment.count" ], 1 do
+        post admin_trip_campsite_signups_url(trip), params: {
+          campsite_signup: {
+            campsite_id: campsite.id,
+            participant_account_status: "new",
+            set_as_campsite_coordinator: "1",
+            new_user: {
+              first_name: "Morgan",
+              last_name: "Anchor",
+              email: "morgan-anchor@example.com",
+              phone: "555-0200"
+            }
+          }
+        }
+      end
+    end
+
+    user = User.find_by!(email: "morgan-anchor@example.com")
+    signup = CampsiteSignup.find_by!(trip: trip, user: user)
+    payment = signup.current_payment
+    assert_redirected_to admin_trip_url(trip, anchor: "admin-campsite-#{campsite.id}")
+    assert_equal user, trip.reload.campsite_coordinator
+    assert signup.confirmed?
+    assert payment.waived?
+    assert_equal 0, payment.amount_cents
+    assert_equal 0, payment.remaining_refundable_amount_cents
+    assert_equal "campsite_coordinator_does_not_pay", payment.waived_reason
+    assert_equal users(:alex), payment.created_by
+    assert_equal 0, payment.pricing_snapshot.fetch("first_two_nights_fee_cents")
+    assert_equal 0, payment.pricing_snapshot.fetch("amount_cents")
   end
 
   test "direct campsite add can confirm participant over capacity" do
