@@ -108,8 +108,8 @@ class CampsiteSignupPaymentLifecycle
     end
   end
 
-  def self.cancel_or_refund_signup!(signup:, reason:)
-    refund_record = refund_payment_for!(signup: signup, reason: reason)
+  def self.cancel_or_refund_signup!(signup:, reason:, issue_refund: true)
+    refund_record = refund_payment_for!(signup: signup, reason: reason) if issue_refund
 
     CampsiteSignup.transaction do
       signup.lock!

@@ -110,10 +110,15 @@
             .fee-rate
               %span Additional nights
               %strong= format_cents(site_setting.minor_extra_night_fee_cents)
-        %fieldset.fee-section.payment-due-section
-          %legend Payment Due
-          .payment-line-items{"data-signature-target" => "paymentLineItems", :hidden => ""}
-          %p.payment-summary{"data-signature-target" => "paymentSummary"} Choose dates to see payment amount.
+        .fee-section-row
+          %fieldset.fee-section.payment-due-section
+            %legend Payment Due
+            .payment-line-items{"data-signature-target" => "paymentLineItems", :hidden => ""}
+            %p.payment-summary{"data-signature-target" => "paymentSummary"} Choose dates to see payment amount.
+          %fieldset.fee-section.refund-policy-section
+            %legend Refund Policy
+            %p Full refund if canceled 7 or more days before trip start.
+            %p No refund within seven days as it becomes hard for the club to fill the spot.
 
     .form-actions
       %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel

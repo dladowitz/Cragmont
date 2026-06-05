@@ -1144,6 +1144,10 @@ body.trips-index-page .trip-card {
   font-size: 1.25rem;
 }
 
+.admin-refund-choice-spacer {
+  min-height: 1rem;
+}
+
 .participant-details-campsite-summary {
   display: grid;
   gap: 2px;
@@ -1345,10 +1349,6 @@ body.trips-index-page .trip-card {
   font-size: 0.75em;
 }
 
-.payment-due-section {
-  width: calc((100% - 14px) / 2);
-}
-
 .payment-line-items {
   display: grid;
   gap: 8px;
@@ -1388,6 +1388,14 @@ body.trips-index-page .trip-card {
   margin-top: 10px;
   font-size: 1.5rem;
   font-weight: 700;
+}
+
+.refund-policy-section {
+  color: var(--muted);
+}
+
+.refund-policy-section p + p {
+  margin-top: 6px;
 }
 
 .signup-kind-options {

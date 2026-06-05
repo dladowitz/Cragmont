@@ -1,5 +1,6 @@
 class CampsiteSignup < ApplicationRecord
   MAX_GUESTS_PER_SIGNUP = 2
+  REFUND_CUTOFF_DAYS = 7
   STATUSES = %w[pending_payment confirmed waitlisted canceled].freeze
   CAPACITY_HOLDING_STATUSES = %w[pending_payment confirmed].freeze
 
@@ -145,6 +146,23 @@ class CampsiteSignup < ApplicationRecord
     return false if payment.blank?
 
     payment.paid? || payment.waived? || payment.manual_source?
+  end
+
+  def days_until_trip_start(today: Date.current)
+    return 0 if trip&.start_date.blank?
+
+    (trip.start_date - today).to_i
+  end
+
+  def refund_eligible?(today: Date.current)
+    days_until_trip_start(today: today) >= REFUND_CUTOFF_DAYS
+  end
+
+  def refundable_amount_cents
+    payment = primary_signup.current_payment
+    return 0 if payment.blank? || !payment.refundable?
+
+    payment.remaining_refundable_amount_cents
   end
 
   def waiver_signed?

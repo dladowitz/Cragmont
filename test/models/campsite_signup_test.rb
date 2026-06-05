@@ -105,6 +105,24 @@ class CampsiteSignupTest < ActiveSupport::TestCase
     assert signup.waiver_signed?
   end
 
+  test "knows refund cutoff timing and amount" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup.payments.create!(
+      source: "manual",
+      status: "paid",
+      amount_cents: 4000,
+      refunded_amount_cents: 1000,
+      manual_payment_method: "cash",
+      manual_paid_at: Time.current,
+      paid_at: Time.current
+    )
+
+    assert_equal 7, signup.days_until_trip_start(today: Date.new(2026, 6, 5))
+    assert signup.refund_eligible?(today: Date.new(2026, 6, 5))
+    assert_not signup.refund_eligible?(today: Date.new(2026, 6, 6))
+    assert_equal 3000, signup.refundable_amount_cents
+  end
+
   test "calculates capacity count from adult and older minors" do
     signup = CampsiteSignup.new(campsite: campsites(:yosemite_a), user: users(:sam))
     signup.campsite_signup_minors.build(first_name: "Young", last_name: "Minor", age: 12, relationship: "Child")

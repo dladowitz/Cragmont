@@ -523,7 +523,7 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "https://checkout.stripe.com/c/pay/admin-#{payment.id}", payment.checkout_url
   end
 
-  test "removing paid participant cancels record instead of deleting it" do
+  test "removing paid participant cancels record without refund by default" do
     signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     signup.payments.create!(source: "manual", status: "paid", amount_cents: 1000, manual_payment_method: "cash", manual_paid_at: Time.current, paid_at: Time.current)
 
@@ -532,7 +532,42 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert signup.reload.canceled?
+    assert signup.current_payment.paid?
+    assert_equal 0, signup.current_payment.refunded_amount_cents
+  end
+
+  test "admin can choose to refund when removing paid participant" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup.payments.create!(source: "manual", status: "paid", amount_cents: 1000, manual_payment_method: "cash", manual_paid_at: Time.current, paid_at: Time.current)
+
+    assert_no_difference "CampsiteSignup.count" do
+      delete remove_from_campsite_admin_trip_campsite_signup_url(trips(:yosemite), signup), params: {
+        payment: {
+          issue_refund: "1"
+        }
+      }
+    end
+
+    assert signup.reload.canceled?
     assert signup.current_payment.refunded?
+  end
+
+  test "admin can override refund cutoff when removing paid participant" do
+    travel_to Date.new(2026, 6, 6) do
+      signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+      signup.payments.create!(source: "manual", status: "paid", amount_cents: 1000, manual_payment_method: "cash", manual_paid_at: Time.current, paid_at: Time.current)
+
+      assert_no_difference "CampsiteSignup.count" do
+        delete remove_from_campsite_admin_trip_campsite_signup_url(trips(:yosemite), signup), params: {
+          payment: {
+            issue_refund: "1"
+          }
+        }
+      end
+
+      assert signup.reload.canceled?
+      assert signup.current_payment.refunded?
+    end
   end
 
   test "admin can remove paid participant after campsite dates changed outside attendance dates" do
@@ -542,7 +577,11 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     campsite.update_columns(arrival_date: campsite.arrival_date + 1.day, updated_at: Time.current)
 
     assert_no_difference "CampsiteSignup.count" do
-      delete remove_from_campsite_admin_trip_campsite_signup_url(trips(:yosemite), signup)
+      delete remove_from_campsite_admin_trip_campsite_signup_url(trips(:yosemite), signup), params: {
+        payment: {
+          issue_refund: "1"
+        }
+      }
     end
 
     assert_redirected_to admin_trip_url(trips(:yosemite))

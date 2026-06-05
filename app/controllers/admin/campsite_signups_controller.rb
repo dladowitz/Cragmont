@@ -76,7 +76,7 @@ class Admin::CampsiteSignupsController < ApplicationController
 
     if signup.waitlisted?
       redirect_to admin_trip_path(trip), alert: "#{signup.user.full_name} is not confirmed for a campsite."
-    elsif remove_confirmed_signup(signup)
+    elsif remove_confirmed_signup(signup, issue_refund: issue_refund?)
       redirect_to admin_trip_path(trip), notice: "#{signup.user.full_name} was removed from #{campsite.campground.name} site #{campsite.site_number}."
     else
       redirect_to admin_trip_path(trip), alert: signup.errors.full_messages.to_sentence
@@ -168,7 +168,11 @@ class Admin::CampsiteSignupsController < ApplicationController
   end
 
   def payment_params
-    params.fetch(:payment, {}).permit(:waived_reason, :manual_payment_method, :manual_paid_at, :note)
+    params.fetch(:payment, {}).permit(:waived_reason, :manual_payment_method, :manual_paid_at, :note, :issue_refund)
+  end
+
+  def issue_refund?
+    ActiveModel::Type::Boolean.new.cast(payment_params[:issue_refund])
   end
 
   def existing_account_participant?
@@ -381,7 +385,7 @@ class Admin::CampsiteSignupsController < ApplicationController
     false
   end
 
-  def remove_confirmed_signup(signup)
+  def remove_confirmed_signup(signup, issue_refund:)
     removed = false
     paid_signup = signup.payments.exists?
 
@@ -392,7 +396,11 @@ class Admin::CampsiteSignupsController < ApplicationController
       campsite.lock_signups! if campsite.capacity_full?
 
       if paid_signup
-        CampsiteSignupPaymentLifecycle.cancel_or_refund_signup!(signup: signup, reason: "removed_by_admin")
+        CampsiteSignupPaymentLifecycle.cancel_or_refund_signup!(
+          signup: signup,
+          reason: "removed_by_admin",
+          issue_refund: issue_refund
+        )
       else
         signup.destroy!
       end
