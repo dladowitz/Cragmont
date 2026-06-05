@@ -75,7 +75,8 @@ class Admin::TripTransactionsControllerTest < ActionDispatch::IntegrationTest
       source: "waived",
       status: "waived",
       amount_cents: 0,
-      waived_reason: "Scholarship"
+      waived_reason: "Scholarship",
+      created_by: users(:alex)
     )
     signup.payments.create!(
       source: "stripe",
@@ -135,6 +136,7 @@ class Admin::TripTransactionsControllerTest < ActionDispatch::IntegrationTest
       "Status",
       "Paid at",
       "Admin created",
+      "Waived By",
       "Waived reason",
       "Created at",
       "Updated at",
@@ -204,6 +206,13 @@ class Admin::TripTransactionsControllerTest < ActionDispatch::IntegrationTest
       assert_select "code", text: "re_ledger_123", count: 0
       assert_select "code", text: "re_failed_123", count: 0
     end
+    waived_modal = css_select("dialog.transaction-details-modal").find do |dialog|
+      dialog.css("dt").any? { |term| term.text.strip == "Waived reason" } &&
+        dialog.css("dd").any? { |definition| definition.text.strip == "Scholarship" }
+    end
+    assert waived_modal
+    assert_equal "Waived By", waived_modal.css("dt").find { |term| term.text.strip == "Waived By" }.text.strip
+    assert_equal "Alex Rivera", waived_modal.css("dd").find { |definition| definition.text.strip == "Alex Rivera" }.text.strip
     assert_select "div[data-modal-disable-autofocus-value='true'] dialog.refund-modal"
     assert_select "dialog.refund-modal" do
       assert_select "h2", "Refund payment"

@@ -52,7 +52,8 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
           campsite_id: campsite.id,
           participant_account_status: "existing",
           user_id: users(:sam).id,
-          set_as_campsite_coordinator: "1"
+          waive_payment: "1",
+          waived_reason_type: "campsite_coordinator"
         }
       }
     end
@@ -69,6 +70,33 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     assert_equal users(:alex), payment.created_by
     assert_equal 0, payment.pricing_snapshot.fetch("first_two_nights_fee_cents")
     assert_equal 0, payment.pricing_snapshot.fetch("amount_cents")
+  end
+
+  test "can add existing account participant with other waived payment reason" do
+    trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+
+    assert_difference [ "CampsiteSignup.count", "CampsiteSignupPayment.count" ], 1 do
+      post admin_trip_campsite_signups_url(trip), params: {
+        campsite_signup: {
+          campsite_id: campsite.id,
+          participant_account_status: "existing",
+          user_id: users(:sam).id,
+          waive_payment: "1",
+          waived_reason_type: "other",
+          waived_reason: "Board approved comp"
+        }
+      }
+    end
+
+    signup = CampsiteSignup.find_by!(trip: trip, user: users(:sam))
+    payment = signup.current_payment
+    assert_redirected_to admin_trip_url(trip, anchor: "admin-campsite-#{campsite.id}")
+    assert_equal users(:alex), trip.reload.campsite_coordinator
+    assert payment.waived?
+    assert_equal 0, payment.amount_cents
+    assert_equal "Board approved comp", payment.waived_reason
+    assert_equal users(:alex), payment.created_by
   end
 
   test "can create account and add participant directly to campsite" do
@@ -115,7 +143,8 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
           campsite_signup: {
             campsite_id: campsite.id,
             participant_account_status: "new",
-            set_as_campsite_coordinator: "1",
+            waive_payment: "1",
+            waived_reason_type: "campsite_coordinator",
             new_user: {
               first_name: "Morgan",
               last_name: "Anchor",
@@ -140,6 +169,41 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     assert_equal users(:alex), payment.created_by
     assert_equal 0, payment.pricing_snapshot.fetch("first_two_nights_fee_cents")
     assert_equal 0, payment.pricing_snapshot.fetch("amount_cents")
+  end
+
+  test "does not waive payment without choosing reason type" do
+    assert_no_difference [ "CampsiteSignup.count", "CampsiteSignupPayment.count" ] do
+      post admin_trip_campsite_signups_url(trips(:yosemite)), params: {
+        campsite_signup: {
+          campsite_id: campsites(:yosemite_a).id,
+          participant_account_status: "existing",
+          user_id: users(:sam).id,
+          waive_payment: "1",
+          waived_reason_type: ""
+        }
+      }
+    end
+
+    assert_redirected_to admin_trip_url(trips(:yosemite))
+    assert_equal "Wow, that was a whipper. Choose why this participant's payment is waived.", flash[:alert]
+  end
+
+  test "does not waive payment with other reason unless reason is filled out" do
+    assert_no_difference [ "CampsiteSignup.count", "CampsiteSignupPayment.count" ] do
+      post admin_trip_campsite_signups_url(trips(:yosemite)), params: {
+        campsite_signup: {
+          campsite_id: campsites(:yosemite_a).id,
+          participant_account_status: "existing",
+          user_id: users(:sam).id,
+          waive_payment: "1",
+          waived_reason_type: "other",
+          waived_reason: ""
+        }
+      }
+    end
+
+    assert_redirected_to admin_trip_url(trips(:yosemite))
+    assert_equal "Wow, that was a whipper. Add a reason for waiving this participant's payment.", flash[:alert]
   end
 
   test "direct campsite add can confirm participant over capacity" do
@@ -690,6 +754,7 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     assert refund.admin_initiated_by?
     assert_equal users(:alex), refund.refunded_by
     assert_equal "automatic", refund.refund_type
+    assert_equal "moved_to_waitlist_by_admin", refund.reason
     assert_equal "re_admin_waitlist", refund.stripe_refund_id
   end
 

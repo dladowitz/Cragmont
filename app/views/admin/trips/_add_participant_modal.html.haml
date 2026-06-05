@@ -6,8 +6,10 @@
 - last_name_id = "admin-add-participant-last-name-#{campsite.id}"
 - email_id = "admin-add-participant-email-#{campsite.id}"
 - phone_id = "admin-add-participant-phone-#{campsite.id}"
-- coordinator_no_id = "admin-add-participant-coordinator-no-#{campsite.id}"
-- coordinator_yes_id = "admin-add-participant-coordinator-yes-#{campsite.id}"
+- waive_payment_no_id = "admin-add-participant-waive-payment-no-#{campsite.id}"
+- waive_payment_yes_id = "admin-add-participant-waive-payment-yes-#{campsite.id}"
+- waive_reason_id = "admin-add-participant-waive-reason-#{campsite.id}"
+- other_waive_reason_id = "admin-add-participant-other-waive-reason-#{campsite.id}"
 - signed_up_user_ids = Array(local_assigns[:trip_participant_user_ids])
 - user_options = users.map do |user|
   - signed_up = signed_up_user_ids.include?(user.id)
@@ -65,13 +67,20 @@
               = label_tag phone_id, "Phone"
               = telephone_field_tag "campsite_signup[new_user][phone]", "", id: phone_id, disabled: true, data: { admin_participant_target: "newInput" }
         %fieldset.signup-kind-options.admin-add-participant-options
-          %legend Set this person as Campsite Coordinator
-          %label{for: coordinator_no_id}
-            = radio_button_tag "campsite_signup[set_as_campsite_coordinator]", "0", true, id: coordinator_no_id
+          %legend Waive Payment
+          %label{for: waive_payment_no_id}
+            = radio_button_tag "campsite_signup[waive_payment]", "0", true, id: waive_payment_no_id, data: { admin_participant_target: "waiveOption", action: "admin-participant#toggleWaivePaymentFields" }
             %span No
-          %label{for: coordinator_yes_id}
-            = radio_button_tag "campsite_signup[set_as_campsite_coordinator]", "1", false, id: coordinator_yes_id
+          %label{for: waive_payment_yes_id}
+            = radio_button_tag "campsite_signup[waive_payment]", "1", false, id: waive_payment_yes_id, data: { admin_participant_target: "waiveOption", action: "admin-participant#toggleWaivePaymentFields" }
             %span Yes
+        %section.admin-add-participant-fields{"data-admin-participant-target" => "waiveReasonFields", hidden: true}
+          .field
+            = required_label_tag waive_reason_id, "Reason"
+            = select_tag "campsite_signup[waived_reason_type]", options_for_select([["Campsite Coordinator", "campsite_coordinator"], ["Other", "other"]]), include_blank: "Choose a reason", id: waive_reason_id, disabled: true, data: { admin_participant_target: "waiveReasonSelect", action: "admin-participant#toggleWaivePaymentFields" }
+          .field{"data-admin-participant-target" => "otherWaiveReasonField", hidden: true}
+            = required_label_tag other_waive_reason_id, "Other reason"
+            = text_area_tag "campsite_signup[waived_reason]", "", id: other_waive_reason_id, rows: 2, disabled: true, data: { admin_participant_target: "otherWaiveReasonInput" }
         .form-actions
           %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
           = submit_tag "Add Participant", class: "button"

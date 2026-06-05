@@ -130,11 +130,20 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
             assert_select "input[type='email'][name='campsite_signup[new_user][email]'][required][disabled]"
             assert_select "input[type='tel'][name='campsite_signup[new_user][phone]'][disabled]"
           end
-          assert_select "legend", text: "Set this person as Campsite Coordinator"
-          assert_select "input[type='radio'][name='campsite_signup[set_as_campsite_coordinator]'][value='0'][checked]"
+          assert_select "legend", text: "Waive Payment"
+          assert_select "input[type='radio'][name='campsite_signup[waive_payment]'][value='0'][checked]"
           assert_select "label", text: "No"
-          assert_select "input[type='radio'][name='campsite_signup[set_as_campsite_coordinator]'][value='1']"
+          assert_select "input[type='radio'][name='campsite_signup[waive_payment]'][value='1']"
           assert_select "label", text: "Yes"
+          assert_select "section[data-admin-participant-target='waiveReasonFields'][hidden]" do
+            assert_select "select[name='campsite_signup[waived_reason_type]'][disabled]" do
+              assert_select "option", text: "Campsite Coordinator"
+              assert_select "option", text: "Other"
+            end
+            assert_select "[data-admin-participant-target='otherWaiveReasonField'][hidden]" do
+              assert_select "textarea[name='campsite_signup[waived_reason]'][disabled]"
+            end
+          end
           assert_select "input[type='submit'][value='Add Participant']"
         end
       end
@@ -561,6 +570,31 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
           assert_select "input[type='submit'][value='Issue Refund']"
         end
         assert_select ".transaction-refunds-table", text: /Admin Created/
+      end
+    end
+  end
+
+  test "trip details payment modal shows waived by admin" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    signup.payments.create!(
+      source: "waived",
+      status: "waived",
+      amount_cents: 0,
+      waived_reason: "Board approved comp",
+      created_by: users(:alex),
+      pricing_snapshot: CampsiteSignupPricing.zero.snapshot
+    )
+
+    get admin_trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select ".confirmed-signups-section tbody tr", text: /Sam Lee/ do
+      assert_select "button.admin-payment-amount-link[data-action='modal#open']", text: "$0.00"
+      assert_select "dialog.transaction-details-modal" do
+        assert_select "dt", text: "Waived By"
+        assert_select "dd", text: "Alex Rivera"
+        assert_select "dt", text: "Waived reason"
+        assert_select "dd", text: "Board approved comp"
       end
     end
   end

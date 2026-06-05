@@ -6,8 +6,8 @@ class AddInitiatedByToCampsiteSignupPaymentRefunds < ActiveRecord::Migration[8.0
     execute <<~SQL.squish
       UPDATE campsite_signup_payment_refunds
       SET initiated_by = CASE
-        WHEN reason = 'requested_by_participant' THEN 'participant'
-        WHEN reason IN ('removed_by_admin', 'moved_to_waitlist') THEN 'admin'
+        WHEN reason = 'cancellation_by_participant' THEN 'participant'
+        WHEN reason IN ('removed_by_admin', 'moved_to_waitlist_by_admin') THEN 'admin'
         ELSE 'system'
       END
     SQL
