@@ -14,12 +14,34 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select "button.button.secondary", text: "Logout"
     end
     assert_select "h2", "Trips"
+    assert_select ".admin-filter-tabs a[href='#{admin_trips_path}']", text: "Active"
+    assert_select ".admin-filter-tabs a[href='#{admin_trips_path(filter: "deleted")}']", text: "Deleted"
     assert_select "th", text: "Participant Capacity"
     assert_select "th", text: "Signed Up"
+    assert_select "th", text: "Actions"
     assert_select "td", text: /Yosemite Valley Spring/
     assert_select "td", text: "Alex Rivera"
     assert_select "td", text: /Not set yet/
     assert_select "td a[href='#{edit_admin_trip_path(trips(:jtree))}']", text: "Update"
+    assert_select "td a[href='#{admin_trip_transactions_path(trips(:jtree))}']", text: "Transactions"
+  end
+
+  test "can view deleted trips tab" do
+    deleted_trip = trips(:jtree)
+    deleted_trip.soft_delete!
+
+    get admin_trips_url
+
+    assert_response :success
+    assert_select "td", text: /Joshua Tree Winter/, count: 0
+
+    get admin_trips_url(filter: "deleted")
+
+    assert_response :success
+    assert_select "h2", "Deleted trips"
+    assert_select "td", text: /Joshua Tree Winter/
+    assert_select "form[action='#{restore_admin_trip_path(deleted_trip)}'] button", text: "Restore"
+    assert_select "td a[href='#{admin_trip_transactions_path(deleted_trip)}']", text: "Transactions"
   end
 
   test "trip details link to edit form when campsite coordinator is not set" do
@@ -66,6 +88,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".stats", text: /Campsites/
     assert_select ".stats span", text: "Car capacity", count: 0
     assert_select ".trip-summary-header .actions a.button.secondary", text: "Edit trip"
+    assert_select ".trip-summary-header .actions a.button.secondary[href='#{admin_trip_transactions_path(trips(:yosemite))}']", text: "Transactions"
     assert_select ".trip-summary-header .actions .button.danger", text: "Delete trip", count: 0
     assert_select ".campground-group", count: 0
     assert_select ".admin-campsite-card-header h4", text: "Upper Pines site A12"
@@ -312,6 +335,64 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "trip details waitlist modal lets admin choose refund" do
+    travel_to Date.new(2026, 6, 5) do
+      signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+      signup.payments.create!(
+        source: "manual",
+        status: "paid",
+        amount_cents: 4000,
+        manual_payment_method: "cash",
+        manual_paid_at: Time.current,
+        paid_at: Time.current
+      )
+
+      get admin_trip_url(trips(:yosemite))
+
+      assert_response :success
+      assert_select "dialog.confirmation-modal", text: /Move Sam Lee to the waitlist\?/ do
+        assert_select "dt", "Trip starts"
+        assert_select "dd", "June 12, 2026"
+        assert_select "dt", "Days until trip"
+        assert_select "dd", "7"
+        assert_select ".admin-refund-choice strong", text: "Policy:"
+        assert_select ".admin-refund-choice", text: /Policy:\s*Full refund if 7 or more days before start of trip\. Admins can override policy with a good reason\./
+        assert_select ".admin-refund-choice", text: /Amount paid:\s*\$40\.00/
+        assert_select "form[action='#{move_to_waitlist_admin_trip_campsite_signup_path(trips(:yosemite), signup)}']", count: 2
+        assert_select "input[name='payment[issue_refund]'][value='0']"
+        assert_select "button.button.danger.secondary", "Move without refund"
+        assert_select "input[name='payment[issue_refund]'][value='1']"
+        assert_select "button.button.danger", "Move and issue refund"
+      end
+    end
+  end
+
+  test "trip details waitlist modal emphasizes no refund inside cutoff" do
+    travel_to Date.new(2026, 6, 6) do
+      signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+      signup.payments.create!(
+        source: "manual",
+        status: "paid",
+        amount_cents: 4000,
+        manual_payment_method: "cash",
+        manual_paid_at: Time.current,
+        paid_at: Time.current
+      )
+
+      get admin_trip_url(trips(:yosemite))
+
+      assert_response :success
+      assert_select "dialog.confirmation-modal", text: /Move Sam Lee to the waitlist\?/ do
+        assert_select "dd", "6"
+        assert_select "form[action='#{move_to_waitlist_admin_trip_campsite_signup_path(trips(:yosemite), signup)}']", count: 2
+        assert_select "input[name='payment[issue_refund]'][value='0']"
+        assert_select "button.button.danger", "Move without refund"
+        assert_select "input[name='payment[issue_refund]'][value='1']"
+        assert_select "button.button.danger.secondary", "Move and issue refund"
+      end
+    end
+  end
+
   test "trip details shows missing dates for admin-assigned participant" do
     signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     signup.update!(arrival_date: nil, checkout_date: nil)
@@ -511,7 +592,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".danger-form-action [data-controller='modal'] > button.button.danger.secondary", text: "Delete trip"
     assert_select "dialog.confirmation-modal", text: /Delete trip\?/
-    assert_select "dialog.confirmation-modal", text: /This will delete the trip and its campsites\./
+    assert_select "dialog.confirmation-modal", text: /transaction history will be preserved/
     assert_select "button[form='delete-trip-#{trip.id}']", text: "Delete trip"
     assert_select "form#delete-trip-#{trip.id}[action='#{admin_trip_path(trip)}']"
   end
@@ -553,14 +634,16 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
   test "can delete trip" do
     trip = trips(:jtree)
 
-    assert_difference "Trip.count", -1 do
+    assert_no_difference "Trip.count" do
       delete admin_trip_url(trip)
     end
 
     assert_redirected_to admin_trips_url
+    assert trip.reload.deleted?
+    assert_equal "Trip was deleted. Transaction history is still on belay.", flash[:notice]
   end
 
-  test "can delete trip with only canceled payment history" do
+  test "delete trip preserves canceled payment history" do
     trip = Trip.create!(
       name: "Canceled History Trip",
       location: "Yosemite Valley, CA",
@@ -569,17 +652,60 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       status: "draft"
     )
     signup = CampsiteSignup.create!(trip: trip, user: users(:sam), status: "canceled")
-    signup.payments.create!(source: "manual", status: "refunded", amount_cents: 1000, refunded_amount_cents: 1000, manual_payment_method: "cash", manual_paid_at: Time.current, paid_at: Time.current)
+    payment = signup.payments.create!(source: "manual", status: "refunded", amount_cents: 1000, refunded_amount_cents: 1000, manual_payment_method: "cash", manual_paid_at: Time.current, paid_at: Time.current)
 
-    assert_difference "Trip.count", -1 do
-      assert_difference "CampsiteSignup.count", -1 do
-        assert_difference "CampsiteSignupPayment.count", -1 do
+    assert_no_difference "Trip.count" do
+      assert_no_difference "CampsiteSignup.count" do
+        assert_no_difference "CampsiteSignupPayment.count" do
           delete admin_trip_url(trip)
         end
       end
     end
 
     assert_redirected_to admin_trips_url
+    assert trip.reload.deleted?
+    assert CampsiteSignup.exists?(signup.id)
+    assert CampsiteSignupPayment.exists?(payment.id)
+  end
+
+  test "can restore deleted trip" do
+    trip = trips(:jtree)
+    trip.soft_delete!
+
+    patch restore_admin_trip_url(trip)
+
+    assert_redirected_to admin_trip_url(trip)
+    assert_not trip.reload.deleted?
+    assert_equal "On belay! Trip was restored.", flash[:notice]
+  end
+
+  test "deleted trip page is read only except transactions and restore" do
+    trip = trips(:yosemite)
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    trip.update_columns(deleted_at: Time.current)
+
+    get admin_trip_url(trip)
+
+    assert_response :success
+    assert_select ".deleted-trip-banner", text: /This trip has been deleted/
+    assert_select "a[href='#{admin_trip_transactions_path(trip)}']", text: "Transactions"
+    assert_select "form[action='#{restore_admin_trip_path(trip)}'] button", text: "Restore trip"
+    assert_select "a[href='#{edit_admin_trip_path(trip)}']", count: 0
+    assert_select "a[href='#{new_admin_trip_campsite_path(trip)}']", count: 0
+    assert_select "button", text: "Add Participant", count: 0
+    assert_select "button", text: "Waitlist", count: 0
+    assert_select "button", text: "Remove", count: 0
+    assert_select "button", text: "Update", count: 0
+  end
+
+  test "deleted trip cannot be edited until restored" do
+    trip = trips(:jtree)
+    trip.soft_delete!
+
+    get edit_admin_trip_url(trip)
+
+    assert_redirected_to admin_trip_url(trip)
+    assert_equal "Restore this trip before making changes.", flash[:alert]
   end
 
   test "cannot delete trip with participants signed up" do

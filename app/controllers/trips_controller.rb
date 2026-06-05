@@ -18,7 +18,7 @@ class TripsController < ApplicationController
   private
 
   def set_trip
-    @trip = Trip.published.find(params[:id])
+    @trip = Trip.published_for_public.find(params[:id])
   end
 
   def participant_details_signup

@@ -22,6 +22,7 @@ class CampsiteSignupPayment < ApplicationRecord
   validate :refunded_amount_not_more_than_amount
 
   scope :current_first, -> { order(created_at: :desc, id: :desc) }
+  scope :completed_for_transactions, -> { where(status: %w[paid waived refunded partially_refunded]) }
 
   def remaining_refundable_amount_cents
     [ amount_cents - refunded_amount_cents, 0 ].max

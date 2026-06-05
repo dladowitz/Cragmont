@@ -403,6 +403,199 @@ input[type="submit"]:disabled {
   color: var(--muted);
 }
 
+.admin-filter-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.deleted-trip-banner {
+  display: grid;
+  gap: 4px;
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid #f0b36a;
+  border-radius: 8px;
+  background: #fff8ec;
+  color: var(--text);
+}
+
+.deleted-trip-banner p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.transactions-table {
+  font-size: 0.95rem;
+}
+
+.transactions-table code {
+  font-size: 0.86rem;
+}
+
+.transaction-status {
+  width: fit-content;
+}
+
+.transaction-details-modal {
+  width: min(1120px, calc(100% - 32px));
+}
+
+.transaction-details-modal .signup-modal-content {
+  gap: 12px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.transaction-details-modal h2 {
+  margin-bottom: 0;
+}
+
+.transaction-details-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.details-list.transaction-details-list {
+  gap: 0;
+  align-content: start;
+  padding: 10px 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfaf7;
+}
+
+.details-list.transaction-details-list div {
+  grid-template-columns: minmax(170px, 0.46fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: baseline;
+  min-height: 44px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.details-list.transaction-details-list div:last-child {
+  border-bottom: 0;
+}
+
+.details-list.transaction-details-list dt {
+  white-space: normal;
+}
+
+.details-list.transaction-details-list dd {
+  overflow-wrap: anywhere;
+}
+
+.details-list.transaction-details-list code,
+.transaction-refund-details code {
+  display: inline-block;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.transaction-refund-details {
+  display: grid;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.transaction-refund-details h3 {
+  margin: 0;
+}
+
+.transaction-refund-details table {
+  table-layout: fixed;
+}
+
+.transaction-refunds-table th,
+.transaction-refunds-table td {
+  padding: 7px 10px;
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+
+.transaction-refunds-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.transaction-refunds-table th:nth-child(1),
+.transaction-refunds-table td:nth-child(1) {
+  width: 12%;
+}
+
+.transaction-refunds-table th:nth-child(2),
+.transaction-refunds-table td:nth-child(2) {
+  width: 14%;
+}
+
+.transaction-refunds-table th:nth-child(3),
+.transaction-refunds-table td:nth-child(3) {
+  width: 18%;
+}
+
+.transaction-refunds-table th:nth-child(4),
+.transaction-refunds-table td:nth-child(4) {
+  width: 15%;
+}
+
+.transaction-refunds-table th:nth-child(5),
+.transaction-refunds-table td:nth-child(5) {
+  width: 27%;
+}
+
+.transaction-refunds-table th:nth-child(6),
+.transaction-refunds-table td:nth-child(6) {
+  width: 14%;
+}
+
+.transaction-fee-details {
+  display: grid;
+  gap: 8px;
+  padding: 10px 16px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.transaction-fee-details legend {
+  padding: 0 8px;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.transaction-fee-total {
+  text-align: right;
+}
+
+.transaction-fee-table {
+  table-layout: fixed;
+}
+
+.transaction-fee-table th,
+.transaction-fee-table td {
+  padding: 6px 10px;
+}
+
+.transaction-fee-table tfoot td {
+  border-bottom: 0;
+}
+
+.transaction-fee-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.transaction-fee-table th:not(:first-child),
+.transaction-fee-table td:not(:first-child) {
+  text-align: right;
+}
+
 .campsite-form-panel {
   padding-top: 18px;
 }
@@ -2288,6 +2481,15 @@ textarea {
 
   .payment-due-section {
     width: 100%;
+  }
+
+  .transaction-details-sections {
+    grid-template-columns: 1fr;
+  }
+
+  .details-list.transaction-details-list div {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 
   table {

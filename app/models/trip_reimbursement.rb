@@ -9,6 +9,8 @@ class TripReimbursement < ApplicationRecord
   validates :amount_cents, numericality: { only_integer: true, greater_than: 0 }
 
   def amount
+    return nil if amount_cents.blank?
+
     BigDecimal(amount_cents.to_s) / 100
   end
 

@@ -1,6 +1,9 @@
 class Admin::CampsiteSignupsController < ApplicationController
+  before_action :set_trip
+  before_action :ensure_trip_not_deleted
+
   def create
-    trip = Trip.find(params[:trip_id])
+    trip = @trip
     campsite = trip.campsites.find(add_participant_params[:campsite_id])
 
     if existing_account_participant?
@@ -13,7 +16,7 @@ class Admin::CampsiteSignupsController < ApplicationController
   end
 
   def make_waitlist_eligible
-    trip = Trip.find(params[:trip_id])
+    trip = @trip
     signup = trip.campsite_signups.find(params[:id])
 
     if signup.guest?
@@ -28,7 +31,7 @@ class Admin::CampsiteSignupsController < ApplicationController
   end
 
   def revoke_waitlist_eligibility
-    trip = Trip.find(params[:trip_id])
+    trip = @trip
     signup = trip.campsite_signups.find(params[:id])
 
     if signup.confirmed?
@@ -41,7 +44,7 @@ class Admin::CampsiteSignupsController < ApplicationController
   end
 
   def move_to_campsite
-    trip = Trip.find(params[:trip_id])
+    trip = @trip
     signup = trip.campsite_signups.find(params[:id])
     campsite = trip.campsites.find(move_to_campsite_params[:campsite_id])
 
@@ -55,14 +58,14 @@ class Admin::CampsiteSignupsController < ApplicationController
   end
 
   def move_to_waitlist
-    trip = Trip.find(params[:trip_id])
+    trip = @trip
     signup = trip.campsite_signups.find(params[:id])
 
     if signup.guest?
       redirect_to admin_trip_path(trip), alert: "Guests follow the primary participant signup."
     elsif signup.waitlisted?
       redirect_to admin_trip_path(trip), alert: "#{signup.user.full_name} is already on the waitlist."
-    elsif move_confirmed_signup_to_waitlist(signup)
+    elsif move_confirmed_signup_to_waitlist(signup, issue_refund: issue_refund?)
       redirect_to admin_trip_path(trip), notice: "#{signup.user.full_name} was moved to the waitlist."
     else
       redirect_to admin_trip_path(trip), alert: signup.errors.full_messages.to_sentence
@@ -70,7 +73,7 @@ class Admin::CampsiteSignupsController < ApplicationController
   end
 
   def remove_from_campsite
-    trip = Trip.find(params[:trip_id])
+    trip = @trip
     signup = trip.campsite_signups.find(params[:id])
     campsite = signup.campsite
 
@@ -84,7 +87,7 @@ class Admin::CampsiteSignupsController < ApplicationController
   end
 
   def remove_from_waitlist
-    trip = Trip.find(params[:trip_id])
+    trip = @trip
     signup = trip.campsite_signups.find(params[:id])
 
     if signup.guest?
@@ -99,7 +102,7 @@ class Admin::CampsiteSignupsController < ApplicationController
   end
 
   def mark_no_payment_needed
-    trip = Trip.find(params[:trip_id])
+    trip = @trip
     signup = trip.campsite_signups.find(params[:id])
 
     if payment_params[:waived_reason].blank?
@@ -116,7 +119,7 @@ class Admin::CampsiteSignupsController < ApplicationController
   end
 
   def mark_already_paid
-    trip = Trip.find(params[:trip_id])
+    trip = @trip
     signup = trip.campsite_signups.find(params[:id])
 
     if signup.arrival_date.blank? || signup.checkout_date.blank?
@@ -137,7 +140,7 @@ class Admin::CampsiteSignupsController < ApplicationController
   end
 
   def create_payment_link
-    trip = Trip.find(params[:trip_id])
+    trip = @trip
     signup = trip.campsite_signups.find(params[:id])
 
     if signup.arrival_date.blank? || signup.checkout_date.blank? || !signup.waiver_signed?
@@ -162,6 +165,16 @@ class Admin::CampsiteSignupsController < ApplicationController
   end
 
   private
+
+  def set_trip
+    @trip = Trip.find(params[:trip_id])
+  end
+
+  def ensure_trip_not_deleted
+    return unless @trip.deleted?
+
+    redirect_to admin_trip_path(@trip), alert: "Restore this trip before making changes.", status: :see_other
+  end
 
   def add_participant_params
     params.fetch(:campsite_signup, {}).permit(:campsite_id, :participant_account_status, :user_id, new_user: %i[first_name last_name email phone])
@@ -351,9 +364,9 @@ class Admin::CampsiteSignupsController < ApplicationController
     false
   end
 
-  def move_confirmed_signup_to_waitlist(signup)
+  def move_confirmed_signup_to_waitlist(signup, issue_refund:)
     moved = false
-    CampsiteSignupPaymentLifecycle.refund_payment_for!(signup: signup, reason: "moved_to_waitlist")
+    CampsiteSignupPaymentLifecycle.refund_payment_for!(signup: signup, reason: "moved_to_waitlist", initiated_by: "admin") if issue_refund
 
     CampsiteSignup.transaction do
       signup.lock!
@@ -399,7 +412,8 @@ class Admin::CampsiteSignupsController < ApplicationController
         CampsiteSignupPaymentLifecycle.cancel_or_refund_signup!(
           signup: signup,
           reason: "removed_by_admin",
-          issue_refund: issue_refund
+          issue_refund: issue_refund,
+          refund_initiated_by: "admin"
         )
       else
         signup.destroy!

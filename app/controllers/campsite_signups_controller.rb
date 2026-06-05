@@ -6,7 +6,7 @@ class CampsiteSignupsController < ApplicationController
   skip_before_action :require_login, only: %i[guest_password participant_password]
 
   def create
-    trip = Trip.published.find(params[:trip_id])
+    trip = Trip.published_for_public.find(params[:trip_id])
     campsite = trip.campsites.find(params[:campsite_id])
     signup = trip.campsite_signups.active.find_or_initialize_by(user: current_user)
 
@@ -30,7 +30,7 @@ class CampsiteSignupsController < ApplicationController
   end
 
   def destroy
-    trip = Trip.published.find(params[:trip_id])
+    trip = Trip.published_for_public.find(params[:trip_id])
     campsite = trip.campsites.find(params[:campsite_id])
     signup = trip.campsite_signups.active.find_by(user: current_user)
 
@@ -53,7 +53,7 @@ class CampsiteSignupsController < ApplicationController
   end
 
   def guest_password
-    trip = Trip.published.find(params[:trip_id])
+    trip = Trip.published_for_public.find(params[:trip_id])
     campsite = trip.campsites.find(params[:campsite_id])
     signup = find_guest_completion_signup(trip, campsite)
 
@@ -71,7 +71,7 @@ class CampsiteSignupsController < ApplicationController
   end
 
   def participant_password
-    trip = Trip.published.find(params[:trip_id])
+    trip = Trip.published_for_public.find(params[:trip_id])
     campsite = trip.campsites.find(params[:campsite_id])
     signup = find_participant_completion_signup(trip, campsite)
 
@@ -471,7 +471,8 @@ class CampsiteSignupsController < ApplicationController
       CampsiteSignupPaymentLifecycle.cancel_or_refund_signup!(
         signup: signup.primary_signup,
         reason: "requested_by_participant",
-        issue_refund: issue_refund
+        issue_refund: issue_refund,
+        refund_initiated_by: "participant"
       )
     else
       signup.destroy!

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_04_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_05_090100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -70,6 +70,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_04_170000) do
     t.datetime "created_at", null: false
     t.string "currency", default: "usd", null: false
     t.text "failure_reason"
+    t.string "initiated_by", default: "system", null: false
     t.text "reason"
     t.datetime "refunded_at"
     t.string "source", default: "stripe", null: false
@@ -78,6 +79,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_04_170000) do
     t.string "stripe_status"
     t.datetime "updated_at", null: false
     t.index ["campsite_signup_payment_id"], name: "idx_on_campsite_signup_payment_id_82d8e6042f"
+    t.index ["initiated_by"], name: "index_campsite_signup_payment_refunds_on_initiated_by"
     t.index ["status"], name: "index_campsite_signup_payment_refunds_on_status"
     t.index ["stripe_refund_id"], name: "index_campsite_signup_payment_refunds_on_stripe_refund", unique: true, where: "(stripe_refund_id IS NOT NULL)"
   end
@@ -239,6 +241,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_04_170000) do
   create_table "trips", force: :cascade do |t|
     t.bigint "campsite_coordinator_id"
     t.datetime "created_at", null: false
+    t.datetime "deleted_at"
     t.text "description"
     t.date "end_date", null: false
     t.string "location", null: false
@@ -247,6 +250,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_04_170000) do
     t.string "status", default: "draft", null: false
     t.datetime "updated_at", null: false
     t.index ["campsite_coordinator_id"], name: "index_trips_on_campsite_coordinator_id"
+    t.index ["deleted_at"], name: "index_trips_on_deleted_at"
     t.index ["start_date"], name: "index_trips_on_start_date"
     t.index ["status"], name: "index_trips_on_status"
   end

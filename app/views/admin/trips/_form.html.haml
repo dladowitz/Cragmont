@@ -44,7 +44,7 @@
               .confirmation-modal-content
                 %div
                   %h2 Delete trip?
-                  %p This will delete the trip and its campsites.
+                  %p This will hide the trip from normal lists. Campsites, participants, payments, refunds, and transaction history will be preserved.
                 .form-actions
                   %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
                   %button.button.danger{form: "delete-trip-#{trip.id}", type: "submit"} Delete trip

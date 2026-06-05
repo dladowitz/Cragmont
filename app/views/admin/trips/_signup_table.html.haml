@@ -1,6 +1,7 @@
 - waitlist = local_assigns.fetch(:waitlist, false)
 - trip = local_assigns[:trip]
 - campsites = Array(local_assigns[:campsites])
+- read_only = local_assigns.fetch(:read_only, false)
 - allowed_signup_tooltip = "Participants can sign themselves up from the waitlist"
 - add_campsite_tooltip = "Adds a participant directly to a campsite"
 - remove_waitlist_tooltip = "Removes Participant from Waitlist"
@@ -13,7 +14,7 @@
       %th Minors
       - unless waitlist
         %th Dates
-      - if waitlist
+      - if waitlist && !read_only
         %th
           %span.tooltip-heading.info-tooltip{aria: { label: allowed_signup_tooltip }, tabindex: "0"}
             %span Self Signup
@@ -29,12 +30,13 @@
             %span Remove
             %span.info-tooltip-icon{aria: { hidden: "true" }} i
             %span.info-tooltip-box{role: "tooltip"}= remove_waitlist_tooltip
-      - else
+      - elsif !waitlist
         %th Payment
         %th Waiver
         %th Info
-        %th Move to Waitlist
-        %th Remove
+        - unless read_only
+          %th Move to Waitlist
+          %th Remove
   %tbody
     - signups.each do |signup|
       - signup_trip = trip || signup.trip
@@ -93,9 +95,11 @@
           %td
             - if !missing_dates
               = signup.compact_attendance_date_range
+            - elsif read_only
+              %span.missing-value Missing
             - else
               %button.missing-value.missing-link{"data-action" => "copyable-modal#open", type: "button"} Missing
-        - if waitlist
+        - if waitlist && !read_only
           %td.admin-self-signup-cell
             .admin-self-signup-control
               - if signup.waitlist_eligible?
@@ -150,9 +154,9 @@
                   .form-actions
                     %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
                     = button_to "Remove", remove_from_waitlist_admin_trip_campsite_signup_path(trip, signup), method: :delete, class: "button danger"
-        - else
+        - elsif !waitlist
           %td
-            = render "payment_controls", signup: signup, trip: signup_trip, missing_dates: missing_dates, missing_waiver: missing_waiver, participant_details_link: participant_details_link
+            = render "payment_controls", signup: signup, trip: signup_trip, missing_dates: missing_dates, missing_waiver: missing_waiver, participant_details_link: participant_details_link, read_only: read_only
           %td
             - if signup.waiver_signed?
               .waiver-download
@@ -162,8 +166,11 @@
                   %svg.waiver-download-icon{ aria: { hidden: "true" }, fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg" }
                     %path{ d: "M12 3v12m0 0 4-4m-4 4-4-4M5 21h14", stroke: "currentColor", "stroke-linecap" => "round", "stroke-linejoin" => "round", "stroke-width" => "2" }
             - else
-              %button.missing-value.missing-link{"data-action" => "copyable-modal#open", type: "button"} Missing
-            - if missing_dates || missing_waiver
+              - if read_only
+                %span.missing-value Missing
+              - else
+                %button.missing-value.missing-link{"data-action" => "copyable-modal#open", type: "button"} Missing
+            - if !read_only && (missing_dates || missing_waiver)
               %dialog.signup-modal.missing-details-modal{"data-action" => "click->copyable-modal#closeOnBackdrop", "data-copyable-modal-target" => "dialog"}
                 .signup-modal-content
                   %div
@@ -204,54 +211,81 @@
                       %dd= signup.user.member? ? "Member" : "Non-member"
                   .form-actions
                     %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
-          %td
-            - if signup.guest?
-              %span.muted Follows primary
-            - else
+          - unless read_only
+            %td
+              - if signup.guest?
+                %span.muted Follows primary
+              - else
+                %div{"data-controller" => "modal"}
+                  %button.button.secondary{"data-action" => "modal#open", :type => "button"} Waitlist
+                  %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                    .confirmation-modal-content
+                      %div
+                        %h2 Move #{signup.user.full_name} to the waitlist?
+                        %p This will remove their campsite assignment and attendance dates.
+                        %dl.details-list
+                          %div
+                            %dt Trip starts
+                            %dd= signup_trip.start_date.to_fs(:long)
+                          %div
+                            %dt Days until trip
+                            %dd= signup.days_until_trip_start
+                        - refund_amount_cents = signup.refundable_amount_cents
+                        - if refund_amount_cents.positive?
+                          .admin-refund-choice
+                            %p.admin-refund-choice-spacer{"aria-hidden" => "true"}
+                            %p.muted
+                              %strong Policy:
+                              Full refund if 7 or more days before start of trip.
+                              %br
+                              Admins can override policy with a good reason.
+                            %p.admin-refund-choice-spacer{"aria-hidden" => "true"}
+                            %p
+                              %strong Amount paid:
+                              = format_cents(refund_amount_cents)
+                      .form-actions
+                        %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
+                        - if refund_amount_cents.positive?
+                          - no_refund_button_class = signup.refund_eligible? ? "button danger secondary" : "button danger"
+                          - refund_button_class = signup.refund_eligible? ? "button danger" : "button danger secondary"
+                          = button_to "Move without refund", move_to_waitlist_admin_trip_campsite_signup_path(signup_trip, signup), method: :patch, params: { payment: { issue_refund: "0" } }, class: no_refund_button_class
+                          = button_to "Move and issue refund", move_to_waitlist_admin_trip_campsite_signup_path(signup_trip, signup), method: :patch, params: { payment: { issue_refund: "1" } }, class: refund_button_class
+                        - else
+                          = button_to "Waitlist", move_to_waitlist_admin_trip_campsite_signup_path(signup_trip, signup), method: :patch, class: "button secondary"
+            %td
               %div{"data-controller" => "modal"}
-                %button.button.secondary{"data-action" => "modal#open", :type => "button"} Waitlist
+                %button.button.danger.secondary{"data-action" => "modal#open", :type => "button"} Remove
                 %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                   .confirmation-modal-content
                     %div
-                      %h2 Move #{signup.user.full_name} to the waitlist?
-                      %p This will remove their campsite assignment and attendance dates.
+                      %h2 Remove #{signup.user.full_name} from this campsite?
+                      %p This will remove their signup from the trip.
+                      %dl.details-list
+                        %div
+                          %dt Trip starts
+                          %dd= signup_trip.start_date.to_fs(:long)
+                        %div
+                          %dt Days until trip
+                          %dd= signup.days_until_trip_start
+                      - refund_amount_cents = signup.refundable_amount_cents
+                      - if refund_amount_cents.positive?
+                        .admin-refund-choice
+                          %p.admin-refund-choice-spacer{"aria-hidden" => "true"}
+                          %p.muted
+                            %strong Policy:
+                            Full refund if 7 or more days before start of trip. 
+                            %br
+                            Admins can override policy with a good reason.
+                          %p.admin-refund-choice-spacer{"aria-hidden" => "true"}
+                          %p
+                            %strong Amount paid:
+                            = format_cents(refund_amount_cents)
                     .form-actions
                       %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
-                      = button_to "Waitlist", move_to_waitlist_admin_trip_campsite_signup_path(signup_trip, signup), method: :patch, class: "button secondary"
-          %td
-            %div{"data-controller" => "modal"}
-              %button.button.danger.secondary{"data-action" => "modal#open", :type => "button"} Remove
-              %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
-                .confirmation-modal-content
-                  %div
-                    %h2 Remove #{signup.user.full_name} from this campsite?
-                    %p This will remove their signup from the trip.
-                    %dl.details-list
-                      %div
-                        %dt Trip starts
-                        %dd= signup_trip.start_date.to_fs(:long)
-                      %div
-                        %dt Days until trip
-                        %dd= signup.days_until_trip_start
-                    - refund_amount_cents = signup.refundable_amount_cents
-                    - if refund_amount_cents.positive?
-                      .admin-refund-choice
-                        %p.admin-refund-choice-spacer{"aria-hidden" => "true"}
-                        %p.muted
-                          %strong Policy:
-                          Full refund if 7 or more days before start of trip. 
-                          %br
-                          Admins can override policy with a good reason.
-                        %p.admin-refund-choice-spacer{"aria-hidden" => "true"}
-                        %p
-                          %strong Amount paid:
-                          = format_cents(refund_amount_cents)
-                  .form-actions
-                    %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
-                    - if refund_amount_cents.positive?
-                      - no_refund_button_class = signup.refund_eligible? ? "button danger secondary" : "button danger"
-                      - refund_button_class = signup.refund_eligible? ? "button danger" : "button danger secondary"
-                      = button_to "Remove without refund", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, params: { payment: { issue_refund: "0" } }, class: no_refund_button_class
-                      = button_to "Remove and issue refund", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, params: { payment: { issue_refund: "1" } }, class: refund_button_class
-                    - else
-                      = button_to "Remove", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, class: "button danger"
+                      - if refund_amount_cents.positive?
+                        - no_refund_button_class = signup.refund_eligible? ? "button danger secondary" : "button danger"
+                        - refund_button_class = signup.refund_eligible? ? "button danger" : "button danger secondary"
+                        = button_to "Remove without refund", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, params: { payment: { issue_refund: "0" } }, class: no_refund_button_class
+                        = button_to "Remove and issue refund", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, params: { payment: { issue_refund: "1" } }, class: refund_button_class
+                      - else
+                        = button_to "Remove", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, class: "button danger"
