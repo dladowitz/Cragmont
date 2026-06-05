@@ -804,6 +804,39 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "shared details link hides fee fields for campsite coordinator" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:alex), arrival_date: nil, checkout_date: nil)
+    signup.payments.create!(
+      source: "waived",
+      status: "waived",
+      amount_cents: 0,
+      waived_reason: "campsite_coordinator_does_not_pay",
+      pricing_snapshot: CampsiteSignupPricing.zero.snapshot
+    )
+    log_in_as(users(:alex))
+
+    get trip_url(trips(:yosemite), complete_signup: signup.signed_id(purpose: :complete_participant_details))
+
+    assert_response :success
+    assert_select "[data-controller='modal'][data-modal-open-value='true']" do
+      assert_select "dialog.signup-modal"
+      assert_select "h2", "You've been added to the Yosemite Valley Spring trip."
+      assert_select "p", "Please select dates you will be attending"
+      assert_select "form[action='#{signup_path_for}'][method='post']" do
+        assert_select "input[type='hidden'][name='campsite_signup[intent]'][value='complete_participant_details']"
+        assert_select "input[type='date'][name='campsite_signup[arrival_date]'][required]"
+        assert_select "input[type='date'][name='campsite_signup[checkout_date]'][required]"
+        assert_select ".fee-fields", count: 0
+        assert_select ".fee-section legend", text: "Adult Fees", count: 0
+        assert_select ".fee-section legend", text: "Minor Fees", count: 0
+        assert_select ".payment-due-section legend", text: "Payment Due", count: 0
+        assert_select ".refund-policy-section legend", text: "Refund Policy", count: 0
+        assert_select "button", text: "Complete"
+        assert_select "button", text: "Pay Now and Complete", count: 0
+      end
+    end
+  end
+
   test "shared details link logs in waitlisted participant moved to campsite" do
     campsite = campsites(:yosemite_a)
     signup = create_waitlisted_signup!(trip: trips(:yosemite), user: users(:sam))

@@ -45,6 +45,26 @@ class CampsiteSignupPricing
     new(...).call
   end
 
+  def self.zero(currency: "usd")
+    Result.new(
+      amount_cents: 0,
+      currency: currency,
+      adult_count: 1,
+      counted_minor_count: 0,
+      free_minor_count: 0,
+      night_count: 0,
+      extra_night_count: 0,
+      adult_unit_amount_cents: 0,
+      counted_minor_unit_amount_cents: 0,
+      first_two_nights_fee_cents: 0,
+      extra_night_fee_cents: 0,
+      minor_fee_cents: 0,
+      minor_extra_night_fee_cents: 0,
+      uncounted_minor_age_limit: SiteSetting.current.uncounted_minor_age_limit,
+      line_items: []
+    )
+  end
+
   def initialize(arrival_date:, checkout_date:, adult_guest_count: 0, minor_ages: [], settings: SiteSetting.current)
     @arrival_date = arrival_date
     @checkout_date = checkout_date

@@ -130,6 +130,11 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
             assert_select "input[type='email'][name='campsite_signup[new_user][email]'][required][disabled]"
             assert_select "input[type='tel'][name='campsite_signup[new_user][phone]'][disabled]"
           end
+          assert_select "legend", text: "Set this person as Campsite Coordinator"
+          assert_select "input[type='radio'][name='campsite_signup[set_as_campsite_coordinator]'][value='0'][checked]"
+          assert_select "label", text: "No"
+          assert_select "input[type='radio'][name='campsite_signup[set_as_campsite_coordinator]'][value='1']"
+          assert_select "label", text: "Yes"
           assert_select "input[type='submit'][value='Add Participant']"
         end
       end

@@ -1,4 +1,6 @@
 class Admin::CampsiteSignupsController < Admin::BaseController
+  CAMPSITE_COORDINATOR_WAIVED_REASON = "campsite_coordinator_does_not_pay".freeze
+
   before_action :set_trip
   before_action :ensure_trip_not_deleted
 
@@ -177,7 +179,7 @@ class Admin::CampsiteSignupsController < Admin::BaseController
   end
 
   def add_participant_params
-    params.fetch(:campsite_signup, {}).permit(:campsite_id, :participant_account_status, :user_id, new_user: %i[first_name last_name email phone])
+    params.fetch(:campsite_signup, {}).permit(:campsite_id, :participant_account_status, :user_id, :set_as_campsite_coordinator, new_user: %i[first_name last_name email phone])
   end
 
   def payment_params
@@ -196,6 +198,10 @@ class Admin::CampsiteSignupsController < Admin::BaseController
     add_participant_params[:participant_account_status] == "new"
   end
 
+  def set_as_campsite_coordinator?
+    ActiveModel::Type::Boolean.new.cast(add_participant_params[:set_as_campsite_coordinator])
+  end
+
   def add_existing_participant(trip, campsite)
     if add_participant_params[:user_id].blank?
       redirect_to admin_trip_path(trip), alert: "Wow, that was a whipper. Choose a participant before stepping onto this campsite."
@@ -205,7 +211,7 @@ class Admin::CampsiteSignupsController < Admin::BaseController
     user = User.find(add_participant_params[:user_id])
     signup = build_admin_assigned_signup(trip, campsite, user)
 
-    if save_admin_assigned_signup(signup, campsite)
+    if save_admin_assigned_signup(signup, campsite, set_as_campsite_coordinator: set_as_campsite_coordinator?)
       redirect_to admin_trip_path(trip, anchor: "admin-campsite-#{campsite.id}"), notice: "On belay! #{user.full_name} was added to #{campsite.campground.name} site #{campsite.site_number}."
     else
       redirect_to admin_trip_path(trip), alert: "Wow, that was a whipper. #{signup.errors.full_messages.to_sentence}"
@@ -231,7 +237,7 @@ class Admin::CampsiteSignupsController < Admin::BaseController
     User.transaction do
       user.save!
       signup = build_admin_assigned_signup(trip, campsite, user)
-      save_admin_assigned_signup!(signup, campsite)
+      save_admin_assigned_signup!(signup, campsite, set_as_campsite_coordinator: set_as_campsite_coordinator?)
       saved = true
     end
 
@@ -312,20 +318,31 @@ class Admin::CampsiteSignupsController < Admin::BaseController
     )
   end
 
-  def save_admin_assigned_signup(signup, campsite)
-    save_admin_assigned_signup!(signup, campsite)
+  def save_admin_assigned_signup(signup, campsite, set_as_campsite_coordinator: false)
+    save_admin_assigned_signup!(signup, campsite, set_as_campsite_coordinator: set_as_campsite_coordinator)
     true
   rescue ActiveRecord::RecordInvalid
     false
   end
 
-  def save_admin_assigned_signup!(signup, campsite)
+  def save_admin_assigned_signup!(signup, campsite, set_as_campsite_coordinator: false)
     CampsiteSignup.transaction do
       campsite.lock!
       signup.save!
       signup.update!(status: "confirmed", waitlist_eligible_at: nil)
+      waive_campsite_coordinator_payment!(signup) if set_as_campsite_coordinator
       campsite.lock_signups_if_full!
     end
+  end
+
+  def waive_campsite_coordinator_payment!(signup)
+    signup.trip.update!(campsite_coordinator: signup.user)
+    CampsiteSignupPaymentLifecycle.mark_waived!(
+      signup: signup,
+      pricing: CampsiteSignupPricing.zero,
+      reason: CAMPSITE_COORDINATOR_WAIVED_REASON,
+      created_by: current_user
+    )
   end
 
   def move_to_campsite_params
