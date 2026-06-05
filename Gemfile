@@ -41,10 +41,18 @@ gem "thruster", require: false
 gem "image_processing", "~> 2.0"
 
 # Render Rails views with HAML templates.
-gem "haml-rails", "~> 2.1"
+gem "haml-rails", "~> 3.0"
 
 # Generate signed waiver PDFs for trip signups.
 gem "prawn", "~> 2.5"
+
+# Collect card payments for trip signups.
+gem "stripe", "~> 13.1"
+
+group :development, :staging, :test do
+  # Load local environment variables from .env files.
+  gem "dotenv-rails", "~> 3.1"
+end
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem

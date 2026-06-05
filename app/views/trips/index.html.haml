@@ -4,9 +4,11 @@
   %section.panel.trips-index-panel
     .panel-header
       %div
-        %p.eyebrow Rack up
         %h1 Trips
-        %p.muted Pick your next pitch, grab a campsite, and get the crew moving.
+        %p.muted 
+          Pick 
+          = link_to "your next route", "https://www.mountainproject.com/area/105708959/california", target: "_blank"
+          , grab a campsite, take a photo of the tope and get the crew moving.
     - if @trips.any?
       .trip-cards
         - @trips.each do |trip|

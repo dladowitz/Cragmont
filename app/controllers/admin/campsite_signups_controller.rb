@@ -98,10 +98,77 @@ class Admin::CampsiteSignupsController < ApplicationController
     end
   end
 
+  def mark_no_payment_needed
+    trip = Trip.find(params[:trip_id])
+    signup = trip.campsite_signups.find(params[:id])
+
+    if payment_params[:waived_reason].blank?
+      redirect_to admin_trip_path(trip), alert: "Wow, that was a whipper. Add a note for why no payment is needed."
+    else
+      CampsiteSignupPaymentLifecycle.mark_waived!(
+        signup: signup,
+        pricing: pricing_for(signup),
+        reason: payment_params[:waived_reason],
+        created_by: current_user
+      )
+      redirect_to admin_trip_path(trip), notice: "On belay! Payment was marked as not needed for #{signup.user.full_name}."
+    end
+  end
+
+  def mark_already_paid
+    trip = Trip.find(params[:trip_id])
+    signup = trip.campsite_signups.find(params[:id])
+
+    if signup.arrival_date.blank? || signup.checkout_date.blank?
+      redirect_to admin_trip_path(trip), alert: "Wow, that was a whipper. Add attendance dates before marking payment."
+    elsif payment_params[:manual_payment_method].blank?
+      redirect_to admin_trip_path(trip), alert: "Wow, that was a whipper. Choose how this participant already paid."
+    else
+      CampsiteSignupPaymentLifecycle.mark_manual_paid!(
+        signup: signup,
+        pricing: pricing_for(signup),
+        method: payment_params[:manual_payment_method],
+        paid_at: manual_paid_at,
+        note: payment_params[:note],
+        created_by: current_user
+      )
+      redirect_to admin_trip_path(trip), notice: "On belay! Payment was marked as already paid for #{signup.user.full_name}."
+    end
+  end
+
+  def create_payment_link
+    trip = Trip.find(params[:trip_id])
+    signup = trip.campsite_signups.find(params[:id])
+
+    if signup.arrival_date.blank? || signup.checkout_date.blank? || !signup.waiver_signed?
+      redirect_to admin_trip_path(trip), alert: "Share the waiver and date selection link before creating a payment link."
+      return
+    end
+
+    pricing = pricing_for(signup)
+    if pricing.free?
+      CampsiteSignupPaymentLifecycle.mark_waived!(
+        signup: signup,
+        pricing: pricing,
+        reason: "No payment due",
+        created_by: current_user
+      )
+      redirect_to admin_trip_path(trip), notice: "No payment is due for #{signup.user.full_name}."
+    elsif create_admin_payment_checkout(trip, signup, pricing)
+      redirect_to admin_trip_path(trip), notice: "Payment link was created for #{signup.user.full_name}."
+    else
+      redirect_to admin_trip_path(trip), alert: signup.errors.full_messages.to_sentence
+    end
+  end
+
   private
 
   def add_participant_params
     params.fetch(:campsite_signup, {}).permit(:campsite_id, :participant_account_status, :user_id, new_user: %i[first_name last_name email phone])
+  end
+
+  def payment_params
+    params.fetch(:payment, {}).permit(:waived_reason, :manual_payment_method, :manual_paid_at, :note)
   end
 
   def existing_account_participant?
@@ -185,7 +252,37 @@ class Admin::CampsiteSignupsController < ApplicationController
   def existing_user_already_on_trip?(trip, email)
     existing_user = User.find_by(email: email.to_s.strip.downcase)
 
-    existing_user.present? && trip.campsite_signups.exists?(user: existing_user)
+    existing_user.present? && trip.campsite_signups.active.exists?(user: existing_user)
+  end
+
+  def pricing_for(signup)
+    CampsiteSignupPricing.call(
+      arrival_date: signup.arrival_date,
+      checkout_date: signup.checkout_date,
+      adult_guest_count: signup.guest_signups.size,
+      minor_ages: signup.campsite_signup_minors.map(&:age)
+    )
+  end
+
+  def manual_paid_at
+    Time.zone.parse(payment_params[:manual_paid_at].presence || Time.current.to_s)
+  rescue ArgumentError
+    Time.current
+  end
+
+  def create_admin_payment_checkout(trip, signup, pricing)
+    CampsiteSignupPaymentLifecycle.create_pending_checkout!(
+      signup: signup,
+      pricing: pricing,
+      success_url: admin_trip_url(trip, stripe_checkout: "success"),
+      cancel_url: admin_trip_url(trip, stripe_checkout: "canceled"),
+      created_by: current_user,
+      previous_signup_status: signup.status
+    )
+    true
+  rescue StripeConfigurationError, Stripe::StripeError => error
+    signup.errors.add(:base, error.message)
+    false
   end
 
   def build_admin_assigned_signup(trip, campsite, user)
@@ -252,6 +349,7 @@ class Admin::CampsiteSignupsController < ApplicationController
 
   def move_confirmed_signup_to_waitlist(signup)
     moved = false
+    CampsiteSignupPaymentLifecycle.refund_payment_for!(signup: signup, reason: "moved_to_waitlist")
 
     CampsiteSignup.transaction do
       signup.lock!
@@ -285,6 +383,7 @@ class Admin::CampsiteSignupsController < ApplicationController
 
   def remove_confirmed_signup(signup)
     removed = false
+    paid_signup = signup.payments.exists?
 
     CampsiteSignup.transaction do
       signup.lock!
@@ -292,7 +391,11 @@ class Admin::CampsiteSignupsController < ApplicationController
       campsite.lock!
       campsite.lock_signups! if campsite.capacity_full?
 
-      signup.destroy!
+      if paid_signup
+        CampsiteSignupPaymentLifecycle.cancel_or_refund_signup!(signup: signup, reason: "removed_by_admin")
+      else
+        signup.destroy!
+      end
       signup.trip.mark_next_waitlisted_signup_eligible!
       removed = true
     end

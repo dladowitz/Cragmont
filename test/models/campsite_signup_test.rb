@@ -32,6 +32,13 @@ class CampsiteSignupTest < ActiveSupport::TestCase
     assert_includes duplicate.errors[:user_id], "is already signed up for this trip"
   end
 
+  test "allows signup for the same trip after previous signup was canceled" do
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam), status: "canceled")
+    signup = CampsiteSignup.new(campsite: campsites(:yosemite_b), user: users(:sam))
+
+    assert signup.valid?
+  end
+
   test "signup is confirmed while capacity remains" do
     signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
 
@@ -219,6 +226,17 @@ class CampsiteSignupTest < ActiveSupport::TestCase
     assert_not signup.valid?
     assert_includes signup.errors[:arrival_date], "must be on or after the campsite arrival date"
     assert_includes signup.errors[:checkout_date], "must be on or before the campsite checkout date"
+  end
+
+  test "canceled signup can keep attendance dates outside current campsite dates" do
+    campsite = campsites(:yosemite_a)
+    signup = create_campsite_signup!(campsite: campsite, user: users(:sam))
+    campsite.update_columns(arrival_date: campsite.arrival_date + 1.day, updated_at: Time.current)
+
+    signup.status = "canceled"
+
+    assert signup.valid?
+    assert_nothing_raised { signup.save! }
   end
 
   test "checkout date must be after arrival date" do

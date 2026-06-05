@@ -1,3 +1,4 @@
+- content_for :body_class, "registration-new-page"
 = render "shared/public_header"
 %main.public-main
   %section.panel
@@ -50,3 +51,4 @@
       .form-actions
         = form.submit "Create account"
         = link_to "Cancel", trips_path, class: "button secondary"
+%p.background-image-caption Tuolumne Meadows, Cathedral Peak

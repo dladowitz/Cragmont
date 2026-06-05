@@ -3,8 +3,20 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static values = {
     availableParticipantCapacity: Number,
+    directSignupIntent: String,
+    existingAdultGuestCount: Number,
+    existingCountedMinorCount: Number,
+    extraNightFeeCents: Number,
+    firstTwoNightsFeeCents: Number,
+    freeSubmitText: String,
+    minorExtraNightFeeCents: Number,
+    minorFeeCents: Number,
+    nextSubmitText: String,
+    paySubmitText: String,
     showCapacityWarning: Boolean,
-    uncountedMinorAgeLimit: Number
+    uncountedMinorAgeLimit: Number,
+    waitlistIntent: String,
+    waitlistSubmitText: String
   }
 
   static targets = [
@@ -13,13 +25,18 @@ export default class extends Controller {
     "capacityWarning",
     "canvas",
     "checkoutDate",
+    "feeFields",
     "guestFields",
     "guestToggle",
     "input",
+    "intent",
     "intro",
     "minorFields",
     "minorToggle",
+    "paymentLineItems",
+    "paymentSummary",
     "signupStep",
+    "signupStepSubmit",
     "submit",
     "waiver",
     "waiverStep"
@@ -45,6 +62,7 @@ export default class extends Controller {
     this.clear()
     this.togglePartyFields()
     this.updateCapacityWarning()
+    this.updatePaymentSummary()
     this.checkWaiverScroll()
     window.addEventListener("resize", this.boundResize)
   }
@@ -129,7 +147,19 @@ export default class extends Controller {
     this.update()
   }
 
+  continueSignup() {
+    this.updateCapacityWarning()
+    if (this.waitlistFallbackActive()) {
+      this.prepareWaitlistFallback()
+      this.element.requestSubmit()
+      return
+    }
+
+    this.showAcknowledgement()
+  }
+
   showAcknowledgement() {
+    this.prepareDirectSignup()
     this.checkAttendanceDates()
     if (!this.element.reportValidity()) return
 
@@ -156,6 +186,17 @@ export default class extends Controller {
 
     this.checkoutDateTarget.setCustomValidity("Checkout date must be after the arrival date.")
     return false
+  }
+
+  showDatePicker(event) {
+    const input = event.currentTarget
+    if (typeof input.showPicker !== "function") return
+
+    try {
+      input.showPicker()
+    } catch (_error) {
+      input.focus()
+    }
   }
 
   showWaiver() {
@@ -188,6 +229,7 @@ export default class extends Controller {
     this.toggleFieldGroup(this.hasMinorFieldsTarget ? this.minorFieldsTarget : null, this.minorSignupSelected(), "requiredForMinor")
     this.toggleFieldGroup(this.hasGuestFieldsTarget ? this.guestFieldsTarget : null, this.guestSignupSelected(), "requiredForGuest")
     this.updateCapacityWarning()
+    this.updatePaymentSummary()
   }
 
   minorSignupSelected() {
@@ -227,6 +269,7 @@ export default class extends Controller {
 
     this.updateAddButton(group, selected)
     this.updateCapacityWarning()
+    this.updatePaymentSummary()
   }
 
   requiredFieldsComplete(group, requiredDatasetKey) {
@@ -248,6 +291,7 @@ export default class extends Controller {
     hiddenRow.dataset.partyRowVisible = "true"
     this.toggleFieldGroup(group, true, group.dataset.requiredDatasetKey)
     this.updateCapacityWarning()
+    this.updatePaymentSummary()
   }
 
   removePartyRow(event) {
@@ -264,6 +308,7 @@ export default class extends Controller {
       this.setGroupToggle(group, false)
       this.toggleFieldGroup(group, false, group.dataset.requiredDatasetKey)
       this.updateCapacityWarning()
+      this.updatePaymentSummary()
       return
     }
 
@@ -280,6 +325,7 @@ export default class extends Controller {
 
     this.toggleFieldGroup(group, true, group.dataset.requiredDatasetKey)
     this.updateCapacityWarning()
+    this.updatePaymentSummary()
   }
 
   updateAddButton(group, selected) {
@@ -314,9 +360,252 @@ export default class extends Controller {
   }
 
   updateCapacityWarning() {
-    if (!this.hasCapacityWarningTarget || !this.showCapacityWarningValue) return
+    if (this.hasCapacityWarningTarget && this.showCapacityWarningValue) {
+      this.capacityWarningTarget.hidden = !this.waitlistFallbackActive()
+    }
 
-    this.capacityWarningTarget.hidden = this.partyCapacityCount() <= this.availableParticipantCapacityValue
+    this.updateWaitlistFallbackControls()
+  }
+
+  updateWaitlistFallbackControls() {
+    if (this.waitlistFallbackActive()) {
+      this.prepareWaitlistFallback()
+    } else {
+      this.prepareDirectSignup()
+    }
+  }
+
+  prepareWaitlistFallback() {
+    if (this.hasFeeFieldsTarget) this.feeFieldsTarget.hidden = true
+    if (this.hasSignupStepSubmitTarget) this.signupStepSubmitTarget.textContent = this.waitlistSubmitTextValue
+    if (this.hasIntentTarget) this.intentTarget.value = this.waitlistIntentValue
+    this.toggleAttendanceDateRequirements(false)
+  }
+
+  prepareDirectSignup() {
+    if (this.hasFeeFieldsTarget) this.feeFieldsTarget.hidden = false
+    if (this.hasSignupStepSubmitTarget) this.signupStepSubmitTarget.textContent = this.nextSubmitTextValue
+    if (this.hasIntentTarget) this.intentTarget.value = this.directSignupIntentValue
+    this.toggleAttendanceDateRequirements(true)
+  }
+
+  waitlistFallbackActive() {
+    return this.showCapacityWarningValue && this.partyCapacityCount() > this.availableParticipantCapacityValue
+  }
+
+  toggleAttendanceDateRequirements(required) {
+    if (this.hasArrivalDateTarget) this.arrivalDateTarget.required = required
+    if (this.hasCheckoutDateTarget) {
+      this.checkoutDateTarget.required = required
+      if (!required) this.checkoutDateTarget.setCustomValidity("")
+    }
+  }
+
+  updatePaymentSummary() {
+    const amountCents = this.paymentAmountCents()
+    const paymentRequired = amountCents === null ? this.feeConfigured() : amountCents > 0
+
+    this.renderPaymentLineItems()
+
+    if (this.hasSubmitTarget) {
+      this.submitTarget.textContent = paymentRequired ? this.paySubmitTextValue : this.freeSubmitTextValue
+    }
+
+    if (!this.hasPaymentSummaryTarget) return
+
+    if (amountCents === null) {
+      this.paymentSummaryTarget.textContent = this.feeConfigured() ? "Choose dates to see payment amount." : "No payment due with current trip fees."
+    } else if (amountCents > 0) {
+      this.paymentSummaryTarget.textContent = `Total: ${this.formatCurrency(amountCents)}`
+    } else {
+      this.paymentSummaryTarget.textContent = "No payment due for these dates."
+    }
+  }
+
+  paymentAmountCents() {
+    const nightCount = this.nightCount()
+    if (nightCount === null) return null
+
+    return this.paymentLineItems(nightCount).reduce((total, item) => total + item.amountCents, 0)
+  }
+
+  renderPaymentLineItems() {
+    if (!this.hasPaymentLineItemsTarget) return
+
+    const nightCount = this.nightCount()
+    this.paymentLineItemsTarget.replaceChildren()
+
+    if (nightCount === null) {
+      this.paymentLineItemsTarget.hidden = true
+      return
+    }
+
+    this.paymentLineItems(nightCount).forEach((item) => {
+      const itemWrapper = document.createElement("div")
+      const itemLabel = document.createElement("div")
+      const detailWrapper = document.createElement("div")
+
+      itemWrapper.className = "payment-line-item"
+      itemLabel.className = "payment-line-item-label"
+      detailWrapper.className = "payment-line-item-details"
+      itemLabel.textContent = item.label
+
+      item.details.forEach((detail) => {
+        const detailRow = document.createElement("div")
+        const detailLabel = document.createElement("span")
+        const detailAmount = document.createElement("strong")
+
+        detailRow.className = "payment-line-detail"
+        detailLabel.textContent = detail.label
+        detailAmount.textContent = detail.amountText || this.formatCurrency(detail.amountCents || 0)
+
+        detailRow.append(detailLabel, detailAmount)
+        detailWrapper.append(detailRow)
+      })
+
+      itemWrapper.append(itemLabel, detailWrapper)
+      this.paymentLineItemsTarget.append(itemWrapper)
+    })
+
+    this.paymentLineItemsTarget.hidden = this.paymentLineItemsTarget.children.length === 0
+  }
+
+  paymentLineItems(nightCount) {
+    return [
+      ...this.adultPaymentLineItems(nightCount),
+      ...this.minorPaymentLineItems(nightCount)
+    ]
+  }
+
+  adultPaymentLineItems(nightCount) {
+    const details = this.adultPaymentDetails(nightCount)
+    const items = [this.paymentLineItem("You", details)]
+    const additionalAdultCount = this.existingAdultGuestCountValue + this.visibleAdultCount()
+
+    for (let index = 0; index < additionalAdultCount; index += 1) {
+      items.push(this.paymentLineItem(`Adult ${index + 2}`, details))
+    }
+
+    return items
+  }
+
+  minorPaymentLineItems(nightCount) {
+    const items = []
+
+    for (let index = 0; index < this.existingCountedMinorCountValue; index += 1) {
+      items.push(this.paymentLineItem(`Minor ${index + 1}`, this.countedMinorPaymentDetails(nightCount)))
+    }
+
+    this.visibleMinorRows().forEach((row, index) => {
+      const age = this.minorAge(row)
+      const label = Number.isInteger(age) ? `Minor ${items.length + 1} (age ${age})` : `Minor ${items.length + 1}`
+
+      if (!Number.isInteger(age)) {
+        items.push(this.paymentLineItem(label, [{ label: "Age required", amountCents: 0, amountText: "Enter age" }]))
+      } else if (age < this.uncountedMinorAgeLimitValue) {
+        items.push(this.paymentLineItem(label, this.freeMinorPaymentDetails(nightCount)))
+      } else {
+        items.push(this.paymentLineItem(label, this.countedMinorPaymentDetails(nightCount)))
+      }
+    })
+
+    return items
+  }
+
+  paymentLineItem(label, details) {
+    return {
+      label,
+      details,
+      amountCents: details.reduce((total, detail) => total + (detail.amountCents || 0), 0)
+    }
+  }
+
+  adultPaymentDetails(nightCount) {
+    return this.paymentDetails(
+      this.firstTwoNightsFeeCentsValue,
+      this.extraNightFeeCentsValue,
+      nightCount
+    )
+  }
+
+  countedMinorPaymentDetails(nightCount) {
+    return this.paymentDetails(
+      this.minorFeeCentsValue,
+      this.minorExtraNightFeeCentsValue,
+      nightCount
+    )
+  }
+
+  freeMinorPaymentDetails(nightCount) {
+    const details = [{ label: "First 2 nights", amountCents: 0, amountText: "Free" }]
+    const extraNights = this.extraNightCount(nightCount)
+
+    if (extraNights > 0) {
+      details.push({ label: this.additionalNightLabel(extraNights, 0), amountCents: 0, amountText: "Free" })
+    }
+
+    return details
+  }
+
+  paymentDetails(firstTwoNightsFeeCents, extraNightFeeCents, nightCount) {
+    const details = [{ label: "First 2 nights", amountCents: firstTwoNightsFeeCents }]
+    const extraNights = this.extraNightCount(nightCount)
+
+    if (extraNights > 0) {
+      details.push({
+        label: this.additionalNightLabel(extraNights, extraNightFeeCents),
+        amountCents: extraNights * extraNightFeeCents
+      })
+    }
+
+    return details
+  }
+
+  additionalNightLabel(extraNights, extraNightFeeCents) {
+    const nightLabel = extraNights === 1 ? "night" : "nights"
+
+    return `Additional ${nightLabel} (${extraNights} x ${this.formatCurrency(extraNightFeeCents)})`
+  }
+
+  adultUnitAmountCents(nightCount) {
+    return this.firstTwoNightsFeeCentsValue + (this.extraNightFeeCentsValue * this.extraNightCount(nightCount))
+  }
+
+  countedMinorUnitAmountCents(nightCount) {
+    return this.minorFeeCentsValue + (this.minorExtraNightFeeCentsValue * this.extraNightCount(nightCount))
+  }
+
+  extraNightCount(nightCount) {
+    return Math.max(nightCount - 2, 0)
+  }
+
+  nightCount() {
+    if (!this.hasArrivalDateTarget || !this.hasCheckoutDateTarget) return null
+    if (!this.arrivalDateTarget.value || !this.checkoutDateTarget.value) return null
+
+    const arrivalDate = this.dateFromInput(this.arrivalDateTarget.value)
+    const checkoutDate = this.dateFromInput(this.checkoutDateTarget.value)
+    if (!arrivalDate || !checkoutDate || checkoutDate <= arrivalDate) return null
+
+    return Math.round((checkoutDate - arrivalDate) / 86400000)
+  }
+
+  dateFromInput(value) {
+    const timestamp = Date.parse(`${value}T00:00:00Z`)
+    if (Number.isNaN(timestamp)) return null
+
+    return timestamp
+  }
+
+  feeConfigured() {
+    return this.firstTwoNightsFeeCentsValue > 0 || this.extraNightFeeCentsValue > 0 || this.minorFeeCentsValue > 0 || this.minorExtraNightFeeCentsValue > 0
+  }
+
+  formatCurrency(cents) {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD"
+    }).format(cents / 100)
   }
 
   partyCapacityCount() {
@@ -331,15 +620,25 @@ export default class extends Controller {
   }
 
   capacityCountedMinorCount() {
-    if (!this.hasMinorFieldsTarget || this.minorFieldsTarget.hidden) return 0
-
-    return Array.from(this.minorFieldsTarget.querySelectorAll("[data-party-row]"))
-      .filter((row) => !row.hidden)
+    return this.visibleMinorRows()
       .filter((row) => {
-        const age = Number.parseInt(row.querySelector("input[type='number']")?.value || "", 10)
+        const age = this.minorAge(row)
 
         return Number.isInteger(age) && age >= this.uncountedMinorAgeLimitValue
       }).length
+  }
+
+  visibleMinorRows() {
+    if (!this.hasMinorFieldsTarget || this.minorFieldsTarget.hidden) return []
+
+    return Array.from(this.minorFieldsTarget.querySelectorAll("[data-party-row]"))
+      .filter((row) => !row.hidden)
+  }
+
+  minorAge(row) {
+    const age = Number.parseInt(row.querySelector("input[type='number']")?.value || "", 10)
+
+    return Number.isInteger(age) ? age : null
   }
 
   kebabCase(value) {

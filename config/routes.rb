@@ -7,6 +7,7 @@ Rails.application.routes.draw do
   resource :session, only: %i[new create destroy]
   resources :password_resets, only: %i[new create edit update], param: :token
   resource :profile, only: %i[show edit update destroy]
+  post "stripe/webhooks", to: "stripe_webhooks#create"
 
   resources :trips, only: %i[index show] do
     resources :campsites, only: [] do
@@ -29,9 +30,13 @@ Rails.application.routes.draw do
         patch :revoke_waitlist_eligibility, on: :member
         patch :move_to_campsite, on: :member
         patch :move_to_waitlist, on: :member
+        patch :mark_no_payment_needed, on: :member
+        patch :mark_already_paid, on: :member
+        patch :create_payment_link, on: :member
         delete :remove_from_campsite, on: :member
         delete :remove_from_waitlist, on: :member
       end
+      resources :trip_reimbursements, except: %i[index show]
     end
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

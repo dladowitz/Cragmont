@@ -7,11 +7,12 @@ class TripsController < ApplicationController
 
   def show
     @campsites = @trip.campsites.includes(:campground, campsite_signups: [ :user, :campsite_signup_minors, { guest_of_signup: :user } ]).order(:arrival_date, :site_number)
-    @current_signup = @trip.campsite_signups.includes(:campsite).find_by(user: current_user) if user_signed_in?
+    @current_signup = @trip.campsite_signups.active.includes(:campsite, :payments).find_by(user: current_user) if user_signed_in?
     @waitlisted_signups = @trip.waitlisted_signups
     @waitlist_confirmation_campsites = @current_signup&.waitlisted? ? @trip.waitlist_confirmation_campsites_for(@current_signup) : []
     @waitlist_confirmation_campsite_ids = @waitlist_confirmation_campsites.map(&:id)
     @completion_signup = participant_details_signup || guest_details_signup
+    @show_payment_success_modal = payment_success_return?
   end
 
   private
@@ -64,5 +65,9 @@ class TripsController < ApplicationController
     session[:user_id] = signup.user_id
     @current_user = signup.user
     @current_signup = signup
+  end
+
+  def payment_success_return?
+    params[:stripe_checkout] == "success" && @current_signup&.confirmed?
   end
 end

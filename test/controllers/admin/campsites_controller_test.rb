@@ -82,6 +82,17 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".form-actions .danger-form-action [data-controller='modal']", count: 0
   end
 
+  test "edit campsite form allows delete when only canceled payment history remains" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam), status: "canceled")
+    signup.payments.create!(source: "manual", status: "refunded", amount_cents: 1000, refunded_amount_cents: 1000, manual_payment_method: "cash", manual_paid_at: Time.current, paid_at: Time.current)
+
+    get edit_admin_trip_campsite_url(trips(:yosemite), campsites(:yosemite_a))
+
+    assert_response :success
+    assert_select ".form-actions .danger-form-action [data-controller='modal'] button.button.danger.secondary", text: "Delete campsite"
+    assert_select ".form-actions .danger-form-action .disabled-tooltip", count: 0
+  end
+
   test "can update campsite" do
     patch admin_trip_campsite_url(trips(:yosemite), campsites(:yosemite_a)), params: {
       campsite: {
@@ -110,6 +121,20 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to admin_trip_url(trips(:yosemite))
+  end
+
+  test "can delete campsite with only canceled payment history" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam), status: "canceled")
+    signup.payments.create!(source: "manual", status: "refunded", amount_cents: 1000, refunded_amount_cents: 1000, manual_payment_method: "cash", manual_paid_at: Time.current, paid_at: Time.current)
+
+    assert_difference "Campsite.count", -1 do
+      assert_no_difference "CampsiteSignup.count" do
+        delete admin_trip_campsite_url(trips(:yosemite), campsites(:yosemite_a))
+      end
+    end
+
+    assert_redirected_to admin_trip_url(trips(:yosemite))
+    assert_nil signup.reload.campsite
   end
 
   test "cannot delete campsite with participants signed up" do

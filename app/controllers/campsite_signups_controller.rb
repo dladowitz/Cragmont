@@ -8,7 +8,7 @@ class CampsiteSignupsController < ApplicationController
   def create
     trip = Trip.published.find(params[:trip_id])
     campsite = trip.campsites.find(params[:campsite_id])
-    signup = trip.campsite_signups.find_or_initialize_by(user: current_user)
+    signup = trip.campsite_signups.active.find_or_initialize_by(user: current_user)
 
     if signup.persisted? && confirming_waitlist?
       confirm_waitlisted_signup(trip, campsite, signup)
@@ -16,6 +16,8 @@ class CampsiteSignupsController < ApplicationController
       confirm_open_campsite_signup_from_waitlist(trip, campsite, signup)
     elsif signup.persisted? && completing_participant_details?
       complete_participant_details(trip, campsite, signup)
+    elsif signup.persisted? && signup.pending_payment? && signup.current_payment&.checkout_url.present?
+      redirect_to_current_payment_checkout(signup, trip)
     elsif signup.persisted?
       redirect_to trip_path(trip), alert: "You are already signed up for this trip."
     elsif completing_participant_details?
@@ -30,16 +32,18 @@ class CampsiteSignupsController < ApplicationController
   def destroy
     trip = Trip.published.find(params[:trip_id])
     campsite = trip.campsites.find(params[:campsite_id])
-    signup = trip.campsite_signups.find_by(user: current_user)
+    signup = trip.campsite_signups.active.find_by(user: current_user)
 
     if signup.blank?
       redirect_to trip_path(trip), alert: "You are not signed up for this trip.", status: :see_other
+    elsif signup.guest? && signup.primary_signup.current_payment&.refundable?
+      redirect_to trip_path(trip), alert: "Guests follow the primary participant signup for paid trips.", status: :see_other
     elsif signup.confirmed? && signup.campsite != campsite
       redirect_to trip_path(trip), alert: "You are not signed up for this campsite.", status: :see_other
     else
       removing_waitlist_signup = signup.waitlisted?
       campsite.lock_signups! if signup.confirmed? && campsite.capacity_full?
-      signup.destroy
+      remove_or_cancel_signup!(signup)
       trip.mark_next_waitlisted_signup_eligible! unless removing_waitlist_signup
 
       notice = removing_waitlist_signup ? "You have been removed from the waitlist." : "You have been removed from this campsite."
@@ -89,7 +93,7 @@ class CampsiteSignupsController < ApplicationController
     minor_attributes = normalized_minor_attributes
     guest_attributes = normalized_guest_attributes
 
-    if !campsite.waitlist_signup_required?
+    if !campsite.waitlist_signup_required? && campsite_has_room_for?(campsite, minor_attributes, guest_attributes)
       redirect_to trip_path(trip), alert: "This campsite still has space. Please sign up for the campsite directly."
     elsif signing_up_with_minors? && minor_attributes.empty?
       redirect_to trip_path(trip), alert: "Please enter minor information before joining the waitlist."
@@ -138,10 +142,20 @@ class CampsiteSignupsController < ApplicationController
       redirect_to trip_path(trip), alert: "Please sign the waiver before signing up."
     elsif !attendance_dates_present?(signup)
       redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
-    elsif create_signup_with_waiver(signup, campsite, signature, acknowledged_at, minor_attributes, guest_attributes)
-      redirect_to trip_path(trip), notice: "You are confirmed for this campsite."
     else
-      redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
+      pricing = pricing_for(arrival_date: signup_params[:arrival_date], checkout_date: signup_params[:checkout_date], minor_attributes: minor_attributes, guest_attributes: guest_attributes)
+
+      if pricing.free?
+        if create_signup_with_waiver(signup, campsite, signature, acknowledged_at, minor_attributes, guest_attributes)
+          redirect_to trip_path(trip), notice: "You are confirmed for this campsite."
+        else
+          redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
+        end
+      elsif create_signup_pending_payment(trip, campsite, signup, signature, acknowledged_at, minor_attributes, guest_attributes, pricing, previous_signup_status: nil)
+        redirect_to_current_payment_checkout(signup, trip)
+      else
+        redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
+      end
     end
   end
 
@@ -161,10 +175,20 @@ class CampsiteSignupsController < ApplicationController
       redirect_to trip_path(trip), alert: "Please sign the waiver before confirming your spot."
     elsif !attendance_dates_present?(signup)
       redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
-    elsif confirm_waitlist_signup_with_waiver(signup, campsite, signature, acknowledged_at)
-      redirect_to trip_path(trip), notice: "You are confirmed for this campsite."
     else
-      redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
+      pricing = pricing_for_existing_signup(signup, arrival_date: signup_params[:arrival_date], checkout_date: signup_params[:checkout_date])
+
+      if pricing.free?
+        if confirm_waitlist_signup_with_waiver(signup, campsite, signature, acknowledged_at)
+          redirect_to trip_path(trip), notice: "You are confirmed for this campsite."
+        else
+          redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
+        end
+      elsif confirm_waitlist_signup_pending_payment(trip, campsite, signup, signature, acknowledged_at, pricing)
+        redirect_to_current_payment_checkout(signup, trip)
+      else
+        redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
+      end
     end
   end
 
@@ -184,10 +208,20 @@ class CampsiteSignupsController < ApplicationController
       redirect_to trip_path(trip), alert: "Please sign the waiver before signing up."
     elsif !attendance_dates_present?(signup)
       redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
-    elsif confirm_open_campsite_signup_with_waiver(signup, campsite, signature, acknowledged_at)
-      redirect_to trip_path(trip), notice: "You are confirmed for this campsite."
     else
-      redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
+      pricing = pricing_for_existing_signup(signup, arrival_date: signup_params[:arrival_date], checkout_date: signup_params[:checkout_date])
+
+      if pricing.free?
+        if confirm_open_campsite_signup_with_waiver(signup, campsite, signature, acknowledged_at)
+          redirect_to trip_path(trip), notice: "You are confirmed for this campsite."
+        else
+          redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
+        end
+      elsif confirm_waitlist_signup_pending_payment(trip, campsite, signup, signature, acknowledged_at, pricing)
+        redirect_to_current_payment_checkout(signup, trip)
+      else
+        redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
+      end
     end
   end
 
@@ -201,10 +235,24 @@ class CampsiteSignupsController < ApplicationController
       redirect_to trip_path(trip), alert: "Please agree to the waiver acknowledgement before completing your trip details."
     elsif !signature.valid?
       redirect_to trip_path(trip), alert: "Please sign the waiver before completing your trip details."
+    elsif signup.guest?
+      if complete_participant_details_with_waiver(signup, signature, acknowledged_at, update_attendance: false)
+        redirect_to trip_path(trip), notice: "Your waiver has been submitted."
+      else
+        redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
+      end
     elsif !attendance_dates_present?(signup)
       redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
     elsif complete_participant_details_with_waiver(signup, signature, acknowledged_at)
-      redirect_to trip_path(trip), notice: "Your trip details have been submitted."
+      pricing = pricing_for_existing_signup(signup, arrival_date: signup_params[:arrival_date], checkout_date: signup_params[:checkout_date])
+
+      if pricing.free? || signup.payment_paid_or_settled?
+        redirect_to trip_path(trip), notice: "Your trip details have been submitted."
+      elsif create_checkout_for_existing_confirmed_signup(trip, campsite, signup, pricing)
+        redirect_to_current_payment_checkout(signup, trip)
+      else
+        redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
+      end
     else
       redirect_to trip_path(trip), alert: signup.errors.full_messages.to_sentence
     end
@@ -303,6 +351,126 @@ class CampsiteSignupsController < ApplicationController
 
   def campsite_has_room_for_waitlisted_signup?(campsite, signup)
     campsite.available_participant_capacity >= signup.party_capacity_count
+  end
+
+  def pricing_for(arrival_date:, checkout_date:, minor_attributes:, guest_attributes:)
+    CampsiteSignupPricing.call(
+      arrival_date: arrival_date,
+      checkout_date: checkout_date,
+      adult_guest_count: guest_attributes.size,
+      minor_ages: minor_attributes.map { |attributes| attributes[:age] }
+    )
+  end
+
+  def pricing_for_existing_signup(signup, arrival_date:, checkout_date:)
+    CampsiteSignupPricing.call(
+      arrival_date: arrival_date,
+      checkout_date: checkout_date,
+      adult_guest_count: signup.guest_signups.size,
+      minor_ages: signup.campsite_signup_minors.map(&:age)
+    )
+  end
+
+  def create_signup_pending_payment(trip, campsite, signup, signature, acknowledged_at, minor_attributes, guest_attributes, pricing, previous_signup_status:)
+    CampsiteSignup.transaction do
+      campsite.lock!
+      unless campsite_has_room_for?(campsite, minor_attributes, guest_attributes)
+        signup.errors.add(:base, "There is not enough space for your party at this campsite")
+        raise ActiveRecord::RecordInvalid.new(signup)
+      end
+
+      signup.assign_attributes(attendance_params.merge(
+        campsite: campsite,
+        status: "pending_payment",
+        waitlist_eligible_at: nil
+      ))
+      minor_attributes.each { |attributes| signup.campsite_signup_minors.build(attributes) }
+      signup.save!
+      attach_waiver!(signup, signature, acknowledged_at)
+      create_guest_signups!(
+        signup,
+        guest_attributes,
+        status: "pending_payment",
+        campsite: campsite,
+        arrival_date: signup.arrival_date,
+        checkout_date: signup.checkout_date
+      )
+    end
+
+    create_pending_checkout!(trip, campsite, signup, pricing, previous_signup_status: previous_signup_status)
+  rescue ActiveRecord::RecordInvalid, StripeConfigurationError, Stripe::StripeError => error
+    signup.errors.add(:base, error.message) if signup.errors.empty?
+    false
+  end
+
+  def confirm_waitlist_signup_pending_payment(trip, campsite, signup, signature, acknowledged_at, pricing)
+    CampsiteSignup.transaction do
+      signup.lock!
+      campsite.lock!
+
+      unless campsite.available_for_waitlist_confirmation?(signup) || (campsite.direct_signup_available? && campsite_has_room_for_waitlisted_signup?(campsite, signup))
+        signup.errors.add(:base, "That campsite spot is no longer available")
+        raise ActiveRecord::RecordInvalid.new(signup)
+      end
+
+      signup.assign_attributes(attendance_params.merge(
+        campsite: campsite,
+        status: "pending_payment"
+      ))
+      signup.save!
+      attach_waiver!(signup, signature, acknowledged_at)
+      move_guest_signups_to_campsite!(signup, campsite, signup.arrival_date, signup.checkout_date, status: "pending_payment")
+    end
+
+    create_pending_checkout!(trip, campsite, signup, pricing, previous_signup_status: "waitlisted")
+  rescue ActiveRecord::RecordInvalid, StripeConfigurationError, Stripe::StripeError => error
+    signup.errors.add(:base, error.message) if signup.errors.empty?
+    false
+  end
+
+  def create_checkout_for_existing_confirmed_signup(trip, campsite, signup, pricing)
+    create_pending_checkout!(trip, campsite, signup, pricing, previous_signup_status: "confirmed")
+  rescue StripeConfigurationError, Stripe::StripeError => error
+    signup.errors.add(:base, error.message)
+    false
+  end
+
+  def create_pending_checkout!(trip, campsite, signup, pricing, previous_signup_status:)
+    CampsiteSignupPaymentLifecycle.create_pending_checkout!(
+      signup: signup,
+      pricing: pricing,
+      success_url: trip_url(trip, stripe_checkout: "success", anchor: "campsite-#{campsite.id}"),
+      cancel_url: trip_url(trip, stripe_checkout: "canceled", anchor: "campsite-#{campsite.id}"),
+      previous_signup_status: previous_signup_status
+    )
+    true
+  end
+
+  def redirect_to_current_payment_checkout(signup, trip)
+    checkout_url = verified_stripe_checkout_url(signup.current_payment&.checkout_url)
+
+    if checkout_url.present?
+      redirect_to checkout_url, allow_other_host: true, status: :see_other
+    else
+      redirect_to trip_path(trip), alert: "Payment checkout link is not available. Please try again.", status: :see_other
+    end
+  end
+
+  def verified_stripe_checkout_url(url)
+    uri = URI.parse(url.to_s)
+    return unless uri.is_a?(URI::HTTPS) && uri.host == "checkout.stripe.com"
+
+    uri.to_s
+  rescue URI::InvalidURIError
+    nil
+  end
+
+  def remove_or_cancel_signup!(signup)
+    if signup.payments.exists? || signup.pending_payment?
+      CampsiteSignupPaymentLifecycle.cancel_or_refund_signup!(signup: signup.primary_signup, reason: "requested_by_participant")
+    else
+      signup.destroy!
+    end
   end
 
   def create_waitlist_signup(signup, minor_attributes, guest_attributes)
@@ -406,10 +574,10 @@ class CampsiteSignupsController < ApplicationController
     false
   end
 
-  def complete_participant_details_with_waiver(signup, signature, acknowledged_at)
+  def complete_participant_details_with_waiver(signup, signature, acknowledged_at, update_attendance: true)
     CampsiteSignup.transaction do
       signup.lock!
-      signup.assign_attributes(attendance_params)
+      signup.assign_attributes(attendance_params) if update_attendance
       signup.save!
       attach_waiver!(signup, signature, acknowledged_at)
     end
@@ -460,7 +628,7 @@ class CampsiteSignupsController < ApplicationController
     user = User.find_by(email: email)
 
     if user.present?
-      if user == current_user || signup.trip.campsite_signups.where(user: user).where.not(id: signup.id).exists?
+      if user == current_user || signup.trip.campsite_signups.active.where(user: user).where.not(id: signup.id).exists?
         signup.errors.add(:base, "#{user.full_name} is already signed up for this trip")
         raise ActiveRecord::RecordInvalid.new(signup)
       end
@@ -483,11 +651,11 @@ class CampsiteSignupsController < ApplicationController
     raise ActiveRecord::RecordInvalid.new(signup)
   end
 
-  def move_guest_signups_to_campsite!(signup, campsite, arrival_date, checkout_date)
+  def move_guest_signups_to_campsite!(signup, campsite, arrival_date, checkout_date, status: "confirmed")
     signup.guest_signups.each do |guest_signup|
       guest_signup.update!(
         campsite: campsite,
-        status: "confirmed",
+        status: status,
         arrival_date: arrival_date,
         checkout_date: checkout_date,
         waitlist_eligible_at: nil

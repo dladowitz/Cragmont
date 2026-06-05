@@ -24,6 +24,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -54,6 +58,13 @@ body.session-new-page {
     url("backgrounds/indian-creek-super-crack.jpg") center / cover fixed;
 }
 
+body.registration-new-page {
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgb(15 23 20 / 24%), rgb(15 23 20 / 64%)),
+    url("backgrounds/tuolumne-meadows-cathedral-peak.jpg") center / cover fixed;
+}
+
 body.trip-show-page {
   min-height: 100vh;
   background:
@@ -73,6 +84,8 @@ body.trips-index-page .site-name,
 body.trips-index-page .site-name small,
 body.session-new-page .site-name,
 body.session-new-page .site-name small,
+body.registration-new-page .site-name,
+body.registration-new-page .site-name small,
 body.trip-show-page .site-name,
 body.trip-show-page .site-name small,
 body.profile-show-page .site-name,
@@ -85,6 +98,7 @@ body.profile-edit-page .site-name small {
 
 body.trips-index-page .public-nav a,
 body.session-new-page .public-nav a,
+body.registration-new-page .public-nav a,
 body.trip-show-page .public-nav a,
 body.profile-show-page .public-nav a,
 body.profile-edit-page .public-nav a {
@@ -697,6 +711,25 @@ input[type="submit"]:disabled {
   line-height: 1.25;
 }
 
+.admin-payment-control {
+  display: grid;
+  gap: 6px;
+  align-items: start;
+  min-width: 150px;
+}
+
+.admin-payment-status,
+.admin-payment-amount {
+  width: fit-content;
+}
+
+.payment-admin-section {
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
 .campsite-card-list,
 .admin-campsite-list {
   display: grid;
@@ -972,6 +1005,13 @@ body.session-new-page .auth-panel {
   backdrop-filter: blur(6px);
 }
 
+body.registration-new-page .panel {
+  border-color: rgb(255 255 255 / 56%);
+  background: rgb(255 255 255 / 90%);
+  box-shadow: 0 24px 72px rgb(0 0 0 / 26%);
+  backdrop-filter: blur(6px);
+}
+
 body.trip-show-page .panel {
   border-color: rgb(255 255 255 / 52%);
   background: rgb(255 255 255 / 90%);
@@ -1240,6 +1280,114 @@ body.trips-index-page .trip-card {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.fee-fields {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfaf7;
+}
+
+.fee-fields h3,
+.fee-fields p {
+  margin: 0;
+}
+
+.fee-fields-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: baseline;
+}
+
+.fee-section-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.fee-section {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  margin: 0;
+  padding: 4px 12px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  min-inline-size: 0;
+}
+
+.fee-section legend {
+  padding-inline: 6px;
+  margin-bottom: 2px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.fee-rate {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-block: 2px;
+  color: var(--muted);
+}
+
+.fee-rate strong {
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.fee-note {
+  font-size: 0.75em;
+}
+
+.payment-due-section {
+  width: calc((100% - 14px) / 2);
+}
+
+.payment-line-items {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.payment-line-item {
+  display: grid;
+  gap: 2px;
+  color: var(--muted);
+}
+
+.payment-line-item-label {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.payment-line-item-details {
+  display: grid;
+  gap: 2px;
+}
+
+.payment-line-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
+  padding-left: 14px;
+  color: var(--muted);
+}
+
+.payment-line-detail strong {
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.fee-fields .payment-summary {
+  margin-top: 10px;
+  font-size: 1.5rem;
+  font-weight: 700;
 }
 
 .signup-kind-options {
@@ -1515,6 +1663,32 @@ body.trips-index-page .trip-card {
 
 .confirmed-participants-table {
   margin-top: 10px;
+  table-layout: fixed;
+}
+
+.confirmed-participants-table th:nth-child(1),
+.confirmed-participants-table td:nth-child(1) {
+  width: 25%;
+}
+
+.confirmed-participants-table th:nth-child(2),
+.confirmed-participants-table td:nth-child(2) {
+  width: 19%;
+}
+
+.confirmed-participants-table th:nth-child(3),
+.confirmed-participants-table td:nth-child(3) {
+  width: 20%;
+}
+
+.confirmed-participants-table th:nth-child(4),
+.confirmed-participants-table td:nth-child(4) {
+  width: 16%;
+}
+
+.confirmed-participants-table th:nth-child(5),
+.confirmed-participants-table td:nth-child(5) {
+  width: 20%;
 }
 
 .public-added-by {
@@ -2097,10 +2271,15 @@ textarea {
   .form-grid,
   .stats,
   .attendance-date-row,
+  .fee-section-row,
   .minor-field-row,
   .guest-field-row,
   .trip-card {
     grid-template-columns: 1fr;
+  }
+
+  .payment-due-section {
+    width: 100%;
   }
 
   table {
