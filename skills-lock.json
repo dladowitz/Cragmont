@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "skills": {
+    "stripe-best-practices": {
+      "source": "docs.stripe.com",
+      "sourceType": "well-known",
+      "computedHash": "bfa3e489fd50db1d0756232876efb7ce725a0dd98a7ab49d668a21ff79152d78"
+    },
+    "stripe-projects": {
+      "source": "docs.stripe.com",
+      "sourceType": "well-known",
+      "computedHash": "3e2c6f288c7f99cba2248e8c97d46ef9669f3262a5d104d6a05b75df9e8dfc84"
+    },
+    "upgrade-stripe": {
+      "source": "docs.stripe.com",
+      "sourceType": "well-known",
+      "computedHash": "a0f0bf709f65ba8d7aa8d55322d030e6b3f16756cb6f0be80463395306305ef3"
+    }
+  }
+}
