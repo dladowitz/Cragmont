@@ -1,4 +1,4 @@
-class Admin::CampsitesController < ApplicationController
+class Admin::CampsitesController < Admin::BaseController
   before_action :set_trip
   before_action :ensure_trip_not_deleted
   before_action :set_campsite, only: %i[edit update destroy]

@@ -1,4 +1,4 @@
-class Admin::CampsiteSignupsController < ApplicationController
+class Admin::CampsiteSignupsController < Admin::BaseController
   before_action :set_trip
   before_action :ensure_trip_not_deleted
 
@@ -366,7 +366,7 @@ class Admin::CampsiteSignupsController < ApplicationController
 
   def move_confirmed_signup_to_waitlist(signup, issue_refund:)
     moved = false
-    CampsiteSignupPaymentLifecycle.refund_payment_for!(signup: signup, reason: "moved_to_waitlist", initiated_by: "admin") if issue_refund
+    CampsiteSignupPaymentLifecycle.refund_payment_for!(signup: signup, reason: "moved_to_waitlist", initiated_by: "admin", refunded_by: current_user) if issue_refund
 
     CampsiteSignup.transaction do
       signup.lock!
@@ -413,7 +413,8 @@ class Admin::CampsiteSignupsController < ApplicationController
           signup: signup,
           reason: "removed_by_admin",
           issue_refund: issue_refund,
-          refund_initiated_by: "admin"
+          refund_initiated_by: "admin",
+          refunded_by: current_user
         )
       else
         signup.destroy!

@@ -1,6 +1,10 @@
 require "test_helper"
 
 class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    log_in_as(users(:alex))
+  end
+
   test "can view trips index" do
     get admin_trips_url
 
@@ -506,6 +510,53 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select ".admin-payment-covered-by", text: "Paid by Sam Lee"
       assert_select ".admin-payment-amount", count: 0
       assert_select ".admin-payment-control button", text: "Update", count: 0
+    end
+  end
+
+  test "trip details links payment amount to details modal for partially refunded payment" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    payment = signup.payments.create!(
+      source: "stripe",
+      status: "partially_refunded",
+      amount_cents: 8000,
+      refunded_amount_cents: 3000,
+      stripe_payment_intent_id: "pi_trip_details_refund",
+      stripe_checkout_session_id: "cs_trip_details_refund",
+      paid_at: Time.current
+    )
+    payment.refunds.create!(
+      amount_cents: 3000,
+      status: "succeeded",
+      initiated_by: "admin",
+      refunded_by: users(:alex),
+      refund_type: "admin_created",
+      reason: "Overpayment",
+      refunded_at: Time.current
+    )
+
+    get admin_trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select ".confirmed-signups-section tbody tr", text: /Sam Lee/ do
+      assert_select ".admin-payment-status.warning-status", text: "Partially Refunded"
+      assert_select "button.admin-payment-amount-link[data-action='modal#open']", text: "$80.00"
+      assert_select "button", text: "Update", count: 0
+      assert_select "dialog.transaction-details-modal" do
+        assert_select "h2", "Payment details"
+        assert_select "dt", text: "Amount Refunded"
+        assert_select "dd", text: "$30.00"
+        assert_select "dt", text: "Remaining refundable"
+        assert_select "dd", text: "$50.00"
+        assert_select ".transaction-refund-action-row button.danger.secondary:not([disabled])", text: "Issue Refund"
+        assert_select "dialog.refund-modal" do
+          assert_select "h2", "Refund payment"
+          assert_select "input[name='refund[amount]'][value='0.00']"
+          assert_select "textarea[name='refund[reason]']"
+          assert_select "input[name='refund[trip_expense]'][type='checkbox']"
+          assert_select "input[type='submit'][value='Issue Refund']"
+        end
+        assert_select ".transaction-refunds-table", text: /Admin Created/
+      end
     end
   end
 

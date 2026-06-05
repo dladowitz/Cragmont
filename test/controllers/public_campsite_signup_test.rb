@@ -295,6 +295,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
       refund = payment.refunds.reload.sole
       assert refund.participant_initiated_by?
+      assert_equal "automatic", refund.refund_type
       assert_equal "re_participant_cancel", refund.stripe_refund_id
     end
   end

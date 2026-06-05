@@ -1,6 +1,10 @@
 require "test_helper"
 
 class Admin::TripReimbursementsControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    log_in_as(users(:alex))
+  end
+
   test "admin can view new reimbursement form" do
     get new_admin_trip_trip_reimbursement_url(trips(:yosemite))
 

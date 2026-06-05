@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_05_090100) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_05_090300) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -72,7 +72,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_05_090100) do
     t.text "failure_reason"
     t.string "initiated_by", default: "system", null: false
     t.text "reason"
+    t.string "refund_type", default: "automatic", null: false
     t.datetime "refunded_at"
+    t.bigint "refunded_by_id"
     t.string "source", default: "stripe", null: false
     t.string "status", default: "pending", null: false
     t.string "stripe_refund_id"
@@ -80,6 +82,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_05_090100) do
     t.datetime "updated_at", null: false
     t.index ["campsite_signup_payment_id"], name: "idx_on_campsite_signup_payment_id_82d8e6042f"
     t.index ["initiated_by"], name: "index_campsite_signup_payment_refunds_on_initiated_by"
+    t.index ["refund_type"], name: "index_campsite_signup_payment_refunds_on_refund_type"
+    t.index ["refunded_by_id"], name: "index_campsite_signup_payment_refunds_on_refunded_by_id"
     t.index ["status"], name: "index_campsite_signup_payment_refunds_on_status"
     t.index ["stripe_refund_id"], name: "index_campsite_signup_payment_refunds_on_stripe_refund", unique: true, where: "(stripe_refund_id IS NOT NULL)"
   end
@@ -275,6 +279,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_05_090100) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "campsite_signup_minors", "campsite_signups"
   add_foreign_key "campsite_signup_payment_refunds", "campsite_signup_payments"
+  add_foreign_key "campsite_signup_payment_refunds", "users", column: "refunded_by_id"
   add_foreign_key "campsite_signup_payments", "campsite_signups"
   add_foreign_key "campsite_signup_payments", "users", column: "created_by_id"
   add_foreign_key "campsite_signups", "campsite_signups", column: "guest_of_signup_id"

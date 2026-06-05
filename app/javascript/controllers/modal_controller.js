@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["dialog"]
-  static values = { open: Boolean }
+  static values = { disableAutofocus: Boolean, open: Boolean }
 
   connect() {
     if (this.openValue) {
@@ -15,6 +15,9 @@ export default class extends Controller {
     if (this.dialogTarget.open) return
 
     this.dialogTarget.showModal()
+    if (this.disableAutofocusValue && this.dialogTarget.contains(document.activeElement)) {
+      document.activeElement.blur()
+    }
   }
 
   close() {

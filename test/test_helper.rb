@@ -46,6 +46,10 @@ module ActiveSupport
       )
     end
 
+    def log_in_as(user)
+      post session_url, params: { email: user.email, password: "password" }
+    end
+
     def attach_test_waiver_to(signup)
       signature = WaiverSignatureData.new(SIGNATURE_DATA_URL)
       waiver_text = TripSignupWaiver.text

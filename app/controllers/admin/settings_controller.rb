@@ -1,4 +1,4 @@
-class Admin::SettingsController < ApplicationController
+class Admin::SettingsController < Admin::BaseController
   def show
     @site_setting = SiteSetting.current
   end
