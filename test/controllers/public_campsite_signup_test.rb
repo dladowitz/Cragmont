@@ -65,6 +65,35 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".details-list", text: /555-0100/, count: 0
   end
 
+  test "public cancellation modal shows refund policy details" do
+    travel_to Date.new(2026, 6, 5) do
+      signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+      signup.payments.create!(
+        source: "manual",
+        status: "paid",
+        amount_cents: 4000,
+        manual_payment_method: "cash",
+        manual_paid_at: Time.current,
+        paid_at: Time.current
+      )
+      log_in_as(users(:sam))
+
+      get trip_url(trips(:yosemite))
+
+      assert_response :success
+      assert_select "dialog.signup-modal" do
+        assert_select "h2", "Remove yourself from this campsite?"
+        assert_select ".cancellation-policy-details", text: /Cancelation policy:\s*Full refund if 7 or more days before start of trip/
+        assert_select ".cancellation-policy-details dt", "Trip starts"
+        assert_select ".cancellation-policy-details dd", "June 12, 2026"
+        assert_select ".cancellation-policy-details dt", "Days until trip"
+        assert_select ".cancellation-policy-details dd", "7"
+        assert_select ".cancellation-policy-details dt", "Refund amount"
+        assert_select ".cancellation-policy-details dd", "$40.00"
+      end
+    end
+  end
+
   test "logged out signup redirects to login" do
     post signup_url_for
 
@@ -207,47 +236,75 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "paid participant removal preserves canceled signup and refunds manual payment record" do
-    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
-    signup.payments.create!(
-      source: "manual",
-      status: "paid",
-      amount_cents: 1000,
-      manual_payment_method: "cash",
-      manual_paid_at: Time.current,
-      paid_at: Time.current
-    )
-    log_in_as(users(:sam))
+    travel_to Date.new(2026, 6, 5) do
+      signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+      signup.payments.create!(
+        source: "manual",
+        status: "paid",
+        amount_cents: 1000,
+        manual_payment_method: "cash",
+        manual_paid_at: Time.current,
+        paid_at: Time.current
+      )
+      log_in_as(users(:sam))
 
-    assert_no_difference "CampsiteSignup.count" do
-      delete signup_url_for
+      assert_no_difference "CampsiteSignup.count" do
+        delete signup_url_for
+      end
+
+      assert_redirected_to trip_url(trips(:yosemite))
+      assert signup.reload.canceled?
+      assert signup.current_payment.refunded?
     end
+  end
 
-    assert_redirected_to trip_url(trips(:yosemite))
-    assert signup.reload.canceled?
-    assert signup.current_payment.refunded?
+  test "paid participant removal does not refund inside seven day cutoff" do
+    travel_to Date.new(2026, 6, 6) do
+      signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+      payment = signup.payments.create!(
+        source: "manual",
+        status: "paid",
+        amount_cents: 1000,
+        manual_payment_method: "cash",
+        manual_paid_at: Time.current,
+        paid_at: Time.current
+      )
+      log_in_as(users(:sam))
+
+      assert_no_difference "CampsiteSignup.count" do
+        delete signup_url_for
+      end
+
+      assert_redirected_to trip_url(trips(:yosemite))
+      assert signup.reload.canceled?
+      assert payment.reload.paid?
+      assert_equal 0, payment.refunded_amount_cents
+    end
   end
 
   test "paid participant can cancel after campsite dates changed outside attendance dates" do
-    campsite = campsites(:yosemite_a)
-    signup = create_campsite_signup!(campsite: campsite, user: users(:sam))
-    signup.payments.create!(
-      source: "manual",
-      status: "paid",
-      amount_cents: 1000,
-      manual_payment_method: "cash",
-      manual_paid_at: Time.current,
-      paid_at: Time.current
-    )
-    campsite.update_columns(arrival_date: campsite.arrival_date + 1.day, updated_at: Time.current)
-    log_in_as(users(:sam))
+    travel_to Date.new(2026, 6, 5) do
+      campsite = campsites(:yosemite_a)
+      signup = create_campsite_signup!(campsite: campsite, user: users(:sam))
+      signup.payments.create!(
+        source: "manual",
+        status: "paid",
+        amount_cents: 1000,
+        manual_payment_method: "cash",
+        manual_paid_at: Time.current,
+        paid_at: Time.current
+      )
+      campsite.update_columns(arrival_date: campsite.arrival_date + 1.day, updated_at: Time.current)
+      log_in_as(users(:sam))
 
-    assert_no_difference "CampsiteSignup.count" do
-      delete signup_url_for
+      assert_no_difference "CampsiteSignup.count" do
+        delete signup_url_for
+      end
+
+      assert_redirected_to trip_url(trips(:yosemite))
+      assert signup.reload.canceled?
+      assert signup.current_payment.refunded?
     end
-
-    assert_redirected_to trip_url(trips(:yosemite))
-    assert signup.reload.canceled?
-    assert signup.current_payment.refunded?
   end
 
   test "paid participant can sign up again after canceling" do
@@ -579,7 +636,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_select "h2", "Get stoked!"
       assert_select "p", text: /Your trip to Yosemite Valley Spring is confirmed\./
       assert_select "p", text: /We'll be sending you more info as the date gets closer\./
-      assert_select "p", text: /If you need to cancel make sure to do it at least seven days before the trip start for a refund\./
+      assert_select "p", text: /If you need to cancel, make sure to do it at least seven days before the start of the trip for a refund\./
     end
   end
 
@@ -624,6 +681,9 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_select ".fee-section legend", "Adult Fees"
       assert_select ".fee-section legend", "Minor Fees"
       assert_select ".payment-due-section legend", "Payment Due"
+      assert_select ".refund-policy-section legend", "Refund Policy"
+      assert_select ".refund-policy-section", text: /Full refund if canceled 7 or more days before trip start\./
+      assert_select ".refund-policy-section", text: /No refund within seven days as it becomes hard for the club to fill the spot\./
       assert_select ".fee-rate", text: /First 2 nights.*\$0\.00/
       assert_select ".fee-rate", text: /Additional nights\s+\$0\.00/
       assert_select ".fee-rate", text: /Ages 0 to #{minor_age_limit - 1}.*Free/

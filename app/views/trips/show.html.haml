@@ -80,6 +80,7 @@
                     %div{"data-controller" => "modal"}
                       - remove_button_text = @current_signup.waitlisted? ? "Remove me from the waitlist" : "Remove me from this campsite"
                       - remove_title = @current_signup.waitlisted? ? "Remove yourself from the waitlist?" : "Remove yourself from this campsite?"
+                      - refund_amount_cents = @current_signup.refund_eligible? ? @current_signup.refundable_amount_cents : 0
                       %button.button.danger{"data-action" => "modal#open", :type => "button"}= remove_button_text
                       %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                         .signup-modal-content
@@ -88,6 +89,21 @@
                             %p
                               = campsite.campground.name
                               site #{campsite.site_number}
+                            - unless @current_signup.waitlisted?
+                              .cancellation-policy-details
+                                %p
+                                  %strong Cancelation policy:
+                                  Full refund if 7 or more days before start of trip
+                                %dl.details-list
+                                  %div
+                                    %dt Trip starts
+                                    %dd= @trip.start_date.to_fs(:long)
+                                  %div
+                                    %dt Days until trip
+                                    %dd= @current_signup.days_until_trip_start
+                                  %div
+                                    %dt Refund amount
+                                    %dd= format_cents(refund_amount_cents)
                           .form-actions
                             %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
                             = button_to remove_button_text, trip_campsite_campsite_signup_path(@trip, campsite), method: :delete, class: "button danger"

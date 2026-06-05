@@ -226,6 +226,32 @@
                   %div
                     %h2 Remove #{signup.user.full_name} from this campsite?
                     %p This will remove their signup from the trip.
+                    %dl.details-list
+                      %div
+                        %dt Trip starts
+                        %dd= signup_trip.start_date.to_fs(:long)
+                      %div
+                        %dt Days until trip
+                        %dd= signup.days_until_trip_start
+                    - refund_amount_cents = signup.refundable_amount_cents
+                    - if refund_amount_cents.positive?
+                      .admin-refund-choice
+                        %p.admin-refund-choice-spacer{"aria-hidden" => "true"}
+                        %p.muted
+                          %strong Policy:
+                          Full refund if 7 or more days before start of trip. 
+                          %br
+                          Admins can override policy with a good reason.
+                        %p.admin-refund-choice-spacer{"aria-hidden" => "true"}
+                        %p
+                          %strong Amount paid:
+                          = format_cents(refund_amount_cents)
                   .form-actions
                     %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
-                    = button_to "Remove", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, class: "button danger"
+                    - if refund_amount_cents.positive?
+                      - no_refund_button_class = signup.refund_eligible? ? "button danger secondary" : "button danger"
+                      - refund_button_class = signup.refund_eligible? ? "button danger" : "button danger secondary"
+                      = button_to "Remove without refund", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, params: { payment: { issue_refund: "0" } }, class: no_refund_button_class
+                      = button_to "Remove and issue refund", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, params: { payment: { issue_refund: "1" } }, class: refund_button_class
+                    - else
+                      = button_to "Remove", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, class: "button danger"

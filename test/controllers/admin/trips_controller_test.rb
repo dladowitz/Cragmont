@@ -252,6 +252,66 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".missing-value", text: "Missing"
   end
 
+  test "trip details remove modal lets admin choose refund" do
+    travel_to Date.new(2026, 6, 5) do
+      signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+      signup.payments.create!(
+        source: "manual",
+        status: "paid",
+        amount_cents: 4000,
+        manual_payment_method: "cash",
+        manual_paid_at: Time.current,
+        paid_at: Time.current
+      )
+
+      get admin_trip_url(trips(:yosemite))
+
+      assert_response :success
+      assert_select "dialog.confirmation-modal", text: /Remove Sam Lee from this campsite\?/ do
+        assert_select "dt", "Trip starts"
+        assert_select "dd", "June 12, 2026"
+        assert_select "dt", "Days until trip"
+        assert_select "dd", "7"
+        assert_select ".admin-refund-choice", text: /Issue a refund\?/, count: 0
+        assert_select ".admin-refund-choice-spacer[aria-hidden='true']"
+        assert_select ".admin-refund-choice strong", text: "Policy:"
+        assert_select ".admin-refund-choice", text: /Policy:\s*Full refund if 7 or more days before start of trip\. Admins can override policy with a good reason\./
+        assert_select ".admin-refund-choice", text: /Amount paid:\s*\$40\.00/
+        assert_select "form[action='#{remove_from_campsite_admin_trip_campsite_signup_path(trips(:yosemite), signup)}']", count: 2
+        assert_select "input[name='payment[issue_refund]'][value='0']"
+        assert_select "button.button.danger.secondary", "Remove without refund"
+        assert_select "input[name='payment[issue_refund]'][value='1']"
+        assert_select "button.button.danger", "Remove and issue refund"
+      end
+    end
+  end
+
+  test "trip details remove modal emphasizes no refund inside cutoff" do
+    travel_to Date.new(2026, 6, 6) do
+      signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+      signup.payments.create!(
+        source: "manual",
+        status: "paid",
+        amount_cents: 4000,
+        manual_payment_method: "cash",
+        manual_paid_at: Time.current,
+        paid_at: Time.current
+      )
+
+      get admin_trip_url(trips(:yosemite))
+
+      assert_response :success
+      assert_select "dialog.confirmation-modal", text: /Remove Sam Lee from this campsite\?/ do
+        assert_select "dd", "6"
+        assert_select "form[action='#{remove_from_campsite_admin_trip_campsite_signup_path(trips(:yosemite), signup)}']", count: 2
+        assert_select "input[name='payment[issue_refund]'][value='0']"
+        assert_select "button.button.danger", "Remove without refund"
+        assert_select "input[name='payment[issue_refund]'][value='1']"
+        assert_select "button.button.danger.secondary", "Remove and issue refund"
+      end
+    end
+  end
+
   test "trip details shows missing dates for admin-assigned participant" do
     signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     signup.update!(arrival_date: nil, checkout_date: nil)

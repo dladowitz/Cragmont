@@ -43,10 +43,11 @@ class CampsiteSignupsController < ApplicationController
     else
       removing_waitlist_signup = signup.waitlisted?
       campsite.lock_signups! if signup.confirmed? && campsite.capacity_full?
-      remove_or_cancel_signup!(signup)
+      issue_refund = signup.refund_eligible?
+      remove_or_cancel_signup!(signup, issue_refund: issue_refund)
       trip.mark_next_waitlisted_signup_eligible! unless removing_waitlist_signup
 
-      notice = removing_waitlist_signup ? "You have been removed from the waitlist." : "You have been removed from this campsite."
+      notice = removing_waitlist_signup ? "You have been removed from the waitlist." : cancellation_notice(issue_refund)
       redirect_to trip_path(trip), notice: notice, status: :see_other
     end
   end
@@ -465,12 +466,22 @@ class CampsiteSignupsController < ApplicationController
     nil
   end
 
-  def remove_or_cancel_signup!(signup)
+  def remove_or_cancel_signup!(signup, issue_refund:)
     if signup.payments.exists? || signup.pending_payment?
-      CampsiteSignupPaymentLifecycle.cancel_or_refund_signup!(signup: signup.primary_signup, reason: "requested_by_participant")
+      CampsiteSignupPaymentLifecycle.cancel_or_refund_signup!(
+        signup: signup.primary_signup,
+        reason: "requested_by_participant",
+        issue_refund: issue_refund
+      )
     else
       signup.destroy!
     end
+  end
+
+  def cancellation_notice(issue_refund)
+    return "You have been removed from this campsite." unless issue_refund
+
+    "You have been removed from this campsite. Your refund is headed back to basecamp."
   end
 
   def create_waitlist_signup(signup, minor_attributes, guest_attributes)
