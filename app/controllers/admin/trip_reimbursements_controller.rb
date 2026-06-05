@@ -1,4 +1,4 @@
-class Admin::TripReimbursementsController < ApplicationController
+class Admin::TripReimbursementsController < Admin::BaseController
   before_action :set_trip
   before_action :ensure_trip_not_deleted
   before_action :set_reimbursement, only: %i[edit update destroy]

@@ -1,6 +1,10 @@
 require "test_helper"
 
 class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    log_in_as(users(:alex))
+  end
+
   test "can view settings" do
     SiteSetting.current.update!(first_two_nights_fee: "30", extra_night_fee: "10", minor_fee: "15", minor_extra_night_fee: "5")
 

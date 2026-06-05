@@ -1,6 +1,10 @@
 require "test_helper"
 
 class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    log_in_as(users(:alex))
+  end
+
   FakeStripeCheckoutSessionCreator = Struct.new(:payment, :success_url, :cancel_url, keyword_init: true) do
     def call
       payment.update!(
@@ -573,6 +577,8 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
 
     refund = payment.refunds.reload.sole
     assert refund.admin_initiated_by?
+    assert_equal users(:alex), refund.refunded_by
+    assert_equal "automatic", refund.refund_type
     assert_equal "re_admin_remove", refund.stripe_refund_id
   end
 
@@ -616,6 +622,8 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
 
     refund = payment.refunds.reload.sole
     assert refund.admin_initiated_by?
+    assert_equal users(:alex), refund.refunded_by
+    assert_equal "automatic", refund.refund_type
     assert_equal "re_admin_waitlist", refund.stripe_refund_id
   end
 

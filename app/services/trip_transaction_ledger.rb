@@ -12,6 +12,28 @@ class TripTransactionLedger
       payment.refunded_amount_cents.positive? || payment.refunded? || payment.partially_refunded?
     end
 
+    def status_label
+      if payment.remaining_refundable_amount_cents.zero? && payment.refunded_amount_cents.positive?
+        "Refunded"
+      elsif payment.refunded_amount_cents.positive? && payment.remaining_refundable_amount_cents.positive?
+        "Partially Refunded"
+      elsif payment.pending?
+        "Pending"
+      else
+        "Paid"
+      end
+    end
+
+    def status_class
+      if status_label == "Refunded"
+        "danger-status"
+      elsif status_label == "Partially Refunded"
+        "warning-status"
+      elsif payment.pending?
+        "warning-status"
+      end
+    end
+
     def amount_cents
       payment.amount_cents
     end
@@ -61,7 +83,7 @@ class TripTransactionLedger
   def payments
     scope = CampsiteSignupPayment.completed_for_transactions
       .joins(:campsite_signup)
-      .includes(:refunds, :created_by, campsite_signup: [ :user, :campsite ])
+      .includes(:created_by, refunds: :refunded_by, campsite_signup: [ :user, :campsite ])
 
     scope = scope.where(campsite_signups: { trip_id: trip.id }) if trip.present?
     scope = scope.where(campsite_signups: { user_id: user.id }) if user.present?

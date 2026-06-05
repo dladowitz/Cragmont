@@ -1,4 +1,4 @@
-class Admin::TripsController < ApplicationController
+class Admin::TripsController < Admin::BaseController
   before_action :set_trip, only: %i[show edit update destroy restore]
   before_action :ensure_trip_not_deleted, only: %i[edit update destroy]
   before_action :set_users, only: %i[show new create edit update]
@@ -10,7 +10,7 @@ class Admin::TripsController < ApplicationController
   end
 
   def show
-    @campsites = @trip.campsites.includes(:campground, :registered_by, campsite_signups: [ :payments, :user, :campsite_signup_minors, { guest_of_signup: :user } ]).order(:arrival_date, :site_number)
+    @campsites = @trip.campsites.includes(:campground, :registered_by, campsite_signups: [ { payments: { refunds: :refunded_by } }, :user, :campsite_signup_minors, { guest_of_signup: :user } ]).order(:arrival_date, :site_number)
     @waitlisted_signups = @trip.waitlisted_signups
     @trip_participant_user_ids = @trip.campsite_signups.active.distinct.pluck(:user_id)
     @trip_reimbursements = @trip.trip_reimbursements.order(paid_on: :desc, created_at: :desc)

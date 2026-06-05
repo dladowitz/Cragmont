@@ -108,8 +108,8 @@ class CampsiteSignupPaymentLifecycle
     end
   end
 
-  def self.cancel_or_refund_signup!(signup:, reason:, issue_refund: true, refund_initiated_by: "system")
-    refund_record = refund_payment_for!(signup: signup, reason: reason, initiated_by: refund_initiated_by) if issue_refund
+  def self.cancel_or_refund_signup!(signup:, reason:, issue_refund: true, refund_initiated_by: "system", refunded_by: nil)
+    refund_record = refund_payment_for!(signup: signup, reason: reason, initiated_by: refund_initiated_by, refunded_by: refunded_by) if issue_refund
 
     CampsiteSignup.transaction do
       signup.lock!
@@ -120,7 +120,7 @@ class CampsiteSignupPaymentLifecycle
     refund_record
   end
 
-  def self.refund_payment_for!(signup:, reason:, initiated_by: "system")
+  def self.refund_payment_for!(signup:, reason:, initiated_by: "system", refunded_by: nil)
     payment = signup.current_payment
     return if payment.blank? || !payment.refundable? || payment.remaining_refundable_amount_cents.zero?
 
@@ -129,7 +129,8 @@ class CampsiteSignupPaymentLifecycle
         payment: payment,
         amount_cents: payment.remaining_refundable_amount_cents,
         reason: reason,
-        initiated_by: initiated_by
+        initiated_by: initiated_by,
+        refunded_by: refunded_by
       ).call
     else
       payment.update!(

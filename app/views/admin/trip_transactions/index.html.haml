@@ -14,4 +14,4 @@
       %strong This trip has been deleted.
       %p Transaction history is preserved and still available here.
 
-  = render "admin/trip_transactions/table", ledger_entries: @ledger_entries, empty_message: "No completed payments yet."
+  = render "admin/trip_transactions/table", ledger_entries: @ledger_entries, empty_message: "No completed payments yet.", show_refund_action: true

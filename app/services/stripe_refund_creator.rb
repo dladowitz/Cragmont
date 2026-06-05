@@ -1,9 +1,11 @@
 class StripeRefundCreator
-  def initialize(payment:, amount_cents:, reason:, initiated_by: "system")
+  def initialize(payment:, amount_cents:, reason:, initiated_by: "system", refunded_by: nil, refund_type: "automatic")
     @payment = payment
     @amount_cents = amount_cents
     @reason = reason
     @initiated_by = initiated_by
+    @refunded_by = refunded_by
+    @refund_type = refund_type
   end
 
   def call
@@ -12,6 +14,8 @@ class StripeRefundCreator
       currency: @payment.currency,
       reason: @reason,
       initiated_by: @initiated_by,
+      refunded_by: @refunded_by,
+      refund_type: @refund_type,
       status: "pending"
     )
 

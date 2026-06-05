@@ -1,6 +1,10 @@
 require "test_helper"
 
 class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    log_in_as(users(:alex))
+  end
+
   test "can render new campsite form" do
     get new_admin_trip_campsite_url(trips(:yosemite))
 

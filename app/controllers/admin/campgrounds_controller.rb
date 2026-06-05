@@ -1,4 +1,4 @@
-class Admin::CampgroundsController < ApplicationController
+class Admin::CampgroundsController < Admin::BaseController
   before_action :set_campground, only: %i[show edit update destroy]
 
   def index

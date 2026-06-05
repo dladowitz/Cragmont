@@ -1,6 +1,10 @@
 require "test_helper"
 
 class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    log_in_as(users(:alex))
+  end
+
   test "can view users index" do
     get admin_users_url
 

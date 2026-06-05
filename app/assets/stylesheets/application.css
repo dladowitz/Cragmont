@@ -452,6 +452,32 @@ input[type="submit"]:disabled {
   margin-bottom: 0;
 }
 
+.refund-modal .refund-amount-field {
+  width: 20%;
+  min-width: 150px;
+  max-width: 100%;
+}
+
+.refund-modal label {
+  display: inline-flex;
+  gap: 2px;
+  align-items: baseline;
+}
+
+.refund-modal label .required-marker {
+  margin-left: 0;
+}
+
+.refund-modal .checkbox-field {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.refund-modal .checkbox-field input[type="checkbox"] {
+  width: auto;
+}
+
 .transaction-details-sections {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -487,6 +513,63 @@ input[type="submit"]:disabled {
 
 .details-list.transaction-details-list dd {
   overflow-wrap: anywhere;
+}
+
+.details-list.transaction-details-list .refund-modal,
+.refund-modal {
+  width: min(640px, calc(100% - 32px));
+}
+
+.details-list.transaction-details-list .refund-modal .signup-modal-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.details-list.transaction-details-list .refund-modal .signup-modal-content > div,
+.details-list.transaction-details-list .refund-modal form > div,
+.details-list.transaction-details-list .refund-modal .currency-field,
+.details-list.transaction-details-list .refund-modal .form-actions {
+  display: block;
+  grid-template-columns: none;
+  gap: 0;
+  min-height: 0;
+  padding: 0;
+  border-bottom: 0;
+}
+
+.details-list.transaction-details-list .refund-modal .currency-field {
+  display: grid;
+  grid-template-columns: auto 1fr;
+}
+
+.details-list.transaction-details-list .refund-modal .details-list.transaction-details-list > div {
+  display: grid;
+  grid-template-columns: minmax(170px, 0.46fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: baseline;
+  min-height: 44px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.details-list.transaction-details-list .refund-modal .details-list.transaction-details-list > div:last-child {
+  border-bottom: 0;
+}
+
+.details-list.transaction-details-list .refund-modal .checkbox-field {
+  display: flex;
+  grid-template-columns: none;
+  gap: 8px;
+  min-height: 0;
+  padding: 0;
+  border-bottom: 0;
+}
+
+.details-list.transaction-details-list .refund-modal .form-actions {
+  display: flex;
+  gap: 10px;
+  padding-top: 0;
 }
 
 .details-list.transaction-details-list code,
@@ -532,27 +615,22 @@ input[type="submit"]:disabled {
 
 .transaction-refunds-table th:nth-child(2),
 .transaction-refunds-table td:nth-child(2) {
-  width: 14%;
+  width: 18%;
 }
 
 .transaction-refunds-table th:nth-child(3),
 .transaction-refunds-table td:nth-child(3) {
-  width: 18%;
+  width: 20%;
 }
 
 .transaction-refunds-table th:nth-child(4),
 .transaction-refunds-table td:nth-child(4) {
-  width: 15%;
+  width: 16%;
 }
 
 .transaction-refunds-table th:nth-child(5),
 .transaction-refunds-table td:nth-child(5) {
-  width: 27%;
-}
-
-.transaction-refunds-table th:nth-child(6),
-.transaction-refunds-table td:nth-child(6) {
-  width: 14%;
+  width: 34%;
 }
 
 .transaction-fee-details {
@@ -914,6 +992,23 @@ input[type="submit"]:disabled {
 .admin-payment-status,
 .admin-payment-amount {
   width: fit-content;
+}
+
+.admin-payment-amount-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.admin-payment-amount-link:hover,
+.admin-payment-amount-link:focus {
+  color: var(--accent-dark);
 }
 
 .payment-admin-section {
@@ -1299,6 +1394,10 @@ body.trips-index-page .trip-card {
   background: rgb(31 41 51 / 45%);
 }
 
+.signup-modal-content {
+  padding: 24px;
+}
+
 .signup-modal-content,
 .confirmation-modal-content {
   display: grid;
@@ -1356,6 +1455,76 @@ body.trips-index-page .trip-card {
   max-width: none;
   color: var(--muted);
   text-align: left;
+}
+
+dialog.signup-modal.refund-modal {
+  width: min(640px, calc(100% - 32px));
+}
+
+dialog.signup-modal.refund-modal .signup-modal-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  padding: 24px;
+}
+
+dialog.signup-modal.refund-modal .signup-modal-content > div,
+dialog.signup-modal.refund-modal form > div,
+dialog.signup-modal.refund-modal .form-actions {
+  display: block;
+  grid-template-columns: none;
+  gap: 0;
+  min-height: 0;
+  padding: 0;
+  border-bottom: 0;
+}
+
+dialog.signup-modal.refund-modal .details-list.transaction-details-list {
+  padding: 10px 16px;
+}
+
+dialog.signup-modal.refund-modal .details-list.transaction-details-list > div {
+  display: grid;
+  grid-template-columns: minmax(170px, 0.46fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: baseline;
+  min-height: 44px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+dialog.signup-modal.refund-modal .details-list.transaction-details-list > div:last-child {
+  border-bottom: 0;
+}
+
+dialog.signup-modal.refund-modal .refund-amount-field {
+  width: 20%;
+  min-width: 150px;
+  max-width: 100%;
+}
+
+dialog.signup-modal.refund-modal .currency-field {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  border: 1px solid #b9c0c8 !important;
+}
+
+dialog.signup-modal.refund-modal .checkbox-field {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+dialog.signup-modal.refund-modal .checkbox-field input[type="checkbox"] {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+dialog.signup-modal.refund-modal .form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: end;
+  padding-top: 0;
 }
 
 .signup-modal .form-actions,
