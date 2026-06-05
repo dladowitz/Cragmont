@@ -41,7 +41,7 @@ gem "thruster", require: false
 gem "image_processing", "~> 2.0"
 
 # Render Rails views with HAML templates.
-gem "haml-rails", "~> 2.1"
+gem "haml-rails", "~> 3.0"
 
 # Generate signed waiver PDFs for trip signups.
 gem "prawn", "~> 2.5"
