@@ -470,7 +470,7 @@ class CampsiteSignupsController < ApplicationController
     if signup.payments.exists? || signup.pending_payment?
       CampsiteSignupPaymentLifecycle.cancel_or_refund_signup!(
         signup: signup.primary_signup,
-        reason: "requested_by_participant",
+        reason: "cancellation_by_participant",
         issue_refund: issue_refund,
         refund_initiated_by: "participant"
       )

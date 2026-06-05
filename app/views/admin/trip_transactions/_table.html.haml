@@ -55,6 +55,10 @@
                       %div
                         %dt Admin created
                         %dd= payment.created_by.present? ? "Yes" : "No"
+                      - if payment.waived?
+                        %div
+                          %dt Waived By
+                          %dd= payment.created_by&.full_name || "None"
                       - if show_waived_reason
                         %div
                           %dt Waived reason
