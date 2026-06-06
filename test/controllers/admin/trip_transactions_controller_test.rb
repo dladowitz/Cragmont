@@ -183,9 +183,9 @@ class Admin::TripTransactionsControllerTest < ActionDispatch::IntegrationTest
       ], fee_table.css("thead th").map { |header| header.text.strip }
       fee_rows = fee_table.css("tbody tr").map { |row| row.text.squish }
       assert_equal 3, fee_rows.size
-      assert_includes fee_rows, "You $30.00 $10.00 $40.00"
-      assert_includes fee_rows, "Adult 2 $30.00 $10.00 $40.00"
-      assert_includes fee_rows, "Minor 1 (age 12) $15.00 $5.00 $20.00"
+      assert_includes fee_rows, "Sam Lee $30.00 $10.00 $40.00"
+      assert_includes fee_rows, "Jordan Guest $30.00 $10.00 $40.00"
+      assert_includes fee_rows, "Mini Lee $15.00 $5.00 $20.00"
       assert_select ".transaction-fee-total", text: "$100.00"
       assert_select ".transaction-fee-details", text: /Total:/, count: 0
       assert_select "h3", "Refunds"

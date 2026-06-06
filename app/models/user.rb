@@ -43,6 +43,10 @@ class User < ApplicationRecord
     user if user.valid_password_reset_token?(token)
   end
 
+  def self.generate_default_password
+    SecureRandom.urlsafe_base64(24)
+  end
+
   def full_name
     "#{first_name} #{last_name}"
   end

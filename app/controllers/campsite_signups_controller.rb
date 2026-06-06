@@ -648,14 +648,16 @@ class CampsiteSignupsController < ApplicationController
       return user
     end
 
+    default_password = User.generate_default_password
+
     User.create!(
       first_name: attributes[:first_name],
       last_name: attributes[:last_name],
       email: email,
       phone: attributes[:phone],
       member: false,
-      password: User::DEFAULT_GUEST_PASSWORD,
-      password_confirmation: User::DEFAULT_GUEST_PASSWORD,
+      password: default_password,
+      password_confirmation: default_password,
       default_password: true
     )
   rescue ActiveRecord::RecordInvalid => error

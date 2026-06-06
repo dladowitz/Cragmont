@@ -6,6 +6,10 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "can view users index" do
+    User.create!(first_name: "Alex", last_name: "Boulder", email: "alex-boulder@example.com", password: "password")
+    User.create!(first_name: "Aaron", last_name: "Anchor", email: "aaron-anchor@example.com", password: "password")
+    User.create!(first_name: "Alex", last_name: "Arete", email: "alex-arete@example.com", password: "password")
+
     get admin_users_url
 
     assert_response :success
@@ -23,6 +27,14 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
       assert_select ".member-icon-placeholder", count: 1
       assert_select "td", text: "No"
     end
+    names = css_select("tbody tr .user-name-cell a").map { |link| link.text.squish }
+    assert_equal [
+      "Aaron Anchor",
+      "Alex Arete",
+      "Alex Boulder",
+      "Alex Rivera",
+      "Sam Lee"
+    ], names.first(5)
   end
 
   test "users index shows default password status" do

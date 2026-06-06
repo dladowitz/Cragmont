@@ -515,28 +515,64 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     get admin_trip_url(trips(:yosemite))
 
     assert_response :success
-    assert_select ".confirmed-signups-section tbody tr", text: /Sam Lee/ do
-      assert_select ".admin-payment-status", text: "Paid"
-      assert_select ".admin-payment-amount", text: "$80.00"
-    end
-    assert_select ".confirmed-signups-section tbody tr", text: /Gina Guest/ do
-      assert_select ".admin-payment-status", text: "Paid"
-      assert_select ".admin-payment-covered-by", text: "Paid by Sam Lee"
-      assert_select ".admin-payment-amount", count: 0
-      assert_select ".admin-payment-control button", text: "Update", count: 0
-    end
+    rows = css_select(".confirmed-signups-section table").first.css("> tbody > tr")
+    sam_row = rows.find { |row| row.css("td").first&.text&.squish&.include?("Sam Lee") }
+    gina_row = rows.find { |row| row.css("td").first&.text&.squish&.include?("Gina Guest") }
+
+    assert sam_row
+    assert_equal "Paid", sam_row.at_css(".admin-payment-status").text.squish
+    assert_equal "$80.00", sam_row.at_css(".admin-payment-amount").text.squish
+
+    assert gina_row
+    assert_equal "Paid", gina_row.at_css(".admin-payment-status").text.squish
+    assert_equal "Paid by Sam Lee", gina_row.at_css(".admin-payment-covered-by").text.squish
+    assert_empty gina_row.css(".admin-payment-amount")
+    assert_empty gina_row.css(".admin-payment-control button").select { |button| button.text.squish == "Update" }
   end
 
   test "trip details links payment amount to details modal for partially refunded payment" do
     signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    guest_user = User.create!(
+      first_name: "Jordan",
+      last_name: "Guest",
+      email: "jordan-trip-payment@example.com",
+      password: "password"
+    )
+    create_campsite_signup!(
+      campsite: campsites(:yosemite_a),
+      user: guest_user,
+      guest_of_signup: signup,
+      guest_position: 1,
+      arrival_date: signup.arrival_date,
+      checkout_date: signup.checkout_date
+    )
+    signup.campsite_signup_minors.create!(
+      first_name: "Mini",
+      last_name: "Lee",
+      age: 12,
+      relationship: "Child"
+    )
     payment = signup.payments.create!(
       source: "stripe",
       status: "partially_refunded",
-      amount_cents: 8000,
+      amount_cents: 10000,
       refunded_amount_cents: 3000,
       stripe_payment_intent_id: "pi_trip_details_refund",
       stripe_checkout_session_id: "cs_trip_details_refund",
-      paid_at: Time.current
+      paid_at: Time.current,
+      pricing_snapshot: {
+        "amount_cents" => 10000,
+        "adult_count" => 2,
+        "counted_minor_count" => 1,
+        "free_minor_count" => 0,
+        "night_count" => 3,
+        "extra_night_count" => 1,
+        "first_two_nights_fee_cents" => 3000,
+        "extra_night_fee_cents" => 1000,
+        "minor_fee_cents" => 1500,
+        "minor_extra_night_fee_cents" => 500,
+        "uncounted_minor_age_limit" => 10
+      }
     )
     payment.refunds.create!(
       amount_cents: 3000,
@@ -553,14 +589,18 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".confirmed-signups-section tbody tr", text: /Sam Lee/ do
       assert_select ".admin-payment-status.warning-status", text: "Partially Refunded"
-      assert_select "button.admin-payment-amount-link[data-action='modal#open']", text: "$80.00"
+      assert_select "button.admin-payment-amount-link[data-action='modal#open']", text: "$100.00"
       assert_select "button", text: "Update", count: 0
       assert_select "dialog.transaction-details-modal" do
         assert_select "h2", "Payment details"
         assert_select "dt", text: "Amount Refunded"
         assert_select "dd", text: "$30.00"
         assert_select "dt", text: "Remaining refundable"
-        assert_select "dd", text: "$50.00"
+        assert_select "dd", text: "$70.00"
+        fee_rows = css_select(".transaction-fee-table tbody tr").map { |row| row.text.squish }
+        assert_includes fee_rows, "Sam Lee $30.00 $10.00 $40.00"
+        assert_includes fee_rows, "Jordan Guest $30.00 $10.00 $40.00"
+        assert_includes fee_rows, "Mini Lee $15.00 $5.00 $20.00"
         assert_select ".transaction-refund-action-row button.danger.secondary:not([disabled])", text: "Issue Refund"
         assert_select "dialog.refund-modal" do
           assert_select "h2", "Refund payment"
@@ -572,6 +612,62 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
         assert_select ".transaction-refunds-table", text: /Admin Created/
       end
     end
+  end
+
+  test "trip details shows trip expense refunds" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    payment = signup.payments.create!(
+      source: "stripe",
+      status: "partially_refunded",
+      amount_cents: 8000,
+      refunded_amount_cents: 2500,
+      stripe_payment_intent_id: "pi_trip_expenses",
+      stripe_checkout_session_id: "cs_trip_expenses",
+      paid_at: Time.current
+    )
+    expense_refund = payment.refunds.create!(
+      amount_cents: 1500,
+      status: "succeeded",
+      initiated_by: "admin",
+      refunded_by: users(:alex),
+      refund_type: "trip_expense",
+      reason: "Firewood",
+      refunded_at: Time.zone.local(2026, 6, 5, 18, 30)
+    )
+    payment.refunds.create!(
+      amount_cents: 1000,
+      status: "succeeded",
+      initiated_by: "admin",
+      refunded_by: users(:alex),
+      refund_type: "admin_created",
+      reason: "Overpayment",
+      refunded_at: Time.zone.local(2026, 6, 5, 17, 30)
+    )
+
+    get admin_trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "h2", "Trip Expenses"
+    assert_select "a", text: "Add reimbursement", count: 0
+    assert_select "section.panel", text: /Trip Expenses/ do
+      assert_select "th", text: "Participant"
+      assert_select "th", text: "Amount"
+      assert_select "th", text: "Refunded By"
+      assert_select "th", text: "Reason"
+      assert_select "th", text: "Date of Refund"
+      assert_select "th", text: "Details"
+      assert_select "tbody tr", count: 1
+      assert_select "tbody tr", text: /Sam Lee/ do
+        assert_select "td", text: "$15.00"
+        assert_select "td", text: "Alex Rivera"
+        assert_select "td", text: "Firewood"
+        assert_select "td", text: "6/5/26"
+        assert_select "[data-controller='payment-details-trigger'][data-payment-details-trigger-payment-id-value='#{payment.id}']"
+        assert_select "button.button.secondary[data-action='payment-details-trigger#open']", text: "View"
+      end
+      assert_select "tbody tr", text: /Overpayment/, count: 0
+    end
+    assert_select "button.admin-payment-amount-link[data-payment-details-payment-id='#{payment.id}']", text: "$80.00"
   end
 
   test "trip details payment modal shows waived by admin" do

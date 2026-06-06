@@ -232,6 +232,7 @@ class Admin::CampsiteSignupsController < Admin::BaseController
     signup = build_admin_assigned_signup(trip, campsite, user)
 
     if save_admin_assigned_signup(signup, campsite, waive_payment: waive_payment?)
+      send_admin_added_waiver_email(signup)
       redirect_to admin_trip_path(trip, anchor: "admin-campsite-#{campsite.id}"), notice: "On belay! #{user.full_name} was added to #{campsite.campground.name} site #{campsite.site_number}."
     else
       redirect_to admin_trip_path(trip), alert: "Wow, that was a whipper. #{signup.errors.full_messages.to_sentence}"
@@ -262,6 +263,7 @@ class Admin::CampsiteSignupsController < Admin::BaseController
     end
 
     if saved
+      send_admin_added_waiver_email(signup)
       redirect_to admin_trip_path(trip, anchor: "admin-campsite-#{campsite.id}"), notice: "On belay! #{user.full_name}'s account was created and they were added to #{campsite.campground.name} site #{campsite.site_number}."
     end
   rescue ActiveRecord::RecordInvalid => error
@@ -271,12 +273,13 @@ class Admin::CampsiteSignupsController < Admin::BaseController
 
   def build_admin_created_user
     user_attributes = add_participant_params.fetch(:new_user, {})
+    default_password = User.generate_default_password
 
     User.new(
       user_attributes.merge(
         member: false,
-        password: User::DEFAULT_GUEST_PASSWORD,
-        password_confirmation: User::DEFAULT_GUEST_PASSWORD,
+        password: default_password,
+        password_confirmation: default_password,
         default_password: true
       )
     )
@@ -353,6 +356,21 @@ class Admin::CampsiteSignupsController < Admin::BaseController
       apply_admin_waived_payment!(signup) if waive_payment
       campsite.lock_signups_if_full!
     end
+  end
+
+  def send_admin_added_waiver_email(signup)
+    return if signup.user.email.blank?
+
+    GuestWaiverMailer.with(
+      signup: signup,
+      added_by: current_user,
+      waiver_url: participant_completion_url(signup),
+      waiver_instruction: "Before tying in you'll need to sign the waiver and choose the dates you'll be there."
+    ).needed.deliver_now
+  end
+
+  def participant_completion_url(signup)
+    trip_url(signup.trip, complete_signup: signup.signed_id(purpose: :complete_participant_details), anchor: "campsite-#{signup.campsite_id}")
   end
 
   def apply_admin_waived_payment!(signup)

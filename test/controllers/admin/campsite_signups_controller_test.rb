@@ -2,6 +2,7 @@ require "test_helper"
 
 class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
   setup do
+    ActionMailer::Base.deliveries.clear
     log_in_as(users(:alex))
   end
 
@@ -20,19 +21,30 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     trip = trips(:yosemite)
     campsite = campsites(:yosemite_a)
 
-    assert_difference "CampsiteSignup.count", 1 do
-      post admin_trip_campsite_signups_url(trip), params: {
-        campsite_signup: {
-          campsite_id: campsite.id,
-          participant_account_status: "existing",
-          user_id: users(:sam).id
+    assert_difference -> { ActionMailer::Base.deliveries.size }, 1 do
+      assert_difference "CampsiteSignup.count", 1 do
+        post admin_trip_campsite_signups_url(trip), params: {
+          campsite_signup: {
+            campsite_id: campsite.id,
+            participant_account_status: "existing",
+            user_id: users(:sam).id
+          }
         }
-      }
+      end
     end
 
     assert_redirected_to admin_trip_url(trip, anchor: "admin-campsite-#{campsite.id}")
     assert_equal "On belay! Sam Lee was added to Upper Pines site A12.", flash[:notice]
     signup = CampsiteSignup.order(:created_at).last
+    mail = ActionMailer::Base.deliveries.last
+    waiver_url = trip_url(trip, complete_signup: signup.signed_id(purpose: :complete_participant_details), anchor: "campsite-#{campsite.id}")
+    assert_equal [ "sam@example.com" ], mail.to
+    assert_equal "Cragmont Climning Yosemite Valley Spring June 12, 2026 Waiver Needed", mail.subject
+    assert_match "Alex Rivera added you to the upcoming Cragmont trip.", mail.text_part.body.decoded
+    assert_match "Before tying in you'll need to sign the waiver and choose the dates you'll be there.", mail.text_part.body.decoded
+    assert_match "You can do that here: #{waiver_url}", mail.text_part.body.decoded
+    assert_no_match "One more thing. We setup an account for you in case you want to sign up for future trips.", mail.text_part.body.decoded
+    assert_no_match "Password Reset Link:", mail.text_part.body.decoded
     assert signup.confirmed?
     assert_equal trip, signup.trip
     assert_equal campsite, signup.campsite
@@ -103,30 +115,41 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     trip = trips(:yosemite)
     campsite = campsites(:yosemite_a)
 
-    assert_difference "User.count", 1 do
-      assert_difference "CampsiteSignup.count", 1 do
-        post admin_trip_campsite_signups_url(trip), params: {
-          campsite_signup: {
-            campsite_id: campsite.id,
-            participant_account_status: "new",
-            new_user: {
-              first_name: "Morgan",
-              last_name: "Chen",
-              email: "morgan-direct@example.com",
-              phone: "555-0199"
+    assert_difference -> { ActionMailer::Base.deliveries.size }, 1 do
+      assert_difference "User.count", 1 do
+        assert_difference "CampsiteSignup.count", 1 do
+          post admin_trip_campsite_signups_url(trip), params: {
+            campsite_signup: {
+              campsite_id: campsite.id,
+              participant_account_status: "new",
+              new_user: {
+                first_name: "Morgan",
+                last_name: "Chen",
+                email: "morgan-direct@example.com",
+                phone: "555-0199"
+              }
             }
           }
-        }
+        end
       end
     end
 
     user = User.find_by!(email: "morgan-direct@example.com")
     signup = CampsiteSignup.find_by!(trip: trip, user: user)
+    mail = ActionMailer::Base.deliveries.last
+    waiver_url = trip_url(trip, complete_signup: signup.signed_id(purpose: :complete_participant_details), anchor: "campsite-#{campsite.id}")
     assert_redirected_to admin_trip_url(trip, anchor: "admin-campsite-#{campsite.id}")
     assert_equal "On belay! Morgan Chen's account was created and they were added to Upper Pines site A12.", flash[:notice]
+    assert_equal [ "morgan-direct@example.com" ], mail.to
+    assert_match "Morgan Chen, Get Stoked!", mail.text_part.body.decoded
+    assert_match "Alex Rivera added you to the upcoming Cragmont trip.", mail.text_part.body.decoded
+    assert_match "Before tying in you'll need to sign the waiver and choose the dates you'll be there.", mail.text_part.body.decoded
+    assert_match "You can do that here: #{waiver_url}", mail.text_part.body.decoded
+    assert_match "One more thing. We setup an account for you in case you want to sign up for future trips.", mail.text_part.body.decoded
+    assert_match "Password Reset Link: http://example.com/password_resets/new", mail.text_part.body.decoded
     assert_equal "555-0199", user.phone
     assert user.default_password?
-    assert user.authenticate(User::DEFAULT_GUEST_PASSWORD)
+    assert_not user.authenticate(User::DEFAULT_GUEST_PASSWORD)
     assert signup.confirmed?
     assert_equal campsite, signup.campsite
     assert_nil signup.arrival_date

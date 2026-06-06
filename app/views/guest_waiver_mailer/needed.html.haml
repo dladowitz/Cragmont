@@ -1,0 +1,23 @@
+%p
+  #{@signup.user.full_name}, Get Stoked!
+  %br/
+  #{@added_by.full_name} added you to the upcoming Cragmont trip.
+  %br/
+  = @waiver_instruction
+  %br/
+  You can do that here:
+  = link_to "Waiver Link", @waiver_url
+  \.
+
+%p
+  See you at the Crag.
+  %br/
+  Cragmont Climbing Club
+
+- if @signup.user.default_password?
+  %p
+    One more thing. We setup an account for you in case you want to sign up for future trips.
+    %br/
+    If you want to log in go through the Password Reset flow to set a password.
+    %br/
+    = link_to "Password Reset Link", @password_reset_url

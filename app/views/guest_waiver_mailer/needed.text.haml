@@ -1,0 +1,14 @@
+- lines = []
+- lines << "#{@signup.user.full_name}, Get Stoked!"
+- lines << "#{@added_by.full_name} added you to the upcoming Cragmont trip."
+- lines << @waiver_instruction
+- lines << "You can do that here: #{@waiver_url}"
+- lines << ""
+- lines << "See you at the Crag."
+- lines << "Cragmont Climbing Club"
+- if @signup.user.default_password?
+  - lines << ""
+  - lines << "One more thing. We setup an account for you in case you want to sign up for future trips."
+  - lines << "If you want to log in go through the Password Reset flow to set a password."
+  - lines << "Password Reset Link: #{@password_reset_url}"
+!= lines.join("\n")
