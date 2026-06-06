@@ -32,6 +32,18 @@ class CampsiteSignupPayment < ApplicationRecord
     paid? || partially_refunded?
   end
 
+  def checkout_active?
+    checkout_url.present? && checkout_expires_at.present? && checkout_expires_at.future?
+  end
+
+  def payment_link_expired?
+    expires_at.present? && expires_at.past?
+  end
+
+  def long_lived_payment_link?
+    expires_at.present? && checkout_expires_at.present? && expires_at > checkout_expires_at
+  end
+
   def complete_refund!
     if remaining_refundable_amount_cents.zero?
       update!(status: "refunded")

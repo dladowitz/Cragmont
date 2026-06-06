@@ -22,6 +22,7 @@ class StripeCheckoutSessionCreatorTest < ActiveSupport::TestCase
       amount_cents: 5000,
       currency: "usd",
       expires_at: 30.minutes.from_now,
+      checkout_expires_at: 30.minutes.from_now,
       previous_signup_status: "confirmed"
     )
 

@@ -11,7 +11,7 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
       payment.update!(
         stripe_checkout_session_id: "cs_admin_test_#{payment.id}",
         checkout_url: "https://checkout.stripe.com/c/pay/admin-#{payment.id}",
-        expires_at: 30.minutes.from_now
+        checkout_expires_at: payment.checkout_expires_at || 30.minutes.from_now
       )
       payment
     end
@@ -21,7 +21,7 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     trip = trips(:yosemite)
     campsite = campsites(:yosemite_a)
 
-    assert_difference -> { ActionMailer::Base.deliveries.size }, 1 do
+    assert_no_difference -> { ActionMailer::Base.deliveries.size } do
       assert_difference "CampsiteSignup.count", 1 do
         post admin_trip_campsite_signups_url(trip), params: {
           campsite_signup: {
@@ -33,18 +33,9 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
       end
     end
 
-    assert_redirected_to admin_trip_url(trip, anchor: "admin-campsite-#{campsite.id}")
-    assert_equal "On belay! Sam Lee was added to Upper Pines site A12.", flash[:notice]
     signup = CampsiteSignup.order(:created_at).last
-    mail = ActionMailer::Base.deliveries.last
-    waiver_url = trip_url(trip, complete_signup: signup.signed_id(purpose: :complete_participant_details), anchor: "campsite-#{campsite.id}")
-    assert_equal [ "sam@example.com" ], mail.to
-    assert_equal "Cragmont Climning Yosemite Valley Spring June 12, 2026 Waiver Needed", mail.subject
-    assert_match "Alex Rivera added you to the upcoming Cragmont trip.", mail.text_part.body.decoded
-    assert_match "Before tying in you'll need to sign the waiver and choose the dates you'll be there.", mail.text_part.body.decoded
-    assert_match "You can do that here: #{waiver_url}", mail.text_part.body.decoded
-    assert_no_match "One more thing. We setup an account for you in case you want to sign up for future trips.", mail.text_part.body.decoded
-    assert_no_match "Password Reset Link:", mail.text_part.body.decoded
+    assert_admin_participant_link_redirect(trip, campsite, signup)
+    assert_equal "On belay! Sam Lee was added to Upper Pines site A12.", flash[:notice]
     assert signup.confirmed?
     assert_equal trip, signup.trip
     assert_equal campsite, signup.campsite
@@ -72,7 +63,7 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
 
     signup = CampsiteSignup.find_by!(trip: trip, user: users(:sam))
     payment = signup.current_payment
-    assert_redirected_to admin_trip_url(trip, anchor: "admin-campsite-#{campsite.id}")
+    assert_admin_participant_link_redirect(trip, campsite, signup)
     assert_equal users(:sam), trip.reload.campsite_coordinator
     assert signup.confirmed?
     assert payment.waived?
@@ -103,7 +94,7 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
 
     signup = CampsiteSignup.find_by!(trip: trip, user: users(:sam))
     payment = signup.current_payment
-    assert_redirected_to admin_trip_url(trip, anchor: "admin-campsite-#{campsite.id}")
+    assert_admin_participant_link_redirect(trip, campsite, signup)
     assert_equal users(:alex), trip.reload.campsite_coordinator
     assert payment.waived?
     assert_equal 0, payment.amount_cents
@@ -115,7 +106,7 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     trip = trips(:yosemite)
     campsite = campsites(:yosemite_a)
 
-    assert_difference -> { ActionMailer::Base.deliveries.size }, 1 do
+    assert_no_difference -> { ActionMailer::Base.deliveries.size } do
       assert_difference "User.count", 1 do
         assert_difference "CampsiteSignup.count", 1 do
           post admin_trip_campsite_signups_url(trip), params: {
@@ -136,17 +127,8 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
 
     user = User.find_by!(email: "morgan-direct@example.com")
     signup = CampsiteSignup.find_by!(trip: trip, user: user)
-    mail = ActionMailer::Base.deliveries.last
-    waiver_url = trip_url(trip, complete_signup: signup.signed_id(purpose: :complete_participant_details), anchor: "campsite-#{campsite.id}")
-    assert_redirected_to admin_trip_url(trip, anchor: "admin-campsite-#{campsite.id}")
+    assert_admin_participant_link_redirect(trip, campsite, signup)
     assert_equal "On belay! Morgan Chen's account was created and they were added to Upper Pines site A12.", flash[:notice]
-    assert_equal [ "morgan-direct@example.com" ], mail.to
-    assert_match "Morgan Chen, Get Stoked!", mail.text_part.body.decoded
-    assert_match "Alex Rivera added you to the upcoming Cragmont trip.", mail.text_part.body.decoded
-    assert_match "Before tying in you'll need to sign the waiver and choose the dates you'll be there.", mail.text_part.body.decoded
-    assert_match "You can do that here: #{waiver_url}", mail.text_part.body.decoded
-    assert_match "One more thing. We setup an account for you in case you want to sign up for future trips.", mail.text_part.body.decoded
-    assert_match "Password Reset Link: http://example.com/password_resets/new", mail.text_part.body.decoded
     assert_equal "555-0199", user.phone
     assert user.default_password?
     assert_not user.authenticate(User::DEFAULT_GUEST_PASSWORD)
@@ -182,7 +164,7 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     user = User.find_by!(email: "morgan-anchor@example.com")
     signup = CampsiteSignup.find_by!(trip: trip, user: user)
     payment = signup.current_payment
-    assert_redirected_to admin_trip_url(trip, anchor: "admin-campsite-#{campsite.id}")
+    assert_admin_participant_link_redirect(trip, campsite, signup)
     assert_equal user, trip.reload.campsite_coordinator
     assert signup.confirmed?
     assert payment.waived?
@@ -260,11 +242,181 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to admin_trip_url(trip, anchor: "admin-campsite-#{campsite.id}")
     signup = CampsiteSignup.find_by!(trip: trip, user: participant)
+    assert_admin_participant_link_redirect(trip, campsite, signup)
     assert signup.confirmed?
     assert_equal campsite, signup.campsite
     assert campsite.reload.signups_locked?
+  end
+
+  test "admin trip show opens date waiver and payment link modal from signed token" do
+    trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+    participant = User.create!(
+      first_name: "Taylor",
+      last_name: "Share",
+      email: "taylor-share@example.com",
+      password: "password"
+    )
+    signup = create_campsite_signup!(campsite: campsite, user: participant, arrival_date: nil, checkout_date: nil)
+    participant_link = trip_url(trip, complete_signup: signup.signed_id(purpose: :complete_participant_details), anchor: "campsite-#{campsite.id}")
+
+    get admin_trip_url(trip, participant_link_signup: signup.signed_id(purpose: :admin_participant_link))
+
+    assert_response :success
+    assert_select "div[data-controller='modal'][data-modal-open-value='true'][data-modal-clean-url-on-close-value='true'] .admin-participant-link-modal" do
+      assert_select "h2", "Date selection, Waiver and Payment Link"
+      assert_select "p", "Share this with the participant so they can select dates, sign the waiver and pay for the trip."
+      assert_select "a[href=?]", participant_link, text: "Date selection, waiver, and payment link"
+      assert_select "form[action=?][method='post'][data-controller='email-link'][data-action='submit->email-link#send'] button", email_participant_link_admin_trip_campsite_signup_path(trip, signup), text: "Email link to participant"
+      assert_select "button", text: "Copy Link"
+    end
+  end
+
+  test "admin trip show opens date waiver link modal for waived participant" do
+    trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+    participant = User.create!(
+      first_name: "Taylor",
+      last_name: "Comped",
+      email: "taylor-comped@example.com",
+      password: "password"
+    )
+    signup = create_campsite_signup!(campsite: campsite, user: participant, arrival_date: nil, checkout_date: nil)
+    signup.payments.create!(
+      source: "waived",
+      status: "waived",
+      amount_cents: 0,
+      waived_reason: "Board approved comp",
+      created_by: users(:alex)
+    )
+    participant_link = trip_url(trip, complete_signup: signup.signed_id(purpose: :complete_participant_details), anchor: "campsite-#{campsite.id}")
+
+    get admin_trip_url(trip, participant_link_signup: signup.signed_id(purpose: :admin_participant_link))
+
+    assert_response :success
+    assert_select "div[data-controller='modal'][data-modal-open-value='true'][data-modal-clean-url-on-close-value='true'] .admin-participant-link-modal" do
+      assert_select "h2", "Date selection and Waiver Link"
+      assert_select "p", "Share this with the participant so they can select dates and sign the waiver."
+      assert_select "a[href=?]", participant_link, text: "Date selection and waiver link"
+      assert_select "form[action=?][method='post'][data-controller='email-link'][data-action='submit->email-link#send'] button", email_participant_link_admin_trip_campsite_signup_path(trip, signup), text: "Email link to participant"
+      assert_select "button", text: "Copy Link"
+    end
+  end
+
+  test "admin can email participant link from modal action" do
+    trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+    participant = User.create!(
+      first_name: "Taylor",
+      last_name: "Share",
+      email: "taylor-share@example.com",
+      password: "password"
+    )
+    signup = create_campsite_signup!(campsite: campsite, user: participant, arrival_date: nil, checkout_date: nil)
+    participant_link = trip_url(trip, complete_signup: signup.signed_id(purpose: :complete_participant_details), anchor: "campsite-#{campsite.id}")
+
+    assert_difference -> { ActionMailer::Base.deliveries.size }, 1 do
+      post email_participant_link_admin_trip_campsite_signup_url(trip, signup)
+    end
+
+    assert_redirected_to admin_trip_url(trip, anchor: "admin-campsite-#{campsite.id}")
+    assert_equal "On belay! The date selection, waiver, and payment link was emailed to Taylor Share.", flash[:notice]
+
+    mail = ActionMailer::Base.deliveries.last
+    assert_equal [ "taylor-share@example.com" ], mail.to
+    assert_equal "Cragmont Climning Yosemite Valley Spring June 12, 2026 Waiver Needed", mail.subject
+    assert_match "Alex Rivera added you to the upcoming Cragmont trip.", mail.text_part.body.decoded
+    assert_match "Before tying in you'll need to choose dates, sign the waiver, and pay for the trip.", mail.text_part.body.decoded
+    assert_match "You can do that here: #{participant_link}", mail.text_part.body.decoded
+  end
+
+  test "admin participant link email action supports in-modal json response" do
+    trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+    participant = User.create!(
+      first_name: "Taylor",
+      last_name: "Json",
+      email: "taylor-json@example.com",
+      password: "password"
+    )
+    signup = create_campsite_signup!(campsite: campsite, user: participant, arrival_date: nil, checkout_date: nil)
+
+    assert_difference -> { ActionMailer::Base.deliveries.size }, 1 do
+      post email_participant_link_admin_trip_campsite_signup_url(trip, signup), as: :json
+    end
+
+    assert_response :success
+    response_body = JSON.parse(response.body)
+    assert_equal "Email sent", response_body.fetch("button_text")
+    assert_equal "On belay! The date selection, waiver, and payment link was emailed to Taylor Json.", response_body.fetch("message")
+  end
+
+  test "admin can email waived participant date and waiver link from modal action" do
+    trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+    participant = User.create!(
+      first_name: "Taylor",
+      last_name: "Comped",
+      email: "taylor-comped-email@example.com",
+      password: "password"
+    )
+    signup = create_campsite_signup!(campsite: campsite, user: participant, arrival_date: nil, checkout_date: nil)
+    signup.payments.create!(
+      source: "waived",
+      status: "waived",
+      amount_cents: 0,
+      waived_reason: "Board approved comp",
+      created_by: users(:alex)
+    )
+    participant_link = trip_url(trip, complete_signup: signup.signed_id(purpose: :complete_participant_details), anchor: "campsite-#{campsite.id}")
+
+    assert_difference -> { ActionMailer::Base.deliveries.size }, 1 do
+      post email_participant_link_admin_trip_campsite_signup_url(trip, signup)
+    end
+
+    assert_redirected_to admin_trip_url(trip, anchor: "admin-campsite-#{campsite.id}")
+    assert_equal "On belay! The date selection and waiver link was emailed to Taylor Comped.", flash[:notice]
+
+    mail = ActionMailer::Base.deliveries.last
+    assert_equal [ "taylor-comped-email@example.com" ], mail.to
+    assert_match "Before tying in you'll need to sign the waiver and choose the dates you'll be there.", mail.text_part.body.decoded
+    assert_match "You can do that here: #{participant_link}", mail.text_part.body.decoded
+  end
+
+  test "admin can email guest waiver link from missing details action" do
+    trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+    primary_signup = create_campsite_signup!(campsite: campsite, user: users(:sam))
+    guest = User.create!(
+      first_name: "Gina",
+      last_name: "Guest",
+      email: "admin-email-guest@example.com",
+      password: User::DEFAULT_GUEST_PASSWORD,
+      default_password: true
+    )
+    guest_signup = create_campsite_signup!(
+      campsite: campsite,
+      user: guest,
+      guest_of_signup: primary_signup,
+      guest_position: 1,
+      arrival_date: primary_signup.arrival_date,
+      checkout_date: primary_signup.checkout_date
+    )
+    guest_link = trip_url(trip, complete_signup: guest_signup.signed_id(purpose: :complete_guest_details), anchor: "campsite-#{campsite.id}")
+
+    assert_difference -> { ActionMailer::Base.deliveries.size }, 1 do
+      post email_participant_link_admin_trip_campsite_signup_url(trip, guest_signup)
+    end
+
+    assert_redirected_to admin_trip_url(trip, anchor: "admin-campsite-#{campsite.id}")
+    assert_equal "On belay! The waiver link was emailed to Gina Guest.", flash[:notice]
+
+    mail = ActionMailer::Base.deliveries.last
+    assert_equal [ "admin-email-guest@example.com" ], mail.to
+    assert_match "Sam Lee added you to the upcoming Cragmont trip.", mail.text_part.body.decoded
+    assert_match "Before tying in you'll need to sign the waiver.", mail.text_part.body.decoded
+    assert_match "You can do that here: #{guest_link}", mail.text_part.body.decoded
   end
 
   test "does not add existing account participant without selecting user" do
@@ -678,6 +830,8 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     payment = signup.reload.current_payment
     assert payment.pending?
     assert_equal "https://checkout.stripe.com/c/pay/admin-#{payment.id}", payment.checkout_url
+    assert_in_delta 30.days.from_now.to_i, payment.expires_at.to_i, 5
+    assert_in_delta 24.hours.from_now.to_i, payment.checkout_expires_at.to_i, 5
   end
 
   test "removing paid participant cancels record without refund by default" do
@@ -707,6 +861,48 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
 
     assert signup.reload.canceled?
     assert signup.current_payment.refunded?
+  end
+
+  test "admin can refund paid guest share when removing guest" do
+    SiteSetting.current.update!(first_two_nights_fee: "30", extra_night_fee: "0")
+    primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    guest_user = User.create!(first_name: "David", last_name: "Guest", email: "admin-remove-paid-guest@example.com", password: "password")
+    guest_signup = create_campsite_signup!(
+      campsite: campsites(:yosemite_a),
+      user: guest_user,
+      guest_of_signup: primary_signup,
+      guest_position: 1,
+      arrival_date: primary_signup.arrival_date,
+      checkout_date: primary_signup.checkout_date
+    )
+    pricing = CampsiteSignupPricing.call(
+      arrival_date: primary_signup.arrival_date,
+      checkout_date: primary_signup.checkout_date,
+      adult_guest_count: 1
+    )
+    payment = primary_signup.payments.create!(
+      source: "manual",
+      status: "paid",
+      amount_cents: pricing.amount_cents,
+      pricing_snapshot: pricing.snapshot,
+      manual_payment_method: "cash",
+      manual_paid_at: Time.current,
+      paid_at: Time.current
+    )
+
+    assert_no_difference "CampsiteSignup.count" do
+      delete remove_from_campsite_admin_trip_campsite_signup_url(trips(:yosemite), guest_signup), params: {
+        payment: {
+          issue_refund: "1"
+        }
+      }
+    end
+
+    assert_redirected_to admin_trip_url(trips(:yosemite))
+    assert primary_signup.reload.confirmed?
+    assert guest_signup.reload.canceled?
+    assert payment.reload.partially_refunded?
+    assert_equal 3000, payment.refunded_amount_cents
   end
 
   test "admin stripe refund records admin initiator when removing paid participant" do
@@ -820,6 +1016,15 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+
+  def assert_admin_participant_link_redirect(trip, campsite, signup)
+    redirect = URI.parse(response.location)
+    query_params = Rack::Utils.parse_nested_query(redirect.query)
+
+    assert_equal admin_trip_path(trip), redirect.path
+    assert_equal "admin-campsite-#{campsite.id}", redirect.fragment
+    assert_equal signup, CampsiteSignup.find_signed(query_params.fetch("participant_link_signup"), purpose: :admin_participant_link)
+  end
 
   def with_fake_stripe_checkout
     original_creator = Rails.application.config.x.stripe_checkout_session_creator

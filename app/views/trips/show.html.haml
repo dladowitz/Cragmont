@@ -182,9 +182,26 @@
                           %td
                             - waiver_missing = !signup.waiver_signed?
                             - if waiver_missing
-                              - if user_signed_in? && signup.user_id == current_user.id
+                              - if user_signed_in? && signup.guest? && signup.guest_of_signup&.user_id == current_user.id
+                                - guest_waiver_link = trip_path(@trip, complete_signup: signup.signed_id(purpose: :complete_guest_details), anchor: "campsite-#{campsite.id}")
+                                - guest_waiver_url = trip_url(@trip, complete_signup: signup.signed_id(purpose: :complete_guest_details), anchor: "campsite-#{campsite.id}")
+                                - guest_email_path = trip_guest_waiver_email_path(@trip, signup)
+                                %div{"data-controller" => "modal", "data-modal-disable-autofocus-value" => "true"}
+                                  %button.missing-value.missing-link{"data-action" => "modal#open", type: "button"} Missing
+                                  %dialog.signup-modal.guest-waiver-link-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                                    .signup-modal-content
+                                      %div
+                                        %h2 Guest waiver link
+                                        %p Send this to #{signup.user.public_name} so they can sign the waiver.
+                                      .admin-participant-link-share
+                                        = link_to "Waiver Link", guest_waiver_link, class: "missing-details-link"
+                                        .admin-participant-link-actions
+                                          = render "guest_waiver_link_actions", waiver_link: guest_waiver_url, email_path: guest_email_path
+                                      .form-actions
+                                        %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+                              - elsif user_signed_in? && signup.user_id == current_user.id
                                 - details_link_purpose = signup.guest? ? :complete_guest_details : :complete_participant_details
-                                = link_to "Missing", trip_path(@trip, complete_signup: signup.signed_id(purpose: details_link_purpose), anchor: "campsite-#{campsite.id}")
+                                = link_to "Missing", trip_path(@trip, complete_signup: signup.signed_id(purpose: details_link_purpose), anchor: "campsite-#{campsite.id}"), class: "missing-value missing-link"
                               - else
                                 Missing
                             - else

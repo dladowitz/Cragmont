@@ -1,0 +1,21 @@
+- content_for :body_class, "trip-show-page"
+= render "shared/public_header"
+
+%main.public-main
+  %section.panel
+    - if @payment_request.paid?
+      %h1 On belay! Payment received.
+      %p Thanks for paying for #{@payment_request.trip.name}. You're all clipped in.
+    - elsif @payment_request.canceled?
+      %h1 This payment request is no longer active.
+      %p This link has been canceled. Reach out to the trip team if you think this was a whipper.
+    - elsif @payment_request.expired?
+      %h1 This payment request is no longer active.
+      %p This link has expired. Reach out to the trip team if you need a fresh payment link.
+    - elsif params[:stripe_checkout] == "success"
+      %h1 On belay! Payment received.
+      %p Thanks for paying for #{@payment_request.trip.name}. We are tying off the final payment details now.
+    - else
+      %h1 Payment not completed.
+      %p No worries. You can still use this link to pay for #{@payment_request.trip.name}.
+      = link_to "Try payment again", trip_payment_request_path(@payment_request.public_token), class: "button"

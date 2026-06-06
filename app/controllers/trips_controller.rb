@@ -16,7 +16,6 @@ class TripsController < ApplicationController
     if @show_payment_success_modal
       missing_waiver_signups = payment_success_missing_waiver_signups
       @payment_success_missing_waiver_links = payment_success_missing_waiver_links(missing_waiver_signups)
-      send_payment_success_missing_waiver_emails(missing_waiver_signups)
     end
   end
 
@@ -81,17 +80,12 @@ class TripsController < ApplicationController
 
   def payment_success_missing_waiver_links(signups)
     signups.map do |signup|
-      [ signup.user.full_name, guest_waiver_path(signup) ]
-    end
-  end
-
-  def send_payment_success_missing_waiver_emails(signups)
-    signups.each do |signup|
-      GuestWaiverMailer.with(
-        signup: signup,
-        primary_participant: @current_signup.user,
-        waiver_url: guest_waiver_url(signup)
-      ).needed.deliver_now
+      {
+        name: signup.user.full_name,
+        waiver_path: guest_waiver_path(signup),
+        waiver_url: guest_waiver_url(signup),
+        email_path: trip_guest_waiver_email_path(@trip, signup)
+      }
     end
   end
 

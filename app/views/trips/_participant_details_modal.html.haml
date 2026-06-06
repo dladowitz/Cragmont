@@ -7,7 +7,7 @@
   - modal_title = "#{signup.user.full_name} you've been added to the #{trip.name} trip by #{added_by.full_name}"
 - else
   - modal_title = "You've been added to the #{trip.name} trip."
-%div{"data-controller" => "modal", "data-modal-open-value" => "true"}
+%div{"data-controller" => "modal", "data-modal-clean-url-on-close-value" => "true", "data-modal-open-value" => "true"}
   %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
     .signup-modal-content
       %div
@@ -15,7 +15,7 @@
         - unless guest_signup
           %p Please select dates you will be attending
         - if guest_signup
-          %p Please review and sign the waiver.
+          %p.participant-details-waiver-prompt Please review and sign the waiver.
         .participant-details-campsite-summary
           %strong
             = campsite.campground.name

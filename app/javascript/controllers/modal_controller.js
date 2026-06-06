@@ -2,12 +2,18 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["dialog"]
-  static values = { disableAutofocus: Boolean, open: Boolean }
+  static values = { cleanUrlOnClose: Boolean, disableAutofocus: Boolean, open: Boolean }
 
   connect() {
+    this.dialogTarget.addEventListener("close", this.cleanUrl)
+
     if (this.openValue) {
       requestAnimationFrame(() => this.open())
     }
+  }
+
+  disconnect() {
+    this.dialogTarget.removeEventListener("close", this.cleanUrl)
   }
 
   open(event) {
@@ -28,5 +34,15 @@ export default class extends Controller {
     if (event.target === this.dialogTarget) {
       this.close()
     }
+  }
+
+  cleanUrl = () => {
+    if (!this.cleanUrlOnCloseValue || !window.location.search) return
+
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${window.location.pathname}${window.location.hash}`
+    )
   }
 }

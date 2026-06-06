@@ -8,8 +8,10 @@ Rails.application.routes.draw do
   resources :password_resets, only: %i[new create edit update], param: :token
   resource :profile, only: %i[show edit update destroy]
   post "stripe/webhooks", to: "stripe_webhooks#create"
+  get "payment_requests/:token", to: "trip_payment_requests#show", as: :trip_payment_request
 
   resources :trips, only: %i[index show] do
+    post "guest_waiver_emails/:id", to: "guest_waiver_emails#create", as: :guest_waiver_email
     resources :campsites, only: [] do
       resource :campsite_signup, only: %i[create destroy] do
         patch :guest_password
@@ -37,10 +39,14 @@ Rails.application.routes.draw do
         patch :mark_no_payment_needed, on: :member
         patch :mark_already_paid, on: :member
         patch :create_payment_link, on: :member
+        post :email_participant_link, on: :member
         delete :remove_from_campsite, on: :member
         delete :remove_from_waitlist, on: :member
       end
-      resources :trip_reimbursements, except: %i[index show]
+      resources :trip_payment_requests, only: %i[create] do
+        post :email, on: :member
+        patch :cancel, on: :member
+      end
     end
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

@@ -168,6 +168,26 @@ class Admin::CampsiteSignupsController < Admin::BaseController
     end
   end
 
+  def email_participant_link
+    trip = @trip
+    signup = trip.campsite_signups.includes(:user, :campsite).find(params[:id])
+
+    if signup.user.email.blank?
+      message = "Wow, that was a whipper. #{signup.user.full_name} does not have an email address."
+      respond_to do |format|
+        format.html { redirect_to admin_trip_path(trip, anchor: "admin-campsite-#{signup.campsite_id}"), alert: message }
+        format.json { render json: { message: message, button_text: "Email failed" }, status: :unprocessable_entity }
+      end
+    else
+      send_admin_details_link_email(signup)
+      message = "On belay! The #{admin_details_link_name(signup)} was emailed to #{signup.user.full_name}."
+      respond_to do |format|
+        format.html { redirect_to admin_trip_path(trip, anchor: "admin-campsite-#{signup.campsite_id}"), notice: message }
+        format.json { render json: { message: message, button_text: "Email sent" } }
+      end
+    end
+  end
+
   private
 
   def set_trip
@@ -232,8 +252,7 @@ class Admin::CampsiteSignupsController < Admin::BaseController
     signup = build_admin_assigned_signup(trip, campsite, user)
 
     if save_admin_assigned_signup(signup, campsite, waive_payment: waive_payment?)
-      send_admin_added_waiver_email(signup)
-      redirect_to admin_trip_path(trip, anchor: "admin-campsite-#{campsite.id}"), notice: "On belay! #{user.full_name} was added to #{campsite.campground.name} site #{campsite.site_number}."
+      redirect_to admin_added_participant_redirect_path(trip, campsite, signup), notice: "On belay! #{user.full_name} was added to #{campsite.campground.name} site #{campsite.site_number}."
     else
       redirect_to admin_trip_path(trip), alert: "Wow, that was a whipper. #{signup.errors.full_messages.to_sentence}"
     end
@@ -263,8 +282,7 @@ class Admin::CampsiteSignupsController < Admin::BaseController
     end
 
     if saved
-      send_admin_added_waiver_email(signup)
-      redirect_to admin_trip_path(trip, anchor: "admin-campsite-#{campsite.id}"), notice: "On belay! #{user.full_name}'s account was created and they were added to #{campsite.campground.name} site #{campsite.site_number}."
+      redirect_to admin_added_participant_redirect_path(trip, campsite, signup), notice: "On belay! #{user.full_name}'s account was created and they were added to #{campsite.campground.name} site #{campsite.site_number}."
     end
   rescue ActiveRecord::RecordInvalid => error
     record = error.record == signup ? signup : user
@@ -323,7 +341,8 @@ class Admin::CampsiteSignupsController < Admin::BaseController
       success_url: admin_trip_url(trip, stripe_checkout: "success"),
       cancel_url: admin_trip_url(trip, stripe_checkout: "canceled"),
       created_by: current_user,
-      previous_signup_status: signup.status
+      previous_signup_status: signup.status,
+      expires_at: CampsiteSignupPaymentLifecycle::ADMIN_PENDING_EXPIRATION.from_now
     )
     true
   rescue StripeConfigurationError, Stripe::StripeError => error
@@ -358,19 +377,47 @@ class Admin::CampsiteSignupsController < Admin::BaseController
     end
   end
 
-  def send_admin_added_waiver_email(signup)
+  def send_admin_details_link_email(signup)
     return if signup.user.email.blank?
 
-    GuestWaiverMailer.with(
+    mail_params = {
       signup: signup,
-      added_by: current_user,
-      waiver_url: participant_completion_url(signup),
-      waiver_instruction: "Before tying in you'll need to sign the waiver and choose the dates you'll be there."
-    ).needed.deliver_now
+      waiver_url: details_completion_url(signup)
+    }
+
+    if signup.guest?
+      mail_params[:primary_participant] = signup.guest_of_signup.user
+    else
+      mail_params[:added_by] = current_user
+      mail_params[:waiver_instruction] = admin_added_participant_link_instruction(signup)
+    end
+
+    GuestWaiverMailer.with(mail_params).needed.deliver_now
   end
 
-  def participant_completion_url(signup)
-    trip_url(signup.trip, complete_signup: signup.signed_id(purpose: :complete_participant_details), anchor: "campsite-#{signup.campsite_id}")
+  def details_completion_url(signup)
+    trip_url(signup.trip, complete_signup: signup.signed_id(purpose: details_completion_purpose(signup)), anchor: "campsite-#{signup.campsite_id}")
+  end
+
+  def details_completion_purpose(signup)
+    signup.guest? ? :complete_guest_details : :complete_participant_details
+  end
+
+  def admin_added_participant_redirect_path(trip, campsite, signup)
+    admin_trip_path(trip, participant_link_signup: signup.signed_id(purpose: :admin_participant_link), anchor: "admin-campsite-#{campsite.id}")
+  end
+
+  def admin_added_participant_link_instruction(signup)
+    return "Before tying in you'll need to sign the waiver and choose the dates you'll be there." if signup.payment_paid_or_settled?
+
+    "Before tying in you'll need to choose dates, sign the waiver, and pay for the trip."
+  end
+
+  def admin_details_link_name(signup)
+    return "waiver link" if signup.guest?
+    return "date selection and waiver link" if signup.payment_paid_or_settled?
+
+    "date selection, waiver, and payment link"
   end
 
   def apply_admin_waived_payment!(signup)
@@ -461,7 +508,7 @@ class Admin::CampsiteSignupsController < Admin::BaseController
 
   def remove_confirmed_signup(signup, issue_refund:)
     removed = false
-    paid_signup = signup.payments.exists?
+    paid_signup = signup.primary_signup.payments.exists?
 
     CampsiteSignup.transaction do
       signup.lock!

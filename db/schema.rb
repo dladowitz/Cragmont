@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_05_090300) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_06_123000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -91,6 +91,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_05_090300) do
   create_table "campsite_signup_payments", force: :cascade do |t|
     t.integer "amount_cents", default: 0, null: false
     t.bigint "campsite_signup_id", null: false
+    t.datetime "checkout_expires_at"
     t.text "checkout_url"
     t.datetime "created_at", null: false
     t.bigint "created_by_id"
@@ -188,19 +189,33 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_05_090300) do
     t.datetime "updated_at", null: false
   end
 
-  create_table "trip_reimbursements", force: :cascade do |t|
-    t.integer "amount_cents", null: false
+  create_table "trip_payment_requests", force: :cascade do |t|
+    t.integer "amount_cents", default: 0, null: false
+    t.datetime "canceled_at"
+    t.bigint "canceled_by_id"
+    t.datetime "checkout_expires_at"
+    t.text "checkout_url"
     t.datetime "created_at", null: false
-    t.text "note"
-    t.date "paid_on", null: false
-    t.string "payment_method", null: false
-    t.string "recipient_name", null: false
-    t.bigint "recorded_by_id"
+    t.bigint "created_by_id"
+    t.string "currency", default: "usd", null: false
+    t.string "email", null: false
+    t.datetime "expires_at"
+    t.string "first_name", null: false
+    t.string "last_name", null: false
+    t.datetime "paid_at"
+    t.text "reason", null: false
+    t.string "status", default: "pending", null: false
+    t.string "stripe_checkout_session_id"
+    t.string "stripe_payment_intent_id"
     t.bigint "trip_id", null: false
     t.datetime "updated_at", null: false
-    t.index ["paid_on"], name: "index_trip_reimbursements_on_paid_on"
-    t.index ["recorded_by_id"], name: "index_trip_reimbursements_on_recorded_by_id"
-    t.index ["trip_id"], name: "index_trip_reimbursements_on_trip_id"
+    t.index ["canceled_by_id"], name: "index_trip_payment_requests_on_canceled_by_id"
+    t.index ["created_by_id"], name: "index_trip_payment_requests_on_created_by_id"
+    t.index ["email"], name: "index_trip_payment_requests_on_email"
+    t.index ["status"], name: "index_trip_payment_requests_on_status"
+    t.index ["stripe_checkout_session_id"], name: "index_trip_payment_requests_on_stripe_session", unique: true, where: "(stripe_checkout_session_id IS NOT NULL)"
+    t.index ["stripe_payment_intent_id"], name: "index_trip_payment_requests_on_stripe_payment_intent_id"
+    t.index ["trip_id"], name: "index_trip_payment_requests_on_trip_id"
   end
 
   create_table "trip_signup_minors", force: :cascade do |t|
@@ -289,8 +304,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_05_090300) do
   add_foreign_key "campsites", "campgrounds"
   add_foreign_key "campsites", "trips"
   add_foreign_key "campsites", "users", column: "registered_by_id"
-  add_foreign_key "trip_reimbursements", "trips"
-  add_foreign_key "trip_reimbursements", "users", column: "recorded_by_id"
+  add_foreign_key "trip_payment_requests", "trips"
+  add_foreign_key "trip_payment_requests", "users", column: "canceled_by_id"
+  add_foreign_key "trip_payment_requests", "users", column: "created_by_id"
   add_foreign_key "trip_signup_minors", "trip_signups"
   add_foreign_key "trips", "users", column: "campsite_coordinator_id"
 end

@@ -64,19 +64,5 @@ class AddTripPaymentTables < ActiveRecord::Migration[8.1]
       unique: true,
       where: "stripe_refund_id IS NOT NULL",
       name: "index_campsite_signup_payment_refunds_on_stripe_refund"
-
-    create_table :trip_reimbursements do |t|
-      t.references :trip, null: false, foreign_key: true
-      t.references :recorded_by, foreign_key: { to_table: :users }
-      t.string :recipient_name, null: false
-      t.integer :amount_cents, null: false
-      t.string :payment_method, null: false
-      t.date :paid_on, null: false
-      t.text :note
-
-      t.timestamps
-    end
-
-    add_index :trip_reimbursements, :paid_on
   end
 end

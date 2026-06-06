@@ -159,10 +159,19 @@ class CampsiteSignup < ApplicationRecord
   end
 
   def refundable_amount_cents
-    payment = primary_signup.current_payment
+    payment = refundable_payment
     return 0 if payment.blank? || !payment.refundable?
 
-    payment.remaining_refundable_amount_cents
+    [ paid_share_amount_cents, payment.remaining_refundable_amount_cents ].min
+  end
+
+  def paid_share_amount_cents
+    payment = refundable_payment
+    return 0 if payment.blank?
+    return payment.amount_cents unless guest?
+
+    pricing_snapshot_value(payment, "adult_unit_amount_cents").presence ||
+      evenly_split_adult_payment_amount_cents(payment)
   end
 
   def waiver_signed?
@@ -182,6 +191,21 @@ class CampsiteSignup < ApplicationRecord
   end
 
   private
+
+  def refundable_payment
+    primary_signup.current_payment
+  end
+
+  def pricing_snapshot_value(payment, key)
+    payment.pricing_snapshot.to_h[key]&.to_i
+  end
+
+  def evenly_split_adult_payment_amount_cents(payment)
+    adult_count = pricing_snapshot_value(payment, "adult_count")
+    return 0 if adult_count.to_i <= 0
+
+    payment.amount_cents / adult_count
+  end
 
   def public_name_with_minors
     return user.public_name unless includes_minors?

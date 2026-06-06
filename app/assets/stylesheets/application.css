@@ -1018,6 +1018,59 @@ input[type="submit"]:disabled {
   border-top: 1px solid var(--line);
 }
 
+.trip-payment-requests-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.trip-payment-requests-panel .panel-header {
+  margin-bottom: 0;
+}
+
+.trip-payment-requests-table td {
+  vertical-align: top;
+}
+
+.trip-payment-request-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.trip-payment-request-actions form,
+.trip-payment-request-actions [data-controller="modal"] {
+  margin: 0;
+}
+
+.trip-payment-request-actions .copy-link-button {
+  gap: 5px;
+}
+
+.trip-revenue-table td:not(:first-child),
+.trip-revenue-table th:not(:first-child) {
+  text-align: right;
+}
+
+.trip-revenue-subtotal td,
+.trip-revenue-total td,
+.trip-revenue-final td {
+  font-weight: 800;
+}
+
+.trip-revenue-total td {
+  border-top: 2px solid var(--line);
+}
+
+.trip-revenue-expense td:last-child {
+  color: var(--danger);
+}
+
+.trip-revenue-final td {
+  border-top: 2px solid var(--accent);
+  font-size: 1.05rem;
+}
+
 .campsite-card-list,
 .admin-campsite-list {
   display: grid;
@@ -1444,6 +1497,10 @@ body.trips-index-page .trip-card {
   display: grid;
   gap: 2px;
   margin-top: 14px;
+}
+
+.signup-modal .participant-details-waiver-prompt {
+  font-size: 1.5rem;
 }
 
 .participant-details-campsite-summary span {
@@ -2248,6 +2305,7 @@ th {
   padding: 0;
   border: 0;
   background: transparent;
+  color: var(--danger);
   cursor: pointer;
   font: inherit;
   text-decoration: underline;
@@ -2259,6 +2317,33 @@ th {
   flex-wrap: wrap;
   gap: 10px;
   align-items: center;
+}
+
+.admin-participant-link-share {
+  display: grid;
+  gap: 14px;
+  justify-items: start;
+}
+
+.admin-participant-link-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.admin-participant-link-action-form {
+  display: inline-flex;
+  margin: 0;
+}
+
+.admin-participant-link-action,
+.admin-participant-link-action.copy-link-button {
+  justify-content: center;
+  min-width: 210px;
+  min-height: 40px;
+  padding: 8px 14px;
+  font-size: 1rem;
 }
 
 .missing-details-link {
@@ -2302,8 +2387,15 @@ th {
 }
 
 .payment-success-waiver-links li {
-  margin-bottom: 14px;
+  display: grid;
+  gap: 14px;
+  justify-items: start;
+  margin-bottom: 34px;
   padding-left: 4px;
+}
+
+.payment-success-waiver-links li:last-child {
+  margin-bottom: 0;
 }
 
 .payment-success-waiver-link-text {
@@ -2312,6 +2404,8 @@ th {
   gap: 8px;
   align-items: baseline;
   margin-right: 12px;
+  font-size: 1.125rem;
+  line-height: 1.25;
 }
 
 .payment-success-waiver-links .copy-link-button {

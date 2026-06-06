@@ -16,7 +16,7 @@ class CampsiteSignupsController < ApplicationController
       confirm_open_campsite_signup_from_waitlist(trip, campsite, signup)
     elsif signup.persisted? && completing_participant_details?
       complete_participant_details(trip, campsite, signup)
-    elsif signup.persisted? && signup.pending_payment? && signup.current_payment&.checkout_url.present?
+    elsif signup.persisted? && signup.pending_payment?
       redirect_to_current_payment_checkout(signup, trip)
     elsif signup.persisted?
       redirect_to trip_path(trip), alert: "You are already signed up for this trip."
@@ -430,25 +430,43 @@ class CampsiteSignupsController < ApplicationController
   end
 
   def create_checkout_for_existing_confirmed_signup(trip, campsite, signup, pricing)
-    create_pending_checkout!(trip, campsite, signup, pricing, previous_signup_status: "confirmed")
+    create_pending_checkout!(
+      trip,
+      campsite,
+      signup,
+      pricing,
+      previous_signup_status: "confirmed",
+      expires_at: CampsiteSignupPaymentLifecycle::ADMIN_PENDING_EXPIRATION.from_now
+    )
   rescue StripeConfigurationError, Stripe::StripeError => error
     signup.errors.add(:base, error.message)
     false
   end
 
-  def create_pending_checkout!(trip, campsite, signup, pricing, previous_signup_status:)
+  def create_pending_checkout!(trip, campsite, signup, pricing, previous_signup_status:, expires_at: CampsiteSignupPaymentLifecycle::DEFAULT_PENDING_EXPIRATION.from_now)
     CampsiteSignupPaymentLifecycle.create_pending_checkout!(
       signup: signup,
       pricing: pricing,
       success_url: trip_url(trip, stripe_checkout: "success", anchor: "campsite-#{campsite.id}"),
       cancel_url: trip_url(trip, stripe_checkout: "canceled", anchor: "campsite-#{campsite.id}"),
-      previous_signup_status: previous_signup_status
+      previous_signup_status: previous_signup_status,
+      expires_at: expires_at
     )
     true
   end
 
   def redirect_to_current_payment_checkout(signup, trip)
-    checkout_url = verified_stripe_checkout_url(signup.current_payment&.checkout_url)
+    payment = signup.current_payment
+    checkout_url = verified_stripe_checkout_url(payment&.checkout_url)
+
+    if refresh_current_payment_checkout?(payment, checkout_url)
+      CampsiteSignupPaymentLifecycle.refresh_checkout!(
+        payment: payment,
+        success_url: trip_url(trip, stripe_checkout: "success", anchor: "campsite-#{signup.campsite_id}"),
+        cancel_url: trip_url(trip, stripe_checkout: "canceled", anchor: "campsite-#{signup.campsite_id}")
+      )
+      checkout_url = verified_stripe_checkout_url(payment.reload.checkout_url)
+    end
 
     if checkout_url.present?
       redirect_to checkout_url, allow_other_host: true, status: :see_other
@@ -464,6 +482,14 @@ class CampsiteSignupsController < ApplicationController
     uri.to_s
   rescue URI::InvalidURIError
     nil
+  end
+
+  def refresh_current_payment_checkout?(payment, checkout_url)
+    return false unless payment&.pending?
+    return true if payment.checkout_url.blank?
+    return true if payment.checkout_expires_at.present? && !payment.checkout_active?
+
+    checkout_url.blank? && payment.checkout_expires_at.present?
   end
 
   def remove_or_cancel_signup!(signup, issue_refund:)
