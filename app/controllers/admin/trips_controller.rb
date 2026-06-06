@@ -13,6 +13,10 @@ class Admin::TripsController < Admin::BaseController
     @campsites = @trip.campsites.includes(:campground, :registered_by, campsite_signups: [ { payments: { refunds: :refunded_by } }, :user, :campsite_signup_minors, { guest_of_signup: :user } ]).order(:arrival_date, :site_number)
     @waitlisted_signups = @trip.waitlisted_signups
     @trip_participant_user_ids = @trip.campsite_signups.active.distinct.pluck(:user_id)
+    @participant_link_signup = participant_link_signup
+    @trip_payment_requests = @trip.trip_payment_requests.order(created_at: :desc)
+    @trip_payment_request = trip_payment_request
+    @trip_revenue_summary = TripRevenueSummary.call(@trip)
     @trip_expense_refunds = CampsiteSignupPaymentRefund.trip_expense_refund_type
       .joins(campsite_signup_payment: :campsite_signup)
       .where(campsite_signups: { trip_id: @trip.id })
@@ -64,6 +68,24 @@ class Admin::TripsController < Admin::BaseController
 
   def set_trip
     @trip = Trip.find(params[:id])
+  end
+
+  def participant_link_signup
+    return if params[:participant_link_signup].blank?
+
+    signup = CampsiteSignup.includes(:user, :campsite).find_signed(params[:participant_link_signup], purpose: :admin_participant_link)
+    return if signup.blank? || signup.trip_id != @trip.id || signup.campsite.blank?
+
+    signup
+  end
+
+  def trip_payment_request
+    return if params[:payment_request].blank?
+
+    payment_request = TripPaymentRequest.find_signed(params[:payment_request], purpose: :admin_trip_payment_request)
+    return if payment_request.blank? || payment_request.trip_id != @trip.id
+
+    payment_request
   end
 
   def ensure_trip_not_deleted

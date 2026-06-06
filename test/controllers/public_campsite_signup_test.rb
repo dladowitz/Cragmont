@@ -6,7 +6,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       payment.update!(
         stripe_checkout_session_id: "cs_test_#{payment.id}",
         checkout_url: "https://checkout.stripe.com/c/pay/#{payment.id}",
-        expires_at: 30.minutes.from_now
+        checkout_expires_at: payment.checkout_expires_at || 30.minutes.from_now
       )
       payment
     end
@@ -203,6 +203,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_equal "pending", payment.status
     assert_equal 60_00, payment.amount_cents
     assert_equal "cs_test_#{payment.id}", payment.stripe_checkout_session_id
+    assert_in_delta 30.minutes.from_now.to_i, payment.expires_at.to_i, 5
+    assert_in_delta payment.expires_at.to_i, payment.checkout_expires_at.to_i, 5
     assert_equal 5, campsites(:yosemite_a).reload.available_participant_capacity
 
     post signup_url_for, params: waiver_signature_params
@@ -251,6 +253,30 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert signup.reload.canceled?
     assert payment.reload.expired?
     assert_equal 6, campsites(:yosemite_a).reload.available_participant_capacity
+  end
+
+  test "expired Stripe session keeps admin-added 30 day payment link pending" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam), status: "pending_payment")
+    payment = signup.payments.create!(
+      source: "stripe",
+      status: "pending",
+      amount_cents: 3500,
+      expires_at: 30.days.from_now,
+      checkout_expires_at: 1.hour.ago,
+      checkout_url: "https://checkout.stripe.com/c/pay/old",
+      stripe_checkout_session_id: "cs_admin_old",
+      previous_signup_status: "confirmed"
+    )
+
+    post stripe_webhooks_url, params: stripe_checkout_event("checkout.session.expired", payment), headers: { "CONTENT_TYPE" => "application/json" }
+
+    assert_response :ok
+    assert signup.reload.pending_payment?
+    payment.reload
+    assert payment.pending?
+    assert_nil payment.checkout_url
+    assert_nil payment.checkout_expires_at
+    assert_nil payment.stripe_checkout_session_id
   end
 
   test "paid participant removal preserves canceled signup and refunds manual payment record" do
@@ -701,7 +727,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     get trip_url(trips(:yosemite), stripe_checkout: "success")
 
     assert_response :success
-    assert_select "[data-controller='modal'][data-modal-open-value='true'] dialog.payment-success-modal" do
+    assert_select "[data-controller='modal'][data-modal-open-value='true'][data-modal-clean-url-on-close-value='true'][data-modal-disable-autofocus-value='true'] dialog.payment-success-modal" do
       assert_select "h2", "Get stoked!"
       assert_select "p", text: /Your trip to Yosemite Valley Spring is confirmed\./
       assert_select "p", text: /We'll be sending you more info as the date gets closer\./
@@ -742,14 +768,16 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     )
     david_link = trip_path(trips(:yosemite), complete_signup: david_signup.signed_id(purpose: :complete_guest_details), anchor: "campsite-#{campsites(:yosemite_a).id}")
     zinnia_link = trip_path(trips(:yosemite), complete_signup: zinnia_signup.signed_id(purpose: :complete_guest_details), anchor: "campsite-#{campsites(:yosemite_a).id}")
+    david_url = trip_url(trips(:yosemite), complete_signup: david_signup.signed_id(purpose: :complete_guest_details), anchor: "campsite-#{campsites(:yosemite_a).id}")
+    zinnia_url = trip_url(trips(:yosemite), complete_signup: zinnia_signup.signed_id(purpose: :complete_guest_details), anchor: "campsite-#{campsites(:yosemite_a).id}")
     log_in_as(users(:sam))
 
-    assert_difference -> { ActionMailer::Base.deliveries.size }, 2 do
+    assert_no_difference -> { ActionMailer::Base.deliveries.size } do
       get trip_url(trips(:yosemite), stripe_checkout: "success")
     end
 
     assert_response :success
-    assert_select "[data-controller='modal'][data-modal-open-value='true'] dialog.payment-success-modal" do
+    assert_select "[data-controller='modal'][data-modal-open-value='true'][data-modal-clean-url-on-close-value='true'][data-modal-disable-autofocus-value='true'] dialog.payment-success-modal" do
       assert_select "h2", "You're not on Belay yet!"
       assert_select "p", text: /Thank you for paying!/
       assert_select "p", text: /We still need the other adults in your party to sign the waiver before you are confirmed\./
@@ -758,46 +786,82 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
         links = css_select("a").map { |link| [ link.text.squish, link["href"] ] }
         assert_includes links, [ "Waiver Link", david_link ]
         assert_select "button.copy-link-button[data-action='copy-link#copy']", text: "Copy Link"
-        assert_select "[data-controller='copy-link'][data-copy-link-url-value='#{david_link}']"
+        assert_select "[data-controller='copy-link'][data-copy-link-url-value='#{david_url}']"
+        assert_select "form[action=?][method='post'][data-controller='email-link'][data-action='submit->email-link#send'] button", trip_guest_waiver_email_path(trips(:yosemite), david_signup), text: "Email link to guest"
       end
       assert_select "li", text: /Zinnia Gray:/ do
         links = css_select("a").map { |link| [ link.text.squish, link["href"] ] }
         assert_includes links, [ "Waiver Link", zinnia_link ]
         assert_select "button.copy-link-button[data-action='copy-link#copy']", text: "Copy Link"
-        assert_select "[data-controller='copy-link'][data-copy-link-url-value='#{zinnia_link}']"
+        assert_select "[data-controller='copy-link'][data-copy-link-url-value='#{zinnia_url}']"
+        assert_select "form[action=?][method='post'][data-controller='email-link'][data-action='submit->email-link#send'] button", trip_guest_waiver_email_path(trips(:yosemite), zinnia_signup), text: "Email link to guest"
       end
     end
 
-    david_mail = ActionMailer::Base.deliveries.find { |mail| mail.to == [ david.email ] }
-    zinnia_mail = ActionMailer::Base.deliveries.find { |mail| mail.to == [ zinnia.email ] }
-    assert david_mail
-    assert zinnia_mail
-    assert_equal "Cragmont Climning Yosemite Valley Spring June 12, 2026 Waiver Needed", david_mail.subject
-    assert_equal "Cragmont Climning Yosemite Valley Spring June 12, 2026 Waiver Needed", zinnia_mail.subject
-    expected_david_body = <<~BODY
-      David Ladowitz, Get Stoked!
-      Sam Lee added you to the upcoming Cragmont trip.
-      Before tying in you'll need to sign the waiver.
-      You can do that here: http://www.example.com#{david_link}
+    assert_empty ActionMailer::Base.deliveries
+  end
 
-      See you at the Crag.
-      Cragmont Climbing Club
+  test "primary participant can email guest waiver link from modal action" do
+    ActionMailer::Base.deliveries.clear
+    primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam), status: "confirmed")
+    guest = User.create!(
+      first_name: "Gina",
+      last_name: "Guest",
+      email: "participant-email-guest@example.com",
+      password: User::DEFAULT_GUEST_PASSWORD,
+      default_password: true
+    )
+    guest_signup = create_campsite_signup!(
+      campsite: campsites(:yosemite_a),
+      user: guest,
+      guest_of_signup: primary_signup,
+      guest_position: 1,
+      status: "confirmed"
+    )
+    guest_link = trip_url(trips(:yosemite), complete_signup: guest_signup.signed_id(purpose: :complete_guest_details), anchor: "campsite-#{campsites(:yosemite_a).id}")
+    log_in_as(users(:sam))
 
-      One more thing. We setup an account for you in case you want to sign up for future trips.
-      If you want to log in go through the Password Reset flow to set a password.
-      Password Reset Link: http://example.com/password_resets/new
-    BODY
-    assert_equal expected_david_body.strip, david_mail.text_part.body.decoded.strip
-    assert_match "David Ladowitz, Get Stoked!", david_mail.text_part.body.decoded
-    assert_match "Sam Lee added you to the upcoming Cragmont trip.", david_mail.text_part.body.decoded
-    assert_match "Before tying in you'll need to sign the waiver.", david_mail.text_part.body.decoded
-    assert_match "You can do that here: http://www.example.com#{david_link}", david_mail.text_part.body.decoded
-    assert_match "See you at the Crag.\nCragmont Climbing Club", david_mail.text_part.body.decoded
-    assert_match "One more thing. We setup an account for you in case you want to sign up for future trips.", david_mail.text_part.body.decoded
-    assert_match "If you want to log in go through the Password Reset flow to set a password.", david_mail.text_part.body.decoded
-    assert_match "Password Reset Link: http://example.com/password_resets/new", david_mail.text_part.body.decoded
-    assert_includes david_mail.html_part.body.decoded, ">Password Reset Link</a>"
-    assert_match "You can do that here: http://www.example.com#{zinnia_link}", zinnia_mail.text_part.body.decoded
+    assert_difference -> { ActionMailer::Base.deliveries.size }, 1 do
+      post trip_guest_waiver_email_url(trips(:yosemite), guest_signup)
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite), anchor: "campsite-#{campsites(:yosemite_a).id}")
+    assert_equal "On belay! The waiver link was emailed to Gina Guest.", flash[:notice]
+
+    mail = ActionMailer::Base.deliveries.last
+    assert_equal [ "participant-email-guest@example.com" ], mail.to
+    assert_match "Sam Lee added you to the upcoming Cragmont trip.", mail.text_part.body.decoded
+    assert_match "Before tying in you'll need to sign the waiver.", mail.text_part.body.decoded
+    assert_match "You can do that here: #{guest_link}", mail.text_part.body.decoded
+  end
+
+  test "guest waiver email action supports in-modal json response" do
+    ActionMailer::Base.deliveries.clear
+    primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam), status: "confirmed")
+    guest = User.create!(
+      first_name: "Gina",
+      last_name: "Json",
+      email: "participant-email-json-guest@example.com",
+      password: User::DEFAULT_GUEST_PASSWORD,
+      default_password: true
+    )
+    guest_signup = create_campsite_signup!(
+      campsite: campsites(:yosemite_a),
+      user: guest,
+      guest_of_signup: primary_signup,
+      guest_position: 1,
+      status: "confirmed"
+    )
+    log_in_as(users(:sam))
+
+    assert_difference -> { ActionMailer::Base.deliveries.size }, 1 do
+      post trip_guest_waiver_email_url(trips(:yosemite), guest_signup), as: :json
+    end
+
+    assert_response :success
+    response_body = JSON.parse(response.body)
+    assert_equal "Email sent", response_body.fetch("button_text")
+    assert_equal "On belay! The waiver link was emailed to Gina Json.", response_body.fetch("message")
   end
 
   test "trip detail shows waitlist remove action in waitlist table for signed in waitlisted participant" do
@@ -900,7 +964,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     get trip_url(trips(:yosemite), complete_signup: signup.signed_id(purpose: :complete_participant_details))
 
     assert_response :success
-    assert_select "[data-controller='modal'][data-modal-open-value='true']" do
+    assert_select "[data-controller='modal'][data-modal-open-value='true'][data-modal-clean-url-on-close-value='true']" do
       assert_select "dialog.signup-modal"
       assert_select "h2", "You've been added to the Yosemite Valley Spring trip."
       assert_select "p", "Please select dates you will be attending"
@@ -936,7 +1000,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     get trip_url(trips(:yosemite), complete_signup: signup.signed_id(purpose: :complete_participant_details))
 
     assert_response :success
-    assert_select "[data-controller='modal'][data-modal-open-value='true']" do
+    assert_select "[data-controller='modal'][data-modal-open-value='true'][data-modal-clean-url-on-close-value='true']" do
       assert_select "dialog.signup-modal"
       assert_select "h2", "You've been added to the Yosemite Valley Spring trip."
       assert_select "p", "Please select dates you will be attending"
@@ -972,7 +1036,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".public-nav a[href='#{profile_path}']", text: "Sam Lee"
     assert_select ".public-nav a", text: "Log in", count: 0
-    assert_select "[data-controller='modal'][data-modal-open-value='true']" do
+    assert_select "[data-controller='modal'][data-modal-open-value='true'][data-modal-clean-url-on-close-value='true']" do
       assert_select "dialog.signup-modal"
       assert_select "h2", "You've been added to the Yosemite Valley Spring trip."
       assert_select "form[action='#{signup_path_for(campsite)}'][method='post']" do
@@ -1020,6 +1084,56 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert signup.waiver_document.attached?
   end
 
+  test "admin-added paid participant gets 30 day payment link after details flow" do
+    SiteSetting.current.update!(first_two_nights_fee: "35")
+    campsite = campsites(:yosemite_a)
+    signup = create_campsite_signup!(campsite: campsite, user: users(:sam), arrival_date: nil, checkout_date: nil)
+    log_in_as(users(:sam))
+    params = waiver_signature_params.deep_dup
+    params[:campsite_signup][:intent] = "complete_participant_details"
+    params[:campsite_signup][:arrival_date] = "2026-06-13"
+    params[:campsite_signup][:checkout_date] = "2026-06-15"
+
+    with_fake_stripe_checkout do
+      assert_difference "CampsiteSignupPayment.count", 1 do
+        post signup_url_for(campsite), params: params
+      end
+    end
+
+    payment = signup.reload.current_payment
+    assert_redirected_to payment.checkout_url
+    assert payment.pending?
+    assert_in_delta 30.days.from_now.to_i, payment.expires_at.to_i, 5
+    assert_in_delta 24.hours.from_now.to_i, payment.checkout_expires_at.to_i, 5
+  end
+
+  test "admin-added pending payment regenerates checkout when Stripe session expires before payment link" do
+    SiteSetting.current.update!(first_two_nights_fee: "35")
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam), status: "pending_payment")
+    payment = signup.payments.create!(
+      source: "stripe",
+      status: "pending",
+      amount_cents: 3500,
+      expires_at: 30.days.from_now,
+      checkout_expires_at: 1.hour.ago,
+      checkout_url: "https://checkout.stripe.com/c/pay/old",
+      stripe_checkout_session_id: "cs_old",
+      previous_signup_status: "confirmed"
+    )
+    log_in_as(users(:sam))
+
+    with_fake_stripe_checkout do
+      post signup_url_for
+    end
+
+    assert_redirected_to "https://checkout.stripe.com/c/pay/#{payment.id}"
+    payment.reload
+    assert_equal "pending", payment.status
+    assert_equal "cs_test_#{payment.id}", payment.stripe_checkout_session_id
+    assert_in_delta 30.days.from_now.to_i, payment.expires_at.to_i, 5
+    assert payment.checkout_expires_at.future?
+  end
+
   test "admin-created participant shared link signs in and opens waiver completion" do
     campsite = campsites(:yosemite_a)
     participant = User.create!(
@@ -1035,7 +1149,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     get trip_url(trips(:yosemite), complete_signup: token)
 
     assert_response :success
-    assert_select "[data-controller='modal'][data-modal-open-value='true']" do
+    assert_select "[data-controller='modal'][data-modal-open-value='true'][data-modal-clean-url-on-close-value='true']" do
       assert_select "h2", "You've been added to the Yosemite Valley Spring trip."
       assert_select "form[action='#{signup_path_for(campsite)}'][method='post']" do
         assert_select "input[type='hidden'][name='campsite_signup[intent]'][value='complete_participant_details']"
@@ -1094,7 +1208,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     get trip_url(trips(:yosemite), complete_signup: token)
 
     assert_response :success
-    assert_select "[data-controller='modal'][data-modal-open-value='true']" do
+    assert_select "[data-controller='modal'][data-modal-open-value='true'][data-modal-clean-url-on-close-value='true']" do
       assert_select "h2", "Gina Guest you've been added to the Yosemite Valley Spring trip by Sam Lee"
       assert_select "p", text: "Please review and sign the waiver."
       assert_select ".participant-details-campsite-summary", text: /Attending June 13, 2026 to June 15, 2026/
@@ -1602,7 +1716,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       complete_signup: signup.signed_id(purpose: :complete_participant_details),
       anchor: "campsite-#{campsites(:yosemite_a).id}"
     )
-    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table a[href='#{expected_path}']", text: "Missing"
+    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table a.missing-value.missing-link[href='#{expected_path}']", text: "Missing"
   end
 
   test "public confirmed participants table does not link missing waivers for other participants" do
@@ -1614,6 +1728,70 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table", text: /Missing/
     assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table a", text: "Missing", count: 0
+  end
+
+  test "public confirmed participants table opens guest waiver link modal for primary participant" do
+    primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    guest_user = User.create!(
+      first_name: "Gina",
+      last_name: "Guest",
+      email: "public-guest-missing-link@example.com",
+      password: User::DEFAULT_GUEST_PASSWORD,
+      default_password: true
+    )
+    guest_signup = create_campsite_signup!(
+      campsite: campsites(:yosemite_a),
+      user: guest_user,
+      guest_of_signup: primary_signup,
+      guest_position: 1,
+      arrival_date: primary_signup.arrival_date,
+      checkout_date: primary_signup.checkout_date
+    )
+    guest_link = trip_path(trips(:yosemite), complete_signup: guest_signup.signed_id(purpose: :complete_guest_details), anchor: "campsite-#{campsites(:yosemite_a).id}")
+    guest_url = trip_url(trips(:yosemite), complete_signup: guest_signup.signed_id(purpose: :complete_guest_details), anchor: "campsite-#{campsites(:yosemite_a).id}")
+    log_in_as(users(:sam))
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table" do
+      assert_select "button.missing-value.missing-link[data-action='modal#open']", text: "Missing"
+      assert_select "dialog.guest-waiver-link-modal" do
+        assert_select "h2", "Guest waiver link"
+        assert_select "p", text: /Send this to Gina G\. so they can sign the waiver\./
+        assert_select "a.missing-details-link[href='#{guest_link}']", text: "Waiver Link"
+        assert_select "button.copy-link-button[data-action='copy-link#copy']", text: "Copy Link"
+        assert_select "[data-controller='copy-link'][data-copy-link-url-value='#{guest_url}']"
+        assert_select "form[action=?][method='post'][data-controller='email-link'][data-action='submit->email-link#send'] button", trip_guest_waiver_email_path(trips(:yosemite), guest_signup), text: "Email link to guest"
+      end
+    end
+  end
+
+  test "public confirmed participants table does not open guest waiver modal for other participants" do
+    primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    guest_user = User.create!(
+      first_name: "Gina",
+      last_name: "Guest",
+      email: "public-other-guest-missing-link@example.com",
+      password: User::DEFAULT_GUEST_PASSWORD,
+      default_password: true
+    )
+    create_campsite_signup!(
+      campsite: campsites(:yosemite_a),
+      user: guest_user,
+      guest_of_signup: primary_signup,
+      guest_position: 1,
+      arrival_date: primary_signup.arrival_date,
+      checkout_date: primary_signup.checkout_date
+    )
+    log_in_as(users(:alex))
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table", text: /Missing/
+    assert_select "dialog.guest-waiver-link-modal", count: 0
+    assert_select "button.missing-value.missing-link[data-action='modal#open']", text: "Missing", count: 0
   end
 
   test "public confirmed participants table shows signed waiver status" do

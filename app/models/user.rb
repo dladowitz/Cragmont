@@ -23,6 +23,16 @@ class User < ApplicationRecord
     foreign_key: :refunded_by_id,
     dependent: :nullify,
     inverse_of: :refunded_by
+  has_many :created_trip_payment_requests,
+    class_name: "TripPaymentRequest",
+    foreign_key: :created_by_id,
+    dependent: :nullify,
+    inverse_of: :created_by
+  has_many :canceled_trip_payment_requests,
+    class_name: "TripPaymentRequest",
+    foreign_key: :canceled_by_id,
+    dependent: :nullify,
+    inverse_of: :canceled_by
   has_many :signed_up_trips, -> { distinct }, through: :campsite_signups, source: :trip
 
   normalizes :email, with: ->(email) { email.to_s.strip.downcase.presence }

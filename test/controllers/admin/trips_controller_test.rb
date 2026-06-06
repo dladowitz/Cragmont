@@ -327,6 +327,48 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "trip details remove modal shows guest paid share from primary participant" do
+    travel_to Date.new(2026, 6, 5) do
+      SiteSetting.current.update!(first_two_nights_fee: "30", extra_night_fee: "0")
+      tiger = User.create!(first_name: "Tiger", last_name: "Ladowitz", email: "tiger-guest-payer@example.com", password: "password")
+      david = User.create!(first_name: "David", last_name: "Ladowitz", email: "david-guest-paid@example.com", password: "password")
+      primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: tiger)
+      guest_signup = create_campsite_signup!(
+        campsite: campsites(:yosemite_a),
+        user: david,
+        guest_of_signup: primary_signup,
+        guest_position: 1,
+        arrival_date: primary_signup.arrival_date,
+        checkout_date: primary_signup.checkout_date
+      )
+      pricing = CampsiteSignupPricing.call(
+        arrival_date: primary_signup.arrival_date,
+        checkout_date: primary_signup.checkout_date,
+        adult_guest_count: 1
+      )
+      primary_signup.payments.create!(
+        source: "manual",
+        status: "paid",
+        amount_cents: pricing.amount_cents,
+        pricing_snapshot: pricing.snapshot,
+        manual_payment_method: "cash",
+        manual_paid_at: Time.current,
+        paid_at: Time.current
+      )
+
+      get admin_trip_url(trips(:yosemite))
+
+      assert_response :success
+      assert_select "dialog.confirmation-modal", text: /Remove David Ladowitz from this campsite\?/ do
+        assert_select ".admin-refund-choice", text: /Tiger Ladowitz paid for David Ladowitz:\s*\$30\.00/
+        assert_select ".admin-refund-choice", text: /Amount paid:\s*\$60\.00/, count: 0
+        assert_select "form[action='#{remove_from_campsite_admin_trip_campsite_signup_path(trips(:yosemite), guest_signup)}']", count: 2
+        assert_select "button.button.danger.secondary", "Remove without refund"
+        assert_select "button.button.danger", "Remove and issue refund"
+      end
+    end
+  end
+
   test "trip details remove modal emphasizes no refund inside cutoff" do
     travel_to Date.new(2026, 6, 6) do
       signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
@@ -443,7 +485,8 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select "dialog.missing-details-modal", text: /We need to collect waiver and attendance dates from this participant\./
       assert_select "dialog.missing-details-modal", text: /Share this link with the participant so they can sign the waiver and select dates:/
       assert_select "a.missing-details-link[href='#{participant_link}']", text: "Waiver and Date Selection Link"
-      assert_select "button.copy-link-button[data-action='copyable-modal#copy']", text: "Copy link"
+      assert_select "button.copy-link-button[data-action='copyable-modal#copy']", text: "Copy Link"
+      assert_select "form[action=?][method='post'][data-controller='email-link'][data-action='submit->email-link#send'] button", email_participant_link_admin_trip_campsite_signup_path(trips(:yosemite), signup), text: "Email link to participant"
       assert_select "button.copy-link-button .copy-icon svg"
       assert_select "button.copy-link-button .check-icon svg"
       assert_select "button[data-action='copyable-modal#close']", text: "Close"
@@ -483,6 +526,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select "dialog.missing-details-modal", text: /We need to collect a waiver from this guest\./
       assert_select "dialog.missing-details-modal", text: /Share this link with the guest so they can sign the waiver:/
       assert_select "a.missing-details-link[href='#{guest_link}']", text: "Waiver Link"
+      assert_select "form[action=?][method='post'][data-controller='email-link'][data-action='submit->email-link#send'] button", email_participant_link_admin_trip_campsite_signup_path(trips(:yosemite), guest_signup), text: "Email link to guest"
       assert_select "td", text: "Follows primary"
     end
   end
@@ -648,7 +692,6 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h2", "Trip Expenses"
-    assert_select "a", text: "Add reimbursement", count: 0
     assert_select "section.panel", text: /Trip Expenses/ do
       assert_select "th", text: "Participant"
       assert_select "th", text: "Amount"
@@ -692,6 +735,56 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
         assert_select "dt", text: "Waived reason"
         assert_select "dd", text: "Board approved comp"
       end
+    end
+  end
+
+  test "trip details shows trip revenue summary" do
+    trip = trips(:yosemite)
+    payment = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam)).payments.create!(
+      source: "stripe",
+      status: "partially_refunded",
+      amount_cents: 10_000,
+      refunded_amount_cents: 3_000,
+      paid_at: Time.current
+    )
+    payment.refunds.create!(
+      amount_cents: 2_000,
+      status: "succeeded",
+      initiated_by: "admin",
+      refund_type: "admin_created",
+      source: "stripe",
+      currency: "usd"
+    )
+    payment.refunds.create!(
+      amount_cents: 1_000,
+      status: "succeeded",
+      initiated_by: "admin",
+      refund_type: "trip_expense",
+      source: "stripe",
+      currency: "usd"
+    )
+    trip.trip_payment_requests.create!(
+      first_name: "Riley",
+      last_name: "Stone",
+      email: "riley@example.com",
+      amount_cents: 2_500,
+      reason: "Extra permit",
+      status: "paid",
+      paid_at: Time.current
+    )
+
+    get admin_trip_url(trip)
+
+    assert_response :success
+    assert_select "section.trip-revenue-panel" do
+      assert_select "h2", "Trip Revenue"
+      assert_select "tr", text: /Upper Pines site A12\s+\$100\.00\s+\$20\.00\s+\$80\.00/
+      assert_select "tr", text: /Upper Pines site A13\s+\$0\.00\s+\$0\.00\s+\$0\.00/
+      assert_select "tr.trip-revenue-subtotal", text: /Campsite revenue\s+\$80\.00/
+      assert_select "tr", text: /One-time payment requests\s+\$25\.00/
+      assert_select "tr.trip-revenue-total", text: /Total revenue\s+\$105\.00/
+      assert_select "tr.trip-revenue-expense", text: /Trip expense refunds\s+-\$10\.00/
+      assert_select "tr.trip-revenue-final", text: /Final trip revenue\s+\$95\.00/
     end
   end
 

@@ -33,6 +33,15 @@ class StripeWebhooksController < ApplicationController
   end
 
   def handle_checkout_completed(session)
+    payment_request = trip_payment_request_for_session(session)
+    if payment_request.present?
+      payment_request.mark_paid!(
+        stripe_checkout_session_id: session.id,
+        stripe_payment_intent_id: session.payment_intent
+      )
+      return
+    end
+
     payment = payment_for_session(session)
     return if payment.blank?
 
@@ -44,10 +53,16 @@ class StripeWebhooksController < ApplicationController
   end
 
   def handle_checkout_expired(session)
+    payment_request = trip_payment_request_for_session(session)
+    if payment_request.present?
+      payment_request.clear_expired_checkout!(stripe_checkout_session_id: session.id)
+      return
+    end
+
     payment = payment_for_session(session)
     return if payment.blank?
 
-    CampsiteSignupPaymentLifecycle.expire_checkout!(payment: payment)
+    CampsiteSignupPaymentLifecycle.expire_checkout!(payment: payment, stripe_checkout_session_id: session.id)
   end
 
   def handle_refund_updated(refund)
@@ -62,7 +77,16 @@ class StripeWebhooksController < ApplicationController
   end
 
   def payment_for_session(session)
-    payment_id = session.metadata&.campsite_signup_payment_id || session.metadata&.[]("campsite_signup_payment_id")
+    payment_id = metadata_value(session, "campsite_signup_payment_id")
     CampsiteSignupPayment.find_by(id: payment_id) || CampsiteSignupPayment.find_by(stripe_checkout_session_id: session.id)
+  end
+
+  def trip_payment_request_for_session(session)
+    payment_request_id = metadata_value(session, "trip_payment_request_id")
+    TripPaymentRequest.find_by(id: payment_request_id) || TripPaymentRequest.find_by(stripe_checkout_session_id: session.id)
+  end
+
+  def metadata_value(session, key)
+    session.metadata&.[](key)
   end
 end

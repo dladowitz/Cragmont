@@ -1,0 +1,112 @@
+- new_payment_request = TripPaymentRequest.new
+%section.panel.trip-payment-requests-panel#trip-payment-requests
+  .panel-header
+    %div
+      %h2 Payment Requests
+      %p.muted Create one-off payment links for participants outside the campsite signup flow.
+    - unless trip.deleted?
+      %div{"data-controller" => "modal", "data-modal-disable-autofocus-value" => "true"}
+        %button.button{"data-action" => "modal#open", type: "button"} Create payment request
+        %dialog.signup-modal.trip-payment-request-form-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+          .signup-modal-content
+            %div
+              %h2 Create payment request
+              %p Send a one-off payment link for this trip.
+            = form_with model: new_payment_request, url: admin_trip_trip_payment_requests_path(trip), class: "admin-form" do |form|
+              .form-grid
+                .field
+                  = required_label form, :first_name, "First name"
+                  = form.text_field :first_name, required: true, autocomplete: "given-name"
+                .field
+                  = required_label form, :last_name, "Last name"
+                  = form.text_field :last_name, required: true, autocomplete: "family-name"
+                .field
+                  = required_label form, :email
+                  = form.email_field :email, required: true, autocomplete: "email"
+                .field
+                  = required_label form, :amount
+                  .currency-field
+                    %span{"aria-hidden" => "true"} $
+                    = form.number_field :amount, min: 0.01, step: 0.01, required: true
+              .field
+                = required_label form, :reason
+                = form.text_area :reason, rows: 4, required: true
+              .form-actions
+                %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
+                = form.submit "Create payment request", class: "button"
+  - if payment_requests.any?
+    %table.trip-payment-requests-table
+      %thead
+        %tr
+          %th Recipient
+          %th Amount
+          %th Reason
+          %th Status
+          %th Created
+          %th Actions
+      %tbody
+        - payment_requests.each do |payment_request|
+          - payment_url = trip_payment_request_url(payment_request.public_token)
+          %tr
+            %td
+              %strong= payment_request.full_name
+              %span= mail_to payment_request.email
+            %td= format_cents(payment_request.amount_cents)
+            %td= payment_request.reason
+            %td
+              - status_class = payment_request.pending? ? "warning-status" : (payment_request.canceled? ? "danger-status" : nil)
+              %span.status{class: status_class}= payment_request.status.titleize
+            %td= payment_request.created_at.strftime("%-m/%-d/%y")
+            %td
+              - if payment_request.pending?
+                .trip-payment-request-actions
+                  %span{"data-controller" => "copy-link", "data-copy-link-url-value" => payment_url}
+                    %button.button.secondary.copy-link-button.admin-table-action-button{"data-action" => "copy-link#copy", type: "button"}
+                      %span.copy-link-icon.copy-icon{aria: { hidden: "true" }}
+                        %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
+                          %rect{height: "12", rx: "2", stroke: "currentColor", "stroke-width" => "2", width: "12", x: "8", y: "8"}
+                          %path{d: "M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2", stroke: "currentColor", "stroke-linecap" => "round", "stroke-width" => "2"}
+                      %span.copy-link-icon.check-icon{aria: { hidden: "true" }}
+                        %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
+                          %path{d: "M20 6 9 17l-5-5", stroke: "currentColor", "stroke-linecap" => "round", "stroke-linejoin" => "round", "stroke-width" => "2.5"}
+                      %span Copy Link
+                  = button_to "Email Link", email_admin_trip_trip_payment_request_path(trip, payment_request), method: :post, class: "button secondary admin-table-action-button", form: { data: { controller: "email-link", action: "submit->email-link#send" } }
+                  %div{"data-controller" => "modal"}
+                    %button.button.danger.secondary.admin-table-action-button{"data-action" => "modal#open", type: "button"} Cancel
+                    %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                      .confirmation-modal-content
+                        %div
+                          %h2 Cancel payment request?
+                          %p This will turn off the payment link for #{payment_request.full_name}.
+                        .form-actions
+                          %button.button.secondary{"data-action" => "modal#close", type: "button"} Keep request
+                          = button_to "Cancel request", cancel_admin_trip_trip_payment_request_path(trip, payment_request), method: :patch, class: "button danger"
+              - else
+                %span.muted No actions
+  - else
+    %p.muted No payment requests yet.
+
+- if modal_payment_request.present?
+  - modal_payment_url = trip_payment_request_url(modal_payment_request.public_token)
+  %div{"data-controller" => "modal", "data-modal-clean-url-on-close-value" => "true", "data-modal-disable-autofocus-value" => "true", "data-modal-open-value" => "true"}
+    %dialog.signup-modal.trip-payment-request-link-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+      .signup-modal-content
+        %div
+          %h2 Payment Request Link
+          %p Share this with the participant so they can pay for the trip.
+        .admin-participant-link-share
+          = link_to "Payment request link", modal_payment_url, class: "missing-details-link"
+          .admin-participant-link-actions
+            %span{"data-controller" => "copy-link", "data-copy-link-url-value" => modal_payment_url}
+              %button.button.secondary.copy-link-button.admin-participant-link-action{"data-action" => "copy-link#copy", type: "button"}
+                %span.copy-link-icon.copy-icon{aria: { hidden: "true" }}
+                  %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
+                    %rect{height: "12", rx: "2", stroke: "currentColor", "stroke-width" => "2", width: "12", x: "8", y: "8"}
+                    %path{d: "M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2", stroke: "currentColor", "stroke-linecap" => "round", "stroke-width" => "2"}
+                %span.copy-link-icon.check-icon{aria: { hidden: "true" }}
+                  %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
+                    %path{d: "M20 6 9 17l-5-5", stroke: "currentColor", "stroke-linecap" => "round", "stroke-linejoin" => "round", "stroke-width" => "2.5"}
+                %span Copy Link
+            = button_to "Email link to participant", email_admin_trip_trip_payment_request_path(trip, modal_payment_request), method: :post, class: "button secondary admin-participant-link-action", form: { class: "admin-participant-link-action-form", data: { controller: "email-link", action: "submit->email-link#send" } }
+        .form-actions
+          %button.button.secondary{"data-action" => "modal#close", type: "button"} Close

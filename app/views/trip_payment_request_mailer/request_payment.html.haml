@@ -1,0 +1,21 @@
+%p
+  #{@payment_request.full_name}, get stoked!
+
+%p
+  There is a Cragmont payment request for #{@trip.name}.
+
+%p
+  %strong Amount:
+  = format_cents(@payment_request.amount_cents)
+  %br/
+  %strong Reason:
+  = @payment_request.reason
+
+%p
+  Clip in and pay here:
+  = link_to "Payment Request Link", @payment_url
+
+%p
+  See you at the crag.
+  %br/
+  Cragmont Climbing Club

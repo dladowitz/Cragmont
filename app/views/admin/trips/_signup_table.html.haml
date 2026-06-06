@@ -46,6 +46,7 @@
       - missing_details_copy = signup.guest? ? "We need to collect a waiver from this guest." : "We need to collect waiver and attendance dates from this participant."
       - missing_details_share_copy = signup.guest? ? "Share this link with the guest so they can sign the waiver:" : "Share this link with the participant so they can sign the waiver and select dates:"
       - missing_details_link_text = signup.guest? ? "Waiver Link" : "Waiver and Date Selection Link"
+      - missing_details_email_text = signup.guest? ? "Email link to guest" : "Email link to participant"
       - participant_details_link = trip_url(signup_trip, complete_signup: signup.signed_id(purpose: details_link_purpose), anchor: "campsite-#{signup.campsite_id}") unless waitlist
       %tr{data: (waitlist ? {} : { controller: "copyable-modal" })}
         %td
@@ -177,17 +178,20 @@
                     %h2 Missing participant details
                     %p= missing_details_copy
                     %p= missing_details_share_copy
-                  .missing-details-link-row
+                  .admin-participant-link-share
                     = link_to missing_details_link_text, participant_details_link, class: "missing-details-link", "data-copyable-modal-target" => "source"
-                    %button.button.secondary.copy-link-button{"data-action" => "copyable-modal#copy", type: "button"}
-                      %span.copy-link-icon.copy-icon{aria: { hidden: "true" }}
-                        %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
-                          %rect{height: "12", rx: "2", stroke: "currentColor", "stroke-width" => "2", width: "12", x: "8", y: "8"}
-                          %path{d: "M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2", stroke: "currentColor", "stroke-linecap" => "round", "stroke-width" => "2"}
-                      %span.copy-link-icon.check-icon{aria: { hidden: "true" }}
-                        %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
-                          %path{d: "M20 6 9 17l-5-5", stroke: "currentColor", "stroke-linecap" => "round", "stroke-linejoin" => "round", "stroke-width" => "2.5"}
-                      %span Copy link
+                    .admin-participant-link-actions
+                      %button.button.secondary.copy-link-button.admin-participant-link-action{"data-action" => "copyable-modal#copy", type: "button"}
+                        %span.copy-link-icon.copy-icon{aria: { hidden: "true" }}
+                          %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
+                            %rect{height: "12", rx: "2", stroke: "currentColor", "stroke-width" => "2", width: "12", x: "8", y: "8"}
+                            %path{d: "M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2", stroke: "currentColor", "stroke-linecap" => "round", "stroke-width" => "2"}
+                        %span.copy-link-icon.check-icon{aria: { hidden: "true" }}
+                          %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
+                            %path{d: "M20 6 9 17l-5-5", stroke: "currentColor", "stroke-linecap" => "round", "stroke-linejoin" => "round", "stroke-width" => "2.5"}
+                        %span Copy Link
+                      - if signup.user.email.present?
+                        = button_to missing_details_email_text, email_participant_link_admin_trip_campsite_signup_path(signup_trip, signup), method: :post, class: "button secondary admin-participant-link-action", form: { class: "admin-participant-link-action-form", data: { controller: "email-link", action: "submit->email-link#send" } }
                   .form-actions
                     %button.button.secondary{"data-action" => "copyable-modal#close", type: "button"} Close
           %td
@@ -241,7 +245,11 @@
                               Admins can override policy with a good reason.
                             %p.admin-refund-choice-spacer{"aria-hidden" => "true"}
                             %p
-                              %strong Amount paid:
+                              %strong
+                                - if signup.guest?
+                                  #{signup.primary_signup.user.full_name} paid for #{signup.user.full_name}:
+                                - else
+                                  Amount paid:
                               = format_cents(refund_amount_cents)
                       .form-actions
                         %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
@@ -278,7 +286,11 @@
                             Admins can override policy with a good reason.
                           %p.admin-refund-choice-spacer{"aria-hidden" => "true"}
                           %p
-                            %strong Amount paid:
+                            %strong
+                              - if signup.guest?
+                                #{signup.primary_signup.user.full_name} paid for #{signup.user.full_name}:
+                              - else
+                                Amount paid:
                             = format_cents(refund_amount_cents)
                     .form-actions
                       %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel

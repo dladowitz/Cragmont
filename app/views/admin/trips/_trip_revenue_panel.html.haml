@@ -1,0 +1,44 @@
+%section.panel.trip-revenue-panel
+  .panel-header
+    %div
+      %h2 Trip Revenue
+      %p.muted Revenue collected for this trip after participant refunds and recorded expenses.
+  %table.trip-revenue-table
+    %thead
+      %tr
+        %th Line item
+        %th Amount collected
+        %th Refunds
+        %th Net
+    %tbody
+      - summary.campsite_lines.each do |line|
+        %tr
+          %td= line.label
+          %td= format_cents(line.paid_cents)
+          %td= format_cents(line.refund_cents)
+          %td= format_cents(line.net_cents)
+      %tr.trip-revenue-subtotal
+        %td Campsite revenue
+        %td
+        %td
+        %td= format_cents(summary.campsite_revenue_cents)
+      %tr
+        %td One-time payment requests
+        %td
+        %td
+        %td= format_cents(summary.one_time_payment_requests_cents)
+      %tr.trip-revenue-total
+        %td Total revenue
+        %td
+        %td
+        %td= format_cents(summary.total_revenue_cents)
+      %tr.trip-revenue-expense
+        %td Trip expense refunds
+        %td
+        %td
+        %td= "-#{format_cents(summary.trip_expense_refund_cents)}"
+      %tr.trip-revenue-final
+        %td Final trip revenue
+        %td
+        %td
+        %td= format_cents(summary.final_total_cents)

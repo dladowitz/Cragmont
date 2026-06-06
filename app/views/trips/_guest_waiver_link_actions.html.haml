@@ -1,0 +1,11 @@
+%span{"data-controller" => "copy-link", "data-copy-link-url-value" => waiver_link}
+  %button.button.secondary.copy-link-button.admin-participant-link-action{"data-action" => "copy-link#copy", type: "button"}
+    %span.copy-link-icon.copy-icon{aria: { hidden: "true" }}
+      %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
+        %rect{height: "12", rx: "2", stroke: "currentColor", "stroke-width" => "2", width: "12", x: "8", y: "8"}
+        %path{d: "M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2", stroke: "currentColor", "stroke-linecap" => "round", "stroke-width" => "2"}
+    %span.copy-link-icon.check-icon{aria: { hidden: "true" }}
+      %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
+        %path{d: "M20 6 9 17l-5-5", stroke: "currentColor", "stroke-linecap" => "round", "stroke-linejoin" => "round", "stroke-width" => "2.5"}
+    %span Copy Link
+= button_to "Email link to guest", email_path, method: :post, class: "button secondary admin-participant-link-action", form: { class: "admin-participant-link-action-form", data: { controller: "email-link", action: "submit->email-link#send" } }

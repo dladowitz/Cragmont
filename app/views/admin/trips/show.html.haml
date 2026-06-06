@@ -1,4 +1,6 @@
 = render "admin/shared/header", title: @trip.name
+- if @participant_link_signup.present?
+  = render "participant_link_modal", trip: @trip, signup: @participant_link_signup
 %section.panel.trip-overview
   .panel-header.trip-summary-header
     .trip-summary-copy
@@ -135,6 +137,7 @@
     .waitlisted-signups-section.trip-waitlist-section
       %h3 Trip waitlist
       = render "signup_table", signups: @waitlisted_signups, waitlist: true, trip: @trip, campsites: @campsites, read_only: @trip.deleted?
+= render "payment_requests_panel", trip: @trip, payment_requests: @trip_payment_requests, modal_payment_request: @trip_payment_request
 %section.panel
   .panel-header
     %div
@@ -165,3 +168,4 @@
                 %button.button.secondary.admin-table-action-button{"data-action" => "payment-details-trigger#open", type: "button"} View
   - else
     %p.muted No trip expenses recorded yet.
+= render "trip_revenue_panel", summary: @trip_revenue_summary

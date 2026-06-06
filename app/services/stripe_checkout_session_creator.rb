@@ -16,12 +16,11 @@ class StripeCheckoutSessionCreator
 
     session = Stripe::Checkout::Session.create(
       mode: "payment",
-      payment_method_types: [ "card" ],
       customer_email: @signup.user.email.presence,
       line_items: [ line_item ],
       success_url: @success_url,
       cancel_url: @cancel_url,
-      expires_at: @payment.expires_at.to_i,
+      expires_at: checkout_expires_at.to_i,
       metadata: metadata,
       payment_intent_data: {
         metadata: metadata
@@ -31,7 +30,7 @@ class StripeCheckoutSessionCreator
     @payment.update!(
       stripe_checkout_session_id: session.id,
       checkout_url: session.url,
-      expires_at: Time.zone.at(session.expires_at)
+      checkout_expires_at: Time.zone.at(session.expires_at)
     )
     @payment
   end
@@ -64,6 +63,10 @@ class StripeCheckoutSessionCreator
     return if ENV["STRIPE_SECRET_KEY"].present?
 
     raise StripeConfigurationError, "STRIPE_SECRET_KEY is required to create Stripe Checkout Sessions"
+  end
+
+  def checkout_expires_at
+    @payment.checkout_expires_at || @payment.expires_at || 24.hours.from_now
   end
 end
 

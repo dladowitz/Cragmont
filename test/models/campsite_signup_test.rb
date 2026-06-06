@@ -123,6 +123,38 @@ class CampsiteSignupTest < ActiveSupport::TestCase
     assert_equal 3000, signup.refundable_amount_cents
   end
 
+  test "guest refundable amount is their share of the primary payment" do
+    SiteSetting.current.update!(first_two_nights_fee: "30", extra_night_fee: "0")
+    primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    guest_user = User.create!(first_name: "David", last_name: "Guest", email: "guest-refund-share@example.com", password: "password")
+    guest_signup = create_campsite_signup!(
+      campsite: campsites(:yosemite_a),
+      user: guest_user,
+      guest_of_signup: primary_signup,
+      guest_position: 1,
+      arrival_date: primary_signup.arrival_date,
+      checkout_date: primary_signup.checkout_date
+    )
+    pricing = CampsiteSignupPricing.call(
+      arrival_date: primary_signup.arrival_date,
+      checkout_date: primary_signup.checkout_date,
+      adult_guest_count: 1
+    )
+    primary_signup.payments.create!(
+      source: "manual",
+      status: "paid",
+      amount_cents: pricing.amount_cents,
+      pricing_snapshot: pricing.snapshot,
+      manual_payment_method: "cash",
+      manual_paid_at: Time.current,
+      paid_at: Time.current
+    )
+
+    assert_equal 6000, primary_signup.refundable_amount_cents
+    assert_equal 3000, guest_signup.paid_share_amount_cents
+    assert_equal 3000, guest_signup.refundable_amount_cents
+  end
+
   test "calculates capacity count from adult and older minors" do
     signup = CampsiteSignup.new(campsite: campsites(:yosemite_a), user: users(:sam))
     signup.campsite_signup_minors.build(first_name: "Young", last_name: "Minor", age: 12, relationship: "Child")

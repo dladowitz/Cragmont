@@ -1,0 +1,28 @@
+- participant_link = trip_url(trip, complete_signup: signup.signed_id(purpose: :complete_participant_details), anchor: "campsite-#{signup.campsite_id}")
+- payment_needed = !signup.payment_paid_or_settled?
+- link_title = payment_needed ? "Date selection, Waiver and Payment Link" : "Date selection and Waiver Link"
+- link_description = payment_needed ? "Share this with the participant so they can select dates, sign the waiver and pay for the trip." : "Share this with the participant so they can select dates and sign the waiver."
+- link_text = payment_needed ? "Date selection, waiver, and payment link" : "Date selection and waiver link"
+%div{"data-controller" => "modal", "data-modal-clean-url-on-close-value" => "true", "data-modal-disable-autofocus-value" => "true", "data-modal-open-value" => "true"}
+  %dialog.signup-modal.admin-participant-link-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+    .signup-modal-content
+      %div
+        %h2= link_title
+        %p= link_description
+      .admin-participant-link-share
+        = link_to link_text, participant_link, class: "missing-details-link"
+        .admin-participant-link-actions
+          %span{"data-controller" => "copy-link", "data-copy-link-url-value" => participant_link}
+            %button.button.secondary.copy-link-button.admin-participant-link-action{"data-action" => "copy-link#copy", type: "button"}
+              %span.copy-link-icon.copy-icon{aria: { hidden: "true" }}
+                %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
+                  %rect{height: "12", rx: "2", stroke: "currentColor", "stroke-width" => "2", width: "12", x: "8", y: "8"}
+                  %path{d: "M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2", stroke: "currentColor", "stroke-linecap" => "round", "stroke-width" => "2"}
+              %span.copy-link-icon.check-icon{aria: { hidden: "true" }}
+                %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
+                  %path{d: "M20 6 9 17l-5-5", stroke: "currentColor", "stroke-linecap" => "round", "stroke-linejoin" => "round", "stroke-width" => "2.5"}
+              %span Copy Link
+          - if signup.user.email.present?
+            = button_to "Email link to participant", email_participant_link_admin_trip_campsite_signup_path(trip, signup), method: :post, class: "button secondary admin-participant-link-action", form: { class: "admin-participant-link-action-form", data: { controller: "email-link", action: "submit->email-link#send" } }
+      .form-actions
+        %button.button.secondary{"data-action" => "modal#close", type: "button"} Close

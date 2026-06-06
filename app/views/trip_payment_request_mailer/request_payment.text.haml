@@ -1,0 +1,12 @@
+- lines = []
+- lines << "#{@payment_request.full_name}, get stoked!"
+- lines << ""
+- lines << "There is a Cragmont payment request for #{@trip.name}."
+- lines << "Amount: #{format_cents(@payment_request.amount_cents)}"
+- lines << "Reason: #{@payment_request.reason}"
+- lines << ""
+- lines << "Clip in and pay here: #{@payment_url}"
+- lines << ""
+- lines << "See you at the crag."
+- lines << "Cragmont Climbing Club"
+!= lines.join("\n")

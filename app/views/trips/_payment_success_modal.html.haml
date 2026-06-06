@@ -1,4 +1,4 @@
-%div{"data-controller" => "modal", "data-modal-open-value" => "true"}
+%div{"data-controller" => "modal", "data-modal-clean-url-on-close-value" => "true", "data-modal-disable-autofocus-value" => "true", "data-modal-open-value" => "true"}
   %dialog.signup-modal.payment-success-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
     .signup-modal-content.payment-success-modal-content
       %div
@@ -8,21 +8,17 @@
           %p We still need the other adults in your party to sign the waiver before you are confirmed.
           %p Send them these links to sign in and then climb on!
           %ul.payment-success-waiver-links
-            - missing_waiver_links.each do |name, waiver_link|
+            - missing_waiver_links.each do |waiver_link_details|
+              - name = waiver_link_details.fetch(:name)
+              - waiver_path = waiver_link_details.fetch(:waiver_path)
+              - waiver_url = waiver_link_details.fetch(:waiver_url)
+              - email_path = waiver_link_details.fetch(:email_path)
               %li
                 %span.payment-success-waiver-link-text
                   #{name}:
-                  = link_to "Waiver Link", waiver_link
-                %span{"data-controller" => "copy-link", "data-copy-link-url-value" => waiver_link}
-                  %button.button.secondary.copy-link-button{"data-action" => "copy-link#copy", type: "button"}
-                    %span.copy-link-icon.copy-icon{aria: { hidden: "true" }}
-                      %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
-                        %rect{height: "12", rx: "2", stroke: "currentColor", "stroke-width" => "2", width: "12", x: "8", y: "8"}
-                        %path{d: "M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2", stroke: "currentColor", "stroke-linecap" => "round", "stroke-width" => "2"}
-                    %span.copy-link-icon.check-icon{aria: { hidden: "true" }}
-                      %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
-                        %path{d: "M20 6 9 17l-5-5", stroke: "currentColor", "stroke-linecap" => "round", "stroke-linejoin" => "round", "stroke-width" => "2.5"}
-                    %span Copy Link
+                  = link_to "Waiver Link", waiver_path
+                .admin-participant-link-actions
+                  = render "guest_waiver_link_actions", waiver_link: waiver_url, email_path: email_path
         - else
           %h2 Get stoked!
           %p

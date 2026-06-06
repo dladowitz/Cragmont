@@ -1,6 +1,11 @@
 class CampsiteSignupPaymentLifecycle
-  def self.create_pending_checkout!(signup:, pricing:, success_url:, cancel_url:, created_by: nil, previous_signup_status: nil)
+  DEFAULT_PENDING_EXPIRATION = 30.minutes
+  ADMIN_PENDING_EXPIRATION = 30.days
+  MAX_CHECKOUT_EXPIRATION = 24.hours
+
+  def self.create_pending_checkout!(signup:, pricing:, success_url:, cancel_url:, created_by: nil, previous_signup_status: nil, expires_at: DEFAULT_PENDING_EXPIRATION.from_now)
     payment = nil
+    checkout_expires_at = checkout_expires_at_for(expires_at)
 
     CampsiteSignup.transaction do
       signup.lock!
@@ -9,7 +14,8 @@ class CampsiteSignupPaymentLifecycle
         status: "pending",
         amount_cents: pricing.amount_cents,
         currency: pricing.currency,
-        expires_at: 30.minutes.from_now,
+        expires_at: expires_at,
+        checkout_expires_at: checkout_expires_at,
         created_by: created_by,
         previous_signup_status: previous_signup_status || signup.status,
         pricing_snapshot: pricing.snapshot
@@ -27,6 +33,30 @@ class CampsiteSignupPaymentLifecycle
       signup.update!(status: "canceled")
       signup.guest_signups.pending_payment.find_each { |guest_signup| guest_signup.update!(status: "canceled") }
     end
+    raise
+  end
+
+  def self.refresh_checkout!(payment:, success_url:, cancel_url:)
+    payment.with_lock do
+      return payment unless payment.pending?
+
+      if payment.payment_link_expired?
+        expire_checkout!(payment: payment)
+        return payment
+      end
+
+      return payment if payment.checkout_active?
+
+      payment.update!(checkout_expires_at: checkout_expires_at_for(payment.expires_at))
+    end
+
+    StripeCheckoutSessionCreator.create(
+      payment: payment,
+      success_url: success_url,
+      cancel_url: cancel_url
+    )
+  rescue StripeConfigurationError, Stripe::StripeError => error
+    payment.update!(status: "failed", note: error.message) if payment.pending?
     raise
   end
 
@@ -83,10 +113,20 @@ class CampsiteSignupPaymentLifecycle
     end
   end
 
-  def self.expire_checkout!(payment:)
+  def self.expire_checkout!(payment:, stripe_checkout_session_id: nil)
     CampsiteSignup.transaction do
       payment.lock!
       return payment unless payment.pending?
+      return payment if stripe_checkout_session_id.present? && payment.stripe_checkout_session_id.present? && payment.stripe_checkout_session_id != stripe_checkout_session_id
+
+      if payment.long_lived_payment_link? && !payment.payment_link_expired?
+        payment.update!(
+          checkout_url: nil,
+          stripe_checkout_session_id: nil,
+          checkout_expires_at: nil
+        )
+        return payment
+      end
 
       signup = payment.campsite_signup
       signup.lock!
@@ -121,23 +161,28 @@ class CampsiteSignupPaymentLifecycle
   end
 
   def self.refund_payment_for!(signup:, reason:, initiated_by: "system", refunded_by: nil)
-    payment = signup.current_payment
-    return if payment.blank? || !payment.refundable? || payment.remaining_refundable_amount_cents.zero?
+    payment = signup.primary_signup.current_payment
+    amount_cents = signup.refundable_amount_cents
+    return if payment.blank? || !payment.refundable? || amount_cents.zero?
 
     if payment.stripe_source?
       StripeRefundCreator.new(
         payment: payment,
-        amount_cents: payment.remaining_refundable_amount_cents,
+        amount_cents: amount_cents,
         reason: reason,
         initiated_by: initiated_by,
         refunded_by: refunded_by
       ).call
     else
       payment.update!(
-        refunded_amount_cents: payment.amount_cents,
-        status: "refunded"
+        refunded_amount_cents: payment.refunded_amount_cents + amount_cents
       )
+      payment.complete_refund!
       nil
     end
+  end
+
+  def self.checkout_expires_at_for(expires_at)
+    [ expires_at, MAX_CHECKOUT_EXPIRATION.from_now ].compact.min
   end
 end
