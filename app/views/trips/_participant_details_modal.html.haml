@@ -1,6 +1,7 @@
 - campsite = signup.campsite
 - guest_signup = signup.guest?
 - campsite_coordinator_signup = !guest_signup && trip.campsite_coordinator_id == signup.user_id
+- waived_payment_signup = signup.current_payment&.waived?
 - added_by = signup.guest_of_signup&.user
 - if guest_signup && added_by.present?
   - modal_title = "#{signup.user.full_name} you've been added to the #{trip.name} trip by #{added_by.full_name}"
@@ -32,9 +33,9 @@
         waitlist_direct_signup: false,
         complete_existing_signup: true,
         waiver_only: guest_signup,
-        hide_fee_fields: campsite_coordinator_signup,
+        hide_fee_fields: campsite_coordinator_signup || waived_payment_signup,
         modal_submit_text: "Complete",
-        payment_submit_text: (guest_signup || campsite_coordinator_signup ? "Complete" : "Pay Now and Complete"),
+        payment_submit_text: (guest_signup || campsite_coordinator_signup || waived_payment_signup ? "Complete" : "Pay Now and Complete"),
         free_submit_text: "Complete",
         signup_intent: "complete_participant_details",
         dom_id_suffix: "complete-#{signup.id}"

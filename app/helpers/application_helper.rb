@@ -109,7 +109,7 @@ module ApplicationHelper
     def adult_line_items
       (0...adult_count).map do |index|
         {
-          label: index.zero? ? "You" : "Adult #{index + 1}",
+          label: adult_label(index),
           details: priced_details(first_two_nights_fee_cents, extra_night_fee_cents)
         }
       end
@@ -118,10 +118,31 @@ module ApplicationHelper
     def minor_line_items
       minor_ages.each_with_index.map do |age, index|
         {
-          label: "Minor #{index + 1} (age #{age})",
+          label: minor_label(index, age),
           details: age < uncounted_minor_age_limit ? free_minor_details : priced_details(minor_fee_cents, minor_extra_night_fee_cents)
         }
       end
+    end
+
+    def adult_label(index)
+      return signup.user.full_name if index.zero?
+
+      adult_guests[index - 1]&.user&.full_name || "Adult #{index + 1}"
+    end
+
+    def minor_label(index, age)
+      minor = minors[index]
+      return "#{minor.first_name} #{minor.last_name}".strip if minor.present?
+
+      "Minor #{index + 1} (age #{age})"
+    end
+
+    def adult_guests
+      @adult_guests ||= signup.guest_signups.includes(:user).order(:guest_position, :created_at).to_a
+    end
+
+    def minors
+      @minors ||= signup.campsite_signup_minors.order(:id).to_a
     end
 
     def priced_details(first_two_nights_cents, extra_night_cents)
@@ -158,7 +179,7 @@ module ApplicationHelper
     end
 
     def minor_ages
-      ages = signup.campsite_signup_minors.order(:id).map { |minor| minor.age.to_i }
+      ages = minors.map { |minor| minor.age.to_i }
       expected_count = snapshot.fetch("counted_minor_count", 0).to_i + snapshot.fetch("free_minor_count", 0).to_i
 
       return ages if expected_count.zero? || ages.size >= expected_count

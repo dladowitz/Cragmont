@@ -9,7 +9,7 @@
   %span.status.admin-payment-status{class: payment_status_class}= payment_label
   - if payment_amount.present?
     %div.admin-payment-amount-control{"data-controller" => "modal"}
-      %button.admin-payment-amount.admin-payment-amount-link{"data-action" => "modal#open", type: "button"}= payment_amount
+      %button.admin-payment-amount.admin-payment-amount-link{"data-action" => "modal#open", "data-payment-details-payment-id" => payment.id, type: "button"}= payment_amount
       %dialog.signup-modal.transaction-details-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
         .signup-modal-content
           %div

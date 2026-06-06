@@ -2,7 +2,7 @@ class Admin::UsersController < Admin::BaseController
   before_action :set_user, only: %i[show edit update destroy]
 
   def index
-    @users = User.order(:last_name, :first_name)
+    @users = User.order(:first_name, :last_name)
   end
 
   def show

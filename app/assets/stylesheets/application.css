@@ -2296,6 +2296,28 @@ th {
   display: inline-flex;
 }
 
+.payment-success-waiver-links {
+  margin-top: 22px;
+  font-size: 1rem;
+}
+
+.payment-success-waiver-links li {
+  margin-bottom: 14px;
+  padding-left: 4px;
+}
+
+.payment-success-waiver-link-text {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  margin-right: 12px;
+}
+
+.payment-success-waiver-links .copy-link-button {
+  vertical-align: middle;
+}
+
 .danger-status {
   background: #fff1f0;
   color: var(--danger);

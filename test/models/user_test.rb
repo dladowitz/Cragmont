@@ -45,6 +45,10 @@ class UserTest < ActiveSupport::TestCase
     assert_not user.default_password?
   end
 
+  test "generated default passwords are unique" do
+    assert_not_equal User.generate_default_password, User.generate_default_password
+  end
+
   test "generates password reset token and finds user with valid token" do
     user = users(:alex)
     token = user.generate_password_reset_token!

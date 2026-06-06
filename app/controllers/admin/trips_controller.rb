@@ -13,7 +13,11 @@ class Admin::TripsController < Admin::BaseController
     @campsites = @trip.campsites.includes(:campground, :registered_by, campsite_signups: [ { payments: { refunds: :refunded_by } }, :user, :campsite_signup_minors, { guest_of_signup: :user } ]).order(:arrival_date, :site_number)
     @waitlisted_signups = @trip.waitlisted_signups
     @trip_participant_user_ids = @trip.campsite_signups.active.distinct.pluck(:user_id)
-    @trip_reimbursements = @trip.trip_reimbursements.order(paid_on: :desc, created_at: :desc)
+    @trip_expense_refunds = CampsiteSignupPaymentRefund.trip_expense_refund_type
+      .joins(campsite_signup_payment: :campsite_signup)
+      .where(campsite_signups: { trip_id: @trip.id })
+      .includes(:refunded_by, campsite_signup_payment: { campsite_signup: :user })
+      .order(refunded_at: :desc, created_at: :desc)
   end
 
   def new

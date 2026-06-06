@@ -77,36 +77,39 @@
                   - else
                     %strong
                       You are #{@current_signup.status} for this campsite.
-                    %div{"data-controller" => "modal"}
-                      - remove_button_text = @current_signup.waitlisted? ? "Remove me from the waitlist" : "Remove me from this campsite"
-                      - remove_title = @current_signup.waitlisted? ? "Remove yourself from the waitlist?" : "Remove yourself from this campsite?"
-                      - refund_amount_cents = @current_signup.refund_eligible? ? @current_signup.refundable_amount_cents : 0
-                      %button.button.danger{"data-action" => "modal#open", :type => "button"}= remove_button_text
-                      %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
-                        .signup-modal-content
-                          %div
-                            %h2= remove_title
-                            %p
-                              = campsite.campground.name
-                              site #{campsite.site_number}
-                            - unless @current_signup.waitlisted?
-                              .cancellation-policy-details
-                                %p
-                                  %strong Cancelation policy:
-                                  Full refund if 7 or more days before start of trip
-                                %dl.details-list
-                                  %div
-                                    %dt Trip starts
-                                    %dd= @trip.start_date.to_fs(:long)
-                                  %div
-                                    %dt Days until trip
-                                    %dd= @current_signup.days_until_trip_start
-                                  %div
-                                    %dt Refund amount
-                                    %dd= format_cents(refund_amount_cents)
-                          .form-actions
-                            %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
-                            = button_to remove_button_text, trip_campsite_campsite_signup_path(@trip, campsite), method: :delete, class: "button danger"
+                    - if @current_signup.guest?
+                      %p.muted.already-signed-up-note #{@current_signup.guest_of_signup.user.full_name} signed you up
+                    - else
+                      %div{"data-controller" => "modal"}
+                        - remove_button_text = @current_signup.waitlisted? ? "Remove me from the waitlist" : "Remove me from this campsite"
+                        - remove_title = @current_signup.waitlisted? ? "Remove yourself from the waitlist?" : "Remove yourself from this campsite?"
+                        - refund_amount_cents = @current_signup.refund_eligible? ? @current_signup.refundable_amount_cents : 0
+                        %button.button.danger{"data-action" => "modal#open", :type => "button"}= remove_button_text
+                        %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                          .signup-modal-content
+                            %div
+                              %h2= remove_title
+                              %p
+                                = campsite.campground.name
+                                site #{campsite.site_number}
+                              - unless @current_signup.waitlisted?
+                                .cancellation-policy-details
+                                  %p
+                                    %strong Cancelation policy:
+                                    Full refund if 7 or more days before start of trip
+                                  %dl.details-list
+                                    %div
+                                      %dt Trip starts
+                                      %dd= @trip.start_date.to_fs(:long)
+                                    %div
+                                      %dt Days until trip
+                                      %dd= @current_signup.days_until_trip_start
+                                    %div
+                                      %dt Refund amount
+                                      %dd= format_cents(refund_amount_cents)
+                            .form-actions
+                              %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
+                              = button_to remove_button_text, trip_campsite_campsite_signup_path(@trip, campsite), method: :delete, class: "button danger"
                 - elsif signed_up_for_another_campsite
                   %p.muted.already-signed-up-note You are already signed up for another campsite on this trip.
                 - elsif current_waitlisted_signup
@@ -242,16 +245,7 @@
     - else
       %p.muted Not yet set
   - if @completion_signup.present?
-    - if @completion_signup.user.default_password?
-      - if @completion_signup.guest?
-        - completion_token = @guest_completion_token
-        - password_path = guest_password_trip_campsite_campsite_signup_path(@trip, @completion_signup.campsite)
-      - else
-        - completion_token = @participant_completion_token
-        - password_path = participant_password_trip_campsite_campsite_signup_path(@trip, @completion_signup.campsite)
-      = render "guest_password_modal", trip: @trip, signup: @completion_signup, token: completion_token, password_path: password_path
-    - else
-      = render "participant_details_modal", trip: @trip, signup: @completion_signup
+    = render "participant_details_modal", trip: @trip, signup: @completion_signup
   - if @show_payment_success_modal
-    = render "payment_success_modal", trip: @trip
+    = render "payment_success_modal", trip: @trip, missing_waiver_links: @payment_success_missing_waiver_links
 %p.background-image-caption Joshua Tree, IRS Wall

@@ -7,12 +7,17 @@ class TripsController < ApplicationController
 
   def show
     @campsites = @trip.campsites.includes(:campground, campsite_signups: [ :user, :campsite_signup_minors, { guest_of_signup: :user } ]).order(:arrival_date, :site_number)
-    @current_signup = @trip.campsite_signups.active.includes(:campsite, :payments).find_by(user: current_user) if user_signed_in?
+    @current_signup = @trip.campsite_signups.active.includes(:campsite, :payments, { guest_of_signup: :user }, guest_signups: [ :user, :campsite ]).find_by(user: current_user) if user_signed_in?
     @waitlisted_signups = @trip.waitlisted_signups
     @waitlist_confirmation_campsites = @current_signup&.waitlisted? ? @trip.waitlist_confirmation_campsites_for(@current_signup) : []
     @waitlist_confirmation_campsite_ids = @waitlist_confirmation_campsites.map(&:id)
     @completion_signup = participant_details_signup || guest_details_signup
     @show_payment_success_modal = payment_success_return?
+    if @show_payment_success_modal
+      missing_waiver_signups = payment_success_missing_waiver_signups
+      @payment_success_missing_waiver_links = payment_success_missing_waiver_links(missing_waiver_signups)
+      send_payment_success_missing_waiver_emails(missing_waiver_signups)
+    end
   end
 
   private
@@ -28,12 +33,10 @@ class TripsController < ApplicationController
     return if signup.blank?
     return if signup.trip_id != @trip.id
     return if !signup.confirmed? || signup.campsite.blank?
+    @participant_completion_token = params[:complete_signup]
     if signup.user.default_password?
-      @participant_completion_token = params[:complete_signup]
-      return signup
-    end
-
-    if user_signed_in?
+      log_in_completion_signup(signup)
+    elsif user_signed_in?
       return if signup.user_id != current_user.id
     else
       log_in_completion_signup(signup)
@@ -53,7 +56,6 @@ class TripsController < ApplicationController
     return unless signup.guest?
 
     @guest_completion_token = params[:complete_signup]
-    return signup if signup.user.default_password?
 
     log_in_completion_signup(signup)
     return if signup.arrival_date.present? && signup.checkout_date.present? && signup.waiver_signed?
@@ -69,5 +71,35 @@ class TripsController < ApplicationController
 
   def payment_success_return?
     params[:stripe_checkout] == "success" && @current_signup&.confirmed?
+  end
+
+  def payment_success_missing_waiver_signups
+    return [] if @current_signup.blank? || @current_signup.guest?
+
+    @current_signup.guest_signups.confirmed.includes(:user, :campsite).reject(&:waiver_signed?)
+  end
+
+  def payment_success_missing_waiver_links(signups)
+    signups.map do |signup|
+      [ signup.user.full_name, guest_waiver_path(signup) ]
+    end
+  end
+
+  def send_payment_success_missing_waiver_emails(signups)
+    signups.each do |signup|
+      GuestWaiverMailer.with(
+        signup: signup,
+        primary_participant: @current_signup.user,
+        waiver_url: guest_waiver_url(signup)
+      ).needed.deliver_now
+    end
+  end
+
+  def guest_waiver_path(signup)
+    trip_path(@trip, complete_signup: signup.signed_id(purpose: :complete_guest_details), anchor: "campsite-#{signup.campsite_id}")
+  end
+
+  def guest_waiver_url(signup)
+    trip_url(@trip, complete_signup: signup.signed_id(purpose: :complete_guest_details), anchor: "campsite-#{signup.campsite_id}")
   end
 end
