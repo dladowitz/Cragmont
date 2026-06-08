@@ -24,11 +24,11 @@ class CampsiteSignupTest < ActiveSupport::TestCase
     end
   end
 
-  test "defaults parking status to open spot" do
+  test "defaults parking status to unassigned" do
     signup = CampsiteSignup.new(campsite: campsites(:yosemite_a), user: users(:sam))
 
-    assert_equal "first_come_first_serve", signup.parking_status
-    assert_equal "Open Spot", signup.parking_status_label
+    assert_equal "unassigned", signup.parking_status
+    assert_equal "Unassigned", signup.parking_status_label
   end
 
   test "requires known parking status" do

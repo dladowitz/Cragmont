@@ -1708,12 +1708,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
         assert_select "td", text: "Jun 13-Jun 15"
         assert_select "td", text: "Missing"
         assert_select "td", text: "None", count: 0
-        assert_select "td .parking-status-with-tooltip > span:first-child", text: "Open Spot"
-        assert_select "td .parking-status-with-tooltip .parking-tooltip" do
-          assert_select ".info-tooltip-icon", text: "i"
-          assert_select ".info-tooltip-box", text: /Open Spots are first come, first serve/
-          assert_select ".info-tooltip-box", text: /Whoever arrives at the campsite first can claim for the weekend/
-        end
+        assert_select "td", text: "Unassigned"
+        assert_select "td .parking-status-with-tooltip", count: 0
       end
       assert_select ".parking-status-groups", count: 0
       assert_select ".confirmed-participants-table a", text: "Missing", count: 0
@@ -1725,6 +1721,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
   test "public confirmed participants table shows parking statuses without separate parking section" do
     primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:alex), parking_status: "reserved_spot")
+    open_spot_user = User.create!(first_name: "Opal", last_name: "Open", email: "public-open-parking@example.com", password: "password")
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: open_spot_user, parking_status: "first_come_first_serve")
     overflow_user = User.create!(first_name: "Omar", last_name: "Overflow", email: "public-overflow@example.com", password: "password")
     create_campsite_signup!(campsite: campsites(:yosemite_a), user: overflow_user, parking_status: "overflow_parking")
     guest_user = User.create!(first_name: "Gina", last_name: "Guest", email: "public-parking-guest@example.com", password: "password")
@@ -1740,6 +1738,12 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table", text: /Reserved Spot/
+    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table", text: /Open Spot/
+    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table .parking-status-with-tooltip" do
+      assert_select ".info-tooltip-icon", text: "i"
+      assert_select ".info-tooltip-box", text: /Open Spots are first come, first serve/
+      assert_select ".info-tooltip-box", text: /Whoever arrives at the campsite first can claim for the weekend/
+    end
     assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table", text: /Overflow Lot/
     assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table", text: /Day Use/
     assert_select "#campsite-#{campsites(:yosemite_a).id} .parking-status-groups", count: 0

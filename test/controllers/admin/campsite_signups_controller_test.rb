@@ -1008,7 +1008,7 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     assert reserved_signup.reload.reserved_spot?
     assert_redirected_to admin_trip_url(trips(:yosemite), anchor: "admin-campsite-#{campsite.id}")
     assert_match "Wow, that was a whipper.", flash[:alert]
-    assert_equal "first_come_first_serve", second_signup.reload.parking_status
+    assert_equal "unassigned", second_signup.reload.parking_status
   end
 
   test "moving participant to waitlist resets parking status" do
@@ -1017,7 +1017,7 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     patch move_to_waitlist_admin_trip_campsite_signup_url(trips(:yosemite), signup)
 
     assert signup.reload.waitlisted?
-    assert_equal "first_come_first_serve", signup.parking_status
+    assert_equal "unassigned", signup.parking_status
   end
 
   test "admin can override refund cutoff when removing paid participant" do
