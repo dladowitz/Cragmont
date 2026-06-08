@@ -3,8 +3,9 @@ class CampsiteSignup < ApplicationRecord
   REFUND_CUTOFF_DAYS = 7
   STATUSES = %w[pending_payment confirmed waitlisted canceled].freeze
   CAPACITY_HOLDING_STATUSES = %w[pending_payment confirmed].freeze
-  PARKING_STATUSES = %w[reserved_spot first_come_first_serve overflow_parking day_use].freeze
+  PARKING_STATUSES = %w[unassigned reserved_spot first_come_first_serve overflow_parking day_use].freeze
   PARKING_STATUS_LABELS = {
+    "unassigned" => "Unassigned",
     "reserved_spot" => "Reserved Spot",
     "first_come_first_serve" => "Open Spot",
     "overflow_parking" => "Overflow Lot",
@@ -33,7 +34,7 @@ class CampsiteSignup < ApplicationRecord
   has_one_attached :waiver_signature_image
 
   enum :status, STATUSES.index_with(&:itself), default: "confirmed"
-  enum :parking_status, PARKING_STATUSES.index_with(&:itself), default: "first_come_first_serve"
+  enum :parking_status, PARKING_STATUSES.index_with(&:itself), default: "unassigned"
   scope :primary, -> { where(guest_of_signup_id: nil) }
   scope :guests, -> { where.not(guest_of_signup_id: nil) }
   scope :capacity_holding, -> { where(status: CAPACITY_HOLDING_STATUSES) }

@@ -472,7 +472,7 @@ class Admin::CampsiteSignupsController < Admin::BaseController
         arrival_date: nil,
         checkout_date: nil,
         waitlist_eligible_at: nil,
-        parking_status: "first_come_first_serve"
+        parking_status: "unassigned"
       )
       signup.guest_signups.each do |guest_signup|
         guest_signup.update!(
@@ -481,7 +481,7 @@ class Admin::CampsiteSignupsController < Admin::BaseController
           arrival_date: nil,
           checkout_date: nil,
           waitlist_eligible_at: nil,
-          parking_status: "first_come_first_serve"
+          parking_status: "unassigned"
         )
       end
       campsite.lock_signups_if_full!
@@ -509,7 +509,7 @@ class Admin::CampsiteSignupsController < Admin::BaseController
         arrival_date: nil,
         checkout_date: nil,
         waitlist_eligible_at: nil,
-        parking_status: "first_come_first_serve"
+        parking_status: "unassigned"
       )
       signup.guest_signups.each do |guest_signup|
         guest_signup.update!(
@@ -518,7 +518,7 @@ class Admin::CampsiteSignupsController < Admin::BaseController
           arrival_date: nil,
           checkout_date: nil,
           waitlist_eligible_at: nil,
-          parking_status: "first_come_first_serve"
+          parking_status: "unassigned"
         )
       end
       moved = true

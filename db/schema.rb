@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_08_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_08_091000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -126,7 +126,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_08_090000) do
     t.datetime "created_at", null: false
     t.bigint "guest_of_signup_id"
     t.integer "guest_position"
-    t.string "parking_status", default: "first_come_first_serve", null: false
+    t.string "parking_status", default: "unassigned", null: false
     t.string "status", default: "confirmed", null: false
     t.bigint "trip_id", null: false
     t.datetime "updated_at", null: false

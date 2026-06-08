@@ -134,13 +134,13 @@ class CampsiteSignupPaymentLifecycle
 
       if signup.pending_payment?
         if payment.previous_signup_status == "waitlisted"
-          signup.update!(status: "waitlisted", campsite: nil, arrival_date: nil, checkout_date: nil, parking_status: "first_come_first_serve")
+          signup.update!(status: "waitlisted", campsite: nil, arrival_date: nil, checkout_date: nil, parking_status: "unassigned")
           signup.guest_signups.pending_payment.find_each do |guest_signup|
-            guest_signup.update!(status: "waitlisted", campsite: nil, arrival_date: nil, checkout_date: nil, parking_status: "first_come_first_serve")
+            guest_signup.update!(status: "waitlisted", campsite: nil, arrival_date: nil, checkout_date: nil, parking_status: "unassigned")
           end
         else
-          signup.update!(status: "canceled", parking_status: "first_come_first_serve")
-          signup.guest_signups.pending_payment.find_each { |guest_signup| guest_signup.update!(status: "canceled", parking_status: "first_come_first_serve") }
+          signup.update!(status: "canceled", parking_status: "unassigned")
+          signup.guest_signups.pending_payment.find_each { |guest_signup| guest_signup.update!(status: "canceled", parking_status: "unassigned") }
         end
       end
 
@@ -153,8 +153,8 @@ class CampsiteSignupPaymentLifecycle
 
     CampsiteSignup.transaction do
       signup.lock!
-      signup.update!(status: "canceled", parking_status: "first_come_first_serve")
-      signup.guest_signups.where.not(status: "canceled").find_each { |guest_signup| guest_signup.update!(status: "canceled", parking_status: "first_come_first_serve") }
+      signup.update!(status: "canceled", parking_status: "unassigned")
+      signup.guest_signups.where.not(status: "canceled").find_each { |guest_signup| guest_signup.update!(status: "canceled", parking_status: "unassigned") }
     end
 
     refund_record

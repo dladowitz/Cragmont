@@ -193,8 +193,9 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select "form[action='#{update_parking_status_admin_trip_campsite_signup_path(trips(:yosemite), signup)}'][method='post']" do
         assert_select "input[name='_method'][value='patch']"
         assert_select "select[name='campsite_signup[parking_status]']" do
+          assert_select "option[value='unassigned'][selected]", text: "Unassigned"
           assert_select "option[value='reserved_spot']", text: "Reserved Spot"
-          assert_select "option[value='first_come_first_serve'][selected]", text: "Open Spot"
+          assert_select "option[value='first_come_first_serve']", text: "Open Spot"
           assert_select "option[value='overflow_parking']", text: "Overflow Lot"
           assert_select "option[value='day_use']", text: "Day Use"
         end
