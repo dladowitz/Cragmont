@@ -60,6 +60,14 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam), arrival_date: Date.new(2026, 6, 13))
     signup.campsite_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
     attach_test_waiver_to(signup)
+    signup.payments.create!(
+      source: "manual",
+      status: "paid",
+      amount_cents: 3000,
+      manual_payment_method: "cash",
+      manual_paid_at: Time.current,
+      paid_at: Time.current
+    )
     waitlisted_user = User.create!(first_name: "Willa", last_name: "Wait", email: "willa-admin@example.com", password: "password")
     waitlisted_signup = create_waitlisted_signup!(trip: trips(:yosemite), user: waitlisted_user)
     waitlisted_guest = User.create!(
@@ -180,7 +188,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".campsite-notes", text: /Close to bathrooms/
     assert_select ".confirmed-signups-section" do
       assert_select "h4", "Confirmed participants"
-      assert_equal [ "Participant", "Dates", "Parking", "Payment", "Waiver", "Info", "Minors", "Move to Waitlist", "Remove" ], css_select(".confirmed-signups-section > table th").map { |header| header.at_css(".tooltip-heading > span:first-child")&.text&.strip || header.text.strip }
+      assert_equal [ "Participant", "Dates", "Parking", "Payment", "Waiver", "Info", "Minors", "Move to Waitlist", "Remove" ], css_select(".confirmed-signups-section > table > thead > tr > th").map { |header| header.at_css(".tooltip-heading > span:first-child")&.text&.strip || header.text.strip }
       assert_select "td", text: "Sam Lee"
       assert_select "th", text: "Dates"
       assert_select "th .parking-tooltip" do
@@ -302,15 +310,24 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select ".admin-campsite-choice-row", text: /Upper Pines site A13/
       assert_select ".admin-campsite-choice-stats", text: /capacity/
       assert_select "form[action='#{move_to_campsite_admin_trip_campsite_signup_path(trips(:yosemite), waitlisted_signup)}']" do
-        assert_select "input[name='campsite_signup[campsite_id]'][value='#{campsites(:yosemite_a).id}']"
-        assert_select "legend", text: "Waive Payment?"
-        assert_select "input[type='radio'][name='campsite_signup[waive_payment]'][value='0'][checked]"
-        assert_select "input[type='radio'][name='campsite_signup[waive_payment]'][value='1']"
+        assert_select ".admin-waitlist-campsite-choice-row", count: 2
+        assert_select ".admin-waitlist-campsite-choice-row.is-selected", count: 1
+        assert_select "input[type='radio'][name='campsite_signup[campsite_id]'][value='#{campsites(:yosemite_a).id}'][checked]"
+        assert_select "input[type='radio'][name='campsite_signup[campsite_id]'][value='#{campsites(:yosemite_b).id}']"
+        assert_select "legend", text: "Waive Payment?", count: 2
+        assert_select ".admin-waitlist-campsite-choice-row.is-selected" do
+          assert_select "input[type='radio'][name='campsite_signup[waive_payment]'][value='0'][checked]"
+          assert_select "input[type='radio'][name='campsite_signup[waive_payment]'][value='0'][disabled]", count: 0
+          assert_select "input[type='radio'][name='campsite_signup[waive_payment]'][value='1']"
+          assert_select "input[type='radio'][name='campsite_signup[waive_payment]'][value='1'][disabled]", count: 0
+        end
+        assert_select ".admin-waitlist-campsite-choice-row:not(.is-selected) input[type='radio'][name='campsite_signup[waive_payment]'][disabled]", count: 2
+        assert_select "select[name='campsite_signup[waived_reason_type]'][disabled]", count: 2
         assert_select "select[name='campsite_signup[waived_reason_type]'][disabled]" do
           assert_select "option[value='campsite_coordinator']", text: "Campsite Coordinator"
           assert_select "option[value='other']", text: "Other"
         end
-        assert_select "textarea[name='campsite_signup[waived_reason]'][disabled]"
+        assert_select "textarea[name='campsite_signup[waived_reason]'][disabled]", count: 2
         assert_select "input[type='submit'][value='Add']"
       end
       assert_select "th", text: /Remove/
@@ -527,11 +544,11 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".confirmed-signups-section" do
-      assert_select "button.missing-value.missing-link[data-action='copyable-modal#open']", text: "Missing", count: 2
+      assert_select "button.missing-value.missing-link[data-action='copyable-modal#open']", text: "Missing", count: 3
       assert_select "dialog.missing-details-modal", count: 1
-      assert_select "dialog.missing-details-modal", text: /We need to collect waiver and attendance dates from this participant\./
-      assert_select "dialog.missing-details-modal", text: /Share this link with the participant so they can sign the waiver and select dates:/
-      assert_select "a.missing-details-link[href='#{participant_link}']", text: "Waiver and Date Selection Link"
+      assert_select "dialog.missing-details-modal", text: /We need to collect waiver, attendance dates, and payment from this participant\./
+      assert_select "dialog.missing-details-modal", text: /Share this link with the participant so they can sign the waiver, select dates, and pay for the trip:/
+      assert_select "a.missing-details-link[href='#{participant_link}']", text: "Date selection, waiver, and payment link"
       assert_select "button.copy-link-button[data-action='copyable-modal#copy']", text: "Copy Link"
       assert_select "form[action=?][method='post'][data-controller='email-link'][data-action='submit->email-link#send'] button", email_participant_link_admin_trip_campsite_signup_path(trips(:yosemite), signup), text: "Email link to participant"
       assert_select "button.copy-link-button .copy-icon svg"
@@ -625,8 +642,14 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_empty gina_row.css(".admin-payment-control button").select { |button| button.text.squish == "Update" }
   end
 
-  test "trip details does not show unpaid update controls for participant without payment" do
+  test "trip details shows missing payment link for participant without payment" do
     signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    attach_test_waiver_to(signup)
+    participant_link = trip_url(
+      trips(:yosemite),
+      complete_signup: signup.signed_id(purpose: :complete_participant_details),
+      anchor: "campsite-#{signup.campsite_id}"
+    )
 
     get admin_trip_url(trips(:yosemite))
 
@@ -636,9 +659,13 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
 
     assert sam_row
     assert_empty sam_row.css(".admin-payment-status")
+    assert_equal "Missing", sam_row.at_css(".admin-payment-control button.missing-link").text.squish
     assert_empty sam_row.css(".admin-payment-control button").select { |button| button.text.squish == "Update" }
     assert_no_match(/Unpaid/, sam_row.text)
     assert_no_match(/Payment for #{signup.user.full_name}/, sam_row.text)
+    assert_select ".confirmed-signups-section dialog.missing-details-modal", text: /We need to collect payment from this participant\./
+    assert_select ".confirmed-signups-section dialog.missing-details-modal", text: /Share this link with the participant so they can pay for the trip:/
+    assert_select ".confirmed-signups-section dialog.missing-details-modal a[href='#{participant_link}']", text: "Date selection, waiver, and payment link"
   end
 
   test "trip details links payment amount to details modal for partially refunded payment" do

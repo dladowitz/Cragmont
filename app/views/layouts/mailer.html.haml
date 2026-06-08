@@ -1,14 +1,31 @@
+- background_image_url = "#{root_url.chomp("/")}#{asset_path("backgrounds/vent-five-emperor-boulder-shorter.jpg")}"
+- dark_mode_background_image_url = "#{root_url.chomp("/")}#{asset_path("backgrounds/vent-five-emperor-boulder-shorter-dark-mode.jpg")}"
 !!!
 %html
   %head
     %meta{:content => "text/html; charset=utf-8", "http-equiv" => "Content-Type"}/
     %meta{name: "viewport", content: "width=device-width, initial-scale=1.0"}/
+    %meta{name: "color-scheme", content: "only light"}/
+    %meta{name: "supported-color-schemes", content: "light"}/
     :css
+      html {
+        color-scheme: only light;
+        forced-color-adjust: none;
+      }
+
+      :root {
+        color-scheme: only light;
+        supported-color-schemes: light;
+        forced-color-adjust: none;
+      }
+
       body {
         margin: 0;
         padding: 0;
         background-color: #17231d;
         color: #21302a;
+        color-scheme: only light;
+        forced-color-adjust: none;
         font-family: Arial, Helvetica, sans-serif;
       }
 
@@ -31,6 +48,20 @@
         color: #17231d;
       }
 
+      .email-background,
+      .email-card,
+      .email-header,
+      .email-footer {
+        color-scheme: only light;
+        forced-color-adjust: none;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .email-background {
+          background-image: linear-gradient(rgba(23, 35, 29, 0.16), rgba(23, 35, 29, 0.24)), url('#{dark_mode_background_image_url}') !important;
+        }
+      }
+
       @media only screen and (max-width: 640px) {
         .email-shell {
           width: 100% !important;
@@ -46,11 +77,10 @@
           padding-right: 22px !important;
         }
       }
-  - background_image_url = "#{root_url.chomp("/")}#{asset_path("backgrounds/vent-five-emperor-boulder-shorter.jpg")}"
-  %body{style: "margin: 0; padding: 0; background-color: #17231d; font-family: Arial, Helvetica, sans-serif;"}
-    %table{role: "presentation", width: "100%", cellpadding: "0", cellspacing: "0", style: "min-width: 100%; background-color: #17231d;"}
+  %body{style: "margin: 0; padding: 0; background-color: #17231d; color-scheme: only light; forced-color-adjust: none; font-family: Arial, Helvetica, sans-serif;"}
+    %table{role: "presentation", width: "100%", cellpadding: "0", cellspacing: "0", style: "min-width: 100%; background-color: #17231d; color-scheme: only light; forced-color-adjust: none;"}
       %tr
-        %td{align: "center", style: "background-color: #17231d; background-image: linear-gradient(rgba(23, 35, 29, 0.16), rgba(23, 35, 29, 0.24)), url('#{background_image_url}'); background-position: center bottom; background-size: cover; padding: 42px 16px 120px;"}
+        %td.email-background{align: "center", style: "background-color: #17231d; background-image: linear-gradient(rgba(23, 35, 29, 0.16), rgba(23, 35, 29, 0.24)), url('#{background_image_url}'); background-position: center bottom; background-size: cover; color-scheme: only light; forced-color-adjust: none; padding: 42px 16px 120px;"}
           %table.email-shell{role: "presentation", width: "620", cellpadding: "0", cellspacing: "0", style: "width: 620px; max-width: 100%;"}
             %tr
               %td.email-header{style: "padding: 0 34px 22px; color: #f8f4ea; text-align: left;"}

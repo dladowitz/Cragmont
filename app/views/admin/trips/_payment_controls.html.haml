@@ -5,9 +5,15 @@
 - payment_status_class = payment&.failed? ? "danger-status" : ("warning-status" if payment&.partially_refunded?)
 - covered_by_primary = signup.guest?
 - read_only = local_assigns.fetch(:read_only, false)
+- missing_payment = !covered_by_primary && !signup.payment_paid_or_settled?
 .admin-payment-control
   - if payment.present?
     %span.status.admin-payment-status{class: payment_status_class}= payment_label
+  - elsif missing_payment
+    - if read_only
+      %span.missing-value Missing
+    - else
+      %button.missing-value.missing-link{"data-action" => "copyable-modal#open", type: "button"} Missing
   - if payment_amount.present?
     %div.admin-payment-amount-control{"data-controller" => "modal"}
       %button.admin-payment-amount.admin-payment-amount-link{"data-action" => "modal#open", "data-payment-details-payment-id" => payment.id, type: "button"}= payment_amount

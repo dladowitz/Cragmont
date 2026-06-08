@@ -1709,7 +1709,27 @@ dialog.signup-modal.refund-modal .form-actions {
 }
 
 .admin-waitlist-campsite-add-form {
-  grid-template-columns: minmax(220px, 1fr) auto minmax(220px, auto) auto;
+  display: grid;
+  gap: 14px;
+}
+
+.admin-waitlist-campsite-choice-row {
+  grid-template-columns: auto minmax(220px, 1fr) auto minmax(220px, auto);
+}
+
+.admin-waitlist-campsite-choice-row.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgb(45 129 105 / 20%);
+}
+
+.admin-campsite-choice-selector {
+  display: flex;
+  align-items: center;
+}
+
+.admin-campsite-choice-selector input[type="radio"] {
+  width: auto;
+  padding: 0;
 }
 
 .admin-waitlist-waive-options {
@@ -1724,7 +1744,7 @@ dialog.signup-modal.refund-modal .form-actions {
 }
 
 .admin-waitlist-waive-fields {
-  grid-column: 1 / -1;
+  grid-column: 2 / -1;
 }
 
 .admin-campsite-choice-copy,

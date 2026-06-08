@@ -13,10 +13,16 @@
 - attendance_help_text = ""
 - site_setting = SiteSetting.current
 - existing_adult_guest_count = existing_signup&.guest? ? 0 : existing_signup&.guest_signups&.size.to_i
-- existing_counted_minor_count = existing_signup&.campsite_signup_minors&.count { |minor| minor.age.to_i >= site_setting.uncounted_minor_age_limit }.to_i
+- existing_adult_guest_names = existing_signup&.guest? ? [] : existing_signup&.guest_signups&.map { |guest_signup| guest_signup.user.full_name }.to_a
+- existing_minors = (existing_signup&.campsite_signup_minors || []).to_a
+- existing_minor_line_items = existing_minors.map { |minor| { name: minor.full_name, age: minor.age } }
+- existing_counted_minors = existing_signup&.campsite_signup_minors&.select { |minor| minor.age.to_i >= site_setting.uncounted_minor_age_limit }.to_a
+- existing_counted_minor_count = existing_counted_minors.size
+- existing_counted_minor_names = existing_counted_minors.map(&:full_name)
+- primary_participant_name = existing_signup&.guest? ? nil : existing_signup&.user&.full_name
 - if complete_existing_signup && existing_signup&.guest? && existing_signup.guest_of_signup.present?
   - attendance_help_text = "Confirm (or change) the nights #{existing_signup.guest_of_signup.user.first_name} has selected for you."
-= form_with url: trip_campsite_campsite_signup_path(trip, campsite), method: :post, class: "waiver-form", data: { turbo: false, controller: "signature", signature_available_participant_capacity_value: campsite.available_participant_capacity, signature_uncounted_minor_age_limit_value: trip.uncounted_minor_age_limit, signature_show_capacity_warning_value: !waitlisted_signup, signature_direct_signup_intent_value: signup_intent, signature_waitlist_intent_value: "join_waitlist", signature_next_submit_text_value: "Next", signature_waitlist_submit_text_value: "Join waitlist", signature_first_two_nights_fee_cents_value: site_setting.first_two_nights_fee_cents, signature_extra_night_fee_cents_value: site_setting.extra_night_fee_cents, signature_minor_fee_cents_value: site_setting.minor_fee_cents, signature_minor_extra_night_fee_cents_value: site_setting.minor_extra_night_fee_cents, signature_existing_adult_guest_count_value: existing_adult_guest_count, signature_existing_counted_minor_count_value: existing_counted_minor_count, signature_pay_submit_text_value: local_assigns.fetch(:payment_submit_text, modal_submit_text), signature_free_submit_text_value: local_assigns.fetch(:free_submit_text, modal_submit_text) } do
+= form_with url: trip_campsite_campsite_signup_path(trip, campsite), method: :post, class: "waiver-form", data: { turbo: false, controller: "signature", signature_available_participant_capacity_value: campsite.available_participant_capacity, signature_uncounted_minor_age_limit_value: trip.uncounted_minor_age_limit, signature_show_capacity_warning_value: !waitlisted_signup, signature_direct_signup_intent_value: signup_intent, signature_waitlist_intent_value: "join_waitlist", signature_next_submit_text_value: "Next", signature_waitlist_submit_text_value: "Join waitlist", signature_first_two_nights_fee_cents_value: site_setting.first_two_nights_fee_cents, signature_extra_night_fee_cents_value: site_setting.extra_night_fee_cents, signature_minor_fee_cents_value: site_setting.minor_fee_cents, signature_minor_extra_night_fee_cents_value: site_setting.minor_extra_night_fee_cents, signature_existing_adult_guest_count_value: existing_adult_guest_count, signature_existing_adult_names_value: existing_adult_guest_names.to_json, signature_existing_counted_minor_count_value: existing_counted_minor_count, signature_existing_counted_minor_names_value: existing_counted_minor_names.to_json, signature_existing_minor_line_items_value: existing_minor_line_items.to_json, signature_primary_participant_name_value: primary_participant_name, signature_pay_submit_text_value: local_assigns.fetch(:payment_submit_text, modal_submit_text), signature_free_submit_text_value: local_assigns.fetch(:free_submit_text, modal_submit_text) } do
   = hidden_field_tag "campsite_signup[intent]", signup_intent, data: { signature_target: "intent" }
   %section.signup-kind-step{"data-signature-target" => "signupStep"}
     - unless waitlisted_signup
@@ -53,10 +59,10 @@
             %button.remove-person-button{"aria-label" => "Remove guest", "data-action" => "signature#removePartyRow", type: "button"} X
             %div
               = required_label_tag "campsite_#{campsite.id}_signup_guest_#{index}_first_name", "First name"
-              = text_field_tag "campsite_signup[guest_attributes][#{index}][first_name]", "", id: "campsite_#{campsite.id}_signup_guest_#{index}_first_name", data: { required_for_guest: "true" }
+              = text_field_tag "campsite_signup[guest_attributes][#{index}][first_name]", "", id: "campsite_#{campsite.id}_signup_guest_#{index}_first_name", data: { required_for_guest: "true", action: "input->signature#updatePaymentSummary" }
             %div
               = required_label_tag "campsite_#{campsite.id}_signup_guest_#{index}_last_name", "Last name"
-              = text_field_tag "campsite_signup[guest_attributes][#{index}][last_name]", "", id: "campsite_#{campsite.id}_signup_guest_#{index}_last_name", data: { required_for_guest: "true" }
+              = text_field_tag "campsite_signup[guest_attributes][#{index}][last_name]", "", id: "campsite_#{campsite.id}_signup_guest_#{index}_last_name", data: { required_for_guest: "true", action: "input->signature#updatePaymentSummary" }
             %div
               = required_label_tag "campsite_#{campsite.id}_signup_guest_#{index}_email", "Email"
               = email_field_tag "campsite_signup[guest_attributes][#{index}][email]", "", id: "campsite_#{campsite.id}_signup_guest_#{index}_email", data: { required_for_guest: "true" }
@@ -74,10 +80,10 @@
             %button.remove-person-button{"aria-label" => "Remove minor", "data-action" => "signature#removePartyRow", type: "button"} X
             %div
               = required_label_tag "campsite_#{campsite.id}_signup_minor_#{index}_first_name", "First name"
-              = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][first_name]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_first_name", data: { required_for_minor: "true" }
+              = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][first_name]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_first_name", data: { required_for_minor: "true", action: "input->signature#updatePaymentSummary" }
             %div
               = required_label_tag "campsite_#{campsite.id}_signup_minor_#{index}_last_name", "Last name"
-              = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][last_name]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_last_name", data: { required_for_minor: "true" }
+              = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][last_name]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_last_name", data: { required_for_minor: "true", action: "input->signature#updatePaymentSummary" }
             %div
               = required_label_tag "campsite_#{campsite.id}_signup_minor_#{index}_age", "Age"
               = number_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][age]", "", id: "campsite_#{campsite.id}_signup_minor_#{index}_age", min: 0, max: 17, data: { required_for_minor: "true", action: "input->signature#updateCapacityWarning input->signature#updatePaymentSummary" }
