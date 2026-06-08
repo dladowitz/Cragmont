@@ -47,7 +47,7 @@ gem "haml-rails", "~> 3.0"
 gem "prawn", "~> 2.5"
 
 # Collect card payments for trip signups.
-gem "stripe", "~> 13.1"
+gem "stripe", "~> 19.2"
 
 group :development, :staging, :test do
   # Load local environment variables from .env files.

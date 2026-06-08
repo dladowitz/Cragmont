@@ -1,4 +1,5 @@
 if defined?(Stripe)
+  stripe_api_version = ENV.fetch("STRIPE_API_VERSION", "2026-05-27.dahlia")
   stripe_secret_key = ENV["STRIPE_SECRET_KEY"].presence
   stripe_publishable_key = ENV["STRIPE_PUBLISHABLE_KEY"].presence
   stripe_webhook_secret = ENV["STRIPE_WEBHOOK_SECRET"].presence
@@ -14,5 +15,6 @@ if defined?(Stripe)
     raise "Stripe live secret keys are only allowed in production"
   end
 
+  Stripe.api_version = stripe_api_version
   Stripe.api_key = stripe_secret_key if stripe_secret_key.present?
 end
