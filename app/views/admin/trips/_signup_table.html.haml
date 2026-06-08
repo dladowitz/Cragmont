@@ -5,15 +5,23 @@
 - allowed_signup_tooltip = "Participants can sign themselves up from the waitlist"
 - add_campsite_tooltip = "Adds a participant directly to a campsite"
 - remove_waitlist_tooltip = "Removes Participant from Waitlist"
+- parking_tooltip = local_assigns.fetch(:parking_tooltip, "Reserved Spots are assigned to the person who registered the site. Then to the Campsite Coordinator. Then to club members.\n\nOther spots are set to Open and are first come, first serve.")
+- signups_by_primary_id = signups.group_by { |signup| signup.guest_of_signup_id || signup.id }
+- display_signups = waitlist ? signups : signups.reject(&:guest?).flat_map { |signup| [signup] + signups_by_primary_id.fetch(signup.id, []).select(&:guest?) }
 %table
   %thead
     %tr
       %th Participant
       - if waitlist
         %th Member
-      %th Minors
+        %th Minors
       - unless waitlist
         %th Dates
+        %th
+          %span.tooltip-heading.info-tooltip.parking-tooltip{aria: { label: parking_tooltip }, tabindex: "0"}
+            %span Parking
+            %span.info-tooltip-icon{aria: { hidden: "true" }} i
+            %span.info-tooltip-box{role: "tooltip"}= parking_tooltip
       - if waitlist && !read_only
         %th
           %span.tooltip-heading.info-tooltip{aria: { label: allowed_signup_tooltip }, tabindex: "0"}
@@ -34,11 +42,12 @@
         %th Payment
         %th Waiver
         %th Info
+        %th Minors
         - unless read_only
           %th Move to Waitlist
           %th Remove
   %tbody
-    - signups.each do |signup|
+    - display_signups.each_with_index do |signup, index|
       - signup_trip = trip || signup.trip
       - missing_dates = !waitlist && (signup.arrival_date.blank? || signup.checkout_date.blank?)
       - missing_waiver = !waitlist && !signup.waiver_signed?
@@ -48,58 +57,42 @@
       - missing_details_link_text = signup.guest? ? "Waiver Link" : "Waiver and Date Selection Link"
       - missing_details_email_text = signup.guest? ? "Email link to guest" : "Email link to participant"
       - participant_details_link = trip_url(signup_trip, complete_signup: signup.signed_id(purpose: details_link_purpose), anchor: "campsite-#{signup.campsite_id}") unless waitlist
-      %tr{data: (waitlist ? {} : { controller: "copyable-modal" })}
+      - party_primary = !waitlist && !signup.guest? && signup.includes_guests?
+      - party_guest = !waitlist && signup.guest?
+      - next_signup = display_signups[index + 1]
+      - party_last = party_guest && (!next_signup&.guest? || next_signup.guest_of_signup_id != signup.guest_of_signup_id)
+      %tr{class: [("admin-party-primary-row" if party_primary), ("admin-party-guest-row" if party_guest), ("admin-party-last-row" if party_last)].compact, data: (waitlist ? {} : { controller: "copyable-modal" })}
         %td
-          = signup.user.full_name
+          - if party_guest
+            %span.admin-party-guest-name= signup.user.full_name
+          - else
+            = signup.user.full_name
           - if waitlist && signup.includes_guests?
             - guest_names = signup.guest_signups.map { |guest_signup| guest_signup.user.full_name }.to_sentence
             %span.muted.admin-linked-party-summary
               = "#{signup.guest_signups.size} #{'guest'.pluralize(signup.guest_signups.size)}: #{guest_names}"
-          - if signup.guest?
-            %span.muted
-              Added by #{signup.guest_of_signup.user.full_name}
         - if waitlist
           %td
             - member_status_text = signup.user.member? ? "Yes" : "No"
             - member_status_class = signup.user.member? ? "status member-status" : "muted"
             %span.admin-member-status{class: member_status_class}= member_status_text
-        %td
-          - if signup.campsite_signup_minors.any?
-            %ul.admin-minor-list
-              - signup.campsite_signup_minors.each_with_index do |minor, index|
-                %li
-                  - minor_info_modal_id = "minor-info-#{signup.id}-#{minor.id || index}"
-                  %div.minor-info-control{"data-controller" => "modal"}
-                    %button.info-link-button{"aria-controls" => minor_info_modal_id, "data-action" => "modal#open", type: "button"}= minor.full_name
-                    %dialog.signup-modal.minor-info-modal{id: minor_info_modal_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
-                      .signup-modal-content
-                        %div
-                          %h2 Minor information
-                        %dl.details-list
-                          %div
-                            %dt Name
-                            %dd= minor.full_name
-                          %div
-                            %dt Age
-                            %dd= minor.age
-                          %div
-                            %dt Added by
-                            %dd= signup.user.full_name
-                          %div
-                            %dt Relationship
-                            %dd= minor.relationship
-                        .form-actions
-                          %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
-          - else
-            %span.muted None
+          = render "signup_minors_cell", signup: signup, party_guest: party_guest
         - unless waitlist
           %td
-            - if !missing_dates
+            - if party_guest
+              %span.admin-party-empty-cell{"aria-hidden" => "true"}
+            - elsif !missing_dates
               = signup.compact_attendance_date_range
             - elsif read_only
               %span.missing-value Missing
             - else
               %button.missing-value.missing-link{"data-action" => "copyable-modal#open", type: "button"} Missing
+          %td
+            - if read_only
+              = signup.parking_status_label
+            - else
+              = form_with model: signup, url: update_parking_status_admin_trip_campsite_signup_path(signup_trip, signup), method: :patch, class: "admin-parking-status-form" do |form|
+                = form.select :parking_status, CampsiteSignup.parking_status_options, {}, onchange: "this.form.requestSubmit()"
         - if waitlist && !read_only
           %td.admin-self-signup-cell
             .admin-self-signup-control
@@ -157,7 +150,10 @@
                     = button_to "Remove", remove_from_waitlist_admin_trip_campsite_signup_path(trip, signup), method: :delete, class: "button danger"
         - elsif !waitlist
           %td
-            = render "payment_controls", signup: signup, trip: signup_trip, missing_dates: missing_dates, missing_waiver: missing_waiver, participant_details_link: participant_details_link, read_only: read_only
+            - if party_guest
+              %span.admin-party-empty-cell{"aria-hidden" => "true"}
+            - else
+              = render "payment_controls", signup: signup, trip: signup_trip, missing_dates: missing_dates, missing_waiver: missing_waiver, participant_details_link: participant_details_link, read_only: read_only
           %td
             - if signup.waiver_signed?
               .waiver-download
@@ -215,13 +211,14 @@
                       %dd= signup.user.member? ? "Member" : "Non-member"
                   .form-actions
                     %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+          = render "signup_minors_cell", signup: signup, party_guest: party_guest
           - unless read_only
             %td
               - if signup.guest?
-                %span.muted Follows primary
+                %span.admin-party-empty-cell{"aria-hidden" => "true"}
               - else
                 %div{"data-controller" => "modal"}
-                  %button.button.secondary{"data-action" => "modal#open", :type => "button"} Waitlist
+                  %button.button.secondary.admin-confirmed-signup-action-button{"data-action" => "modal#open", :type => "button"} Waitlist
                   %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                     .confirmation-modal-content
                       %div
@@ -262,7 +259,7 @@
                           = button_to "Waitlist", move_to_waitlist_admin_trip_campsite_signup_path(signup_trip, signup), method: :patch, class: "button secondary"
             %td
               %div{"data-controller" => "modal"}
-                %button.button.danger.secondary{"data-action" => "modal#open", :type => "button"} Remove
+                %button.button.danger.secondary.admin-confirmed-signup-action-button{"data-action" => "modal#open", :type => "button"} Remove
                 %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                   .confirmation-modal-content
                     %div

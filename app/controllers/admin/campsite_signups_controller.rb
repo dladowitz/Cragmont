@@ -168,6 +168,21 @@ class Admin::CampsiteSignupsController < Admin::BaseController
     end
   end
 
+  def update_parking_status
+    trip = @trip
+    signup = trip.campsite_signups.includes(:user, :campsite).find(params[:id])
+
+    if !signup.confirmed? || signup.campsite.blank?
+      redirect_to admin_trip_path(trip), alert: "Wow, that was a whipper. Parking can only be assigned to confirmed campsite participants."
+    elsif CampsiteSignup::PARKING_STATUSES.exclude?(parking_status_params[:parking_status])
+      redirect_to admin_trip_path(trip, anchor: "admin-campsite-#{signup.campsite_id}"), alert: "Wow, that was a whipper. Choose a valid parking status."
+    elsif signup.update(parking_status: parking_status_params[:parking_status])
+      redirect_to admin_trip_path(trip, anchor: "admin-campsite-#{signup.campsite_id}"), notice: "On belay! Parking was updated for #{signup.user.full_name}."
+    else
+      redirect_to admin_trip_path(trip, anchor: "admin-campsite-#{signup.campsite_id}"), alert: "Wow, that was a whipper. #{signup.errors.full_messages.to_sentence}."
+    end
+  end
+
   def email_participant_link
     trip = @trip
     signup = trip.campsite_signups.includes(:user, :campsite).find(params[:id])
@@ -206,6 +221,10 @@ class Admin::CampsiteSignupsController < Admin::BaseController
 
   def payment_params
     params.fetch(:payment, {}).permit(:waived_reason, :manual_payment_method, :manual_paid_at, :note, :issue_refund)
+  end
+
+  def parking_status_params
+    params.require(:campsite_signup).permit(:parking_status)
   end
 
   def issue_refund?
@@ -452,7 +471,8 @@ class Admin::CampsiteSignupsController < Admin::BaseController
         status: "confirmed",
         arrival_date: nil,
         checkout_date: nil,
-        waitlist_eligible_at: nil
+        waitlist_eligible_at: nil,
+        parking_status: "first_come_first_serve"
       )
       signup.guest_signups.each do |guest_signup|
         guest_signup.update!(
@@ -460,7 +480,8 @@ class Admin::CampsiteSignupsController < Admin::BaseController
           status: "confirmed",
           arrival_date: nil,
           checkout_date: nil,
-          waitlist_eligible_at: nil
+          waitlist_eligible_at: nil,
+          parking_status: "first_come_first_serve"
         )
       end
       campsite.lock_signups_if_full!
@@ -487,7 +508,8 @@ class Admin::CampsiteSignupsController < Admin::BaseController
         status: "waitlisted",
         arrival_date: nil,
         checkout_date: nil,
-        waitlist_eligible_at: nil
+        waitlist_eligible_at: nil,
+        parking_status: "first_come_first_serve"
       )
       signup.guest_signups.each do |guest_signup|
         guest_signup.update!(
@@ -495,7 +517,8 @@ class Admin::CampsiteSignupsController < Admin::BaseController
           status: "waitlisted",
           arrival_date: nil,
           checkout_date: nil,
-          waitlist_eligible_at: nil
+          waitlist_eligible_at: nil,
+          parking_status: "first_come_first_serve"
         )
       end
       moved = true

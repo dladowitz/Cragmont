@@ -86,11 +86,32 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".stats", text: /Signed up/
     assert_select ".split-signup-stat section:first-child", text: /1/
     assert_select ".split-signup-stat section:last-child", text: /Under #{SiteSetting.current.uncounted_minor_age_limit}/
-    assert_select ".availability-stat", text: /Spaces available/
+    assert_select ".split-signup-stat section:last-child .under-minor-tooltip" do
+      assert_select ".info-tooltip-icon", text: "i"
+      assert_select ".info-tooltip-box", text: "Children under 10 don't count against Total Capacity"
+    end
+    assert_select ".availability-stat", text: /Open Spaces/
     assert_select ".availability-stat", text: /9/
-    assert_select ".stats", text: /Total capacity/
+    assert_select ".stats", text: /Total Capacity/
     assert_select ".stats", text: /Campsites/
     assert_select ".stats span", text: "Car capacity", count: 0
+    assert_select "#admin-campsite-#{campsites(:yosemite_a).id} .parking-stat" do
+      assert_select "> span", text: "Parking"
+      assert_select "> .parking-tooltip", count: 0
+      assert_select ".parking-breakdown-item", text: /Reserved/
+      assert_select ".parking-breakdown-item", text: /Open/
+    end
+    assert_select "#admin-campsite-#{campsites(:yosemite_a).id} .campsite-stats .split-signup-stat" do
+      assert_select "section:first-child", text: /1/
+      assert_select "section:first-child", text: /Signed up/
+      assert_select "section:last-child", text: /1/
+      assert_select "section:last-child", text: /Under #{SiteSetting.current.uncounted_minor_age_limit}/
+      assert_select "section:last-child .under-minor-tooltip" do
+        assert_select ".info-tooltip-icon", text: "i"
+        assert_select ".info-tooltip-box", text: "Children under 10 don't count against Total Capacity"
+      end
+    end
+    assert_select "#admin-campsite-#{campsites(:yosemite_a).id} .campsite-stats", text: /Cars/, count: 0
     assert_select ".trip-summary-header .actions a.button.secondary", text: "Edit trip"
     assert_select ".trip-summary-header .actions a.button.secondary[href='#{admin_trip_transactions_path(trips(:yosemite))}']", text: "Transactions"
     assert_select ".trip-summary-header .actions .button.danger", text: "Delete trip", count: 0
@@ -159,15 +180,29 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".campsite-notes", text: /Close to bathrooms/
     assert_select ".confirmed-signups-section" do
       assert_select "h4", "Confirmed participants"
-      assert_equal [ "Participant", "Minors", "Dates", "Payment", "Waiver", "Info", "Move to Waitlist", "Remove" ], css_select(".confirmed-signups-section > table th").map { |header| header.text.strip }
+      assert_equal [ "Participant", "Dates", "Parking", "Payment", "Waiver", "Info", "Minors", "Move to Waitlist", "Remove" ], css_select(".confirmed-signups-section > table th").map { |header| header.at_css(".tooltip-heading > span:first-child")&.text&.strip || header.text.strip }
       assert_select "td", text: "Sam Lee"
       assert_select "th", text: "Dates"
+      assert_select "th .parking-tooltip" do
+        assert_select ".info-tooltip-icon", text: "i"
+        assert_select ".info-tooltip-box", text: /Reserved Spots are assigned to the person who registered the site/
+        assert_select ".info-tooltip-box", text: /Other spots are set to Open and are first come, first serve/
+      end
       assert_select "th", text: "Attendance", count: 0
       assert_select "td", text: "6/13-6/15"
+      assert_select "form[action='#{update_parking_status_admin_trip_campsite_signup_path(trips(:yosemite), signup)}'][method='post']" do
+        assert_select "input[name='_method'][value='patch']"
+        assert_select "select[name='campsite_signup[parking_status]']" do
+          assert_select "option[value='reserved_spot']", text: "Reserved Spot"
+          assert_select "option[value='first_come_first_serve'][selected]", text: "Open Spot"
+          assert_select "option[value='overflow_parking']", text: "Overflow Lot"
+          assert_select "option[value='day_use']", text: "Day Use"
+        end
+      end
       assert_select "td", text: "Jun 13-Jun 15", count: 0
       assert_select ".missing-value", text: "Missing", count: 0
       assert_select "td", text: "Willa Wait", count: 0
-      assert_select ".admin-minor-list .minor-info-control button.info-link-button[data-action='modal#open']", text: "Mika Lee"
+      assert_select ".admin-minor-list .minor-info-control button.info-link-button[data-action='modal#open']", text: "Mika L."
       assert_select "dialog.minor-info-modal" do
         assert_select "h2", "Minor information"
         assert_select "dt", "Name"
@@ -201,6 +236,8 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select "button", text: "Waitlist"
       assert_select "button", text: "Move to Waitlist", count: 0
       assert_select "button", text: "Remove"
+      assert_select "button.admin-confirmed-signup-action-button", text: "Waitlist"
+      assert_select "button.admin-confirmed-signup-action-button", text: "Remove"
       assert_select "dialog.confirmation-modal", text: /Move Sam Lee to the waitlist\?/
       assert_select "dialog.confirmation-modal", text: /This will remove their campsite assignment and attendance dates\./
       assert_select "dialog.confirmation-modal form[action='#{move_to_waitlist_admin_trip_campsite_signup_path(trips(:yosemite), signup)}']"
@@ -210,6 +247,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select "th", text: "Status", count: 0
       assert_select ".status.confirmed-status", count: 0
     end
+    assert_select "#admin-campsite-#{campsites(:yosemite_a).id} .parking-status-groups", count: 0
     assert_select ".trip-waitlist-section" do
       assert_select "h3", "Trip waitlist"
       assert_select "tbody > tr", count: 2
@@ -521,13 +559,16 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".confirmed-signups-section" do
       assert_select "td", text: /Gina Guest/
-      assert_select "td", text: /Added by Sam Lee/
+      assert_select "td", text: /Added by Sam L\./, count: 0
+      assert_select ".admin-party-guest-kicker", count: 0
+      assert_select "tr.admin-party-primary-row", text: /Sam Lee/
+      assert_select "tr.admin-party-guest-row.admin-party-last-row", text: /Gina Guest/
       assert_select "button.missing-value.missing-link[data-action='copyable-modal#open']", text: "Missing"
       assert_select "dialog.missing-details-modal", text: /We need to collect a waiver from this guest\./
       assert_select "dialog.missing-details-modal", text: /Share this link with the guest so they can sign the waiver:/
       assert_select "a.missing-details-link[href='#{guest_link}']", text: "Waiver Link"
       assert_select "form[action=?][method='post'][data-controller='email-link'][data-action='submit->email-link#send'] button", email_participant_link_admin_trip_campsite_signup_path(trips(:yosemite), guest_signup), text: "Email link to guest"
-      assert_select "td", text: "Follows primary"
+      assert_select "td", text: "Follows primary", count: 0
     end
   end
 
@@ -568,8 +609,9 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "$80.00", sam_row.at_css(".admin-payment-amount").text.squish
 
     assert gina_row
-    assert_equal "Paid", gina_row.at_css(".admin-payment-status").text.squish
-    assert_equal "Paid by Sam Lee", gina_row.at_css(".admin-payment-covered-by").text.squish
+    assert_includes gina_row["class"], "admin-party-guest-row"
+    assert_empty gina_row.css(".admin-payment-status")
+    assert_empty gina_row.css(".admin-payment-covered-by")
     assert_empty gina_row.css(".admin-payment-amount")
     assert_empty gina_row.css(".admin-payment-control button").select { |button| button.text.squish == "Update" }
   end

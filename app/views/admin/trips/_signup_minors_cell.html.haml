@@ -1,0 +1,30 @@
+- party_guest = local_assigns.fetch(:party_guest, false)
+%td
+  - if party_guest
+    %span.admin-party-empty-cell{"aria-hidden" => "true"}
+  - elsif signup.campsite_signup_minors.any?
+    %ul.admin-minor-list
+      - signup.campsite_signup_minors.each_with_index do |minor, index|
+        %li
+          - minor_info_modal_id = "minor-info-#{signup.id}-#{minor.id || index}"
+          %div.minor-info-control{"data-controller" => "modal"}
+            %button.info-link-button{"aria-controls" => minor_info_modal_id, "data-action" => "modal#open", type: "button"}= minor.public_name
+            %dialog.signup-modal.minor-info-modal{id: minor_info_modal_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+              .signup-modal-content
+                %div
+                  %h2 Minor information
+                %dl.details-list
+                  %div
+                    %dt Name
+                    %dd= minor.full_name
+                  %div
+                    %dt Age
+                    %dd= minor.age
+                  %div
+                    %dt Added by
+                    %dd= signup.user.full_name
+                  %div
+                    %dt Relationship
+                    %dd= minor.relationship
+                .form-actions
+                  %button.button.secondary{"data-action" => "modal#close", type: "button"} Close

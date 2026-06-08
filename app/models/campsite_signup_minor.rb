@@ -8,6 +8,10 @@ class CampsiteSignupMinor < ApplicationRecord
     [ first_name, last_name ].compact_blank.join(" ")
   end
 
+  def public_name
+    "#{first_name} #{last_name.to_s.first}."
+  end
+
   def capacity_counted?
     age.to_i >= SiteSetting.current.uncounted_minor_age_limit
   end

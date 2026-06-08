@@ -39,6 +39,7 @@ Rails.application.routes.draw do
         patch :mark_no_payment_needed, on: :member
         patch :mark_already_paid, on: :member
         patch :create_payment_link, on: :member
+        patch :update_parking_status, on: :member
         post :email_participant_link, on: :member
         delete :remove_from_campsite, on: :member
         delete :remove_from_waitlist, on: :member

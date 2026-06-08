@@ -143,7 +143,7 @@
           .form-actions
             %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
   - if covered_by_primary
-    - covered_by_text = payment&.paid? ? "Paid by #{payment_signup.user.full_name}" : "Follows primary"
+    - covered_by_text = payment&.paid? ? "By #{payment_signup.user.public_name}" : "Follows primary"
     %span.muted.admin-payment-covered-by= covered_by_text
   - if !read_only && !covered_by_primary && payment&.checkout_url.present? && payment.pending?
     = link_to "Payment link", payment.checkout_url, class: "small-link", target: "_blank", rel: "noopener"

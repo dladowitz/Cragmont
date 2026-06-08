@@ -78,6 +78,18 @@ class Campsite < ApplicationRecord
     campsite_signups.pending_payment.includes(:user, :campsite_signup_minors).order(created_at: :asc)
   end
 
+  def parking_status_signups(status)
+    confirmed_signups.select { |signup| signup.parking_status == status }
+  end
+
+  def reserved_parking_count
+    parking_status_signups("reserved_spot").size
+  end
+
+  def first_come_first_serve_parking_spot_count
+    [ car_capacity - reserved_parking_count, 0 ].max
+  end
+
   def delete_blocked_by_participants?
     campsite_signups.active.exists?
   end
