@@ -1,4 +1,6 @@
 = render "admin/shared/header", title: @trip.name
+- parking_policy_tooltip = "Reserved Spots are assigned to the person who registered the site. Then to the Campsite Coordinator. Then to club members.\n\nOther spots are set to Open and are first come, first serve."
+- uncounted_minor_tooltip = "Children under 10 don't count against Total Capacity"
 - if @participant_link_signup.present?
   = render "participant_link_modal", trip: @trip, signup: @participant_link_signup
 %section.panel.trip-overview
@@ -42,25 +44,28 @@
     - if @trip.confirmed_uncounted_minor_count.positive?
       .split-signup-stat
         %section
-          %strong= @trip.confirmed_signup_count
           %span Signed up
+          %strong= @trip.confirmed_signup_count
         %section
-          %strong= @trip.confirmed_uncounted_minor_count
           %span.under-13-label
             Under #{@trip.uncounted_minor_age_limit}
+            %span.info-tooltip.under-minor-tooltip{aria: { label: uncounted_minor_tooltip }, tabindex: "0"}
+              %span.info-tooltip-icon{aria: { hidden: "true" }} i
+              %span.info-tooltip-box{role: "tooltip"}= uncounted_minor_tooltip
+          %strong= @trip.confirmed_uncounted_minor_count
     - else
       %div
-        %strong= @trip.confirmed_signup_count
         %span Signed up
+        %strong= @trip.confirmed_signup_count
     %div{:class => "availability-stat #{@trip.capacity_full? ? "danger-stat" : (@trip.almost_full? ? "warning-stat" : "success-stat")}"}
+      %span Open Spaces
       %strong= @trip.available_participant_capacity
-      %span Spaces available
     %div
+      %span Total Capacity
       %strong= @trip.total_participant_capacity
-      %span Total capacity
     %div
-      %strong= @trip.campsite_count
       %span Campsites
+      %strong= @trip.campsite_count
 %section.panel.campsites-panel
   .panel-header.campsites-panel-header
     %div
@@ -107,18 +112,37 @@
                   - else
                     = link_to "Update", edit_admin_trip_campsite_path(@trip, campsite), class: "small-link"
           .stats.campsite-stats
-            %div
-              %strong= campsite.confirmed_signup_count
-              %span Signed up
+            - if campsite.confirmed_uncounted_minor_count.positive?
+              .split-signup-stat
+                %section
+                  %span Signed up
+                  %strong= campsite.confirmed_signup_count
+                %section
+                  %span.under-13-label
+                    Under #{@trip.uncounted_minor_age_limit}
+                    %span.info-tooltip.under-minor-tooltip{aria: { label: uncounted_minor_tooltip }, tabindex: "0"}
+                      %span.info-tooltip-icon{aria: { hidden: "true" }} i
+                      %span.info-tooltip-box{role: "tooltip"}= uncounted_minor_tooltip
+                  %strong= campsite.confirmed_uncounted_minor_count
+            - else
+              %div
+                %span Signed up
+                %strong= campsite.confirmed_signup_count
             %div{:class => "availability-stat #{campsite.capacity_full? ? "danger-stat" : "success-stat"}"}
+              %span Open Spaces
               %strong= campsite.available_participant_capacity
-              %span Spaces available
             %div
+              %span Total Capacity
               %strong= campsite.participant_capacity
-              %span Capacity
-            %div
-              %strong= campsite.car_capacity
-              %span Cars
+            .parking-stat
+              %span Parking
+              .parking-breakdown
+                .parking-breakdown-item
+                  %strong= campsite.reserved_parking_count
+                  %span Reserved
+                .parking-breakdown-item
+                  %strong= campsite.first_come_first_serve_parking_spot_count
+                  %span Open
           - if campsite.notes.present?
             %p.campsite-notes
               %strong Notes:
@@ -127,7 +151,7 @@
             .confirmed-signups-section
               %h4 Confirmed participants
               - if campsite.confirmed_signups.any?
-                = render "signup_table", signups: campsite.confirmed_signups, read_only: @trip.deleted?
+                = render "signup_table", signups: campsite.confirmed_signups, read_only: @trip.deleted?, parking_tooltip: parking_policy_tooltip
               - else
                 %p.muted No confirmed participants yet.
   - else

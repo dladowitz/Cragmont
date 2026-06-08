@@ -977,6 +977,49 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "re_admin_waitlist", refund.stripe_refund_id
   end
 
+  test "admin can update participant parking status" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+
+    CampsiteSignup::PARKING_STATUSES.each do |parking_status|
+      patch update_parking_status_admin_trip_campsite_signup_url(trips(:yosemite), signup), params: {
+        campsite_signup: {
+          parking_status: parking_status
+        }
+      }
+
+      assert_redirected_to admin_trip_url(trips(:yosemite), anchor: "admin-campsite-#{campsites(:yosemite_a).id}")
+      assert_equal "On belay! Parking was updated for Sam Lee.", flash[:notice]
+      assert_equal parking_status, signup.reload.parking_status
+    end
+  end
+
+  test "admin cannot reserve more parking spots than campsite allows" do
+    campsite = campsites(:yosemite_b)
+    reserved_signup = create_campsite_signup!(campsite: campsite, user: users(:sam), parking_status: "reserved_spot")
+    second_user = User.create!(first_name: "Riley", last_name: "Driver", email: "admin-riley-driver@example.com", password: "password")
+    second_signup = create_campsite_signup!(campsite: campsite, user: second_user)
+
+    patch update_parking_status_admin_trip_campsite_signup_url(trips(:yosemite), second_signup), params: {
+      campsite_signup: {
+        parking_status: "reserved_spot"
+      }
+    }
+
+    assert reserved_signup.reload.reserved_spot?
+    assert_redirected_to admin_trip_url(trips(:yosemite), anchor: "admin-campsite-#{campsite.id}")
+    assert_match "Wow, that was a whipper.", flash[:alert]
+    assert_equal "first_come_first_serve", second_signup.reload.parking_status
+  end
+
+  test "moving participant to waitlist resets parking status" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam), parking_status: "day_use")
+
+    patch move_to_waitlist_admin_trip_campsite_signup_url(trips(:yosemite), signup)
+
+    assert signup.reload.waitlisted?
+    assert_equal "first_come_first_serve", signup.parking_status
+  end
+
   test "admin can override refund cutoff when removing paid participant" do
     travel_to Date.new(2026, 6, 6) do
       signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))

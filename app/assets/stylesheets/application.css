@@ -968,6 +968,13 @@ input[type="submit"]:disabled {
   line-height: 1.1;
 }
 
+.admin-confirmed-signup-action-button {
+  min-height: 31px;
+  padding: 7px 12px;
+  font-size: 0.75rem;
+  line-height: 1.05;
+}
+
 .admin-waitlist-campsite-control {
   display: inline-flex;
   align-items: center;
@@ -984,9 +991,15 @@ input[type="submit"]:disabled {
 
 .admin-payment-control {
   display: grid;
+  grid-template-columns: max-content max-content;
+  column-gap: 8px;
   gap: 6px;
-  align-items: start;
+  align-items: center;
   min-width: 150px;
+}
+
+.admin-payment-control > :not(.admin-payment-status, .admin-payment-amount-control, .admin-payment-covered-by) {
+  grid-column: 1 / -1;
 }
 
 .admin-payment-status,
@@ -1009,6 +1022,45 @@ input[type="submit"]:disabled {
 .admin-payment-amount-link:hover,
 .admin-payment-amount-link:focus {
   color: var(--accent-dark);
+}
+
+.admin-party-primary-row > td,
+.admin-party-guest-row > td {
+  background: #fcfffd;
+}
+
+.admin-party-primary-row > td {
+  border-top: 2px solid #9bd0ba;
+}
+
+.admin-party-primary-row > td:first-child,
+.admin-party-guest-row > td:first-child {
+  border-left: 2px solid #9bd0ba;
+}
+
+.admin-party-primary-row > td:last-child,
+.admin-party-guest-row > td:last-child {
+  border-right: 2px solid #9bd0ba;
+}
+
+.admin-party-last-row > td {
+  border-bottom: 2px solid #9bd0ba;
+}
+
+.admin-party-guest-row > td:first-child {
+  padding-left: 28px;
+}
+
+.admin-party-guest-name {
+  display: block;
+  color: var(--text);
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.admin-party-empty-cell {
+  display: block;
+  min-height: 1.2em;
 }
 
 .payment-admin-section {
@@ -1285,6 +1337,40 @@ input[type="submit"]:disabled {
   font-size: 1.8rem;
 }
 
+.stats .parking-stat {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.parking-breakdown {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: center;
+  gap: 18px;
+}
+
+.parking-breakdown-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.parking-breakdown-item strong {
+  display: inline;
+  flex: 0 0 auto;
+  line-height: 1;
+}
+
+.parking-breakdown-item span {
+  display: inline;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: inherit;
+  line-height: 1.1;
+}
+
 .split-signup-stat {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1293,8 +1379,32 @@ input[type="submit"]:disabled {
 }
 
 .split-signup-stat .under-13-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: #9fc4d1;
   font-weight: 750;
+}
+
+.split-signup-stat .under-minor-tooltip.info-tooltip {
+  display: inline-flex;
+  color: var(--muted);
+}
+
+.split-signup-stat .under-minor-tooltip.info-tooltip .info-tooltip-icon {
+  display: inline-flex;
+  flex: 0 0 18px;
+  color: currentColor;
+  font-size: 0.78rem;
+  line-height: 1;
+  text-align: center;
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+
+.split-signup-stat .under-minor-tooltip.info-tooltip .info-tooltip-box {
+  color: #fff;
+  font-size: 1rem;
 }
 
 .stats .availability-stat strong,
@@ -2095,27 +2205,77 @@ dialog.signup-modal.refund-modal .form-actions {
 
 .confirmed-participants-table th:nth-child(1),
 .confirmed-participants-table td:nth-child(1) {
-  width: 25%;
+  width: 22%;
 }
 
 .confirmed-participants-table th:nth-child(2),
 .confirmed-participants-table td:nth-child(2) {
-  width: 19%;
+  width: 17%;
 }
 
 .confirmed-participants-table th:nth-child(3),
 .confirmed-participants-table td:nth-child(3) {
-  width: 20%;
+  width: 18%;
 }
 
 .confirmed-participants-table th:nth-child(4),
 .confirmed-participants-table td:nth-child(4) {
-  width: 16%;
+  width: 13%;
 }
 
 .confirmed-participants-table th:nth-child(5),
 .confirmed-participants-table td:nth-child(5) {
-  width: 20%;
+  width: 13%;
+}
+
+.confirmed-participants-table th:nth-child(6),
+.confirmed-participants-table td:nth-child(6) {
+  width: 17%;
+}
+
+.public-party-primary-row > td,
+.public-party-guest-row > td {
+  background: #fcfffd;
+}
+
+.public-party-primary-row > td {
+  border-top: 2px solid #9bd0ba;
+}
+
+.public-party-primary-row > td:first-child,
+.public-party-guest-row > td:first-child {
+  border-left: 2px solid #9bd0ba;
+}
+
+.public-party-primary-row > td:last-child,
+.public-party-guest-row > td:last-child {
+  border-right: 2px solid #9bd0ba;
+}
+
+.public-party-last-row > td {
+  border-bottom: 2px solid #9bd0ba;
+}
+
+.public-party-guest-row > td:first-child {
+  padding-left: 28px;
+}
+
+.public-party-participant-name {
+  display: inline;
+  color: inherit;
+  font-size: inherit;
+}
+
+.admin-parking-status-form {
+  margin: 0;
+}
+
+.admin-parking-status-form select {
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+  padding: 5px 8px;
+  font-size: 0.86rem;
 }
 
 .public-added-by {
@@ -2132,6 +2292,15 @@ dialog.signup-modal.refund-modal .form-actions {
   margin: 0;
   padding-left: 0;
   list-style: none;
+}
+
+.admin-minor-list .info-link-button {
+  font-weight: inherit;
+  white-space: nowrap;
+}
+
+.participant-info-control .info-link-button {
+  font-weight: inherit;
 }
 
 .admin-linked-party-summary {
@@ -2284,6 +2453,50 @@ th {
 .info-tooltip:focus-visible .info-tooltip-box {
   opacity: 1;
   transform: translate(-50%, 0);
+}
+
+.parking-tooltip.info-tooltip {
+  color: var(--muted);
+}
+
+.parking-tooltip.info-tooltip .info-tooltip-box {
+  white-space: pre-line;
+}
+
+.parking-status-with-tooltip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.parking-status-with-tooltip .parking-status-label {
+  display: inline;
+  color: inherit;
+  font-size: inherit;
+}
+
+.stats .parking-tooltip.info-tooltip {
+  display: inline-flex;
+  justify-content: flex-start;
+  font-size: 0.9rem;
+}
+
+.stats .parking-tooltip.info-tooltip .info-tooltip-box {
+  color: #fff;
+  font-size: 1rem;
+}
+
+.stats .parking-tooltip.info-tooltip .info-tooltip-icon {
+  display: inline-flex;
+  flex: 0 0 18px;
+  color: currentColor;
+  font-size: 0.78rem;
+  line-height: 1;
+  text-align: center;
+  vertical-align: middle;
+  box-sizing: border-box;
 }
 
 .status {

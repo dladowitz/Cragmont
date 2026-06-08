@@ -63,6 +63,18 @@ class CampsiteTest < ActiveSupport::TestCase
     assert_equal 5, campsite.available_participant_capacity
   end
 
+  test "groups confirmed participants by parking status" do
+    campsite = campsites(:yosemite_a)
+    reserved_signup = create_campsite_signup!(campsite: campsite, user: users(:sam), parking_status: "reserved_spot")
+    overflow_user = User.create!(first_name: "Omar", last_name: "Overflow", email: "omar-overflow@example.com", password: "password")
+    overflow_signup = create_campsite_signup!(campsite: campsite, user: overflow_user, parking_status: "overflow_parking")
+
+    assert_equal [ reserved_signup ], campsite.parking_status_signups("reserved_spot")
+    assert_equal [ overflow_signup ], campsite.parking_status_signups("overflow_parking")
+    assert_equal 1, campsite.reserved_parking_count
+    assert_equal 1, campsite.first_come_first_serve_parking_spot_count
+  end
+
   test "campsite full status uses campsite signups" do
     campsite = campsites(:yosemite_a)
     campsite.participant_capacity.times do |index|

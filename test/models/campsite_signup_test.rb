@@ -24,6 +24,19 @@ class CampsiteSignupTest < ActiveSupport::TestCase
     end
   end
 
+  test "defaults parking status to open spot" do
+    signup = CampsiteSignup.new(campsite: campsites(:yosemite_a), user: users(:sam))
+
+    assert_equal "first_come_first_serve", signup.parking_status
+    assert_equal "Open Spot", signup.parking_status_label
+  end
+
+  test "requires known parking status" do
+    assert_raises ArgumentError do
+      CampsiteSignup.new(parking_status: "valet")
+    end
+  end
+
   test "prevents duplicate signup for the same user and trip" do
     create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     duplicate = CampsiteSignup.new(campsite: campsites(:yosemite_b), user: users(:sam))
@@ -44,6 +57,35 @@ class CampsiteSignupTest < ActiveSupport::TestCase
 
     assert signup.confirmed?
     assert_equal trips(:yosemite), signup.trip
+  end
+
+  test "reserved parking cannot exceed campsite car capacity" do
+    campsite = campsites(:yosemite_b)
+    reserved_signup = create_campsite_signup!(campsite: campsite, user: users(:sam), parking_status: "reserved_spot")
+    second_user = User.create!(first_name: "Riley", last_name: "Driver", email: "riley-driver@example.com", password: "password")
+    second_signup = create_campsite_signup!(campsite: campsite, user: second_user)
+
+    second_signup.parking_status = "reserved_spot"
+
+    assert reserved_signup.reserved_spot?
+    assert_not second_signup.valid?
+    assert_includes second_signup.errors[:parking_status], "cannot exceed the campsite parking spot count"
+  end
+
+  test "guest can be assigned any parking status" do
+    primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    guest = User.create!(first_name: "Gina", last_name: "Guest", email: "parking-guest@example.com", password: "password")
+    guest_signup = create_campsite_signup!(
+      campsite: campsites(:yosemite_a),
+      user: guest,
+      guest_of_signup: primary_signup,
+      guest_position: 1,
+      parking_status: "day_use"
+    )
+
+    assert guest_signup.valid?
+    assert guest_signup.day_use?
+    assert_equal "Day Use", guest_signup.parking_status_label
   end
 
   test "campsite must belong to the selected trip" do
@@ -170,6 +212,12 @@ class CampsiteSignupTest < ActiveSupport::TestCase
     signup.campsite_signup_minors.build(first_name: "Teen", last_name: "Minor", age: 12, relationship: "Child")
 
     assert_equal "1 under 10yrs and 1 over 10yrs", signup.public_minor_age_summary(age_limit: 10)
+  end
+
+  test "minor public name uses first name and last initial" do
+    minor = CampsiteSignupMinor.new(first_name: "Mika", last_name: "Lee")
+
+    assert_equal "Mika L.", minor.public_name
   end
 
   test "primary signup can have multiple guests" do

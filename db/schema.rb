@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_06_123000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_08_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -126,6 +126,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_06_123000) do
     t.datetime "created_at", null: false
     t.bigint "guest_of_signup_id"
     t.integer "guest_position"
+    t.string "parking_status", default: "first_come_first_serve", null: false
     t.string "status", default: "confirmed", null: false
     t.bigint "trip_id", null: false
     t.datetime "updated_at", null: false
@@ -142,6 +143,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_06_123000) do
     t.string "waiver_text_digest"
     t.string "waiver_user_agent"
     t.index ["arrival_date"], name: "index_campsite_signups_on_arrival_date"
+    t.index ["campsite_id", "parking_status"], name: "index_campsite_signups_on_campsite_parking_status"
     t.index ["campsite_id"], name: "index_campsite_signups_on_campsite_id"
     t.index ["checkout_date"], name: "index_campsite_signups_on_checkout_date"
     t.index ["guest_of_signup_id", "guest_position"], name: "index_campsite_signups_on_guest_signup_position", where: "(guest_of_signup_id IS NOT NULL)"
