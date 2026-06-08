@@ -1,12 +1,13 @@
 - payment_signup = signup.primary_signup
 - payment = payment_signup.current_payment
-- payment_label = payment.present? ? payment.status.titleize : "Unpaid"
+- payment_label = payment&.status&.titleize
 - payment_amount = payment.present? && !signup.guest? ? format_cents(payment.amount_cents) : nil
 - payment_status_class = payment&.failed? ? "danger-status" : ("warning-status" if payment&.partially_refunded?)
 - covered_by_primary = signup.guest?
 - read_only = local_assigns.fetch(:read_only, false)
 .admin-payment-control
-  %span.status.admin-payment-status{class: payment_status_class}= payment_label
+  - if payment.present?
+    %span.status.admin-payment-status{class: payment_status_class}= payment_label
   - if payment_amount.present?
     %div.admin-payment-amount-control{"data-controller" => "modal"}
       %button.admin-payment-amount.admin-payment-amount-link{"data-action" => "modal#open", "data-payment-details-payment-id" => payment.id, type: "button"}= payment_amount
@@ -147,44 +148,3 @@
     %span.muted.admin-payment-covered-by= covered_by_text
   - if !read_only && !covered_by_primary && payment&.checkout_url.present? && payment.pending?
     = link_to "Payment link", payment.checkout_url, class: "small-link", target: "_blank", rel: "noopener"
-  - if !read_only && !covered_by_primary && (payment.blank? || payment.pending? || payment.expired? || payment.failed?)
-    %div{"data-controller" => "modal"}
-      %button.button.secondary.admin-table-action-button{"data-action" => "modal#open", type: "button"} Update
-      %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
-        .signup-modal-content
-          %div
-            %h2 Payment for #{signup.user.full_name}
-            - if missing_dates || missing_waiver
-              %p.muted Share the waiver and date selection link before creating a Stripe payment link.
-              = link_to "Waiver, date, and payment link", participant_details_link, class: "missing-details-link"
-          %section.payment-admin-section
-            %h3 No payment needed
-            = form_with url: mark_no_payment_needed_admin_trip_campsite_signup_path(trip, signup), method: :patch, class: "admin-form" do |form|
-              .field
-                = required_label_tag "payment_#{signup.id}_waived_reason", "Reason"
-                = text_area_tag "payment[waived_reason]", "", id: "payment_#{signup.id}_waived_reason", required: true, rows: 2
-              .form-actions
-                = submit_tag "Mark no payment needed", class: "button secondary"
-          %section.payment-admin-section
-            %h3 Already paid
-            = form_with url: mark_already_paid_admin_trip_campsite_signup_path(trip, signup), method: :patch, class: "admin-form" do |form|
-              .form-grid
-                %div
-                  = required_label_tag "payment_#{signup.id}_manual_payment_method", "Method"
-                  = select_tag "payment[manual_payment_method]", options_for_select([["Venmo", "venmo"], ["Zelle", "zelle"], ["Cash", "cash"], ["Check", "check"], ["Other", "other"]]), include_blank: "Choose method", id: "payment_#{signup.id}_manual_payment_method", required: true
-                %div
-                  = required_label_tag "payment_#{signup.id}_manual_paid_at", "Paid at"
-                  = datetime_field_tag "payment[manual_paid_at]", Time.current.strftime("%Y-%m-%dT%H:%M"), id: "payment_#{signup.id}_manual_paid_at", required: true
-              .field
-                = label_tag "payment_#{signup.id}_note", "Note"
-                = text_area_tag "payment[note]", "", id: "payment_#{signup.id}_note", rows: 2
-              .form-actions
-                = submit_tag "Mark already paid", class: "button secondary"
-          %section.payment-admin-section
-            %h3 Stripe payment link
-            - if missing_dates || missing_waiver
-              %p.muted Dates and waiver are required before creating a payment link.
-            - else
-              = button_to "Create payment link", create_payment_link_admin_trip_campsite_signup_path(trip, signup), method: :patch, class: "button secondary"
-          .form-actions
-            %button.button.secondary{"data-action" => "modal#close", type: "button"} Close

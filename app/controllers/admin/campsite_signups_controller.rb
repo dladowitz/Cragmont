@@ -51,11 +51,12 @@ class Admin::CampsiteSignupsController < Admin::BaseController
     trip = @trip
     signup = trip.campsite_signups.find(params[:id])
     campsite = trip.campsites.find(move_to_campsite_params[:campsite_id])
+    return if invalid_waive_payment_params?(trip, move_to_campsite_params)
 
     if signup.confirmed?
       redirect_to admin_trip_path(trip), alert: "#{signup.user.full_name} is already confirmed for this trip."
-    elsif move_waitlisted_signup_to_campsite(signup, campsite)
-      redirect_to admin_trip_path(trip), notice: "#{signup.user.full_name} was moved to #{campsite.campground.name} site #{campsite.site_number}."
+    elsif move_waitlisted_signup_to_campsite(signup, campsite, waive_payment: waive_payment?(move_to_campsite_params))
+      redirect_to admin_added_participant_redirect_path(trip, campsite, signup), notice: "#{signup.user.full_name} was moved to #{campsite.campground.name} site #{campsite.site_number}."
     else
       redirect_to admin_trip_path(trip), alert: signup.errors.full_messages.to_sentence
     end
@@ -100,69 +101,6 @@ class Admin::CampsiteSignupsController < Admin::BaseController
       redirect_to admin_trip_path(trip), alert: "Wow, that was a whipper. #{signup.user.full_name} is not on the waitlist."
     elsif remove_waitlisted_signup(signup)
       redirect_to admin_trip_path(trip), notice: "Off belay! #{signup.user.full_name} was removed from the waitlist."
-    else
-      redirect_to admin_trip_path(trip), alert: signup.errors.full_messages.to_sentence
-    end
-  end
-
-  def mark_no_payment_needed
-    trip = @trip
-    signup = trip.campsite_signups.find(params[:id])
-
-    if payment_params[:waived_reason].blank?
-      redirect_to admin_trip_path(trip), alert: "Wow, that was a whipper. Add a note for why no payment is needed."
-    else
-      CampsiteSignupPaymentLifecycle.mark_waived!(
-        signup: signup,
-        pricing: pricing_for(signup),
-        reason: payment_params[:waived_reason],
-        created_by: current_user
-      )
-      redirect_to admin_trip_path(trip), notice: "On belay! Payment was marked as not needed for #{signup.user.full_name}."
-    end
-  end
-
-  def mark_already_paid
-    trip = @trip
-    signup = trip.campsite_signups.find(params[:id])
-
-    if signup.arrival_date.blank? || signup.checkout_date.blank?
-      redirect_to admin_trip_path(trip), alert: "Wow, that was a whipper. Add attendance dates before marking payment."
-    elsif payment_params[:manual_payment_method].blank?
-      redirect_to admin_trip_path(trip), alert: "Wow, that was a whipper. Choose how this participant already paid."
-    else
-      CampsiteSignupPaymentLifecycle.mark_manual_paid!(
-        signup: signup,
-        pricing: pricing_for(signup),
-        method: payment_params[:manual_payment_method],
-        paid_at: manual_paid_at,
-        note: payment_params[:note],
-        created_by: current_user
-      )
-      redirect_to admin_trip_path(trip), notice: "On belay! Payment was marked as already paid for #{signup.user.full_name}."
-    end
-  end
-
-  def create_payment_link
-    trip = @trip
-    signup = trip.campsite_signups.find(params[:id])
-
-    if signup.arrival_date.blank? || signup.checkout_date.blank? || !signup.waiver_signed?
-      redirect_to admin_trip_path(trip), alert: "Share the waiver and date selection link before creating a payment link."
-      return
-    end
-
-    pricing = pricing_for(signup)
-    if pricing.free?
-      CampsiteSignupPaymentLifecycle.mark_waived!(
-        signup: signup,
-        pricing: pricing,
-        reason: "No payment due",
-        created_by: current_user
-      )
-      redirect_to admin_trip_path(trip), notice: "No payment is due for #{signup.user.full_name}."
-    elsif create_admin_payment_checkout(trip, signup, pricing)
-      redirect_to admin_trip_path(trip), notice: "Payment link was created for #{signup.user.full_name}."
     else
       redirect_to admin_trip_path(trip), alert: signup.errors.full_messages.to_sentence
     end
@@ -220,7 +158,7 @@ class Admin::CampsiteSignupsController < Admin::BaseController
   end
 
   def payment_params
-    params.fetch(:payment, {}).permit(:waived_reason, :manual_payment_method, :manual_paid_at, :note, :issue_refund)
+    params.fetch(:payment, {}).permit(:issue_refund)
   end
 
   def parking_status_params
@@ -239,23 +177,23 @@ class Admin::CampsiteSignupsController < Admin::BaseController
     add_participant_params[:participant_account_status] == "new"
   end
 
-  def waive_payment?
-    ActiveModel::Type::Boolean.new.cast(add_participant_params[:waive_payment])
+  def waive_payment?(source_params = add_participant_params)
+    ActiveModel::Type::Boolean.new.cast(source_params[:waive_payment])
   end
 
-  def campsite_coordinator_waiver?
-    waive_payment? && add_participant_params[:waived_reason_type] == "campsite_coordinator"
+  def campsite_coordinator_waiver?(source_params = add_participant_params)
+    waive_payment?(source_params) && source_params[:waived_reason_type] == "campsite_coordinator"
   end
 
-  def invalid_waive_payment_params?(trip)
-    return false unless waive_payment?
+  def invalid_waive_payment_params?(trip, source_params = add_participant_params)
+    return false unless waive_payment?(source_params)
 
-    if WAIVED_REASON_TYPES.exclude?(add_participant_params[:waived_reason_type])
+    if WAIVED_REASON_TYPES.exclude?(source_params[:waived_reason_type])
       redirect_to admin_trip_path(trip), alert: "Wow, that was a whipper. Choose why this participant's payment is waived."
       return true
     end
 
-    return false unless add_participant_params[:waived_reason_type] == "other" && add_participant_params[:waived_reason].blank?
+    return false unless source_params[:waived_reason_type] == "other" && source_params[:waived_reason].blank?
 
     redirect_to admin_trip_path(trip), alert: "Wow, that was a whipper. Add a reason for waiving this participant's payment."
     true
@@ -347,28 +285,6 @@ class Admin::CampsiteSignupsController < Admin::BaseController
     )
   end
 
-  def manual_paid_at
-    Time.zone.parse(payment_params[:manual_paid_at].presence || Time.current.to_s)
-  rescue ArgumentError
-    Time.current
-  end
-
-  def create_admin_payment_checkout(trip, signup, pricing)
-    CampsiteSignupPaymentLifecycle.create_pending_checkout!(
-      signup: signup,
-      pricing: pricing,
-      success_url: admin_trip_url(trip, stripe_checkout: "success"),
-      cancel_url: admin_trip_url(trip, stripe_checkout: "canceled"),
-      created_by: current_user,
-      previous_signup_status: signup.status,
-      expires_at: CampsiteSignupPaymentLifecycle::ADMIN_PENDING_EXPIRATION.from_now
-    )
-    true
-  rescue StripeConfigurationError, Stripe::StripeError => error
-    signup.errors.add(:base, error.message)
-    false
-  end
-
   def build_admin_assigned_signup(trip, campsite, user)
     trip.campsite_signups.build(
       user: user,
@@ -439,27 +355,27 @@ class Admin::CampsiteSignupsController < Admin::BaseController
     "date selection, waiver, and payment link"
   end
 
-  def apply_admin_waived_payment!(signup)
-    signup.trip.update!(campsite_coordinator: signup.user) if campsite_coordinator_waiver?
+  def apply_admin_waived_payment!(signup, source_params = add_participant_params)
+    signup.trip.update!(campsite_coordinator: signup.user) if campsite_coordinator_waiver?(source_params)
     CampsiteSignupPaymentLifecycle.mark_waived!(
       signup: signup,
       pricing: CampsiteSignupPricing.zero,
-      reason: waived_payment_reason,
+      reason: waived_payment_reason(source_params),
       created_by: current_user
     )
   end
 
-  def waived_payment_reason
-    return CAMPSITE_COORDINATOR_WAIVED_REASON if campsite_coordinator_waiver?
+  def waived_payment_reason(source_params = add_participant_params)
+    return CAMPSITE_COORDINATOR_WAIVED_REASON if campsite_coordinator_waiver?(source_params)
 
-    add_participant_params[:waived_reason]
+    source_params[:waived_reason]
   end
 
   def move_to_campsite_params
-    params.require(:campsite_signup).permit(:campsite_id)
+    params.require(:campsite_signup).permit(:campsite_id, :waive_payment, :waived_reason_type, :waived_reason)
   end
 
-  def move_waitlisted_signup_to_campsite(signup, campsite)
+  def move_waitlisted_signup_to_campsite(signup, campsite, waive_payment: false)
     moved = false
 
     CampsiteSignup.transaction do
@@ -484,6 +400,7 @@ class Admin::CampsiteSignupsController < Admin::BaseController
           parking_status: "unassigned"
         )
       end
+      apply_admin_waived_payment!(signup, move_to_campsite_params) if waive_payment
       campsite.lock_signups_if_full!
       moved = true
     end

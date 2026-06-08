@@ -303,7 +303,15 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select ".admin-campsite-choice-stats", text: /capacity/
       assert_select "form[action='#{move_to_campsite_admin_trip_campsite_signup_path(trips(:yosemite), waitlisted_signup)}']" do
         assert_select "input[name='campsite_signup[campsite_id]'][value='#{campsites(:yosemite_a).id}']"
-        assert_select "button", text: "Add"
+        assert_select "legend", text: "Waive Payment?"
+        assert_select "input[type='radio'][name='campsite_signup[waive_payment]'][value='0'][checked]"
+        assert_select "input[type='radio'][name='campsite_signup[waive_payment]'][value='1']"
+        assert_select "select[name='campsite_signup[waived_reason_type]'][disabled]" do
+          assert_select "option[value='campsite_coordinator']", text: "Campsite Coordinator"
+          assert_select "option[value='other']", text: "Other"
+        end
+        assert_select "textarea[name='campsite_signup[waived_reason]'][disabled]"
+        assert_select "input[type='submit'][value='Add']"
       end
       assert_select "th", text: /Remove/
       assert_select ".tooltip-heading.info-tooltip[aria-label='Removes Participant from Waitlist']", text: /Remove/
@@ -615,6 +623,22 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_empty gina_row.css(".admin-payment-covered-by")
     assert_empty gina_row.css(".admin-payment-amount")
     assert_empty gina_row.css(".admin-payment-control button").select { |button| button.text.squish == "Update" }
+  end
+
+  test "trip details does not show unpaid update controls for participant without payment" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+
+    get admin_trip_url(trips(:yosemite))
+
+    assert_response :success
+    rows = css_select(".confirmed-signups-section table").first.css("> tbody > tr")
+    sam_row = rows.find { |row| row.css("td").first&.text&.squish&.include?(signup.user.full_name) }
+
+    assert sam_row
+    assert_empty sam_row.css(".admin-payment-status")
+    assert_empty sam_row.css(".admin-payment-control button").select { |button| button.text.squish == "Update" }
+    assert_no_match(/Unpaid/, sam_row.text)
+    assert_no_match(/Payment for #{signup.user.full_name}/, sam_row.text)
   end
 
   test "trip details links payment amount to details modal for partially refunded payment" do

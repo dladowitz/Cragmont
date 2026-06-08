@@ -15,10 +15,19 @@ export default class extends Controller {
   ]
 
   connect() {
-    this.toggle()
+    if (this.hasOptionTarget) {
+      this.toggle()
+    } else {
+      this.toggleWaivePaymentFields()
+    }
   }
 
   toggle() {
+    if (!this.hasOptionTarget) {
+      this.toggleWaivePaymentFields()
+      return
+    }
+
     const useExistingAccount = this.selectedOptionValue === "existing"
 
     this.existingFieldsTarget.hidden = !useExistingAccount
