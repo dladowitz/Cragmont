@@ -1063,13 +1063,6 @@ input[type="submit"]:disabled {
   min-height: 1.2em;
 }
 
-.payment-admin-section {
-  display: grid;
-  gap: 10px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-}
-
 .trip-payment-requests-panel {
   display: grid;
   gap: 16px;
@@ -1713,6 +1706,45 @@ dialog.signup-modal.refund-modal .form-actions {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fbfaf7;
+}
+
+.admin-waitlist-campsite-add-form {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-waitlist-campsite-choice-row {
+  grid-template-columns: auto minmax(220px, 1fr) auto minmax(220px, auto);
+}
+
+.admin-waitlist-campsite-choice-row.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgb(45 129 105 / 20%);
+}
+
+.admin-campsite-choice-selector {
+  display: flex;
+  align-items: center;
+}
+
+.admin-campsite-choice-selector input[type="radio"] {
+  width: auto;
+  padding: 0;
+}
+
+.admin-waitlist-waive-options {
+  grid-template-columns: repeat(2, auto);
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 12px;
+}
+
+.admin-waitlist-waive-options legend {
+  font-size: 0.9rem;
+}
+
+.admin-waitlist-waive-fields {
+  grid-column: 2 / -1;
 }
 
 .admin-campsite-choice-copy,

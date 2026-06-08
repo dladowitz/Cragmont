@@ -11,14 +11,27 @@ export default class extends Controller {
     "waiveReasonFields",
     "waiveReasonSelect",
     "otherWaiveReasonField",
-    "otherWaiveReasonInput"
+    "otherWaiveReasonInput",
+    "campsiteOption",
+    "campsiteChoiceRow"
   ]
 
   connect() {
-    this.toggle()
+    if (this.hasCampsiteOptionTarget) {
+      this.toggleSelectedCampsite()
+    } else if (this.hasOptionTarget) {
+      this.toggle()
+    } else {
+      this.toggleWaivePaymentFields()
+    }
   }
 
   toggle() {
+    if (!this.hasOptionTarget) {
+      this.toggleWaivePaymentFields()
+      return
+    }
+
     const useExistingAccount = this.selectedOptionValue === "existing"
 
     this.existingFieldsTarget.hidden = !useExistingAccount
@@ -56,5 +69,49 @@ export default class extends Controller {
 
   get selectedWaiveOptionValue() {
     return this.waiveOptionTargets.find((option) => option.checked)?.value
+  }
+
+  toggleSelectedCampsite() {
+    if (!this.hasCampsiteOptionTarget) return
+
+    const selectedCampsiteId = this.campsiteOptionTargets.find((option) => option.checked)?.value
+
+    this.campsiteChoiceRowTargets.forEach((row) => {
+      const selected = row.dataset.campsiteId === selectedCampsiteId
+      row.classList.toggle("is-selected", selected)
+      this.toggleWaitlistPaymentControls(row, selected)
+    })
+  }
+
+  toggleWaitlistPaymentControls(row, selected) {
+    const waiveOptions = Array.from(row.querySelectorAll("input[name='campsite_signup[waive_payment]']"))
+    const reasonFields = row.querySelector(".admin-waitlist-waive-fields")
+    const reasonSelect = row.querySelector("select[name='campsite_signup[waived_reason_type]']")
+    const otherReasonField = row.querySelector(".admin-waitlist-other-waive-reason-field")
+    const otherReasonInput = row.querySelector("textarea[name='campsite_signup[waived_reason]']")
+
+    waiveOptions.forEach((option) => {
+      option.disabled = !selected
+      if (!selected) option.checked = false
+    })
+
+    if (selected && !waiveOptions.some((option) => option.checked)) {
+      const noWaiverOption = waiveOptions.find((option) => option.value === "0")
+      if (noWaiverOption) noWaiverOption.checked = true
+    }
+
+    const waivePayment = selected && waiveOptions.some((option) => option.checked && option.value === "1")
+    const otherReason = waivePayment && reasonSelect?.value === "other"
+
+    if (reasonFields) reasonFields.hidden = !waivePayment
+    if (reasonSelect) {
+      reasonSelect.disabled = !waivePayment
+      reasonSelect.required = waivePayment
+    }
+    if (otherReasonField) otherReasonField.hidden = !otherReason
+    if (otherReasonInput) {
+      otherReasonInput.disabled = !otherReason
+      otherReasonInput.required = otherReason
+    }
   }
 }

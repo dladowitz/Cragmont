@@ -5,7 +5,10 @@ export default class extends Controller {
     availableParticipantCapacity: Number,
     directSignupIntent: String,
     existingAdultGuestCount: Number,
+    existingAdultNames: Array,
     existingCountedMinorCount: Number,
+    existingCountedMinorNames: Array,
+    existingMinorLineItems: Array,
     extraNightFeeCents: Number,
     firstTwoNightsFeeCents: Number,
     freeSubmitText: String,
@@ -13,6 +16,7 @@ export default class extends Controller {
     minorFeeCents: Number,
     nextSubmitText: String,
     paySubmitText: String,
+    primaryParticipantName: String,
     showCapacityWarning: Boolean,
     uncountedMinorAgeLimit: Number,
     waitlistIntent: String,
@@ -479,11 +483,17 @@ export default class extends Controller {
 
   adultPaymentLineItems(nightCount) {
     const details = this.adultPaymentDetails(nightCount)
-    const items = [this.paymentLineItem("You", details)]
-    const additionalAdultCount = this.existingAdultGuestCountValue + this.visibleAdultCount()
+    const primaryLabel = this.hasPrimaryParticipantNameValue && this.primaryParticipantNameValue ? this.primaryParticipantNameValue : "You"
+    const items = [this.paymentLineItem(primaryLabel, details)]
+    const visibleAdultNames = this.visibleAdultRows().map((row) => this.personNameFromRow(row))
+    const adultLabels = [
+      ...this.existingAdultNamesValue,
+      ...visibleAdultNames
+    ]
+    const additionalAdultCount = Math.max(this.existingAdultGuestCountValue + this.visibleAdultCount(), adultLabels.length)
 
     for (let index = 0; index < additionalAdultCount; index += 1) {
-      items.push(this.paymentLineItem(`Adult ${index + 2}`, details))
+      items.push(this.paymentLineItem(adultLabels[index] || `Adult ${index + 2}`, details))
     }
 
     return items
@@ -492,13 +502,19 @@ export default class extends Controller {
   minorPaymentLineItems(nightCount) {
     const items = []
 
-    for (let index = 0; index < this.existingCountedMinorCountValue; index += 1) {
-      items.push(this.paymentLineItem(`Minor ${index + 1}`, this.countedMinorPaymentDetails(nightCount)))
-    }
+    this.existingMinorLineItemsValue.forEach((minor) => {
+      const age = Number.parseInt(minor.age, 10)
+      const label = this.minorPaymentLabel(minor.name, age, `Minor ${items.length + 1}`)
+      const details = Number.isInteger(age) && age < this.uncountedMinorAgeLimitValue ? this.freeMinorPaymentDetails(nightCount) : this.countedMinorPaymentDetails(nightCount)
 
-    this.visibleMinorRows().forEach((row, index) => {
+      items.push(this.paymentLineItem(label, details))
+    })
+
+    this.visibleMinorRows().forEach((row) => {
       const age = this.minorAge(row)
-      const label = Number.isInteger(age) ? `Minor ${items.length + 1} (age ${age})` : `Minor ${items.length + 1}`
+      const name = this.personNameFromRow(row)
+      const fallbackLabel = `Minor ${items.length + 1}`
+      const label = this.minorPaymentLabel(name, age, fallbackLabel)
 
       if (!Number.isInteger(age)) {
         items.push(this.paymentLineItem(label, [{ label: "Age required", amountCents: 0, amountText: "Enter age" }]))
@@ -537,11 +553,11 @@ export default class extends Controller {
   }
 
   freeMinorPaymentDetails(nightCount) {
-    const details = [{ label: "First 2 nights", amountCents: 0, amountText: "Free" }]
+    const details = [{ label: "First 2 nights", amountCents: 0, amountText: "$0.00" }]
     const extraNights = this.extraNightCount(nightCount)
 
     if (extraNights > 0) {
-      details.push({ label: this.additionalNightLabel(extraNights, 0), amountCents: 0, amountText: "Free" })
+      details.push({ label: this.additionalNightLabel(extraNights, 0), amountCents: 0, amountText: "$0.00" })
     }
 
     return details
@@ -613,10 +629,14 @@ export default class extends Controller {
   }
 
   visibleAdultCount() {
-    if (!this.hasGuestFieldsTarget || this.guestFieldsTarget.hidden) return 0
+    return this.visibleAdultRows().length
+  }
+
+  visibleAdultRows() {
+    if (!this.hasGuestFieldsTarget || this.guestFieldsTarget.hidden) return []
 
     return Array.from(this.guestFieldsTarget.querySelectorAll("[data-party-row]"))
-      .filter((row) => !row.hidden).length
+      .filter((row) => !row.hidden)
   }
 
   capacityCountedMinorCount() {
@@ -639,6 +659,25 @@ export default class extends Controller {
     const age = Number.parseInt(row.querySelector("input[type='number']")?.value || "", 10)
 
     return Number.isInteger(age) ? age : null
+  }
+
+  minorPaymentLabel(name, age, fallbackLabel) {
+    const label = name || fallbackLabel
+    if (!Number.isInteger(age)) return label
+
+    const ageGroup = age < this.uncountedMinorAgeLimitValue ? "under" : "over"
+    return `${label} (${ageGroup} ${this.uncountedMinorAgeLimitValue})`
+  }
+
+  personNameFromRow(row) {
+    const textInputs = Array.from(row.querySelectorAll("input[type='text']"))
+    const name = textInputs
+      .slice(0, 2)
+      .map((input) => input.value.trim())
+      .filter(Boolean)
+      .join(" ")
+
+    return name
   }
 
   kebabCase(value) {

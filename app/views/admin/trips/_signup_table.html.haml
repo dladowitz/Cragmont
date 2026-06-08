@@ -51,10 +51,25 @@
       - signup_trip = trip || signup.trip
       - missing_dates = !waitlist && (signup.arrival_date.blank? || signup.checkout_date.blank?)
       - missing_waiver = !waitlist && !signup.waiver_signed?
+      - missing_payment = !waitlist && !signup.guest? && !signup.payment_paid_or_settled?
+      - missing_participant_details = missing_dates || missing_waiver || missing_payment
       - details_link_purpose = signup.guest? ? :complete_guest_details : :complete_participant_details
-      - missing_details_copy = signup.guest? ? "We need to collect a waiver from this guest." : "We need to collect waiver and attendance dates from this participant."
-      - missing_details_share_copy = signup.guest? ? "Share this link with the guest so they can sign the waiver:" : "Share this link with the participant so they can sign the waiver and select dates:"
-      - missing_details_link_text = signup.guest? ? "Waiver Link" : "Waiver and Date Selection Link"
+      - if signup.guest?
+        - missing_details_copy = "We need to collect a waiver from this guest."
+        - missing_details_share_copy = "Share this link with the guest so they can sign the waiver:"
+        - missing_details_link_text = "Waiver Link"
+      - elsif missing_payment && (missing_dates || missing_waiver)
+        - missing_details_copy = "We need to collect waiver, attendance dates, and payment from this participant."
+        - missing_details_share_copy = "Share this link with the participant so they can sign the waiver, select dates, and pay for the trip:"
+        - missing_details_link_text = "Date selection, waiver, and payment link"
+      - elsif missing_payment
+        - missing_details_copy = "We need to collect payment from this participant."
+        - missing_details_share_copy = "Share this link with the participant so they can pay for the trip:"
+        - missing_details_link_text = "Date selection, waiver, and payment link"
+      - else
+        - missing_details_copy = "We need to collect waiver and attendance dates from this participant."
+        - missing_details_share_copy = "Share this link with the participant so they can sign the waiver and select dates:"
+        - missing_details_link_text = "Waiver and Date Selection Link"
       - missing_details_email_text = signup.guest? ? "Email link to guest" : "Email link to participant"
       - participant_details_link = trip_url(signup_trip, complete_signup: signup.signed_id(purpose: details_link_purpose), anchor: "campsite-#{signup.campsite_id}") unless waitlist
       - party_primary = !waitlist && !signup.guest? && signup.includes_guests?
@@ -71,6 +86,29 @@
             - guest_names = signup.guest_signups.map { |guest_signup| guest_signup.user.full_name }.to_sentence
             %span.muted.admin-linked-party-summary
               = "#{signup.guest_signups.size} #{'guest'.pluralize(signup.guest_signups.size)}: #{guest_names}"
+          - if !read_only && missing_participant_details
+            %dialog.signup-modal.missing-details-modal{"data-action" => "click->copyable-modal#closeOnBackdrop", "data-copyable-modal-target" => "dialog"}
+              .signup-modal-content
+                %div
+                  %h2 Missing participant details
+                  %p= missing_details_copy
+                  %p= missing_details_share_copy
+                .admin-participant-link-share
+                  = link_to missing_details_link_text, participant_details_link, class: "missing-details-link", "data-copyable-modal-target" => "source"
+                  .admin-participant-link-actions
+                    %button.button.secondary.copy-link-button.admin-participant-link-action{"data-action" => "copyable-modal#copy", type: "button"}
+                      %span.copy-link-icon.copy-icon{aria: { hidden: "true" }}
+                        %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
+                          %rect{height: "12", rx: "2", stroke: "currentColor", "stroke-width" => "2", width: "12", x: "8", y: "8"}
+                          %path{d: "M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2", stroke: "currentColor", "stroke-linecap" => "round", "stroke-width" => "2"}
+                      %span.copy-link-icon.check-icon{aria: { hidden: "true" }}
+                        %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
+                          %path{d: "M20 6 9 17l-5-5", stroke: "currentColor", "stroke-linecap" => "round", "stroke-linejoin" => "round", "stroke-width" => "2.5"}
+                      %span Copy Link
+                    - if signup.user.email.present?
+                      = button_to missing_details_email_text, email_participant_link_admin_trip_campsite_signup_path(signup_trip, signup), method: :post, class: "button secondary admin-participant-link-action", form: { class: "admin-participant-link-action-form", data: { controller: "email-link", action: "submit->email-link#send" } }
+                .form-actions
+                  %button.button.secondary{"data-action" => "copyable-modal#close", type: "button"} Close
         - if waitlist
           %td
             - member_status_text = signup.user.member? ? "Yes" : "No"
@@ -117,26 +155,50 @@
                   %div
                     %h2 Add #{signup.user.full_name} to a campsite
                     %p.muted Admins can add waitlisted participants even when a campsite is at capacity.
-                  .admin-campsite-choice-list
-                    - campsites.each do |campsite|
-                      .admin-campsite-choice-row
-                        .admin-campsite-choice-copy
-                          %strong
-                            = campsite.campground.name
-                            site #{campsite.site_number}
-                          %span.muted
-                            = campsite.arrival_date.strftime("%b %-d")
-                            to #{campsite.checkout_date.strftime("%b %-d")}
-                        .admin-campsite-choice-stats
-                          %span
-                            %strong= campsite.confirmed_signup_count
-                            signed up
-                          %span
-                            %strong= campsite.participant_capacity
-                            capacity
-                        = button_to "Add", move_to_campsite_admin_trip_campsite_signup_path(trip, signup), method: :patch, params: { campsite_signup: { campsite_id: campsite.id } }, class: "button secondary"
-                  .form-actions
-                    %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
+                  = form_with url: move_to_campsite_admin_trip_campsite_signup_path(trip, signup), method: :patch, class: "admin-waitlist-campsite-add-form", data: { controller: "admin-participant" } do
+                    .admin-campsite-choice-list
+                      - campsites.each_with_index do |campsite, index|
+                        - selected_campsite = index.zero?
+                        - campsite_option_id = "waitlist-add-campsite-#{signup.id}-#{campsite.id}"
+                        - waive_payment_no_id = "waitlist-add-waive-payment-no-#{signup.id}-#{campsite.id}"
+                        - waive_payment_yes_id = "waitlist-add-waive-payment-yes-#{signup.id}-#{campsite.id}"
+                        - waive_reason_id = "waitlist-add-waive-reason-#{signup.id}-#{campsite.id}"
+                        - other_waive_reason_id = "waitlist-add-other-waive-reason-#{signup.id}-#{campsite.id}"
+                        .admin-campsite-choice-row.admin-waitlist-campsite-choice-row{class: ("is-selected" if selected_campsite), data: { admin_participant_target: "campsiteChoiceRow", campsite_id: campsite.id }}
+                          .admin-campsite-choice-selector
+                            = radio_button_tag "campsite_signup[campsite_id]", campsite.id, selected_campsite, id: campsite_option_id, data: { admin_participant_target: "campsiteOption", action: "admin-participant#toggleSelectedCampsite" }
+                          %label.admin-campsite-choice-copy{for: campsite_option_id}
+                            %strong
+                              = campsite.campground.name
+                              site #{campsite.site_number}
+                            %span.muted
+                              = campsite.arrival_date.strftime("%b %-d")
+                              to #{campsite.checkout_date.strftime("%b %-d")}
+                          .admin-campsite-choice-stats
+                            %span
+                              %strong= campsite.confirmed_signup_count
+                              signed up
+                            %span
+                              %strong= campsite.participant_capacity
+                              capacity
+                          %fieldset.signup-kind-options.admin-add-participant-options.admin-waitlist-waive-options
+                            %legend Waive Payment?
+                            %label{for: waive_payment_no_id}
+                              = radio_button_tag "campsite_signup[waive_payment]", "0", selected_campsite, id: waive_payment_no_id, disabled: !selected_campsite, data: { action: "admin-participant#toggleSelectedCampsite" }
+                              %span No
+                            %label{for: waive_payment_yes_id}
+                              = radio_button_tag "campsite_signup[waive_payment]", "1", false, id: waive_payment_yes_id, disabled: !selected_campsite, data: { action: "admin-participant#toggleSelectedCampsite" }
+                              %span Yes
+                          %section.admin-add-participant-fields.admin-waitlist-waive-fields{hidden: true}
+                            .field
+                              = required_label_tag waive_reason_id, "Reason"
+                              = select_tag "campsite_signup[waived_reason_type]", options_for_select([["Campsite Coordinator", "campsite_coordinator"], ["Other", "other"]]), include_blank: "Choose a reason", id: waive_reason_id, disabled: true, data: { action: "admin-participant#toggleSelectedCampsite" }
+                            .field.admin-waitlist-other-waive-reason-field{hidden: true}
+                              = required_label_tag other_waive_reason_id, "Other reason"
+                              = text_area_tag "campsite_signup[waived_reason]", "", id: other_waive_reason_id, rows: 2, disabled: true
+                    .form-actions
+                      %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
+                      = submit_tag "Add", class: "button"
           %td
             %div{"data-controller" => "modal"}
               %button.button.danger.secondary.admin-table-action-button{"data-action" => "modal#open", :type => "button"} Remove
@@ -167,29 +229,6 @@
                 %span.missing-value Missing
               - else
                 %button.missing-value.missing-link{"data-action" => "copyable-modal#open", type: "button"} Missing
-            - if !read_only && (missing_dates || missing_waiver)
-              %dialog.signup-modal.missing-details-modal{"data-action" => "click->copyable-modal#closeOnBackdrop", "data-copyable-modal-target" => "dialog"}
-                .signup-modal-content
-                  %div
-                    %h2 Missing participant details
-                    %p= missing_details_copy
-                    %p= missing_details_share_copy
-                  .admin-participant-link-share
-                    = link_to missing_details_link_text, participant_details_link, class: "missing-details-link", "data-copyable-modal-target" => "source"
-                    .admin-participant-link-actions
-                      %button.button.secondary.copy-link-button.admin-participant-link-action{"data-action" => "copyable-modal#copy", type: "button"}
-                        %span.copy-link-icon.copy-icon{aria: { hidden: "true" }}
-                          %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
-                            %rect{height: "12", rx: "2", stroke: "currentColor", "stroke-width" => "2", width: "12", x: "8", y: "8"}
-                            %path{d: "M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2", stroke: "currentColor", "stroke-linecap" => "round", "stroke-width" => "2"}
-                        %span.copy-link-icon.check-icon{aria: { hidden: "true" }}
-                          %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
-                            %path{d: "M20 6 9 17l-5-5", stroke: "currentColor", "stroke-linecap" => "round", "stroke-linejoin" => "round", "stroke-width" => "2.5"}
-                        %span Copy Link
-                      - if signup.user.email.present?
-                        = button_to missing_details_email_text, email_participant_link_admin_trip_campsite_signup_path(signup_trip, signup), method: :post, class: "button secondary admin-participant-link-action", form: { class: "admin-participant-link-action-form", data: { controller: "email-link", action: "submit->email-link#send" } }
-                  .form-actions
-                    %button.button.secondary{"data-action" => "copyable-modal#close", type: "button"} Close
           %td
             - participant_info_modal_id = "participant-info-#{signup.id}"
             %div.participant-info-control{"data-controller" => "modal"}

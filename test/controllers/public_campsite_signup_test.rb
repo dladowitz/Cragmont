@@ -966,6 +966,22 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
   test "shared details link opens completion modal for signed in participant" do
     signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam), arrival_date: nil, checkout_date: nil)
+    guest_user = User.create!(
+      first_name: "Jordan",
+      last_name: "Guest",
+      email: "jordan-completion-link@example.com",
+      password: User::DEFAULT_GUEST_PASSWORD
+    )
+    create_campsite_signup!(
+      campsite: campsites(:yosemite_a),
+      user: guest_user,
+      guest_of_signup: signup,
+      guest_position: 1,
+      arrival_date: nil,
+      checkout_date: nil
+    )
+    signup.campsite_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 17, relationship: "Child")
+    signup.campsite_signup_minors.create!(first_name: "Tiny", last_name: "Lee", age: 9, relationship: "Child")
     log_in_as(users(:sam))
 
     get trip_url(trips(:yosemite), complete_signup: signup.signed_id(purpose: :complete_participant_details))
@@ -979,6 +995,14 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_select ".participant-details-campsite-summary", text: /Available June 12, 2026 to June 15, 2026/
       assert_select "form[action='#{signup_path_for}'][method='post']" do
         assert_select "input[type='hidden'][name='campsite_signup[intent]'][value='complete_participant_details']"
+        form = css_select("form.waiver-form").sole
+        assert_equal "Sam Lee", form["data-signature-primary-participant-name-value"]
+        assert_equal [ "Jordan Guest" ], JSON.parse(form["data-signature-existing-adult-names-value"])
+        assert_equal [ "Mika Lee" ], JSON.parse(form["data-signature-existing-counted-minor-names-value"])
+        assert_equal [
+          { "name" => "Mika Lee", "age" => 17 },
+          { "name" => "Tiny Lee", "age" => 9 }
+        ], JSON.parse(form["data-signature-existing-minor-line-items-value"])
         assert_select "input[type='date'][name='campsite_signup[arrival_date]'][required]"
         assert_select "input[type='date'][name='campsite_signup[checkout_date]'][required]"
         assert_select ".signup-kind-options", count: 0

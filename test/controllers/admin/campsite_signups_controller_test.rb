@@ -561,7 +561,9 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
       }
     }
 
-    assert_redirected_to admin_trip_url(trip)
+    assert_response :redirect
+    assert_match admin_trip_path(trip), response.location
+    assert_match "participant_link_signup=", response.location
     assert_equal "Morgan Waitlist was moved to Upper Pines site A12.", flash[:notice]
     signup.reload
     assert signup.confirmed?
@@ -570,8 +572,67 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     assert_nil signup.checkout_date
     assert_equal "Not chosen yet", signup.attendance_date_range
     assert_not signup.waitlist_eligible?
+    assert_nil signup.current_payment
     assert campsite.reload.signups_locked?
     assert_equal campsite.participant_capacity + 1, campsite.confirmed_signup_count
+  end
+
+  test "can move waitlisted participant to campsite with waived payment reason" do
+    trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+    participant = User.create!(
+      first_name: "Wendy",
+      last_name: "Waived",
+      email: "wendy-waived@example.com",
+      password: "password"
+    )
+    signup = create_waitlisted_signup!(trip: trip, user: participant)
+
+    assert_difference "CampsiteSignupPayment.count", 1 do
+      patch move_to_campsite_admin_trip_campsite_signup_url(trip, signup), params: {
+        campsite_signup: {
+          campsite_id: campsite.id,
+          waive_payment: "1",
+          waived_reason_type: "other",
+          waived_reason: "Scholarship comp"
+        }
+      }
+    end
+
+    assert_response :redirect
+    assert_match admin_trip_path(trip), response.location
+    assert_match "participant_link_signup=", response.location
+    payment = signup.reload.current_payment
+    assert signup.confirmed?
+    assert payment.waived?
+    assert_equal "Scholarship comp", payment.waived_reason
+  end
+
+  test "moving waitlisted participant to campsite requires waived payment reason when waived" do
+    trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+    participant = User.create!(
+      first_name: "Rory",
+      last_name: "Reason",
+      email: "rory-reason@example.com",
+      password: "password"
+    )
+    signup = create_waitlisted_signup!(trip: trip, user: participant)
+
+    assert_no_difference "CampsiteSignupPayment.count" do
+      patch move_to_campsite_admin_trip_campsite_signup_url(trip, signup), params: {
+        campsite_signup: {
+          campsite_id: campsite.id,
+          waive_payment: "1",
+          waived_reason_type: "other",
+          waived_reason: ""
+        }
+      }
+    end
+
+    assert_redirected_to admin_trip_url(trip)
+    assert_equal "Wow, that was a whipper. Add a reason for waiving this participant's payment.", flash[:alert]
+    assert signup.reload.waitlisted?
   end
 
   test "moving waitlisted participant to campsite moves linked guests" do
@@ -599,7 +660,9 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
       }
     }
 
-    assert_redirected_to admin_trip_url(trip)
+    assert_response :redirect
+    assert_match admin_trip_path(trip), response.location
+    assert_match "participant_link_signup=", response.location
     signup.reload
     guest_signup.reload
     assert signup.confirmed?
@@ -775,63 +838,6 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_trip_url(trips(:yosemite))
     assert_equal "Wow, that was a whipper. Sam Lee is not on the waitlist.", flash[:alert]
     assert signup.reload.confirmed?
-  end
-
-  test "admin can mark no payment needed with required reason" do
-    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
-
-    assert_difference "CampsiteSignupPayment.count", 1 do
-      patch mark_no_payment_needed_admin_trip_campsite_signup_url(trips(:yosemite), signup), params: {
-        payment: {
-          waived_reason: "Scholarship comp"
-        }
-      }
-    end
-
-    assert_redirected_to admin_trip_url(trips(:yosemite))
-    payment = signup.reload.current_payment
-    assert payment.waived?
-    assert_equal "Scholarship comp", payment.waived_reason
-  end
-
-  test "admin can mark participant already paid" do
-    SiteSetting.current.update!(first_two_nights_fee: "35", extra_night_fee: "5")
-    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
-
-    assert_difference "CampsiteSignupPayment.count", 1 do
-      patch mark_already_paid_admin_trip_campsite_signup_url(trips(:yosemite), signup), params: {
-        payment: {
-          manual_payment_method: "venmo",
-          manual_paid_at: "2026-06-01T12:30",
-          note: "Paid David"
-        }
-      }
-    end
-
-    assert_redirected_to admin_trip_url(trips(:yosemite))
-    payment = signup.reload.current_payment
-    assert payment.manual_source?
-    assert payment.paid?
-    assert_equal 4000, payment.amount_cents
-    assert_equal "venmo", payment.manual_payment_method
-  end
-
-  test "admin can create Stripe payment link after details are complete" do
-    SiteSetting.current.update!(first_two_nights_fee: "35")
-    signup = attach_test_waiver_to(create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam)))
-
-    with_fake_stripe_checkout do
-      assert_difference "CampsiteSignupPayment.count", 1 do
-        patch create_payment_link_admin_trip_campsite_signup_url(trips(:yosemite), signup)
-      end
-    end
-
-    assert_redirected_to admin_trip_url(trips(:yosemite))
-    payment = signup.reload.current_payment
-    assert payment.pending?
-    assert_equal "https://checkout.stripe.com/c/pay/admin-#{payment.id}", payment.checkout_url
-    assert_in_delta 30.days.from_now.to_i, payment.expires_at.to_i, 5
-    assert_in_delta 24.hours.from_now.to_i, payment.checkout_expires_at.to_i, 5
   end
 
   test "removing paid participant cancels record without refund by default" do
