@@ -32,6 +32,43 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".background-image-caption", "Half Dome, Regular Northwest Face"
   end
 
+  test "trips index shows archived trips five at a time" do
+    archived_trips = 6.times.map do |index|
+      Trip.create!(
+        name: "Archived Route #{index + 1}",
+        location: "Archive Wall, CA",
+        start_date: Date.new(2025, 1, index + 1),
+        end_date: Date.new(2025, 1, index + 2),
+        status: "archived"
+      )
+    end
+
+    get trips_url
+
+    assert_response :success
+    assert_select ".archived-trips-panel" do
+      assert_select "h2", "Archived trips"
+      archived_trips[1..5].each do |trip|
+        assert_select "a[href='#{trip_path(trip)}']", text: trip.name
+      end
+      assert_select "a", text: archived_trips.first.name, count: 0
+      assert_select ".pagination-summary", "Page 1 of 2"
+      assert_select "a[href='#{trips_path(archived_page: 2, anchor: "archived-trips")}']", text: "Next"
+    end
+
+    get trips_url(archived_page: 2)
+
+    assert_response :success
+    assert_select ".archived-trips-panel" do
+      assert_select "a[href='#{trip_path(archived_trips.first)}']", text: archived_trips.first.name
+      archived_trips[1..5].each do |trip|
+        assert_select "a", text: trip.name, count: 0
+      end
+      assert_select ".pagination-summary", "Page 2 of 2"
+      assert_select "a[href='#{trips_path(archived_page: 1, anchor: "archived-trips")}']", text: "Previous"
+    end
+  end
+
   test "trips index hides admin link from signed in users without admin access" do
     log_in_as(users(:sam))
 
@@ -94,6 +131,27 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     end
     assert_select "#campsite-#{campsites(:yosemite_a).id} .campsite-stats", text: /Cars/, count: 0
     assert_select "#campsite-#{campsites(:yosemite_a).id}", text: /Close to bathrooms/
+  end
+
+  test "archived public trip detail is viewable but closed to new participants" do
+    trips(:yosemite).update!(status: "archived")
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "h1", "Yosemite Valley Spring"
+    assert_select ".campsite-signup-action", text: /Archived trip/
+    assert_select "button", text: "Sign up for this campsite", count: 0
+    assert_select "button", text: "Join waitlist", count: 0
+    assert_select "a", text: "Log in to sign up", count: 0
+
+    log_in_as(users(:sam))
+
+    assert_no_difference "CampsiteSignup.count" do
+      post signup_url_for, params: waiver_signature_params
+    end
+
+    assert_response :not_found
   end
 
   test "public trip detail shows placeholder when campsite coordinator is not set" do

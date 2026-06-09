@@ -283,6 +283,62 @@ textarea {
   text-transform: uppercase;
 }
 
+.public-beta-notice {
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1 1 280px;
+  gap: 5px 10px;
+  align-items: center;
+  max-width: 620px;
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, #fff);
+  border-radius: 6px;
+  padding: 10px 13px;
+  background: color-mix(in srgb, var(--accent) 8%, #fff);
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.25;
+}
+
+.public-beta-notice strong {
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, transparent);
+  border-radius: 999px;
+  padding: 3px 9px;
+  color: var(--accent-dark);
+  font-size: 0.83rem;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.public-beta-notice a {
+  color: var(--accent-dark);
+  font-weight: 800;
+}
+
+.panel-header .public-beta-notice {
+  flex: 0 1 620px;
+  margin-top: 4px;
+}
+
+body.trips-index-page .public-beta-notice,
+body.trip-show-page .public-beta-notice {
+  font-size: 0.9rem;
+}
+
+body.trips-index-page .public-beta-notice strong,
+body.trip-show-page .public-beta-notice strong {
+  font-size: 0.83rem;
+}
+
+body.trips-index-page .trips-index-panel .public-beta-notice,
+body.trip-show-page .trip-summary-header .public-beta-notice {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  justify-self: end;
+  max-width: 620px;
+  text-align: right;
+}
+
 .public-nav {
   display: flex;
   flex-wrap: wrap;
@@ -1868,10 +1924,86 @@ body.help-request-show-page .help-admin-detail h1 {
 }
 
 body.trips-index-page .trips-index-panel {
+  padding-block: 18px 20px;
   border-color: rgb(255 255 255 / 56%);
   background: rgb(255 255 255 / 88%);
   box-shadow: 0 24px 72px rgb(0 0 0 / 26%);
   backdrop-filter: blur(6px);
+}
+
+body.trips-index-page .trips-index-panel .panel-header {
+  margin-bottom: 14px;
+}
+
+body.trips-index-page .trips-index-panel h1 {
+  margin-block: 0 10px;
+}
+
+body.trips-index-page .trips-index-panel .muted {
+  margin-bottom: 0;
+}
+
+.archived-trips-panel {
+  padding-block: 18px 20px;
+  background: rgb(255 255 255 / 82%);
+}
+
+.archived-trips-panel .panel-header {
+  margin-bottom: 14px;
+}
+
+.archived-trips-panel h2 {
+  margin-block: 0 8px;
+}
+
+.archived-trips-panel .panel-header .muted {
+  margin-bottom: 0;
+}
+
+.archived-trip-list {
+  display: grid;
+  gap: 10px;
+}
+
+.archived-trip-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.75fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfaf7;
+}
+
+.archived-trip-row h3,
+.archived-trip-row p,
+.archived-trip-row dl {
+  margin: 0;
+}
+
+.archived-trip-row p,
+.archived-trip-meta dt {
+  color: var(--muted);
+}
+
+.archived-trip-meta {
+  display: grid;
+  gap: 4px;
+}
+
+.archived-trip-meta div {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 10px;
+}
+
+.archived-trip-meta dt {
+  font-weight: 750;
+}
+
+.archived-trip-meta dd {
+  margin: 0;
 }
 
 body.session-new-page .auth-panel,
@@ -3875,6 +4007,11 @@ textarea {
     flex-direction: column;
   }
 
+  .public-beta-notice {
+    flex-basis: auto;
+    max-width: none;
+  }
+
   .campsite-signup-action {
     justify-items: start;
     min-width: 0;
@@ -3914,7 +4051,8 @@ textarea {
   .guest-field-row,
   .help-layout,
   .help-request-detail-grid,
-  .trip-card {
+  .trip-card,
+  .archived-trip-row {
     grid-template-columns: 1fr;
   }
 

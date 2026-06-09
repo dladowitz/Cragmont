@@ -17,6 +17,8 @@ class Trip < ApplicationRecord
   scope :active, -> { where(deleted_at: nil) }
   scope :deleted, -> { where.not(deleted_at: nil) }
   scope :published_for_public, -> { active.published.order(start_date: :asc, name: :asc) }
+  scope :archived_for_public, -> { active.archived.order(start_date: :desc, name: :asc) }
+  scope :visible_for_public, -> { active.where(status: %w[published archived]) }
 
   validates :name, :location, :start_date, :end_date, :status, presence: true
   validates :status, inclusion: { in: STATUSES }

@@ -1,8 +1,21 @@
 class TripsController < ApplicationController
+  ARCHIVED_TRIPS_PER_PAGE = 5
+
   before_action :set_trip, only: :show
 
   def index
     @trips = Trip.published_for_public.includes(:campsite_coordinator, :campsites)
+    archived_trips_scope = Trip.archived_for_public.includes(:campsite_coordinator, :campsites)
+
+    @archived_current_page = [ params[:archived_page].to_i, 1 ].max
+    @total_archived_trips = archived_trips_scope.count
+    @archived_total_pages = (@total_archived_trips.to_f / ARCHIVED_TRIPS_PER_PAGE).ceil
+    @archived_total_pages = 1 if @archived_total_pages.zero?
+    @archived_current_page = @archived_total_pages if @archived_current_page > @archived_total_pages
+
+    @archived_trips = archived_trips_scope
+      .offset((@archived_current_page - 1) * ARCHIVED_TRIPS_PER_PAGE)
+      .limit(ARCHIVED_TRIPS_PER_PAGE)
   end
 
   def show
@@ -22,7 +35,7 @@ class TripsController < ApplicationController
   private
 
   def set_trip
-    @trip = Trip.published_for_public.find(params[:id])
+    @trip = Trip.visible_for_public.find(params[:id])
   end
 
   def participant_details_signup
