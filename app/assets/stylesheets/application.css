@@ -1723,6 +1723,7 @@ td span {
   align-items: center;
 }
 
+.help-request-title-line h1,
 .help-request-title-line h2 {
   margin: 0;
 }

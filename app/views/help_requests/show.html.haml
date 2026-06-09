@@ -5,7 +5,9 @@
   %section.panel.help-admin-detail
     .panel-header
       %div
-        %h1= @help_request.subject
+        .help-request-title-line
+          %h1= @help_request.subject
+          = help_request_status_pill(@help_request)
       = link_to "Back to my help requests", help_requests_path, class: "button secondary"
     %section.help-conversation
       %article.help-reply

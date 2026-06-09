@@ -204,6 +204,7 @@ class HelpRequestsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", "Trip dates question"
+    assert_select ".help-request-title-line .status-pill.replied-status", text: "Replied"
     assert_select ".panel-header .muted", text: /Sent/, count: 0
     assert_select ".help-reply-heading", text: "Original message"
     assert_select ".help-reply", text: /Need help with trip/
