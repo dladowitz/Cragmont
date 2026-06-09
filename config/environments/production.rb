@@ -57,6 +57,11 @@ Rails.application.configure do
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
   # config.action_mailer.raise_delivery_errors = false
 
+  if ENV["LETTER_OPENER_WEB"].present?
+    config.action_mailer.delivery_method = :letter_opener_web
+    config.action_mailer.raise_delivery_errors = true
+  end
+
   # Set host to be used by links generated in mailer templates and redirects.
   app_host = ENV.fetch("APP_HOST", "cragmontclimbing.com")
   config.action_mailer.default_url_options = { host: app_host, protocol: "https" }

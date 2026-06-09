@@ -33,4 +33,4 @@
       %footer.environment-indicator{"aria-label" => "Environment indicator"}
         %span= "Env: #{environment_name}"
         - if show_letter_opener_link?
-          = link_to letter_opener_label, "/letter_opener"
+          = link_to letter_opener_label, letter_opener_path

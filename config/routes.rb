@@ -1,7 +1,15 @@
 Rails.application.routes.draw do
   root "home#index"
 
-  mount LetterOpenerWeb::Engine, at: "/letter_opener" if Rails.env.development?
+  if Rails.env.development? || ENV["LETTER_OPENER_WEB"].present?
+    letter_opener_access = lambda do |request|
+      Rails.env.development? || User.find_by(id: request.session[:user_id])&.super_admin?
+    end
+
+    constraints letter_opener_access do
+      mount LetterOpenerWeb::Engine, at: "/admin/letter_opener"
+    end
+  end
 
   resource :registration, only: %i[new create]
   resource :session, only: %i[new create destroy]
