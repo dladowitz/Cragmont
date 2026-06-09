@@ -100,4 +100,30 @@ class UserTest < ActiveSupport::TestCase
   test "public name abbreviates last name" do
     assert_equal "Alex R.", users(:alex).public_name
   end
+
+  test "supports multiple global roles" do
+    user = users(:sam)
+    user.roles << roles(:finance_admin)
+    user.roles << roles(:trip_admin)
+
+    assert user.finance_admin?
+    assert user.trip_admin?
+    assert_not user.super_admin?
+    assert user.has_role?("finance_admin")
+  end
+
+  test "admin access allows roles and coordinated trips" do
+    finance_user = users(:sam)
+    assign_role(finance_user, :finance_admin)
+
+    coordinator = User.create!(first_name: "Casey", last_name: "Coordinator", email: "casey-coordinator@example.com", password: "password")
+    trips(:jtree).update!(campsite_coordinator: coordinator)
+
+    participant = User.create!(first_name: "Pat", last_name: "Participant", email: "pat-participant@example.com", password: "password")
+
+    assert users(:alex).admin_access?
+    assert finance_user.admin_access?
+    assert coordinator.admin_access?
+    assert_not participant.admin_access?
+  end
 end

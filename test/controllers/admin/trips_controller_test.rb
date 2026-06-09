@@ -30,6 +30,91 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select "td a[href='#{admin_trip_transactions_path(trips(:jtree))}']", text: "Transactions"
   end
 
+  test "assigned campsite coordinator sees only assigned trips and can edit trip details" do
+    coordinator = users(:sam)
+    trips(:jtree).update!(campsite_coordinator: coordinator)
+    delete session_url
+    log_in_as(coordinator)
+
+    get admin_trips_url
+
+    assert_response :success
+    assert_select "td", text: /Joshua Tree Winter/
+    assert_select "td", text: /Yosemite Valley Spring/, count: 0
+    assert_select ".admin-nav a", text: "Campgrounds", count: 0
+    assert_select ".admin-nav a", text: "Users", count: 0
+    assert_select ".admin-nav a", text: "Settings", count: 0
+
+    get edit_admin_trip_url(trips(:jtree))
+
+    assert_response :success
+    assert_select "input[name='trip[name]']"
+    assert_select "select[name='trip[campsite_coordinator_id]']", count: 0
+
+    patch admin_trip_url(trips(:jtree)), params: {
+      trip: {
+        name: "Joshua Tree Coordinator Edit",
+        location: trips(:jtree).location,
+        start_date: trips(:jtree).start_date,
+        end_date: trips(:jtree).end_date,
+        status: trips(:jtree).status,
+        campsite_coordinator_id: users(:alex).id
+      }
+    }
+
+    assert_redirected_to admin_trip_url(trips(:jtree))
+    assert_equal "Joshua Tree Coordinator Edit", trips(:jtree).reload.name
+    assert_equal coordinator, trips(:jtree).campsite_coordinator
+  end
+
+  test "assigned campsite coordinator cannot edit unassigned trip" do
+    coordinator = users(:sam)
+    trips(:jtree).update!(campsite_coordinator: coordinator)
+    delete session_url
+    log_in_as(coordinator)
+
+    get edit_admin_trip_url(trips(:yosemite))
+
+    assert_redirected_to root_url
+    assert_equal "Wow, that was a whipper. You do not have permission to access that page.", flash[:alert]
+  end
+
+  test "finance admin can view trip payment surfaces but not edit trip setup" do
+    finance_user = users(:sam)
+    assign_role(finance_user, :finance_admin)
+    delete session_url
+    log_in_as(finance_user)
+
+    get admin_trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select ".trip-summary-header .actions a[href='#{admin_trip_transactions_path(trips(:yosemite))}']", text: "Transactions"
+    assert_select "a", text: "Edit trip", count: 0
+    assert_select "a.button.secondary", text: "Add campsite", count: 0
+    assert_select ".table-actions > [data-controller='modal'] > button", text: "Add Participant", count: 0
+    assert_select "#trip-payment-requests"
+
+    get edit_admin_trip_url(trips(:yosemite))
+
+    assert_redirected_to root_url
+  end
+
+  test "trip admin can manage campgrounds but not users or settings" do
+    trip_admin = users(:sam)
+    assign_role(trip_admin, :trip_admin)
+    delete session_url
+    log_in_as(trip_admin)
+
+    get admin_campgrounds_url
+    assert_response :success
+
+    get admin_users_url
+    assert_redirected_to root_url
+
+    get admin_settings_url
+    assert_redirected_to root_url
+  end
+
   test "can view deleted trips tab" do
     deleted_trip = trips(:jtree)
     deleted_trip.soft_delete!

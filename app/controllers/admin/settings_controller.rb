@@ -1,10 +1,12 @@
 class Admin::SettingsController < Admin::BaseController
   def show
     @site_setting = SiteSetting.current
+    authorize @site_setting
   end
 
   def update
     @site_setting = SiteSetting.current
+    authorize @site_setting
 
     if @site_setting.update(site_setting_params)
       redirect_to admin_settings_path, notice: "Settings were updated."

@@ -2,6 +2,7 @@
 - trip = local_assigns[:trip]
 - campsites = Array(local_assigns[:campsites])
 - read_only = local_assigns.fetch(:read_only, false)
+- payment_read_only = local_assigns.fetch(:payment_read_only, read_only)
 - allowed_signup_tooltip = "Participants can sign themselves up from the waitlist"
 - add_campsite_tooltip = "Adds a participant directly to a campsite"
 - remove_waitlist_tooltip = "Removes Participant from Waitlist"
@@ -215,7 +216,7 @@
             - if party_guest
               %span.admin-party-empty-cell{"aria-hidden" => "true"}
             - else
-              = render "payment_controls", signup: signup, trip: signup_trip, missing_dates: missing_dates, missing_waiver: missing_waiver, participant_details_link: participant_details_link, read_only: read_only
+              = render "payment_controls", signup: signup, trip: signup_trip, missing_dates: missing_dates, missing_waiver: missing_waiver, participant_details_link: participant_details_link, read_only: payment_read_only
           %td
             - if signup.waiver_signed?
               .waiver-download

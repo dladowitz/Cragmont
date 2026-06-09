@@ -12,6 +12,7 @@
           %th Email
           %th Phone
           %th Member
+          %th Roles
           %th Default Password
       %tbody
         - @users.each do |user|
@@ -29,6 +30,7 @@
             %td= user.email.presence || tag.span("None")
             %td= user.phone.presence || tag.span("None")
             %td= user.member? ? "Yes" : "No"
+            %td= user.roles.order(:name).map(&:name).to_sentence.presence || "None"
             %td= user.default_password? ? "Yes" : "No"
   - else
     .empty-state

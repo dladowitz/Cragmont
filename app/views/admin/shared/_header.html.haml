@@ -6,7 +6,10 @@
     = link_to "Public View", root_path, class: "admin-public-link"
   %nav.admin-nav{"aria-label" => "Admin navigation"}
     = link_to "Trips", admin_trips_path
-    = link_to "Campgrounds", admin_campgrounds_path
-    = link_to "Users", admin_users_path
-    = link_to "Settings", admin_settings_path
+    - if policy(Campground).index?
+      = link_to "Campgrounds", admin_campgrounds_path
+    - if policy(User).index?
+      = link_to "Users", admin_users_path
+    - if policy(SiteSetting.current).show?
+      = link_to "Settings", admin_settings_path
     = button_to "Logout", session_path, method: :delete, class: "button secondary"

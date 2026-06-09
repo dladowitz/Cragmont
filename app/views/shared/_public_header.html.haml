@@ -4,7 +4,7 @@
       = link_to root_path, class: "site-name" do
         %span Cragmont
         %small Climbing Club
-      - if user_signed_in?
+      - if current_user&.admin_access?
         = link_to "Admin", admin_root_path, class: "public-admin-link"
     %nav.public-nav
       - if user_signed_in?

@@ -1,23 +1,29 @@
 class Admin::UsersController < Admin::BaseController
   before_action :set_user, only: %i[show edit update destroy]
+  before_action :set_roles, only: %i[new edit create update]
 
   def index
+    authorize User
     @users = User.order(:first_name, :last_name)
   end
 
   def show
+    authorize @user
     @coordinated_trips = @user.coordinated_trips.order(start_date: :asc, name: :asc)
   end
 
   def new
     @user = User.new
+    authorize @user
   end
 
   def edit
+    authorize @user
   end
 
   def create
     @user = User.new(user_params)
+    authorize @user
 
     if @user.save
       redirect_to admin_user_path(@user), notice: "User was created."
@@ -27,6 +33,8 @@ class Admin::UsersController < Admin::BaseController
   end
 
   def update
+    authorize @user
+
     if @user.update(user_params_for_update)
       redirect_to admin_user_path(@user), notice: "User was updated."
     else
@@ -35,6 +43,8 @@ class Admin::UsersController < Admin::BaseController
   end
 
   def destroy
+    authorize @user
+
     if @user.destroy
       redirect_to admin_users_path, notice: "User was deleted.", status: :see_other
     else
@@ -50,8 +60,13 @@ class Admin::UsersController < Admin::BaseController
     @user = User.find(params[:id])
   end
 
+  def set_roles
+    Role.seed_defaults!
+    @roles = Role.order(:name)
+  end
+
   def user_params
-    params.require(:user).permit(:first_name, :last_name, :email, :phone, :member, :password, :password_confirmation)
+    params.require(:user).permit(:first_name, :last_name, :email, :phone, :member, :password, :password_confirmation, role_ids: [])
   end
 
   def user_params_for_update

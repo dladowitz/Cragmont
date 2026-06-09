@@ -33,6 +33,8 @@ class User < ApplicationRecord
     foreign_key: :canceled_by_id,
     dependent: :nullify,
     inverse_of: :canceled_by
+  has_many :user_roles, dependent: :destroy
+  has_many :roles, through: :user_roles
   has_many :signed_up_trips, -> { distinct }, through: :campsite_signups, source: :trip
 
   normalizes :email, with: ->(email) { email.to_s.strip.downcase.presence }
@@ -63,6 +65,34 @@ class User < ApplicationRecord
 
   def public_name
     "#{first_name} #{last_name.to_s.first}."
+  end
+
+  def role_slugs
+    if roles.loaded?
+      roles.map(&:slug)
+    else
+      roles.pluck(:slug)
+    end
+  end
+
+  def has_role?(slug)
+    role_slugs.include?(slug.to_s)
+  end
+
+  def super_admin?
+    has_role?("super_admin")
+  end
+
+  def finance_admin?
+    has_role?("finance_admin")
+  end
+
+  def trip_admin?
+    has_role?("trip_admin")
+  end
+
+  def admin_access?
+    super_admin? || finance_admin? || trip_admin? || coordinated_trips.exists?
   end
 
   def generate_password_reset_token!

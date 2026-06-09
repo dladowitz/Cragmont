@@ -1,0 +1,11 @@
+super_admin:
+  name: Super Admin
+  slug: super_admin
+
+finance_admin:
+  name: Finance Admin
+  slug: finance_admin
+
+trip_admin:
+  name: Trip Admin
+  slug: trip_admin

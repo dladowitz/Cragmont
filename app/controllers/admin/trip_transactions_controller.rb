@@ -2,10 +2,12 @@ class Admin::TripTransactionsController < Admin::BaseController
   before_action :set_trip
 
   def index
+    authorize @trip, :manage_payments?
     @ledger_entries = TripTransactionLedger.call(@trip)
   end
 
   def refund
+    authorize @trip, :manage_payments?
     payment = CampsiteSignupPayment
       .joins(:campsite_signup)
       .includes(campsite_signup: :user)

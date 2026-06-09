@@ -7,3 +7,12 @@
 #   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
+
+Role.seed_defaults!
+
+ENV.fetch("CRAGMONT_SUPER_ADMIN_EMAILS", "").split(",").map(&:strip).reject(&:blank?).each do |email|
+  user = User.find_by(email: email)
+  next if user.blank?
+
+  user.roles << Role.find_by!(slug: "super_admin") unless user.super_admin?
+end

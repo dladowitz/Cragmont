@@ -22,7 +22,8 @@
             - else
               .coordinator-contact
                 %span.muted Not set yet
-                = link_to "Update", edit_admin_trip_path(trip)
+                - if policy(trip).assign_coordinator?
+                  = link_to "Update", edit_admin_trip_path(trip)
           %td
             %span{ class: [ "status", "#{trip.status}-status" ] }= trip.status.titleize
           %td
@@ -37,8 +38,9 @@
           %td= trip.total_participant_capacity
           %td= trip.confirmed_signup_count
           %td.table-actions
-            = link_to "Transactions", admin_trip_transactions_path(trip), class: "button secondary admin-table-action-button"
-            - if trip.deleted?
+            - if policy(trip).manage_payments?
+              = link_to "Transactions", admin_trip_transactions_path(trip), class: "button secondary admin-table-action-button"
+            - if trip.deleted? && policy(trip).restore?
               = button_to "Restore", restore_admin_trip_path(trip), method: :patch, class: "button admin-table-action-button"
 - else
   .empty-state

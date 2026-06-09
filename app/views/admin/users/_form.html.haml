@@ -1,29 +1,31 @@
-= form_with model: [:admin, user], class: "admin-form" do |form|
+= form_with model: [:admin, user], class: "admin-form user-form" do |form|
   = render "admin/shared/errors", record: user
-  .form-grid
-    .field
-      = required_label form, :first_name
-      = form.text_field :first_name, required: true
-    .field
-      = required_label form, :last_name
-      = form.text_field :last_name, required: true
-    .field
-      = form.label :email
-      = form.email_field :email
-    .field
-      = form.label :phone
-      = form.telephone_field :phone
-    .field
-      = form.label :password do
-        Password
-        = required_marker if user.new_record?
-      = form.password_field :password, required: user.new_record?, autocomplete: "new-password"
-    .field
-      = form.label :password_confirmation do
-        Password confirmation
-        = required_marker if user.new_record?
-      = form.password_field :password_confirmation, required: user.new_record?, autocomplete: "new-password"
-  %fieldset.radio-field
+  %fieldset.user-form-section
+    %legend Name, Email, Password
+    .form-grid
+      .field
+        = required_label form, :first_name
+        = form.text_field :first_name, required: true
+      .field
+        = required_label form, :last_name
+        = form.text_field :last_name, required: true
+      .field
+        = form.label :email
+        = form.email_field :email
+      .field
+        = form.label :phone
+        = form.telephone_field :phone
+      .field
+        = form.label :password do
+          Password
+          = required_marker if user.new_record?
+        = form.password_field :password, required: user.new_record?, autocomplete: "new-password"
+      .field
+        = form.label :password_confirmation do
+          Password confirmation
+          = required_marker if user.new_record?
+        = form.password_field :password_confirmation, required: user.new_record?, autocomplete: "new-password"
+  %fieldset.user-form-section.user-form-section-compact.radio-field
     %legend Club member
     %label
       = form.radio_button :member, true
@@ -31,6 +33,13 @@
     %label
       = form.radio_button :member, false
       No
+  %fieldset.user-form-section.user-form-roles-section
+    %legend Roles
+    .user-role-options
+      = form.collection_check_boxes :role_ids, @roles, :id, :name do |role_field|
+        %label.user-role-option
+          = role_field.check_box(class: "user-role-checkbox")
+          %span= role_field.text
   .form-actions
     = form.submit
     = link_to "Cancel", user.persisted? ? admin_user_path(user) : admin_users_path, class: "button secondary"

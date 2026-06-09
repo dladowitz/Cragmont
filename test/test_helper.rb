@@ -50,6 +50,11 @@ module ActiveSupport
       post session_url, params: { email: user.email, password: "password" }
     end
 
+    def assign_role(user, slug)
+      user.roles << roles(slug) unless user.has_role?(slug.to_s)
+      user.reload
+    end
+
     def attach_test_waiver_to(signup)
       signature = WaiverSignatureData.new(SIGNATURE_DATA_URL)
       waiver_text = TripSignupWaiver.text

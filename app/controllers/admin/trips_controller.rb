@@ -4,12 +4,14 @@ class Admin::TripsController < Admin::BaseController
   before_action :set_users, only: %i[show new create edit update]
 
   def index
+    authorize Trip
     @showing_deleted_trips = params[:filter] == "deleted"
     trips_scope = @showing_deleted_trips ? Trip.deleted : Trip.active
-    @trips = trips_scope.includes(:campsite_coordinator, { campsite_signups: :campsite_signup_minors }, campsites: :campground).order(start_date: :asc, name: :asc)
+    @trips = policy_scope(trips_scope).includes(:campsite_coordinator, { campsite_signups: :campsite_signup_minors }, campsites: :campground).order(start_date: :asc, name: :asc)
   end
 
   def show
+    authorize @trip
     @campsites = @trip.campsites.includes(:campground, :registered_by, campsite_signups: [ { payments: { refunds: :refunded_by } }, :user, :campsite_signup_minors, { guest_of_signup: :user } ]).order(:arrival_date, :site_number)
     @waitlisted_signups = @trip.waitlisted_signups
     @trip_participant_user_ids = @trip.campsite_signups.active.distinct.pluck(:user_id)
@@ -26,13 +28,16 @@ class Admin::TripsController < Admin::BaseController
 
   def new
     @trip = Trip.new
+    authorize @trip
   end
 
   def edit
+    authorize @trip
   end
 
   def create
     @trip = Trip.new(trip_params)
+    authorize @trip
 
     if @trip.save
       redirect_to admin_trip_path(@trip), notice: "Trip was created."
@@ -42,6 +47,8 @@ class Admin::TripsController < Admin::BaseController
   end
 
   def update
+    authorize @trip
+
     if @trip.update(trip_params)
       redirect_to admin_trip_path(@trip), notice: "Trip was updated."
     else
@@ -50,6 +57,8 @@ class Admin::TripsController < Admin::BaseController
   end
 
   def destroy
+    authorize @trip
+
     if @trip.delete_blocked_by_participants?
       redirect_to edit_admin_trip_path(@trip), alert: "Cannot delete a trip with participants signed up", status: :see_other
       return
@@ -60,6 +69,8 @@ class Admin::TripsController < Admin::BaseController
   end
 
   def restore
+    authorize @trip
+
     @trip.restore!
     redirect_to admin_trip_path(@trip), notice: "On belay! Trip was restored.", status: :see_other
   end
@@ -95,7 +106,7 @@ class Admin::TripsController < Admin::BaseController
   end
 
   def trip_params
-    params.require(:trip).permit(:name, :location, :start_date, :end_date, :description, :status, :campsite_coordinator_id)
+    params.require(:trip).permit(policy(@trip || Trip).permitted_attributes)
   end
 
   def set_users

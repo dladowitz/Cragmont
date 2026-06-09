@@ -25,16 +25,19 @@
         - else
           .coordinator-contact
             %span.muted Not set yet
-            = link_to "Update", edit_admin_trip_path(@trip)
+            - if policy(@trip).assign_coordinator?
+              = link_to "Update", edit_admin_trip_path(@trip)
       - if @trip.description.present?
         .description
           %strong Notes:
           = simple_format(@trip.description)
     .actions
-      = link_to "Transactions", admin_trip_transactions_path(@trip), class: "button secondary"
+      - if policy(@trip).manage_payments?
+        = link_to "Transactions", admin_trip_transactions_path(@trip), class: "button secondary"
       - if @trip.deleted?
-        = button_to "Restore trip", restore_admin_trip_path(@trip), method: :patch, class: "button"
-      - else
+        - if policy(@trip).restore?
+          = button_to "Restore trip", restore_admin_trip_path(@trip), method: :patch, class: "button"
+      - elsif policy(@trip).edit?
         = link_to "Edit trip", edit_admin_trip_path(@trip), class: "button secondary"
   - if @trip.deleted?
     .deleted-trip-banner
@@ -70,7 +73,7 @@
   .panel-header.campsites-panel-header
     %div
       %h2 Campsites
-    - unless @trip.deleted?
+    - if !@trip.deleted? && policy(@trip).manage_campsites?
       = link_to "Add campsite", new_admin_trip_campsite_path(@trip), class: "button secondary"
   - if @campsites.any?
     .admin-campsite-list
@@ -91,8 +94,9 @@
                   %dt Checkout
                   %dd= campsite.checkout_date.to_fs(:long)
             %div.table-actions
-              - unless @trip.deleted?
+              - if !@trip.deleted? && policy(@trip).manage_participants?
                 = render "add_participant_modal", trip: @trip, campsite: campsite, users: @users, trip_participant_user_ids: @trip_participant_user_ids
+              - if !@trip.deleted? && policy(@trip).manage_campsites?
                 = link_to "Edit Campsite", edit_admin_trip_campsite_path(@trip, campsite), class: "button secondary"
               .campsite-registration
                 %p
@@ -101,16 +105,20 @@
                     = campsite.registered_by.full_name
                   - elsif @trip.deleted?
                     None
-                  - else
+                  - elsif policy(@trip).manage_campsites?
                     = link_to "Update", edit_admin_trip_campsite_path(@trip, campsite), class: "small-link"
+                  - else
+                    None
                 %p
                   %strong Registration #
                   - if campsite.registration_number.present?
                     = campsite.registration_number
                   - elsif @trip.deleted?
                     None
-                  - else
+                  - elsif policy(@trip).manage_campsites?
                     = link_to "Update", edit_admin_trip_campsite_path(@trip, campsite), class: "small-link"
+                  - else
+                    None
           .stats.campsite-stats
             - if campsite.confirmed_uncounted_minor_count.positive?
               .split-signup-stat
@@ -151,7 +159,7 @@
             .confirmed-signups-section
               %h4 Confirmed participants
               - if campsite.confirmed_signups.any?
-                = render "signup_table", signups: campsite.confirmed_signups, read_only: @trip.deleted?, parking_tooltip: parking_policy_tooltip
+                = render "signup_table", signups: campsite.confirmed_signups, read_only: @trip.deleted? || !policy(@trip).manage_participants?, payment_read_only: @trip.deleted? || !policy(@trip).manage_payments?, parking_tooltip: parking_policy_tooltip
               - else
                 %p.muted No confirmed participants yet.
   - else
@@ -160,36 +168,37 @@
   - if @waitlisted_signups.any?
     .waitlisted-signups-section.trip-waitlist-section
       %h3 Trip waitlist
-      = render "signup_table", signups: @waitlisted_signups, waitlist: true, trip: @trip, campsites: @campsites, read_only: @trip.deleted?
-= render "payment_requests_panel", trip: @trip, payment_requests: @trip_payment_requests, modal_payment_request: @trip_payment_request
-%section.panel
-  .panel-header
-    %div
-      %h2 Trip Expenses
-      %p.muted Refunds marked as trip expenses, such as firewood or other shared campsite costs.
-  - if @trip_expense_refunds.any?
-    %table
-      %thead
-        %tr
-          %th Participant
-          %th Amount
-          %th Refunded By
-          %th Reason
-          %th Date of Refund
-          %th Details
-      %tbody
-        - @trip_expense_refunds.each do |refund|
-          - payment = refund.campsite_signup_payment
-          - signup = payment.campsite_signup
+      = render "signup_table", signups: @waitlisted_signups, waitlist: true, trip: @trip, campsites: @campsites, read_only: @trip.deleted? || !policy(@trip).manage_participants?
+- if policy(@trip).manage_payments?
+  = render "payment_requests_panel", trip: @trip, payment_requests: @trip_payment_requests, modal_payment_request: @trip_payment_request
+  %section.panel
+    .panel-header
+      %div
+        %h2 Trip Expenses
+        %p.muted Refunds marked as trip expenses, such as firewood or other shared campsite costs.
+    - if @trip_expense_refunds.any?
+      %table
+        %thead
           %tr
-            %td= signup.user.full_name
-            %td= format_cents(refund.amount_cents)
-            %td= refund.refunded_by&.full_name || "None"
-            %td= refund.reason.presence || "None"
-            %td= refund.refunded_at&.strftime("%-m/%-d/%y") || "None"
-            %td
-              %div{"data-controller" => "payment-details-trigger", "data-payment-details-trigger-payment-id-value" => payment.id}
-                %button.button.secondary.admin-table-action-button{"data-action" => "payment-details-trigger#open", type: "button"} View
-  - else
-    %p.muted No trip expenses recorded yet.
-= render "trip_revenue_panel", summary: @trip_revenue_summary
+            %th Participant
+            %th Amount
+            %th Refunded By
+            %th Reason
+            %th Date of Refund
+            %th Details
+        %tbody
+          - @trip_expense_refunds.each do |refund|
+            - payment = refund.campsite_signup_payment
+            - signup = payment.campsite_signup
+            %tr
+              %td= signup.user.full_name
+              %td= format_cents(refund.amount_cents)
+              %td= refund.refunded_by&.full_name || "None"
+              %td= refund.reason.presence || "None"
+              %td= refund.refunded_at&.strftime("%-m/%-d/%y") || "None"
+              %td
+                %div{"data-controller" => "payment-details-trigger", "data-payment-details-trigger-payment-id-value" => payment.id}
+                  %button.button.secondary.admin-table-action-button{"data-action" => "payment-details-trigger#open", type: "button"} View
+    - else
+      %p.muted No trip expenses recorded yet.
+  = render "trip_revenue_panel", summary: @trip_revenue_summary

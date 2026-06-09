@@ -36,4 +36,14 @@ class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_url
     assert_not Trip.exists?(name: "Unauthorized Peak")
   end
+
+  test "logged in user without admin role or coordinated trip cannot access admin" do
+    delete session_url
+    log_in_as(users(:sam))
+
+    get admin_trips_url
+
+    assert_redirected_to root_url
+    assert_equal "Wow, that was a whipper. You do not have permission to access that page.", flash[:alert]
+  end
 end
