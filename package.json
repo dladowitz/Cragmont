@@ -4,7 +4,7 @@
   "description": "You need to setup a Stripe Webhook",
   "main": "index.js",
   "engines": {
-    "node": "24.13.0"
+    "node": "24.16.0"
   },
   "directories": {
     "lib": "lib",
