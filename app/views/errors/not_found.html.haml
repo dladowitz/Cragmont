@@ -1,0 +1,9 @@
+- content_for :body_class, "not-found-page"
+= render "shared/public_header"
+
+%main.public-main.error-main
+  %section.panel.error-panel
+    %h1 Off route!
+    %p That page doesn't exist
+
+%p.background-image-caption Indian Creek, UT

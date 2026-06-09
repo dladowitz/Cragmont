@@ -1,3 +1,4 @@
+- content_for :body_class, "password-reset-new-page"
 = render "shared/public_header"
 %main.public-main
   %section.panel.auth-panel
@@ -9,3 +10,4 @@
       .form-actions
         = submit_tag "Send reset link"
         = link_to "Back to log in", new_session_path, class: "button secondary"
+%p.background-image-caption Castle Valley, UT, The Rectory
