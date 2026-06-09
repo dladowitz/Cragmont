@@ -1,0 +1,55 @@
+= render "admin/shared/header", title: "Help"
+%section.panel.help-admin-detail
+  .panel-header
+    %div
+      .help-request-title-line
+        %h2= @help_request.subject
+        = help_request_status_pill(@help_request)
+    .actions
+      - unless @help_request.status == "resolved"
+        = button_to "Mark resolved", resolve_admin_help_request_path(@help_request), method: :patch, class: "button secondary"
+      = link_to "Back to help requests", admin_help_requests_path, class: "button secondary"
+  %dl.help-request-meta-row
+    %div
+      %dt Reason
+      %dd= @help_request.reason_label
+    %div
+      %dt Name
+      %dd= @help_request.name
+    %div
+      %dt Email
+      %dd= mail_to @help_request.email
+    - if @help_request.user.present?
+      %div
+        %dt Linked account
+        %dd= link_to @help_request.user.full_name, admin_user_path(@help_request.user)
+  %section.help-conversation
+    %article.help-reply
+      %p.help-reply-heading Original message
+      %p.muted= "#{@help_request.name} opened this request #{@help_request.created_at.to_fs(:long)}"
+      = simple_format(@help_request.message)
+      - if @help_request.images.attached?
+        .help-attachment-list
+          - @help_request.images.each do |image|
+            = render "help_requests/attachment", attachment: image
+    - @help_request.replies.order(created_at: :asc).each do |reply|
+      %article.help-reply
+        %p.muted= "#{reply.user.full_name} replied #{reply.created_at.to_fs(:long)}"
+        = simple_format(reply.message)
+        - if reply.files.attached?
+          .help-attachment-list
+            - reply.files.each do |file|
+              = render "help_requests/attachment", attachment: file
+  %section.help-reply-form
+    %h3 Reply
+    = form_with model: @reply, url: reply_admin_help_request_path(@help_request), class: "admin-form help-request-form" do |form|
+      - if @reply.errors.any?
+        = render "admin/shared/errors", record: @reply
+      .field
+        = required_label form, :message, "Message"
+        = form.text_area :message, rows: 6, required: true
+      .field
+        = form.label :files, "File"
+        = form.file_field :files, multiple: true
+        %p.muted Files must be #{HelpRequestReply::MAX_UPLOAD_SIZE_LABEL} or smaller.
+      = form.submit "Send reply"

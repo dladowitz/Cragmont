@@ -49,6 +49,10 @@ export default class extends Controller {
     inputs.forEach((input) => {
       input.disabled = !enabled
       input.required = enabled && input.dataset.required === "true"
+      input.dispatchEvent(new CustomEvent("admin-participant:input-toggle", {
+        bubbles: true,
+        detail: { enabled }
+      }))
     })
   }
 

@@ -1,13 +1,16 @@
 class Admin::TripsController < Admin::BaseController
+  TRIP_FILTER_STATUSES = (Trip::STATUSES + [ "deleted" ]).freeze
+  DEFAULT_TRIP_FILTER_STATUSES = Trip::STATUSES.freeze
+
   before_action :set_trip, only: %i[show edit update destroy restore]
   before_action :ensure_trip_not_deleted, only: %i[edit update destroy]
   before_action :set_users, only: %i[show new create edit update]
 
   def index
     authorize Trip
-    @showing_deleted_trips = params[:filter] == "deleted"
-    trips_scope = @showing_deleted_trips ? Trip.deleted : Trip.active
-    @trips = policy_scope(trips_scope).includes(:campsite_coordinator, { campsite_signups: :campsite_signup_minors }, campsites: :campground).order(start_date: :asc, name: :asc)
+    @selected_statuses = selected_trip_statuses
+    trips_scope = filtered_trips_scope(policy_scope(Trip))
+    @trips = trips_scope.includes(:campsite_coordinator, { campsite_signups: :campsite_signup_minors }, campsites: :campground).order(start_date: :asc, name: :asc)
   end
 
   def show
@@ -111,5 +114,20 @@ class Admin::TripsController < Admin::BaseController
 
   def set_users
     @users = User.order(:last_name, :first_name)
+  end
+
+  def selected_trip_statuses
+    return [ "deleted" ] if params[:filter] == "deleted"
+    return DEFAULT_TRIP_FILTER_STATUSES unless params[:filters].present?
+
+    Array(params[:status]).select { |status| status.in?(TRIP_FILTER_STATUSES) }
+  end
+
+  def filtered_trips_scope(base_scope)
+    active_statuses = @selected_statuses & Trip::STATUSES
+    trips_scope = base_scope.none
+    trips_scope = trips_scope.or(base_scope.active.where(status: active_statuses)) if active_statuses.any?
+    trips_scope = trips_scope.or(base_scope.deleted) if @selected_statuses.include?("deleted")
+    trips_scope
   end
 end

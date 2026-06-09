@@ -18,6 +18,8 @@ class User < ApplicationRecord
     dependent: :nullify,
     inverse_of: :registered_by
   has_many :campsite_signups, dependent: :restrict_with_error
+  has_many :help_requests, dependent: :nullify
+  has_many :help_request_replies, dependent: :restrict_with_error
   has_many :issued_refunds,
     class_name: "CampsiteSignupPaymentRefund",
     foreign_key: :refunded_by_id,

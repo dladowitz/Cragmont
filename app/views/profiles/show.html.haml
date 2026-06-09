@@ -17,20 +17,6 @@
             %dd= @user.member? ? "Yes" : "No"
       .actions
         = link_to "Edit profile", edit_profile_path, class: "button secondary"
-        %div{"data-controller" => "modal"}
-          %button.button.danger.secondary{"data-action" => "modal#open", type: "button"} Delete account
-          %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
-            .confirmation-modal-content
-              %div
-                %h2 Are you sure you want to delete your account?
-                %p This will delete all history and current trips.
-              = form_with url: profile_path, method: :delete, data: { controller: "confirmation-text", confirmation_text_phrase_value: "Delete Me" } do
-                .field
-                  = required_label_tag :confirmation_text, "Type Delete Me to Confirm"
-                  = text_field_tag :confirmation_text, "", required: true, data: { confirmation_text_target: "input", action: "input->confirmation-text#update" }, autocomplete: "off"
-                .form-actions
-                  %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
-                  = submit_tag "Delete account", class: "button danger", disabled: true, data: { confirmation_text_target: "submit" }
   %section.panel
     %h2 Transactions
     = render "admin/trip_transactions/table",
@@ -40,6 +26,32 @@
       show_source: false,
       show_remaining_refundable: false,
       show_waived_reason: false
+  %section.panel
+    .panel-header
+      %div
+        %h2 Inbox
+        %p.muted View your help requests and replies from the Cragmont admins.
+      = link_to "All Help Requests", help_requests_path, class: "button secondary"
+    - if @recent_help_requests.any?
+      %table.profile-inbox-table
+        %thead
+          %tr
+            %th Sent
+            %th Subject
+            %th Reason
+            %th Status
+            %th
+        %tbody
+          - @recent_help_requests.each do |help_request|
+            %tr
+              %td= help_request.created_at.to_fs(:long)
+              %td= help_request.subject
+              %td= help_request.reason_label
+              %td
+                = help_request_status_pill(help_request)
+              %td= link_to "View", help_request_path(help_request), class: "button secondary admin-table-action-button"
+    - else
+      %p.muted No help requests yet.
   - if @coordinated_trips.any?
     %section.panel
       %h2 Coordinated trips

@@ -1,0 +1,8 @@
+%h1 On belay! We got your help request
+%p Hi #{@help_request.name},
+%p
+  Thanks for reaching out. The Cragmont admins received your help request:
+  %strong= @help_request.subject
+%p We will follow up as soon as we can.
+%p= link_to "View this help request on the site", @request_url
+%p Thanks for helping us keep the site dialed.

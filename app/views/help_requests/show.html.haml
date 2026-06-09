@@ -1,0 +1,48 @@
+- content_for :body_class, "help-request-show-page"
+= render "shared/public_header"
+
+%main.public-main
+  %section.panel.help-admin-detail
+    .panel-header
+      %div
+        .help-request-title-line
+          %h1= @help_request.subject
+          = help_request_status_pill(@help_request)
+      = link_to "Back to my help requests", help_requests_path, class: "button secondary"
+    %section.help-conversation
+      %article.help-reply
+        %p.help-reply-heading Original message
+        %p.muted= "You opened this request #{@help_request.created_at.to_fs(:long)}"
+        %p
+          %strong Reason:
+          = @help_request.reason_label
+        = simple_format(@help_request.message)
+        - if @help_request.images.attached?
+          .help-attachment-list
+            - @help_request.images.each do |image|
+              = render "help_requests/attachment", attachment: image
+      - @help_request.replies.order(created_at: :asc).each do |reply|
+        %article.help-reply{class: ("admin-help-reply" if reply.admin_reply?)}
+          %p.muted
+            - if reply.admin_reply?
+              = "Cragmont replied #{reply.created_at.to_fs(:long)}"
+            - else
+              = "You replied #{reply.created_at.to_fs(:long)}"
+          = simple_format(reply.message)
+          - if reply.files.attached?
+            .help-attachment-list
+              - reply.files.each do |file|
+                = render "help_requests/attachment", attachment: file
+    %section.help-reply-form
+      %h2 Reply
+      = form_with model: @reply, url: reply_help_request_path(@help_request), class: "admin-form help-request-form" do |form|
+        - if @reply.errors.any?
+          = render "admin/shared/errors", record: @reply
+        .field
+          = required_label form, :message, "Message"
+          = form.text_area :message, rows: 6, required: true
+        .field
+          = form.label :files, "File"
+          = form.file_field :files, multiple: true
+          %p.muted Add a screenshot or file if it helps explain the crux. Files must be #{HelpRequestReply::MAX_UPLOAD_SIZE_LABEL} or smaller.
+        = form.submit "Send reply"

@@ -1,0 +1,31 @@
+- content_for :body_class, "help-requests-index-page"
+= render "shared/public_header"
+
+%main.public-main
+  %section.panel
+    .panel-header
+      %div
+        %h1 My Help Requests
+        %p.muted Track your messages with the Cragmont admins.
+      = link_to "New request", new_help_request_path, class: "button"
+    - if @help_requests.any?
+      .table-wrapper
+        %table
+          %thead
+            %tr
+              %th View
+              %th Subject
+              %th Status
+              %th Replies
+              %th Sent
+          %tbody
+            - @help_requests.each do |help_request|
+              %tr
+                %td= link_to "View", help_request_path(help_request), class: "button secondary admin-table-action-button"
+                %td= help_request.subject
+                %td
+                  = help_request_status_pill(help_request)
+                %td= help_request.replies.size
+                %td= help_request.created_at.to_fs(:long)
+    - else
+      %p.muted You have not sent any help requests yet.

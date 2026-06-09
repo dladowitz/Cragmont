@@ -100,9 +100,9 @@
                               .form-field
                                 = required_label_tag "refund_#{payment.id}_reason", "Reason for refund"
                                 = text_area_tag "refund[reason]", "", id: "refund_#{payment.id}_reason", required: true, rows: 3
-                              .checkbox-field.refund-trip-expense-field
+                              %label.checkbox-field.refund-trip-expense-field{for: "refund_#{payment.id}_trip_expense"}
                                 = check_box_tag "refund[trip_expense]", "1", false, id: "refund_#{payment.id}_trip_expense"
-                                = label_tag "refund_#{payment.id}_trip_expense", "This was for a trip expense (ex: firewood)"
+                                %span This was for a trip expense (ex: firewood)
                               .form-actions
                                 %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
                                 = submit_tag "Issue Refund", class: "button danger"

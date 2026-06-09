@@ -6,4 +6,23 @@
       %div
         %h1 Edit profile
     = render "form", user: @user
+  %section.panel
+    .panel-header
+      %div
+        %h2 Account
+        %p.muted Delete your account if you are done with Cragmont.
+      %div{"data-controller" => "modal"}
+        %button.button.danger.secondary{"data-action" => "modal#open", type: "button"} Delete account
+        %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+          .confirmation-modal-content
+            %div
+              %h2 Are you sure you want to delete your account?
+              %p This will delete all history and current trips.
+            = form_with url: profile_path, method: :delete, data: { controller: "confirmation-text", confirmation_text_phrase_value: "Delete Me" } do
+              .field
+                = required_label_tag :confirmation_text, "Type Delete Me to Confirm"
+                = text_field_tag :confirmation_text, "", required: true, data: { confirmation_text_target: "input", action: "input->confirmation-text#update" }, autocomplete: "off"
+              .form-actions.delete-account-actions
+                %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
+                = submit_tag "Delete account", class: "button danger", disabled: true, data: { confirmation_text_target: "submit" }
 %p.background-image-caption Castle Valley, UT. Castleton Tower.

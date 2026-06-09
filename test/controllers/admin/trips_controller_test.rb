@@ -18,8 +18,17 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select "button.button.secondary", text: "Logout"
     end
     assert_select "h2", "Trips"
-    assert_select ".admin-filter-tabs a[href='#{admin_trips_path}']", text: "Active"
-    assert_select ".admin-filter-tabs a[href='#{admin_trips_path(filter: "deleted")}']", text: "Deleted"
+    assert_select ".admin-filter-tabs", count: 0
+    assert_select "form.trip-filter-form[action='#{admin_trips_path}'][method='get']"
+    assert_select "input[name='filters'][value='1']"
+    assert_select "input#trip_status_draft[checked]"
+    assert_select "input#trip_status_published[checked]"
+    assert_select "input#trip_status_archived[checked]"
+    assert_select "input#trip_status_deleted[checked]", count: 0
+    assert_select ".trip-status-filter", text: "Draft"
+    assert_select ".trip-status-filter", text: "Published"
+    assert_select ".trip-status-filter", text: "Archived"
+    assert_select ".trip-status-filter", text: "Deleted"
     assert_select "th", text: "Participant Capacity"
     assert_select "th", text: "Signed Up"
     assert_select "th", text: "Actions"
@@ -50,6 +59,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "input[name='trip[name]']"
     assert_select "select[name='trip[campsite_coordinator_id]']", count: 0
+    assert_select ".coordinator-picker", count: 0
 
     patch admin_trip_url(trips(:jtree)), params: {
       trip: {
@@ -115,22 +125,37 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_url
   end
 
-  test "can view deleted trips tab" do
+  test "can filter trips by status and deleted state" do
     deleted_trip = trips(:jtree)
     deleted_trip.soft_delete!
+    trips(:yosemite).update!(status: "archived")
 
     get admin_trips_url
 
     assert_response :success
     assert_select "td", text: /Joshua Tree Winter/, count: 0
+    assert_select "td", text: /Yosemite Valley Spring/
 
-    get admin_trips_url(filter: "deleted")
+    get admin_trips_url, params: { filters: "1", status: [ "deleted" ] }
 
     assert_response :success
-    assert_select "h2", "Deleted trips"
+    assert_select "h2", "Trips"
+    assert_select "input#trip_status_draft[checked]", count: 0
+    assert_select "input#trip_status_published[checked]", count: 0
+    assert_select "input#trip_status_archived[checked]", count: 0
+    assert_select "input#trip_status_deleted[checked]"
     assert_select "td", text: /Joshua Tree Winter/
+    assert_select ".deleted-status", text: "Deleted"
+    assert_select "td", text: /Yosemite Valley Spring/, count: 0
     assert_select "form[action='#{restore_admin_trip_path(deleted_trip)}'] button", text: "Restore"
     assert_select "td a[href='#{admin_trip_transactions_path(deleted_trip)}']", text: "Transactions"
+
+    get admin_trips_url, params: { filters: "1", status: [ "archived" ] }
+
+    assert_response :success
+    assert_select "td", text: /Yosemite Valley Spring/
+    assert_select "td", text: /Joshua Tree Winter/, count: 0
+    assert_select ".archived-status", text: "Archived"
   end
 
   test "trip details link to edit form when campsite coordinator is not set" do
@@ -232,11 +257,13 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
           assert_select "label", text: "Participant has an account"
           assert_select "input[type='radio'][name='campsite_signup[participant_account_status]'][value='new']"
           assert_select "label", text: "Participant does not have an account"
-          assert_select "select[name='campsite_signup[user_id]'][required]" do
-            assert_select "option[value='#{users(:alex).id}']", text: /Alex Rivera/
-            assert_select "option[value='#{users(:alex).id}'][disabled]", count: 0
-            assert_select "option[value='#{users(:sam).id}'][disabled]", text: /Sam Lee .* already on trip/
-          end
+          assert_select ".participant-picker[data-controller='participant-picker']"
+          assert_select "input[type='hidden'][name='campsite_signup[user_id]'][data-admin-participant-target='existingInput'][data-participant-picker-target='input']"
+          assert_select "button.participant-picker-button[role='combobox']", text: "Choose a participant"
+          assert_select "input.participant-picker-search[placeholder='Search by name or email']"
+          assert_select "button.participant-picker-option[data-value='#{users(:alex).id}']", text: /Alex Rivera/
+          assert_select "button.participant-picker-option[data-value='#{users(:alex).id}'][disabled]", count: 0
+          assert_select "button.participant-picker-option[data-value='#{users(:sam).id}'][disabled]", text: /Sam Lee .* already on trip/
           assert_select "section[data-admin-participant-target='newFields'][hidden]" do
             assert_select "h3", "Create an account and add to campsite"
             assert_select "input[type='text'][name='campsite_signup[new_user][first_name]'][required][disabled]"
@@ -1003,6 +1030,13 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     get new_admin_trip_url
 
     assert_response :success
+    assert_select "select[name='trip[campsite_coordinator_id]']", count: 0
+    assert_select ".coordinator-picker[data-controller='participant-picker']"
+    assert_select "input[type='hidden'][name='trip[campsite_coordinator_id]'][data-participant-picker-target='input'][value='']"
+    assert_select "button.participant-picker-button[role='combobox']", text: "Unassigned"
+    assert_select "input.participant-picker-search[placeholder='Search coordinators']"
+    assert_select "button.participant-picker-option[data-value='']", text: "Unassigned"
+    assert_select "button.participant-picker-option[data-value='#{users(:alex).id}']", text: "Alex Rivera"
   end
 
   test "can update trip" do
@@ -1048,6 +1082,9 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     get edit_admin_trip_url(trip)
 
     assert_response :success
+    assert_select ".coordinator-picker[data-controller='participant-picker']"
+    assert_select "input[type='hidden'][name='trip[campsite_coordinator_id]'][value='']"
+    assert_select "button.participant-picker-button[role='combobox']", text: "Unassigned"
     assert_select ".danger-form-action [data-controller='modal'] > button.button.danger.secondary", text: "Delete trip"
     assert_select "dialog.confirmation-modal", text: /Delete trip\?/
     assert_select "dialog.confirmation-modal", text: /transaction history will be preserved/

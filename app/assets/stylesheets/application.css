@@ -469,6 +469,75 @@ input[type="submit"]:disabled {
   margin-bottom: 18px;
 }
 
+.help-request-filter-form,
+.trip-filter-form {
+  margin: 0 0 18px;
+}
+
+.help-request-status-filters,
+.trip-status-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.help-request-status-filters legend,
+.trip-status-filters legend {
+  margin-right: 4px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.help-status-filter,
+.trip-status-filter {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #d8e1dc;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--accent-dark);
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.help-status-filter input[type="checkbox"],
+.trip-status-filter input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  accent-color: var(--accent);
+}
+
+.trip-status-filter:has(input[type="checkbox"]:checked),
+.help-status-filter:has(input[type="checkbox"]:checked) {
+  border-color: var(--accent);
+  background: #eaf6f1;
+  box-shadow: inset 0 0 0 1px rgb(47 111 94 / 18%);
+}
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+.pagination-summary {
+  color: var(--muted);
+  font-weight: 750;
+}
+
 .deleted-trip-banner {
   display: grid;
   gap: 4px;
@@ -512,8 +581,8 @@ input[type="submit"]:disabled {
 }
 
 .refund-modal .refund-amount-field {
-  width: 20%;
-  min-width: 150px;
+  width: min(260px, 100%);
+  min-width: 0;
   max-width: 100%;
 }
 
@@ -528,13 +597,48 @@ input[type="submit"]:disabled {
 }
 
 .refund-modal .checkbox-field {
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
+  display: inline-flex;
+  gap: 14px;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 58px;
+  padding: 12px 16px;
+  border: 1px solid #d8e1dc;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 800;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease,
+    box-shadow 120ms ease;
 }
 
 .refund-modal .checkbox-field input[type="checkbox"] {
-  width: auto;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  flex: 0 0 28px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.refund-modal .checkbox-field:hover {
+  border-color: var(--accent);
+  box-shadow: 0 6px 18px rgb(47 111 94 / 10%);
+}
+
+.refund-modal .checkbox-field:has(input[type="checkbox"]:checked) {
+  border-color: var(--accent);
+  background: #eaf6f1;
+  box-shadow: inset 0 0 0 1px rgb(47 111 94 / 18%);
+}
+
+.refund-modal .checkbox-field:has(input[type="checkbox"]:focus-visible) {
+  outline: 3px solid rgb(47 111 94 / 22%);
+  outline-offset: 3px;
 }
 
 .transaction-details-sections {
@@ -1494,6 +1598,275 @@ td span {
   gap: 14px;
 }
 
+.help-panel {
+  max-width: 980px;
+}
+
+.help-layout,
+.help-request-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.help-copy {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid #d8e1dc;
+  border-radius: 8px;
+  background: #fbfdfc;
+}
+
+.help-copy p {
+  margin: 0;
+}
+
+.help-screenshot-emphasis {
+  font-size: 1.2em;
+  font-weight: 800;
+}
+
+.help-request-form textarea {
+  min-height: 170px;
+}
+
+.help-request-form input[type="file"] {
+  padding: 14px;
+  border-color: #a8b7ae;
+  background: #fbfdfc;
+  color: var(--text);
+}
+
+.help-request-form input[type="file"]::file-selector-button {
+  min-height: 46px;
+  margin-right: 14px;
+  padding: 10px 18px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.help-request-form input[type="file"]::file-selector-button:hover {
+  background: var(--accent-dark);
+}
+
+.help-contact-label {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.help-contact-value {
+  display: block;
+  min-height: 46px;
+  padding: 10px 0;
+  color: var(--text);
+  font-weight: 750;
+}
+
+.detail-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.detail-list div {
+  display: grid;
+  gap: 4px;
+}
+
+.detail-list dt {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.detail-list dd {
+  margin: 0;
+}
+
+.help-request-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 28px;
+  align-items: flex-start;
+  margin: 0;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.help-request-meta-row div {
+  display: grid;
+  gap: 4px;
+}
+
+.help-request-meta-row dt {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.help-request-meta-row dd {
+  margin: 0;
+}
+
+.help-request-title-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.help-request-title-line h1,
+.help-request-title-line h2 {
+  margin: 0;
+}
+
+.help-message,
+.help-conversation,
+.help-replies,
+.help-reply-form {
+  display: grid;
+  gap: 12px;
+}
+
+.help-message h3,
+.help-replies h3,
+.help-reply-form h3 {
+  margin: 0;
+}
+
+.help-screenshot-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.help-screenshot-list img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.help-admin-detail {
+  display: grid;
+  gap: 24px;
+}
+
+.help-admin-detail > .panel-header {
+  margin-bottom: 0;
+}
+
+body.help-request-show-page .help-admin-detail > .panel-header {
+  margin-bottom: 0;
+}
+
+body.help-request-show-page .help-admin-detail {
+  gap: 12px;
+  padding-top: 16px;
+}
+
+body.help-request-show-page .help-admin-detail h1 {
+  margin: 0;
+}
+
+.help-reply {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfdfc;
+}
+
+.admin-help-reply {
+  border-color: #9bd0ba;
+  background: #ecf8f2;
+}
+
+.help-reply p {
+  margin-top: 0;
+}
+
+.help-reply-heading {
+  margin: 0;
+  font-weight: 850;
+}
+
+.help-attachment-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.help-attachment-list a,
+.help-attachment-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid #cfd8d3;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--accent-dark);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.help-image-modal {
+  width: min(1120px, calc(100% - 32px));
+}
+
+.help-image-modal-content {
+  gap: 16px;
+}
+
+.help-image-modal img {
+  max-width: 100%;
+  max-height: calc(100vh - 190px);
+  object-fit: contain;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.help-subscriber-form {
+  max-width: 520px;
+  margin-bottom: 22px;
+}
+
+.status-pill {
+  display: inline-flex;
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.open-status {
+  background: #fff8db;
+  color: #936100;
+}
+
+.replied-status {
+  background: #ecf8f2;
+  color: var(--accent-dark);
+}
+
+.resolved-status {
+  background: #eef4ff;
+  color: #1f5fbf;
+}
+
 body.trips-index-page .trips-index-panel {
   border-color: rgb(255 255 255 / 56%);
   background: rgb(255 255 255 / 88%);
@@ -1728,26 +2101,53 @@ dialog.signup-modal.refund-modal .details-list.transaction-details-list > div:la
 }
 
 dialog.signup-modal.refund-modal .refund-amount-field {
-  width: 20%;
-  min-width: 150px;
+  width: min(260px, 100%);
+  min-width: 0;
   max-width: 100%;
 }
 
 dialog.signup-modal.refund-modal .currency-field {
   display: grid;
   grid-template-columns: auto 1fr;
-  border: 1px solid #b9c0c8 !important;
+  min-height: 56px;
+  overflow: hidden;
+  border: 1px solid #cfd8d3 !important;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 0 rgb(31 41 51 / 4%);
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    background-color 120ms ease;
 }
 
-dialog.signup-modal.refund-modal .checkbox-field {
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
+dialog.signup-modal.refund-modal .currency-field span {
+  display: inline-flex;
+  align-self: stretch;
+  align-items: center;
+  padding: 0 14px;
+  border-right: 1px solid #d8e1dc;
+  background: #fbfdfc;
+  color: var(--muted);
+  font-weight: 850;
 }
 
-dialog.signup-modal.refund-modal .checkbox-field input[type="checkbox"] {
-  width: auto;
-  flex: 0 0 auto;
+dialog.signup-modal.refund-modal .currency-field input:not([type="submit"]) {
+  min-height: 54px;
+  padding: 12px 14px;
+  border: 0;
+}
+
+dialog.signup-modal.refund-modal .currency-field:hover {
+  border-color: var(--accent) !important;
+  background: #fbfdfc;
+}
+
+dialog.signup-modal.refund-modal .currency-field:focus-within {
+  border-color: var(--accent) !important;
+  outline: 3px solid rgb(47 111 94 / 18%);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px rgb(47 111 94 / 18%);
 }
 
 dialog.signup-modal.refund-modal .form-actions {
@@ -1760,6 +2160,10 @@ dialog.signup-modal.refund-modal .form-actions {
 .signup-modal .form-actions,
 .confirmation-modal .form-actions {
   justify-content: end;
+}
+
+.confirmation-modal .delete-account-actions {
+  margin-top: 18px;
 }
 
 .admin-campsite-choice-list {
@@ -1784,7 +2188,8 @@ dialog.signup-modal.refund-modal .form-actions {
 }
 
 .admin-waitlist-campsite-choice-row {
-  grid-template-columns: auto minmax(220px, 1fr) auto minmax(220px, auto);
+  grid-template-columns: 42px minmax(220px, 1fr) minmax(160px, auto) minmax(320px, 0.9fr);
+  align-items: center;
 }
 
 .admin-waitlist-campsite-choice-row.is-selected {
@@ -1794,27 +2199,69 @@ dialog.signup-modal.refund-modal .form-actions {
 
 .admin-campsite-choice-selector {
   display: flex;
+  justify-content: center;
   align-items: center;
 }
 
 .admin-campsite-choice-selector input[type="radio"] {
-  width: auto;
+  width: 30px;
+  height: 30px;
   padding: 0;
+  border: 2px solid #a8b7ae;
+  border-radius: 50%;
+  appearance: none;
+  background: #fff;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    background 120ms ease;
+}
+
+.admin-campsite-choice-selector input[type="radio"]:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+  box-shadow: inset 0 0 0 7px #fff;
+}
+
+.admin-campsite-choice-selector input[type="radio"]:focus-visible {
+  outline: 3px solid rgb(47 111 94 / 22%);
+  outline-offset: 3px;
 }
 
 .admin-waitlist-waive-options {
-  grid-template-columns: repeat(2, auto);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: center;
-  gap: 8px 12px;
-  padding: 10px 12px;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  padding: 10px;
 }
 
 .admin-waitlist-waive-options legend {
   font-size: 0.9rem;
 }
 
+.admin-waitlist-waive-options label {
+  min-width: 0;
+  min-height: 58px;
+  padding: 10px 14px;
+}
+
+.admin-waitlist-waive-options input[type="radio"] {
+  width: 26px;
+  height: 26px;
+  flex-basis: 26px;
+}
+
 .admin-waitlist-waive-fields {
   grid-column: 2 / -1;
+  padding: 16px;
+}
+
+.admin-waitlist-waive-fields select {
+  min-height: 54px;
+  border-radius: 8px;
 }
 
 .admin-campsite-choice-copy,
@@ -1838,8 +2285,53 @@ dialog.signup-modal.refund-modal .form-actions {
   gap: 16px;
 }
 
+.admin-add-participant-options {
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.admin-add-participant-options legend {
+  grid-column: 1 / -1;
+}
+
 .admin-add-participant-options label {
-  width: auto;
+  width: 100%;
+  min-height: 66px;
+}
+
+.admin-add-participant-options input[type="radio"] {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  flex: 0 0 28px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.admin-add-participant-options label:has(input[type="radio"]:checked) {
+  border-color: var(--accent);
+  background: #eaf6f1;
+  box-shadow: inset 0 0 0 1px rgb(47 111 94 / 18%);
+}
+
+.admin-add-participant-options label:has(input[type="radio"]:focus-visible) {
+  outline: 3px solid rgb(47 111 94 / 22%);
+  outline-offset: 3px;
+}
+
+.admin-add-participant-options.admin-waitlist-waive-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-add-participant-options.admin-waitlist-waive-options label {
+  min-height: 58px;
+  padding: 10px 14px;
+}
+
+.admin-add-participant-options.admin-waitlist-waive-options input[type="radio"] {
+  width: 26px;
+  height: 26px;
+  flex-basis: 26px;
 }
 
 .admin-add-participant-fields {
@@ -1857,6 +2349,182 @@ dialog.signup-modal.refund-modal .form-actions {
 
 .admin-add-participant-fields h3 {
   margin: 0;
+}
+
+.participant-picker {
+  position: relative;
+}
+
+.participant-picker-button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 18px;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  min-height: 54px;
+  padding: 12px 16px;
+  border: 1px solid #cfd8d3;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 650;
+  text-align: left;
+  box-shadow: 0 1px 0 rgb(31 41 51 / 4%);
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    background-color 120ms ease;
+}
+
+.participant-picker-button:hover {
+  border-color: var(--accent);
+  background: #fbfdfc;
+}
+
+.participant-picker-button:focus-visible {
+  border-color: var(--accent);
+  outline: 3px solid rgb(47 111 94 / 18%);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px rgb(47 111 94 / 18%);
+}
+
+.participant-picker-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.participant-picker-chevron {
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--accent-dark);
+  border-bottom: 2px solid var(--accent-dark);
+  justify-self: center;
+  transform: translateY(-2px) rotate(45deg);
+}
+
+.participant-picker-panel {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 8px);
+  right: 0;
+  left: 0;
+  display: grid;
+  gap: 8px;
+  max-height: min(420px, 52vh);
+  padding: 10px;
+  border: 1px solid #cfd8d3;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 18px 44px rgb(31 41 51 / 22%);
+}
+
+.participant-picker-panel[hidden] {
+  display: none;
+}
+
+.participant-picker-search {
+  min-height: 46px;
+  padding: 10px 12px;
+  border-color: #cfd8d3;
+  border-radius: 8px;
+}
+
+.participant-picker-list {
+  display: grid;
+  gap: 4px;
+  max-height: 330px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.participant-picker-option {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  padding: 9px 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 650;
+  text-align: left;
+}
+
+.participant-picker-option:hover,
+.participant-picker-option:focus-visible {
+  border-color: rgb(47 111 94 / 28%);
+  background: #eaf6f1;
+  outline: 0;
+}
+
+.participant-picker-option[aria-selected="true"] {
+  border-color: var(--accent);
+  background: #eaf6f1;
+  color: var(--accent-dark);
+}
+
+.participant-picker-option:disabled {
+  color: #8a9490;
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.participant-picker-option:disabled:hover {
+  border-color: transparent;
+  background: transparent;
+}
+
+.participant-picker-empty {
+  padding: 12px;
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.admin-add-participant-fields select {
+  min-height: 54px;
+  padding: 12px 48px 12px 16px;
+  border-color: #cfd8d3;
+  border-radius: 8px;
+  appearance: none;
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--accent-dark) 50%),
+    linear-gradient(135deg, var(--accent-dark) 50%, transparent 50%);
+  background-position:
+    calc(100% - 24px) 50%,
+    calc(100% - 17px) 50%;
+  background-size:
+    8px 8px,
+    8px 8px;
+  background-repeat: no-repeat;
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 650;
+  box-shadow: 0 1px 0 rgb(31 41 51 / 4%);
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    background-color 120ms ease;
+}
+
+.admin-add-participant-fields select:hover {
+  border-color: var(--accent);
+  background-color: #fbfdfc;
+}
+
+.admin-add-participant-fields select:focus,
+.admin-add-participant-fields select:focus-visible {
+  border-color: var(--accent);
+  outline: 3px solid rgb(47 111 94 / 18%);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px rgb(47 111 94 / 18%);
 }
 
 .admin-add-participant-form .form-actions {
@@ -2044,17 +2712,52 @@ dialog.signup-modal.refund-modal .form-actions {
 }
 
 .signup-kind-options label {
-  display: flex;
-  gap: 10px;
+  display: inline-flex;
+  gap: 14px;
   align-items: center;
-  width: max-content;
+  width: min(420px, 100%);
+  min-height: 58px;
+  padding: 12px 16px;
+  border: 1px solid #d8e1dc;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
   font-weight: 700;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease,
+    box-shadow 120ms ease;
 }
 
-.signup-kind-options input[type="radio"],
 .signup-kind-options input[type="checkbox"] {
-  width: auto;
+  width: 28px;
+  height: 28px;
   padding: 0;
+  flex: 0 0 28px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.signup-kind-options label:hover {
+  border-color: var(--accent);
+  box-shadow: 0 6px 18px rgb(47 111 94 / 10%);
+}
+
+.signup-kind-options label:has(input[type="checkbox"]:checked) {
+  border-color: var(--accent);
+  background: #eaf6f1;
+  box-shadow: inset 0 0 0 1px rgb(47 111 94 / 18%);
+}
+
+.signup-kind-options label:has(input[type="checkbox"]:focus-visible) {
+  outline: 3px solid rgb(47 111 94 / 22%);
+  outline-offset: 3px;
+}
+
+.signup-kind-options label span {
+  font-size: 1.08rem;
+  line-height: 1.2;
 }
 
 .minor-fields,
@@ -2752,6 +3455,11 @@ th {
   color: #1f5fbf;
 }
 
+.deleted-status {
+  background: #fff1f0;
+  color: var(--danger);
+}
+
 .admin-form {
   display: grid;
   gap: 18px;
@@ -2766,6 +3474,46 @@ th {
 .field {
   display: grid;
   gap: 6px;
+}
+
+.admin-form select {
+  min-height: 54px;
+  padding: 12px 48px 12px 16px;
+  border-color: #cfd8d3;
+  border-radius: 8px;
+  appearance: none;
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--accent-dark) 50%),
+    linear-gradient(135deg, var(--accent-dark) 50%, transparent 50%);
+  background-position:
+    calc(100% - 24px) 50%,
+    calc(100% - 17px) 50%;
+  background-size:
+    8px 8px,
+    8px 8px;
+  background-repeat: no-repeat;
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 650;
+  box-shadow: 0 1px 0 rgb(31 41 51 / 4%);
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    background-color 120ms ease;
+}
+
+.admin-form select:hover {
+  border-color: var(--accent);
+  background-color: #fbfdfc;
+}
+
+.admin-form select:focus,
+.admin-form select:focus-visible {
+  border-color: var(--accent);
+  outline: 3px solid rgb(47 111 94 / 18%);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px rgb(47 111 94 / 18%);
 }
 
 .password-visibility-field {
@@ -2811,6 +3559,13 @@ label {
   margin-left: 2px;
   color: var(--danger);
   font-weight: 850;
+}
+
+.required-inline-label {
+  display: inline-flex;
+  gap: 2px;
+  align-items: baseline;
+  width: fit-content;
 }
 
 .radio-field {
@@ -3157,6 +3912,8 @@ textarea {
   .fee-section-row,
   .minor-field-row,
   .guest-field-row,
+  .help-layout,
+  .help-request-detail-grid,
   .trip-card {
     grid-template-columns: 1fr;
   }

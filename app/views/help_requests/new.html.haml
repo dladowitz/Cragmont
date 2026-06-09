@@ -1,0 +1,62 @@
+- content_for :body_class, "help-request-page"
+= render "shared/public_header"
+
+%main.public-main
+  %section.panel.help-panel
+    .panel-header
+      %div
+        %h1 Need Help?
+        %p.muted Report an issue, ask questions, or generally just reach out to us.
+    .help-layout
+      .help-copy
+        - if Date.current <= Date.new(2026, 10, 31)
+          %p
+            We just launched this site in June of 2026. It's filled with many new processes for booking and organizing climbing trips.
+          %p
+            It'll
+            %s likely
+            absolutely have issues that we'll be working out for the next few months.
+          %p
+            Please help us out by reporting issues you find.
+        %p.help-screenshot-emphasis
+          It's super helpful to upload a screenshot along with a description of issues you run into.
+      = form_with model: @help_request, url: create_help_request_path, class: "admin-form help-request-form" do |form|
+        - if @help_request.errors.any?
+          = render "admin/shared/errors", record: @help_request
+        .field
+          = required_label form, :reason, "Reason for contact"
+          = form.select :reason, HelpRequest::REASONS.map { |value, label| [label, value] }, { prompt: "Choose a reason" }, required: true
+        .field
+          = required_label form, :subject
+          = form.text_field :subject, required: true
+        - if current_user
+          .form-grid
+            .field
+              %span.help-contact-label Name
+              %span.help-contact-value= current_user.full_name
+            .field
+              - if current_user.email.present?
+                %span.help-contact-label Email
+                %span.help-contact-value= current_user.email
+              - else
+                = required_label form, :email
+                = form.email_field :email, required: true, autocomplete: "email"
+        - else
+          .form-grid
+            .field
+              = required_label form, :first_name, "First name"
+              = form.text_field :first_name, required: true, autocomplete: "given-name"
+            .field
+              = required_label form, :last_name, "Last name"
+              = form.text_field :last_name, required: true, autocomplete: "family-name"
+            .field
+              = required_label form, :email
+              = form.email_field :email, required: true, autocomplete: "email"
+        .field
+          = required_label form, :message, "Question or issue"
+          = form.text_area :message, rows: 7, required: true
+        .field
+          = form.label :images, "Screenshot"
+          = form.file_field :images, multiple: true, accept: "image/png,image/jpeg,image/gif,image/webp"
+          %p.muted Upload a screenshot or two if it helps show where the crux is. Files must be #{HelpRequest::MAX_UPLOAD_SIZE_LABEL} or smaller.
+        = form.submit "Send message"

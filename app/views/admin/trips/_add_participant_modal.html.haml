@@ -11,11 +11,11 @@
 - waive_reason_id = "admin-add-participant-waive-reason-#{campsite.id}"
 - other_waive_reason_id = "admin-add-participant-other-waive-reason-#{campsite.id}"
 - signed_up_user_ids = Array(local_assigns[:trip_participant_user_ids])
-- user_options = users.map do |user|
+- user_picker_options = users.map do |user|
   - signed_up = signed_up_user_ids.include?(user.id)
   - option_label = user.email.present? ? "#{user.full_name} (#{user.email})" : user.full_name
   - option_label = "#{option_label} - already on trip" if signed_up
-  - [option_label, user.id, { disabled: signed_up }]
+  - { label: option_label, value: user.id, disabled: signed_up }
 %div{"data-controller" => "modal"}
   %button.button.secondary{"aria-controls" => modal_id, "data-action" => "modal#open", type: "button"} Add Participant
   %dialog.signup-modal.admin-add-participant-modal{id: modal_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
@@ -41,7 +41,19 @@
               Participant
               %span.required-marker{"aria-hidden" => "true"} *
               %span.visually-hidden required
-            = select_tag "campsite_signup[user_id]", options_for_select(user_options), include_blank: "Choose a participant", id: user_select_id, required: true, data: { admin_participant_target: "existingInput", required: "true" }
+            .participant-picker{"data-controller" => "participant-picker", "data-participant-picker-placeholder-value" => "Choose a participant", "data-action" => "keydown->participant-picker#keydown"}
+              = hidden_field_tag "campsite_signup[user_id]", "", id: user_select_id, data: { admin_participant_target: "existingInput", participant_picker_target: "input", required: "true" }
+              %button.participant-picker-button{type: "button", role: "combobox", aria: { expanded: "false", controls: "#{user_select_id}-list", haspopup: "listbox" }, data: { participant_picker_target: "button", action: "participant-picker#toggle" }}
+                %span{"data-participant-picker-target" => "label"} Choose a participant
+                %span.participant-picker-chevron{"aria-hidden" => "true"}
+              .participant-picker-panel{hidden: true, data: { participant_picker_target: "panel" }}
+                = search_field_tag nil, "", class: "participant-picker-search", placeholder: "Search by name or email", autocomplete: "off", data: { participant_picker_target: "search", action: "input->participant-picker#filter" }
+                %ul.participant-picker-list{id: "#{user_select_id}-list", role: "listbox"}
+                  - user_picker_options.each do |option|
+                    %li
+                      %button.participant-picker-option{type: "button", role: "option", disabled: option[:disabled], aria: { selected: "false" }, data: { participant_picker_target: "option", action: "participant-picker#choose", value: option[:value], label: option[:label], search_text: option[:label].downcase }}
+                        %span= option[:label]
+                  %li.participant-picker-empty{hidden: true, data: { participant_picker_target: "empty" }} No participants found.
         %section.admin-add-participant-fields{"data-admin-participant-target" => "newFields", hidden: true}
           %h3 Create an account and add to campsite
           .form-grid

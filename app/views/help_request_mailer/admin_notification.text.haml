@@ -1,0 +1,10 @@
+New Cragmont help request
+
+Subject: #{@help_request.subject}
+Reason: #{@help_request.reason_label}
+From: #{@help_request.name} <#{@help_request.email}>
+
+= @help_request.message
+
+Review and reply:
+= admin_help_request_url(@help_request)
