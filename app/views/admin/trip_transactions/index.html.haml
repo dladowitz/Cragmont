@@ -6,7 +6,7 @@
       %h2 Transactions
     .actions
       = link_to "Back to trip", admin_trip_path(@trip), class: "button secondary"
-      - if @trip.deleted?
+      - if @trip.deleted? && policy(@trip).restore?
         = button_to "Restore trip", restore_admin_trip_path(@trip), method: :patch, class: "button"
 
   - if @trip.deleted?

@@ -43,6 +43,9 @@ gem "image_processing", "~> 2.0"
 # Render Rails views with HAML templates.
 gem "haml-rails", "~> 3.0"
 
+# Authorize admin actions with small, explicit policy classes.
+gem "pundit", "~> 2.5"
+
 # Generate signed waiver PDFs for trip signups.
 gem "prawn", "~> 2.5"
 

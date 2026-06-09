@@ -2,22 +2,27 @@ class Admin::CampgroundsController < Admin::BaseController
   before_action :set_campground, only: %i[show edit update destroy]
 
   def index
+    authorize Campground
     @campgrounds = Campground.order(:name)
   end
 
   def show
+    authorize @campground
     @campsites = @campground.campsites.includes(:trip).order(:arrival_date, :site_number)
   end
 
   def new
     @campground = Campground.new
+    authorize @campground
   end
 
   def edit
+    authorize @campground
   end
 
   def create
     @campground = Campground.new(campground_params)
+    authorize @campground
 
     if @campground.save
       redirect_to admin_campground_path(@campground), notice: "Campground was created."
@@ -27,6 +32,8 @@ class Admin::CampgroundsController < Admin::BaseController
   end
 
   def update
+    authorize @campground
+
     if @campground.update(campground_params)
       redirect_to admin_campground_path(@campground), notice: "Campground was updated."
     else
@@ -35,6 +42,8 @@ class Admin::CampgroundsController < Admin::BaseController
   end
 
   def destroy
+    authorize @campground
+
     if @campground.destroy
       redirect_to admin_campgrounds_path, notice: "Campground was deleted.", status: :see_other
     else

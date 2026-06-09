@@ -65,6 +65,8 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_select ".details-list dd", text: "Yes"
     assert_select ".details-list dt", text: "Default Password"
     assert_select ".details-list dd", text: "No"
+    assert_select ".details-list dt", text: "Roles"
+    assert_select ".details-list dd", text: "Super Admin"
     assert_select "form[data-turbo-confirm='Are you sure you want to delete this user?']"
     assert_select "a", text: "Yosemite Valley Spring"
   end
@@ -108,21 +110,27 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     get new_admin_user_url
 
     assert_response :success
+    assert_select "fieldset legend", text: "Roles"
+    assert_select "input[type='checkbox'][name='user[role_ids][]']", count: 3
   end
 
   test "can update user" do
+    finance_role = roles(:finance_admin)
+
     patch admin_user_url(users(:sam)), params: {
       user: {
         first_name: "Samantha",
         last_name: users(:sam).last_name,
         email: users(:sam).email,
         phone: users(:sam).phone,
-        member: users(:sam).member
+        member: users(:sam).member,
+        role_ids: [ finance_role.id ]
       }
     }
 
     assert_redirected_to admin_user_url(users(:sam))
     assert_equal "Samantha", users(:sam).reload.first_name
+    assert users(:sam).finance_admin?
   end
 
   test "admin create requires password" do

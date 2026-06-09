@@ -3,7 +3,7 @@
   .panel-header
     %div
       %h2= @showing_deleted_trips ? "Deleted trips" : "Trips"
-    - unless @showing_deleted_trips
+    - if !@showing_deleted_trips && policy(Trip).new?
       = link_to "New trip", new_admin_trip_path, class: "button"
   .admin-filter-tabs
     = link_to "Active", admin_trips_path, class: ["button", ("secondary" if @showing_deleted_trips)].compact

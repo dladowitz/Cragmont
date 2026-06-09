@@ -32,6 +32,24 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".background-image-caption", "Half Dome, Regular Northwest Face"
   end
 
+  test "trips index hides admin link from signed in users without admin access" do
+    log_in_as(users(:sam))
+
+    get trips_url
+
+    assert_response :success
+    assert_select "a.public-admin-link", text: "Admin", count: 0
+  end
+
+  test "trips index shows admin link to users with admin access" do
+    log_in_as(users(:alex))
+
+    get trips_url
+
+    assert_response :success
+    assert_select "a.public-admin-link[href='#{admin_root_path}']", text: "Admin"
+  end
+
   test "public pages hide deleted trips" do
     trips(:yosemite).soft_delete!
 

@@ -4,6 +4,8 @@ class Admin::CampsiteSignupsController < Admin::BaseController
 
   before_action :set_trip
   before_action :ensure_trip_not_deleted
+  before_action :authorize_trip_participant_management,
+    only: %i[create make_waitlist_eligible revoke_waitlist_eligibility move_to_campsite move_to_waitlist remove_from_campsite remove_from_waitlist update_parking_status email_participant_link]
 
   def create
     trip = @trip
@@ -151,6 +153,10 @@ class Admin::CampsiteSignupsController < Admin::BaseController
     return unless @trip.deleted?
 
     redirect_to admin_trip_path(@trip), alert: "Restore this trip before making changes.", status: :see_other
+  end
+
+  def authorize_trip_participant_management
+    authorize @trip, :manage_participants?
   end
 
   def add_participant_params

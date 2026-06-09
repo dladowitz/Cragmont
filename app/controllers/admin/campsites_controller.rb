@@ -6,13 +6,16 @@ class Admin::CampsitesController < Admin::BaseController
   before_action :set_users, only: %i[new create edit update]
 
   def new
+    authorize @trip, :manage_campsites?
     @campsite = @trip.campsites.new
   end
 
   def edit
+    authorize @trip, :manage_campsites?
   end
 
   def create
+    authorize @trip, :manage_campsites?
     @campsite = @trip.campsites.new(campsite_params)
 
     if @campsite.save
@@ -23,6 +26,8 @@ class Admin::CampsitesController < Admin::BaseController
   end
 
   def update
+    authorize @trip, :manage_campsites?
+
     if @campsite.update(campsite_params)
       redirect_to admin_trip_path(@trip), notice: "Campsite was updated."
     else
@@ -31,6 +36,8 @@ class Admin::CampsitesController < Admin::BaseController
   end
 
   def destroy
+    authorize @trip, :manage_campsites?
+
     if @campsite.destroy
       redirect_to admin_trip_path(@trip), notice: "Campsite was deleted.", status: :see_other
     else

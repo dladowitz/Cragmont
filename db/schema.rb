@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_08_091000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_09_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -181,6 +181,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_08_091000) do
     t.index ["trip_id"], name: "index_campsites_on_trip_id"
   end
 
+  create_table "roles", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_roles_on_slug", unique: true
+  end
+
   create_table "site_settings", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "extra_night_fee_cents", default: 0, null: false
@@ -276,6 +284,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_08_091000) do
     t.index ["status"], name: "index_trips_on_status"
   end
 
+  create_table "user_roles", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "role_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["role_id"], name: "index_user_roles_on_role_id"
+    t.index ["user_id", "role_id"], name: "index_user_roles_on_user_id_and_role_id", unique: true
+    t.index ["user_id"], name: "index_user_roles_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.boolean "default_password", default: false, null: false
@@ -311,4 +329,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_08_091000) do
   add_foreign_key "trip_payment_requests", "users", column: "created_by_id"
   add_foreign_key "trip_signup_minors", "trip_signups"
   add_foreign_key "trips", "users", column: "campsite_coordinator_id"
+  add_foreign_key "user_roles", "roles"
+  add_foreign_key "user_roles", "users"
 end

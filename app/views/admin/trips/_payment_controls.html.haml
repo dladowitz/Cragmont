@@ -70,41 +70,42 @@
                     = link_to payment.source.titleize, stripe_payment_url, target: "_blank", rel: "noopener"
                   - else
                     = payment.source.titleize
-              %div.transaction-refund-action-row
-                %dt
-                %dd
-                  %div{"data-controller" => "modal", "data-modal-disable-autofocus-value" => "true"}
-                    - refund_disabled = payment.remaining_refundable_amount_cents.zero? || !payment.stripe_source?
-                    - refund_title = payment.remaining_refundable_amount_cents.zero? ? "There is nothing left to refund." : ("Only Stripe transactions can be refunded here." unless payment.stripe_source?)
-                    %button.button.danger.secondary.admin-table-action-button{"data-action" => ("modal#open" unless refund_disabled), disabled: refund_disabled, title: refund_title, type: "button"} Issue Refund
-                    - unless refund_disabled
-                      %dialog.signup-modal.refund-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
-                        .signup-modal-content
-                          %div
-                            %h2 Refund payment
-                            %p= payment_signup.user.full_name
-                          %dl.details-list.transaction-details-list
+              - unless read_only
+                %div.transaction-refund-action-row
+                  %dt
+                  %dd
+                    %div{"data-controller" => "modal", "data-modal-disable-autofocus-value" => "true"}
+                      - refund_disabled = payment.remaining_refundable_amount_cents.zero? || !payment.stripe_source?
+                      - refund_title = payment.remaining_refundable_amount_cents.zero? ? "There is nothing left to refund." : ("Only Stripe transactions can be refunded here." unless payment.stripe_source?)
+                      %button.button.danger.secondary.admin-table-action-button{"data-action" => ("modal#open" unless refund_disabled), disabled: refund_disabled, title: refund_title, type: "button"} Issue Refund
+                      - unless refund_disabled
+                        %dialog.signup-modal.refund-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                          .signup-modal-content
                             %div
-                              %dt Participant
-                              %dd= payment_signup.user.full_name
-                            %div
-                              %dt Remaining refundable
-                              %dd= format_cents(payment.remaining_refundable_amount_cents)
-                          = form_with url: refund_admin_trip_transaction_path(trip, payment), method: :post, class: "admin-form" do
-                            .form-field.refund-amount-field
-                              = required_label_tag "refund_#{payment.id}_amount", "Refund amount"
-                              .currency-field
-                                %span $
-                                = number_field_tag "refund[amount]", "0.00", id: "refund_#{payment.id}_amount", min: 0.01, max: number_with_precision(BigDecimal(payment.remaining_refundable_amount_cents.to_s) / 100, precision: 2), step: 0.01, required: true
-                            .form-field
-                              = required_label_tag "refund_#{payment.id}_reason", "Reason for refund"
-                              = text_area_tag "refund[reason]", "", id: "refund_#{payment.id}_reason", required: true, rows: 3
-                            .checkbox-field.refund-trip-expense-field
-                              = check_box_tag "refund[trip_expense]", "1", false, id: "refund_#{payment.id}_trip_expense"
-                              = label_tag "refund_#{payment.id}_trip_expense", "This was for a trip expense (ex: firewood)"
-                            .form-actions
-                              %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
-                              = submit_tag "Issue Refund", class: "button danger"
+                              %h2 Refund payment
+                              %p= payment_signup.user.full_name
+                            %dl.details-list.transaction-details-list
+                              %div
+                                %dt Participant
+                                %dd= payment_signup.user.full_name
+                              %div
+                                %dt Remaining refundable
+                                %dd= format_cents(payment.remaining_refundable_amount_cents)
+                            = form_with url: refund_admin_trip_transaction_path(trip, payment), method: :post, class: "admin-form" do
+                              .form-field.refund-amount-field
+                                = required_label_tag "refund_#{payment.id}_amount", "Refund amount"
+                                .currency-field
+                                  %span $
+                                  = number_field_tag "refund[amount]", "0.00", id: "refund_#{payment.id}_amount", min: 0.01, max: number_with_precision(BigDecimal(payment.remaining_refundable_amount_cents.to_s) / 100, precision: 2), step: 0.01, required: true
+                              .form-field
+                                = required_label_tag "refund_#{payment.id}_reason", "Reason for refund"
+                                = text_area_tag "refund[reason]", "", id: "refund_#{payment.id}_reason", required: true, rows: 3
+                              .checkbox-field.refund-trip-expense-field
+                                = check_box_tag "refund[trip_expense]", "1", false, id: "refund_#{payment.id}_trip_expense"
+                                = label_tag "refund_#{payment.id}_trip_expense", "This was for a trip expense (ex: firewood)"
+                              .form-actions
+                                %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
+                                = submit_tag "Issue Refund", class: "button danger"
           %fieldset.transaction-fee-details
             %legend Fee details
             %table.transaction-fee-table

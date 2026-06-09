@@ -4,6 +4,7 @@ class Admin::TripPaymentRequestsController < Admin::BaseController
   before_action :set_payment_request, only: %i[email cancel]
 
   def create
+    authorize @trip, :manage_payments?
     @payment_request = @trip.trip_payment_requests.build(payment_request_params.merge(created_by: current_user))
 
     if @payment_request.save
@@ -23,6 +24,8 @@ class Admin::TripPaymentRequestsController < Admin::BaseController
   end
 
   def email
+    authorize @trip, :manage_payments?
+
     if @payment_request.pending?
       TripPaymentRequestMailer.with(
         payment_request: @payment_request,
@@ -39,6 +42,8 @@ class Admin::TripPaymentRequestsController < Admin::BaseController
   end
 
   def cancel
+    authorize @trip, :manage_payments?
+
     if @payment_request.pending?
       TripPaymentRequestCheckoutSessionExpirer.expire(payment_request: @payment_request)
       @payment_request.cancel!(canceled_by: current_user)
