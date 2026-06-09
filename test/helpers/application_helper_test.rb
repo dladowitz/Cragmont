@@ -20,6 +20,17 @@ class ApplicationHelperTest < ActionView::TestCase
     end
   end
 
+  test "staging environment shows letter opener footer for super admins" do
+    super_admin = users(:alex)
+
+    with_current_user(super_admin) do
+      with_rails_env("staging") do
+        assert_equal "Staging", visible_environment_name
+        assert show_letter_opener_link?
+      end
+    end
+  end
+
   test "letter opener label includes readable message count" do
     Dir.mktmpdir do |dir|
       letters_location = Pathname.new(dir)
@@ -85,6 +96,14 @@ class ApplicationHelperTest < ActionView::TestCase
     yield
   ensure
     singleton_class.remove_method(:letter_opener_letters_location)
+  end
+
+  def with_current_user(user)
+    singleton_class.define_method(:current_user) { user }
+
+    yield
+  ensure
+    singleton_class.remove_method(:current_user)
   end
 
   def with_env(values)

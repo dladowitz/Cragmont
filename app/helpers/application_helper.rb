@@ -64,7 +64,11 @@ module ApplicationHelper
   end
 
   def show_letter_opener_link?
-    Rails.env.development?
+    Rails.env.development? || (Rails.env.staging? && respond_to?(:current_user) && current_user&.super_admin?)
+  end
+
+  def letter_opener_path
+    "/admin/letter_opener"
   end
 
   def letter_opener_label

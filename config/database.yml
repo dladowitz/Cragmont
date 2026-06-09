@@ -103,3 +103,23 @@ production:
   cable:
     <<: *primary_production
     migrations_paths: db/cable_migrate
+
+staging:
+  primary: &primary_staging
+    <<: *default
+<% if ENV["DATABASE_URL"].present? %>
+    url: <%= ENV["DATABASE_URL"] %>
+<% else %>
+    database: cragmont_staging
+    username: cragmont
+    password: <%= ENV["CRAGMONT_DATABASE_PASSWORD"] %>
+<% end %>
+  cache:
+    <<: *primary_staging
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *primary_staging
+    migrations_paths: db/queue_migrate
+  cable:
+    <<: *primary_staging
+    migrations_paths: db/cable_migrate

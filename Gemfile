@@ -1,5 +1,7 @@
 source "https://rubygems.org"
 
+ruby "3.3.11"
+
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.1.3"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
@@ -55,6 +57,9 @@ gem "prawn", "~> 2.5"
 # Collect card payments for trip signups.
 gem "stripe", "~> 19.2"
 
+# Capture emails in non-production delivery environments.
+gem "letter_opener_web", "~> 3.0"
+
 group :development, :staging, :test do
   # Load local environment variables from .env files.
   gem "dotenv-rails", "~> 3.1"
@@ -75,9 +80,6 @@ group :development, :test do
 end
 
 group :development do
-  # Browse sent development emails from the app.
-  gem "letter_opener_web", "~> 3.0"
-
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
 end
