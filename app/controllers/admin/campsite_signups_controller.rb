@@ -6,8 +6,6 @@ class Admin::CampsiteSignupsController < Admin::BaseController
   before_action :ensure_trip_not_deleted
   before_action :authorize_trip_participant_management,
     only: %i[create make_waitlist_eligible revoke_waitlist_eligibility move_to_campsite move_to_waitlist remove_from_campsite remove_from_waitlist update_parking_status email_participant_link]
-  before_action :authorize_trip_payment_management,
-    only: %i[mark_no_payment_needed mark_already_paid create_payment_link]
 
   def create
     trip = @trip
@@ -159,10 +157,6 @@ class Admin::CampsiteSignupsController < Admin::BaseController
 
   def authorize_trip_participant_management
     authorize @trip, :manage_participants?
-  end
-
-  def authorize_trip_payment_management
-    authorize @trip, :manage_payments?
   end
 
   def add_participant_params
