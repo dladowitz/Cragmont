@@ -24,6 +24,24 @@ module ApplicationHelper
     Rails.env.to_s.titleize
   end
 
+  def help_request_status_class(status)
+    case status
+    when "replied"
+      "replied-status"
+    when "resolved"
+      "resolved-status"
+    else
+      "open-status"
+    end
+  end
+
+  def help_request_status_pill(help_request)
+    tag.span(
+      help_request.status.titleize,
+      class: [ "status-pill", help_request_status_class(help_request.status) ]
+    )
+  end
+
   def format_cents(cents)
     number_to_currency(BigDecimal(cents.to_i.to_s) / 100)
   end

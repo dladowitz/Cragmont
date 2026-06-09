@@ -36,7 +36,7 @@
                 %br/
                 = mail_to help_request.email
               %td
-                %span.status-pill{class: "#{help_request.status}-status"}= help_request.status.titleize
+                = help_request_status_pill(help_request)
               %td= help_request.created_at.to_fs(:long)
     - if @total_pages > 1
       %nav.pagination{aria: {label: "Help request pages"}}

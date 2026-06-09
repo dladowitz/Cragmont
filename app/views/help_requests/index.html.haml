@@ -24,7 +24,7 @@
                 %td= link_to "View", help_request_path(help_request), class: "button secondary admin-table-action-button"
                 %td= help_request.subject
                 %td
-                  %span.status-pill{class: "#{help_request.status}-status"}= help_request.status.titleize
+                  = help_request_status_pill(help_request)
                 %td= help_request.replies.size
                 %td= help_request.created_at.to_fs(:long)
     - else

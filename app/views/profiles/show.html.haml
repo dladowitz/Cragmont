@@ -48,7 +48,7 @@
               %td= help_request.subject
               %td= help_request.reason_label
               %td
-                %span.status-pill{class: "#{help_request.status}-status"}= help_request.status.titleize
+                = help_request_status_pill(help_request)
               %td= link_to "View", help_request_path(help_request), class: "button secondary admin-table-action-button"
     - else
       %p.muted No help requests yet.

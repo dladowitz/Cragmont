@@ -4,7 +4,7 @@
     %div
       .help-request-title-line
         %h2= @help_request.subject
-        %span.status-pill{class: "#{@help_request.status}-status"}= @help_request.status.titleize
+        = help_request_status_pill(@help_request)
     .actions
       - unless @help_request.status == "resolved"
         = button_to "Mark resolved", resolve_admin_help_request_path(@help_request), method: :patch, class: "button secondary"
