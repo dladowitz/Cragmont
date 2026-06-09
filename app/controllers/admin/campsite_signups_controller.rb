@@ -55,8 +55,16 @@ class Admin::CampsiteSignupsController < Admin::BaseController
     campsite = trip.campsites.find(move_to_campsite_params[:campsite_id])
     return if invalid_waive_payment_params?(trip, move_to_campsite_params)
 
-    if signup.confirmed?
-      redirect_to admin_trip_path(trip), alert: "#{signup.user.full_name} is already confirmed for this trip."
+    if signup.guest?
+      redirect_to admin_trip_path(trip), alert: "Guests follow the primary participant signup."
+    elsif signup.confirmed?
+      if signup.campsite_id == campsite.id
+        redirect_to admin_trip_path(trip, anchor: "admin-campsite-#{campsite.id}"), alert: "#{signup.user.full_name} is already on that campsite."
+      elsif move_confirmed_signup_to_campsite(signup, campsite)
+        redirect_to admin_trip_path(trip, anchor: "admin-campsite-#{campsite.id}"), notice: "On belay! #{signup.user.full_name} was moved to #{campsite.campground.name} site #{campsite.site_number}."
+      else
+        redirect_to admin_trip_path(trip), alert: signup.errors.full_messages.to_sentence
+      end
     elsif move_waitlisted_signup_to_campsite(signup, campsite, waive_payment: waive_payment?(move_to_campsite_params))
       redirect_to admin_added_participant_redirect_path(trip, campsite, signup), notice: "#{signup.user.full_name} was moved to #{campsite.campground.name} site #{campsite.site_number}."
     else
@@ -407,6 +415,28 @@ class Admin::CampsiteSignupsController < Admin::BaseController
         )
       end
       apply_admin_waived_payment!(signup, move_to_campsite_params) if waive_payment
+      campsite.lock_signups_if_full!
+      moved = true
+    end
+
+    moved
+  rescue ActiveRecord::RecordInvalid
+    false
+  end
+
+  def move_confirmed_signup_to_campsite(signup, campsite)
+    moved = false
+
+    CampsiteSignup.transaction do
+      signup.lock!
+      previous_campsite = signup.campsite
+      previous_campsite.lock! if previous_campsite.present?
+      campsite.lock!
+
+      signup.update!(campsite: campsite)
+      signup.guest_signups.each do |guest_signup|
+        guest_signup.update!(campsite: campsite)
+      end
       campsite.lock_signups_if_full!
       moved = true
     end

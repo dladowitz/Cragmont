@@ -1194,6 +1194,18 @@ input[type="submit"]:disabled {
   line-height: 1.05;
 }
 
+.admin-reservation-change-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  max-width: 360px;
+}
+
+.admin-reservation-change-actions .button {
+  width: 100%;
+  justify-content: center;
+}
+
 .admin-waitlist-campsite-control {
   display: inline-flex;
   align-items: center;
@@ -2324,7 +2336,13 @@ dialog.signup-modal.refund-modal .form-actions {
   align-items: center;
 }
 
-.admin-waitlist-campsite-choice-row.is-selected {
+.admin-move-campsite-choice-row {
+  grid-template-columns: 42px minmax(220px, 1fr) minmax(160px, auto);
+  align-items: center;
+}
+
+.admin-waitlist-campsite-choice-row.is-selected,
+.admin-move-campsite-choice-row.is-selected {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px rgb(45 129 105 / 20%);
 }

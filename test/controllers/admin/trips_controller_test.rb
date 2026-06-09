@@ -300,7 +300,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".campsite-notes", text: /Close to bathrooms/
     assert_select ".confirmed-signups-section" do
       assert_select "h4", "Confirmed participants"
-      assert_equal [ "Participant", "Dates", "Parking", "Payment", "Waiver", "Info", "Minors", "Move to Waitlist", "Remove" ], css_select(".confirmed-signups-section > table > thead > tr > th").map { |header| header.at_css(".tooltip-heading > span:first-child")&.text&.strip || header.text.strip }
+      assert_equal [ "Participant", "Dates", "Parking", "Payment", "Waiver", "Info", "Minors", "Reservation" ], css_select(".confirmed-signups-section > table > thead > tr > th").map { |header| header.at_css(".tooltip-heading > span:first-child")&.text&.strip || header.text.strip }
       assert_select "td", text: "Sam Lee"
       assert_select "th", text: "Dates"
       assert_select "th .parking-tooltip" do
@@ -352,13 +352,32 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
         assert_select "button[data-action='modal#close']", text: "Close"
       end
       assert_select "th", text: "Waiver"
-      assert_select "th", text: "Move to Waitlist"
-      assert_select "th", text: "Remove"
-      assert_select "button", text: "Waitlist"
-      assert_select "button", text: "Move to Waitlist", count: 0
-      assert_select "button", text: "Remove"
-      assert_select "button.admin-confirmed-signup-action-button", text: "Waitlist"
-      assert_select "button.admin-confirmed-signup-action-button", text: "Remove"
+      assert_select "th", text: "Reservation"
+      assert_select "th", text: "Move to Waitlist", count: 0
+      assert_select "th", text: "Remove", count: 0
+      assert_select "button", text: "Change"
+      assert_select "button", text: "Move to a Different Campsite"
+      assert_select "button", text: "Move to Waitlist"
+      assert_select "button", text: "Remove Reservation"
+      assert_select "button", text: "Waitlist", count: 0
+      assert_select "button.admin-confirmed-signup-action-button", text: "Change"
+      assert_select "button.admin-confirmed-signup-action-button", text: "Move Site", count: 0
+      assert_select "button.admin-confirmed-signup-action-button", text: "Waitlist", count: 0
+      assert_select "button.admin-confirmed-signup-action-button", text: "Remove", count: 0
+      assert_select "dialog.signup-modal", text: /Change Sam Lee's reservation/ do
+        assert_select "button", text: "Move to a Different Campsite"
+        assert_select "button", text: "Move to Waitlist"
+        assert_select "button", text: "Remove Reservation"
+      end
+      assert_select "dialog.signup-modal", text: /Move Sam Lee to another campsite/ do
+        assert_select "p", text: /This keeps their dates, waiver, and payment status unchanged/
+        assert_select "form[action='#{move_to_campsite_admin_trip_campsite_signup_path(trips(:yosemite), signup)}']" do
+          assert_select "input[type='radio'][name='campsite_signup[campsite_id]'][value='#{campsites(:yosemite_b).id}'][checked]"
+          assert_select ".admin-campsite-choice-copy", text: /Upper Pines\s+site A13/
+          assert_select ".admin-campsite-choice-stats", text: /capacity/
+          assert_select "input[type='submit'][value='Move Site']"
+        end
+      end
       assert_select "dialog.confirmation-modal", text: /Move Sam Lee to the waitlist\?/
       assert_select "dialog.confirmation-modal", text: /This will remove their campsite assignment and attendance dates\./
       assert_select "dialog.confirmation-modal form[action='#{move_to_waitlist_admin_trip_campsite_signup_path(trips(:yosemite), signup)}']"
@@ -458,6 +477,24 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".waiver-download a.waiver-download-link[aria-label^='Download waiver signed on']"
     assert_select ".waiver-download a.waiver-download-link svg.waiver-download-icon"
     assert_select ".waiver-download", text: /Download/, count: 0
+  end
+
+  test "confirmed participant reservation actions hide move site when trip has one campsite" do
+    trip = trips(:jtree)
+    create_campsite_signup!(campsite: campsites(:jtree_a), user: users(:sam))
+
+    get admin_trip_url(trip)
+
+    assert_response :success
+    assert_select ".confirmed-signups-section" do
+      assert_select "th", text: "Reservation"
+      assert_select "button.admin-confirmed-signup-action-button", text: "Change"
+      assert_select "dialog.signup-modal", text: /Change Sam Lee's reservation/ do
+        assert_select "button", text: "Move to a Different Campsite", count: 0
+        assert_select "button", text: "Move to Waitlist"
+        assert_select "button", text: "Remove Reservation"
+      end
+    end
   end
 
   test "trip details show missing waiver for legacy signups" do

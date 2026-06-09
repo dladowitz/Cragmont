@@ -5,6 +5,8 @@ export default class extends Controller {
   static values = { cleanUrlOnClose: Boolean, disableAutofocus: Boolean, open: Boolean }
 
   connect() {
+    if (!this.hasDialogTarget) return
+
     this.dialogTarget.addEventListener("close", this.cleanUrl)
 
     if (this.openValue) {
@@ -13,11 +15,14 @@ export default class extends Controller {
   }
 
   disconnect() {
+    if (!this.hasDialogTarget) return
+
     this.dialogTarget.removeEventListener("close", this.cleanUrl)
   }
 
   open(event) {
     event?.preventDefault()
+    if (!this.hasDialogTarget) return
     if (this.dialogTarget.open) return
 
     this.dialogTarget.showModal()
@@ -26,7 +31,27 @@ export default class extends Controller {
     }
   }
 
+  openDialog(event) {
+    this.open_dialog(event)
+  }
+
+  open_dialog(event) {
+    event.preventDefault()
+
+    const dialogId = event.params.dialogId || event.currentTarget.dataset.modalDialogIdParam
+    const dialog = document.getElementById(dialogId)
+    if (!dialog) return
+
+    if (this.hasDialogTarget) {
+      this.dialogTarget.close()
+    }
+
+    requestAnimationFrame(() => dialog.showModal())
+  }
+
   close() {
+    if (!this.hasDialogTarget) return
+
     this.dialogTarget.close()
   }
 

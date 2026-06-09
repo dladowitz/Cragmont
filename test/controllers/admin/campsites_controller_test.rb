@@ -67,6 +67,7 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", "Admin Dashboard"
     assert_select ".panel-header", text: /Yosemite Valley Spring/
     assert_select ".form-actions input[type='submit']"
+    assert_select "select[name='campsite[registered_by_id]'] option[value='']", text: "Unassigned"
     assert_select ".form-actions a.button.secondary", text: "Cancel"
     assert_select ".form-actions .danger-form-action [data-controller='modal'] button.button.danger.secondary", text: "Delete campsite"
     assert_select "dialog.confirmation-modal", text: /Delete campsite\?/
@@ -117,6 +118,27 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 7, campsites(:yosemite_a).participant_capacity
     assert_equal users(:alex), campsites(:yosemite_a).registered_by
     assert_equal "YO-2026-A12B", campsites(:yosemite_a).registration_number
+  end
+
+  test "can clear campsite registered by" do
+    campsites(:yosemite_a).update!(registered_by: users(:alex))
+
+    patch admin_trip_campsite_url(trips(:yosemite), campsites(:yosemite_a)), params: {
+      campsite: {
+        campground_id: campgrounds(:upper_pines).id,
+        registered_by_id: "",
+        registration_number: campsites(:yosemite_a).registration_number,
+        site_number: campsites(:yosemite_a).site_number,
+        arrival_date: campsites(:yosemite_a).arrival_date,
+        checkout_date: campsites(:yosemite_a).checkout_date,
+        participant_capacity: campsites(:yosemite_a).participant_capacity,
+        car_capacity: campsites(:yosemite_a).car_capacity,
+        notes: campsites(:yosemite_a).notes
+      }
+    }
+
+    assert_redirected_to admin_trip_url(trips(:yosemite))
+    assert_nil campsites(:yosemite_a).reload.registered_by
   end
 
   test "can delete campsite" do

@@ -673,8 +673,26 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     assert guest_signup.user.default_password?
   end
 
-  test "does not move confirmed participant to campsite" do
-    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+  test "can move confirmed participant to another campsite without changing details" do
+    signup = create_campsite_signup!(
+      campsite: campsites(:yosemite_a),
+      user: users(:sam),
+      arrival_date: Date.new(2026, 6, 13),
+      checkout_date: Date.new(2026, 6, 14),
+      waitlist_eligible_at: Time.current,
+      parking_status: "reserved_spot"
+    )
+    attach_test_waiver_to(signup)
+    payment = signup.payments.create!(
+      source: "manual",
+      status: "paid",
+      amount_cents: 6000,
+      manual_payment_method: "cash",
+      manual_paid_at: Time.current,
+      paid_at: Time.current
+    )
+    waiver_signed_at = signup.waiver_signed_at
+    waiver_document_id = signup.waiver_document.id
 
     patch move_to_campsite_admin_trip_campsite_signup_url(trips(:yosemite), signup), params: {
       campsite_signup: {
@@ -682,9 +700,68 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
       }
     }
 
+    assert_redirected_to admin_trip_url(trips(:yosemite), anchor: "admin-campsite-#{campsites(:yosemite_b).id}")
+    assert_equal "On belay! Sam Lee was moved to Upper Pines site A13.", flash[:notice]
+    signup.reload
+    assert signup.confirmed?
+    assert_equal campsites(:yosemite_b), signup.campsite
+    assert_equal Date.new(2026, 6, 13), signup.arrival_date
+    assert_equal Date.new(2026, 6, 14), signup.checkout_date
+    assert_equal waiver_signed_at.to_i, signup.waiver_signed_at.to_i
+    assert_equal waiver_document_id, signup.waiver_document.id
+    assert_equal payment, signup.current_payment
+    assert signup.waitlist_eligible?
+    assert_equal "reserved_spot", signup.parking_status
+  end
+
+  test "moving confirmed primary participant to another campsite moves linked guests without changing details" do
+    primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    guest_user = User.create!(
+      first_name: "Gina",
+      last_name: "Guest",
+      email: "gina-confirmed-site-move@example.com",
+      password: User::DEFAULT_GUEST_PASSWORD,
+      default_password: true
+    )
+    guest_signup = create_campsite_signup!(
+      campsite: campsites(:yosemite_a),
+      user: guest_user,
+      guest_of_signup: primary_signup,
+      guest_position: 1,
+      arrival_date: Date.new(2026, 6, 13),
+      checkout_date: Date.new(2026, 6, 15)
+    )
+    attach_test_waiver_to(guest_signup)
+    guest_waiver_signed_at = guest_signup.waiver_signed_at
+
+    patch move_to_campsite_admin_trip_campsite_signup_url(trips(:yosemite), primary_signup), params: {
+      campsite_signup: {
+        campsite_id: campsites(:yosemite_b).id
+      }
+    }
+
+    assert_redirected_to admin_trip_url(trips(:yosemite), anchor: "admin-campsite-#{campsites(:yosemite_b).id}")
+    assert_equal campsites(:yosemite_b), primary_signup.reload.campsite
+    guest_signup.reload
+    assert_equal campsites(:yosemite_b), guest_signup.campsite
+    assert_equal Date.new(2026, 6, 13), guest_signup.arrival_date
+    assert_equal Date.new(2026, 6, 15), guest_signup.checkout_date
+    assert_equal guest_waiver_signed_at.to_i, guest_signup.waiver_signed_at.to_i
+  end
+
+  test "does not move confirmed guest directly to another campsite" do
+    primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:alex))
+    guest_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam), guest_of_signup: primary_signup, guest_position: 1)
+
+    patch move_to_campsite_admin_trip_campsite_signup_url(trips(:yosemite), guest_signup), params: {
+      campsite_signup: {
+        campsite_id: campsites(:yosemite_b).id
+      }
+    }
+
     assert_redirected_to admin_trip_url(trips(:yosemite))
-    assert_equal "Sam Lee is already confirmed for this trip.", flash[:alert]
-    assert_equal campsites(:yosemite_a), signup.reload.campsite
+    assert_equal "Guests follow the primary participant signup.", flash[:alert]
+    assert_equal campsites(:yosemite_a), guest_signup.reload.campsite
   end
 
   test "can move confirmed participant to waitlist" do
