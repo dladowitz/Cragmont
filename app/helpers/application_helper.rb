@@ -19,7 +19,6 @@ module ApplicationHelper
   end
 
   def visible_environment_name
-    return "Staging" if ENV["LETTER_OPENER_WEB"].present?
     return unless Rails.env.development? || Rails.env.staging?
 
     Rails.env.to_s.titleize
@@ -65,7 +64,7 @@ module ApplicationHelper
   end
 
   def show_letter_opener_link?
-    Rails.env.development? || (ENV["LETTER_OPENER_WEB"].present? && current_user&.super_admin?)
+    Rails.env.development? || (Rails.env.staging? && respond_to?(:current_user) && current_user&.super_admin?)
   end
 
   def letter_opener_path

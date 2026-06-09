@@ -20,15 +20,13 @@ class ApplicationHelperTest < ActionView::TestCase
     end
   end
 
-  test "letter opener staging mode shows staging footer for super admins" do
+  test "staging environment shows letter opener footer for super admins" do
     super_admin = users(:alex)
 
-    with_env("LETTER_OPENER_WEB" => "true") do
-      with_current_user(super_admin) do
-        with_rails_env("production") do
-          assert_equal "Staging", visible_environment_name
-          assert show_letter_opener_link?
-        end
+    with_current_user(super_admin) do
+      with_rails_env("staging") do
+        assert_equal "Staging", visible_environment_name
+        assert show_letter_opener_link?
       end
     end
   end

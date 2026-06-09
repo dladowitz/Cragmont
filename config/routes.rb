@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
   root "home#index"
 
-  if Rails.env.development? || ENV["LETTER_OPENER_WEB"].present?
+  if Rails.env.development? || Rails.env.staging?
     letter_opener_access = lambda do |request|
       Rails.env.development? || User.find_by(id: request.session[:user_id])&.super_admin?
     end
