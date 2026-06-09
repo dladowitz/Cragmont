@@ -159,7 +159,7 @@
             .confirmed-signups-section
               %h4 Confirmed participants
               - if campsite.confirmed_signups.any?
-                = render "signup_table", signups: campsite.confirmed_signups, read_only: @trip.deleted? || !policy(@trip).manage_participants?, payment_read_only: @trip.deleted? || !policy(@trip).manage_payments?, parking_tooltip: parking_policy_tooltip
+                = render "signup_table", signups: campsite.confirmed_signups, trip: @trip, campsites: @campsites, read_only: @trip.deleted? || !policy(@trip).manage_participants?, payment_read_only: @trip.deleted? || !policy(@trip).manage_payments?, parking_tooltip: parking_policy_tooltip
               - else
                 %p.muted No confirmed participants yet.
   - else

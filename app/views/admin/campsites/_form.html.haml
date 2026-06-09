@@ -10,7 +10,7 @@
         = form.text_field :site_number, required: true
       .field
         = form.label :registered_by_id, "Registered by"
-        = form.collection_select :registered_by_id, @users, :id, :full_name, { prompt: "Unassigned" }
+        = form.collection_select :registered_by_id, @users, :id, :full_name, { include_blank: "Unassigned" }
       .field
         = form.label :registration_number
         = form.text_field :registration_number
