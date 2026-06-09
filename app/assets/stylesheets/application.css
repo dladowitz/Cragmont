@@ -58,6 +58,27 @@ body.session-new-page {
     url("backgrounds/indian-creek-super-crack.jpg") center / cover fixed;
 }
 
+body.password-reset-new-page {
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgb(15 23 20 / 22%), rgb(15 23 20 / 62%)),
+    url("backgrounds/castle-valley-the-rectory.jpg") center / cover fixed;
+}
+
+body.password-reset-edit-page {
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgb(15 23 20 / 22%), rgb(15 23 20 / 62%)),
+    url("backgrounds/yosemite-valley-arrowhead-arete.jpg") 72% center / cover fixed;
+}
+
+body.not-found-page {
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgb(15 23 20 / 18%), rgb(15 23 20 / 58%)),
+    url("backgrounds/indian-creek-falling.png") center / cover fixed;
+}
+
 body.registration-new-page {
   min-height: 100vh;
   background:
@@ -84,6 +105,12 @@ body.trips-index-page .site-name,
 body.trips-index-page .site-name small,
 body.session-new-page .site-name,
 body.session-new-page .site-name small,
+body.password-reset-new-page .site-name,
+body.password-reset-new-page .site-name small,
+body.password-reset-edit-page .site-name,
+body.password-reset-edit-page .site-name small,
+body.not-found-page .site-name,
+body.not-found-page .site-name small,
 body.registration-new-page .site-name,
 body.registration-new-page .site-name small,
 body.trip-show-page .site-name,
@@ -98,6 +125,9 @@ body.profile-edit-page .site-name small {
 
 body.trips-index-page .public-nav a,
 body.session-new-page .public-nav a,
+body.password-reset-new-page .public-nav a,
+body.password-reset-edit-page .public-nav a,
+body.not-found-page .public-nav a,
 body.registration-new-page .public-nav a,
 body.trip-show-page .public-nav a,
 body.profile-show-page .public-nav a,
@@ -116,6 +146,35 @@ body.profile-edit-page .public-nav a {
   font-size: 0.9rem;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
   pointer-events: none;
+}
+
+.error-main {
+  display: grid;
+  min-height: calc(100svh - 160px);
+  align-items: center;
+}
+
+.error-panel {
+  width: fit-content;
+  max-width: min(480px, 100%);
+  margin-inline: 0 auto;
+  background: rgb(255 255 255 / 90%);
+  border-color: rgb(255 255 255 / 58%);
+  box-shadow: 0 18px 48px rgb(0 0 0 / 24%);
+  backdrop-filter: blur(2px);
+}
+
+.error-panel h1 {
+  margin: 0;
+  color: var(--accent-dark);
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  line-height: 0.95;
+}
+
+.error-panel p {
+  margin: 16px 0 0;
+  font-size: clamp(1.25rem, 2.2vw, 2rem);
+  font-weight: 750;
 }
 
 a {
@@ -1442,11 +1501,22 @@ body.trips-index-page .trips-index-panel {
   backdrop-filter: blur(6px);
 }
 
-body.session-new-page .auth-panel {
+body.session-new-page .auth-panel,
+body.password-reset-new-page .auth-panel,
+body.password-reset-edit-page .auth-panel {
   border-color: rgb(255 255 255 / 56%);
   background: rgb(255 255 255 / 88%);
   box-shadow: 0 24px 72px rgb(0 0 0 / 26%);
   backdrop-filter: blur(6px);
+}
+
+body.password-reset-edit-page .public-main {
+  display: flex;
+  justify-content: flex-end;
+}
+
+body.password-reset-edit-page .auth-panel {
+  margin-inline: 0;
 }
 
 body.registration-new-page .panel {
@@ -3097,6 +3167,14 @@ textarea {
 
   .transaction-details-sections {
     grid-template-columns: 1fr;
+  }
+
+  body.password-reset-edit-page .public-main {
+    display: block;
+  }
+
+  body.password-reset-edit-page .auth-panel {
+    margin-inline: auto;
   }
 
   .details-list.transaction-details-list div {

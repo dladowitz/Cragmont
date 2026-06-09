@@ -18,10 +18,12 @@ class PasswordResetsControllerTest < ActionDispatch::IntegrationTest
     get new_password_reset_url
 
     assert_response :success
+    assert_select "body.password-reset-new-page"
     assert_select "h1", "Reset password"
     assert_select "label[for='email'] .required-marker", text: "*"
     assert_select "input[type='email'][name='email'][required]"
     assert_select "input[type='submit'][value='Send reset link']"
+    assert_select ".background-image-caption", "Castle Valley, UT, The Rectory"
   end
 
   test "known email receives password reset link" do
@@ -65,11 +67,13 @@ class PasswordResetsControllerTest < ActionDispatch::IntegrationTest
     get edit_password_reset_url(token)
 
     assert_response :success
+    assert_select "body.password-reset-edit-page"
     assert_select "h1", "Choose a new password"
     assert_select ".password-visibility-field[data-controller='password-visibility']", count: 2
     assert_select "input[type='password'][name='user[password]'][required]"
     assert_select "input[type='password'][name='user[password_confirmation]'][required]"
     assert_select "input[type='submit'][value='Reset password']"
+    assert_select ".background-image-caption", "Yosemite Valley, Arrowhead Arete"
   end
 
   test "user can reset password with valid token" do

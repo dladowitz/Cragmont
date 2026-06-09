@@ -9,6 +9,7 @@ class ApplicationMailerTest < ActionMailer::TestCase
     assert_includes html, "Climbing Club"
     assert_includes html, "vent-five-emperor-boulder"
     assert_includes html, "font-family: Arial, Helvetica, sans-serif"
+    assert_includes html, "margin-left: 20%"
     assert_includes html, "See you at the crag."
   end
 

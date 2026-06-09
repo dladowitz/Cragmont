@@ -1,3 +1,4 @@
+- content_for :body_class, "password-reset-edit-page"
 = render "shared/public_header"
 %main.public-main
   %section.panel.auth-panel
@@ -38,3 +39,4 @@
       .form-actions
         = submit_tag "Reset password"
         = link_to "Back to log in", new_session_path, class: "button secondary"
+%p.background-image-caption Yosemite Valley, Arrowhead Arete
