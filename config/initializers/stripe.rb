@@ -3,8 +3,12 @@ if defined?(Stripe)
   stripe_secret_key = ENV["STRIPE_SECRET_KEY"].presence
   stripe_publishable_key = ENV["STRIPE_PUBLISHABLE_KEY"].presence
   stripe_webhook_secret = ENV["STRIPE_WEBHOOK_SECRET"].presence
+  asset_task =
+    defined?(Rake) &&
+    Rake.respond_to?(:application) &&
+    Rake.application.top_level_tasks.any? { |task| task.to_s.start_with?("assets:") }
 
-  if Rails.env.production?
+  if Rails.env.production? && !asset_task
     missing = []
     missing << "STRIPE_SECRET_KEY" if stripe_secret_key.blank?
     missing << "STRIPE_PUBLISHABLE_KEY" if stripe_publishable_key.blank?

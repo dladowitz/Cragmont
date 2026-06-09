@@ -87,18 +87,19 @@ test:
 production:
   primary: &primary_production
     <<: *default
+<% if ENV["DATABASE_URL"].present? %>
+    url: <%= ENV["DATABASE_URL"] %>
+<% else %>
     database: cragmont_production
     username: cragmont
     password: <%= ENV["CRAGMONT_DATABASE_PASSWORD"] %>
+<% end %>
   cache:
     <<: *primary_production
-    database: cragmont_production_cache
     migrations_paths: db/cache_migrate
   queue:
     <<: *primary_production
-    database: cragmont_production_queue
     migrations_paths: db/queue_migrate
   cable:
     <<: *primary_production
-    database: cragmont_production_cable
     migrations_paths: db/cable_migrate

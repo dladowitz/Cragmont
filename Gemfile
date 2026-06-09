@@ -40,6 +40,9 @@ gem "thruster", require: false
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 2.0"
 
+# Store Active Storage uploads in Bucketeer/S3 on Heroku.
+gem "aws-sdk-s3", "~> 1.0"
+
 # Render Rails views with HAML templates.
 gem "haml-rails", "~> 3.0"
 
