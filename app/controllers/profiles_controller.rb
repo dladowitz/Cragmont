@@ -5,6 +5,7 @@ class ProfilesController < ApplicationController
     @user = current_user
     @coordinated_trips = @user.coordinated_trips.order(start_date: :asc, name: :asc)
     @ledger_entries = TripTransactionLedger.for_user(@user)
+    @recent_help_requests = @user.help_requests.recent_first.limit(5)
   end
 
   def edit

@@ -1,0 +1,12 @@
+%h1 Help request updated
+%p
+  %strong Subject:
+  = @help_request.subject
+%p
+  %strong Reason:
+  = @help_request.reason_label
+%p
+  %strong From:
+  = "#{@help_request.name} <#{@help_request.email}>"
+%p= simple_format(@reply.message)
+%p= link_to "Review and reply", admin_help_request_url(@help_request)

@@ -2,10 +2,16 @@
 %section.panel
   .panel-header
     %div
-      %h2= @showing_deleted_trips ? "Deleted trips" : "Trips"
-    - if !@showing_deleted_trips && policy(Trip).new?
+      %h2 Trips
+    - if policy(Trip).new?
       = link_to "New trip", new_admin_trip_path, class: "button"
-  .admin-filter-tabs
-    = link_to "Active", admin_trips_path, class: ["button", ("secondary" if @showing_deleted_trips)].compact
-    = link_to "Deleted", admin_trips_path(filter: "deleted"), class: ["button", ("secondary" unless @showing_deleted_trips)].compact
+  = form_with url: admin_trips_path, method: :get, class: "trip-filter-form" do
+    = hidden_field_tag :filters, "1"
+    %fieldset.trip-status-filters
+      %legend View trips
+      - Admin::TripsController::TRIP_FILTER_STATUSES.each do |status|
+        %label.trip-status-filter
+          = check_box_tag "status[]", status, @selected_statuses.include?(status), id: "trip_status_#{status}"
+          %span= status.titleize
+      = submit_tag "Apply", class: "button secondary"
   = render "table", trips: @trips

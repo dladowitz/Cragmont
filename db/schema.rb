@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_09_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_09_100500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -181,6 +181,40 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_090000) do
     t.index ["trip_id"], name: "index_campsites_on_trip_id"
   end
 
+  create_table "help_notification_subscribers", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.datetime "updated_at", null: false
+    t.index "lower((email)::text)", name: "index_help_notification_subscribers_on_lower_email", unique: true
+  end
+
+  create_table "help_request_replies", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "help_request_id", null: false
+    t.text "message", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["help_request_id"], name: "index_help_request_replies_on_help_request_id"
+    t.index ["user_id"], name: "index_help_request_replies_on_user_id"
+  end
+
+  create_table "help_requests", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.datetime "last_replied_at"
+    t.text "message", null: false
+    t.string "name", null: false
+    t.string "reason", null: false
+    t.string "status", default: "open", null: false
+    t.string "subject", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["email"], name: "index_help_requests_on_email"
+    t.index ["reason"], name: "index_help_requests_on_reason"
+    t.index ["status"], name: "index_help_requests_on_status"
+    t.index ["user_id"], name: "index_help_requests_on_user_id"
+  end
+
   create_table "roles", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
@@ -324,6 +358,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_090000) do
   add_foreign_key "campsites", "campgrounds"
   add_foreign_key "campsites", "trips"
   add_foreign_key "campsites", "users", column: "registered_by_id"
+  add_foreign_key "help_request_replies", "help_requests"
+  add_foreign_key "help_request_replies", "users"
+  add_foreign_key "help_requests", "users"
   add_foreign_key "trip_payment_requests", "trips"
   add_foreign_key "trip_payment_requests", "users", column: "canceled_by_id"
   add_foreign_key "trip_payment_requests", "users", column: "created_by_id"

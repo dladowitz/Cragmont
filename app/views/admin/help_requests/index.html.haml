@@ -1,0 +1,50 @@
+= render "admin/shared/header", title: "Help"
+%section.panel
+  .panel-header
+    %div
+      %h2 Help requests
+      %p.muted Review issues, questions, and trip help requests from participants.
+    - if current_user.super_admin?
+      = link_to "Update Who Gets Notified on Requests", admin_help_notification_subscribers_path, class: "button secondary"
+  = form_with url: admin_help_requests_path, method: :get, class: "help-request-filter-form" do
+    %fieldset.help-request-status-filters
+      %legend View requests
+      - HelpRequest::STATUSES.each do |status|
+        %label.help-status-filter
+          = check_box_tag "status[]", status, @selected_statuses.include?(status), id: "status_#{status}"
+          %span= status.titleize
+      = submit_tag "Apply", class: "button secondary"
+  - if @help_requests.any?
+    .table-wrapper
+      %table
+        %thead
+          %tr
+            %th View
+            %th Subject
+            %th Reason
+            %th From
+            %th Status
+            %th Received
+        %tbody
+          - @help_requests.each do |help_request|
+            %tr
+              %td= link_to "View", admin_help_request_path(help_request), class: "button secondary admin-table-action-button"
+              %td= help_request.subject
+              %td= help_request.reason_label
+              %td
+                = help_request.name
+                %br/
+                = mail_to help_request.email
+              %td
+                %span.status-pill{class: "#{help_request.status}-status"}= help_request.status.titleize
+              %td= help_request.created_at.to_fs(:long)
+    - if @total_pages > 1
+      %nav.pagination{aria: {label: "Help request pages"}}
+        - pagination_params = { status: @selected_statuses }
+        - if @current_page > 1
+          = link_to "Previous", admin_help_requests_path(pagination_params.merge(page: @current_page - 1)), class: "button secondary"
+        %span.pagination-summary Page #{@current_page} of #{@total_pages}
+        - if @current_page < @total_pages
+          = link_to "Next", admin_help_requests_path(pagination_params.merge(page: @current_page + 1)), class: "button secondary"
+  - else
+    %p.muted No help requests yet. A quiet wall is a happy wall.

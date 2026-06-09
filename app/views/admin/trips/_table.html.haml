@@ -25,7 +25,9 @@
                 - if policy(trip).assign_coordinator?
                   = link_to "Update", edit_admin_trip_path(trip)
           %td
-            %span{ class: [ "status", "#{trip.status}-status" ] }= trip.status.titleize
+            - status_label = trip.deleted? ? "Deleted" : trip.status.titleize
+            - status_class = trip.deleted? ? "deleted-status" : "#{trip.status}-status"
+            %span{ class: [ "status", status_class ] }= status_label
           %td
             %dl.date-pair
               %div

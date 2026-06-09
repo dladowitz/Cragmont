@@ -10,8 +10,10 @@
       - if user_signed_in?
         = link_to current_user.full_name, profile_path
         = link_to "Trips", trips_path
+        = link_to "Get Help", new_help_request_path
         = button_to "Log out", session_path, method: :delete, class: "nav-button"
       - else
         = link_to "Trips", trips_path
+        = link_to "Get Help", new_help_request_path
         = link_to "Log in", new_session_path
         = link_to "Register", new_registration_path

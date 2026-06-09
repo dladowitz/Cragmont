@@ -7,6 +7,11 @@ Rails.application.routes.draw do
   resource :session, only: %i[new create destroy]
   resources :password_resets, only: %i[new create edit update], param: :token
   resource :profile, only: %i[show edit update destroy]
+  get "help", to: "help_requests#new", as: :new_help_request
+  post "help", to: "help_requests#create", as: :create_help_request
+  resources :help_requests, only: %i[index show] do
+    post :reply, on: :member
+  end
   post "stripe/webhooks", to: "stripe_webhooks#create"
   get "payment_requests/:token", to: "trip_payment_requests#show", as: :trip_payment_request
 
@@ -23,6 +28,11 @@ Rails.application.routes.draw do
   namespace :admin do
     root to: redirect("/admin/trips")
     resource :settings, only: %i[show update]
+    resources :help_requests, only: %i[index show] do
+      post :reply, on: :member
+      patch :resolve, on: :member
+    end
+    resources :help_notification_subscribers, only: %i[index create destroy]
     resources :users
     resources :campgrounds
     resources :trips do

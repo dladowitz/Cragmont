@@ -1,0 +1,10 @@
+Help request updated
+
+Subject: #{@help_request.subject}
+Reason: #{@help_request.reason_label}
+From: #{@help_request.name} <#{@help_request.email}>
+
+= @reply.message
+
+Review and reply:
+= admin_help_request_url(@help_request)

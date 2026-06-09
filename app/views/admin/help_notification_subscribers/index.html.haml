@@ -1,0 +1,28 @@
+= render "admin/shared/header", title: "Help"
+%section.panel
+  .panel-header
+    %div
+      %h2 Help notification emails
+      %p.muted Super admins can add admins who want an email when help requests come in.
+    = link_to "Help requests", admin_help_requests_path, class: "button secondary"
+  = form_with model: [:admin, @subscriber], class: "admin-form help-subscriber-form" do |form|
+    - if @subscriber.errors.any?
+      = render "admin/shared/errors", record: @subscriber
+    .field
+      = required_label form, :email
+      = form.email_field :email, required: true, autocomplete: "email"
+    = form.submit "Add email"
+  - if @subscribers.any?
+    .table-wrapper.help-subscriber-table
+      %table
+        %thead
+          %tr
+            %th Email
+            %th
+        %tbody
+          - @subscribers.each do |subscriber|
+            %tr
+              %td= mail_to subscriber.email
+              %td= button_to "Remove", admin_help_notification_subscriber_path(subscriber), method: :delete, class: "button danger secondary admin-table-action-button"
+  - else
+    %p.muted No one is getting help request emails yet.

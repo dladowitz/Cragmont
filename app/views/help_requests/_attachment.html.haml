@@ -1,0 +1,13 @@
+- filename = attachment.filename.to_s
+- if attachment.blob.image?
+  %div.help-attachment-preview{"data-controller" => "modal", "data-modal-disable-autofocus-value" => "true"}
+    %button.help-attachment-button{"data-action" => "modal#open", type: "button"}= filename
+    %dialog.signup-modal.help-image-modal{"aria-label" => filename, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+      .signup-modal-content.help-image-modal-content
+        .panel-header
+          %div
+            %h2= filename
+          %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+        = image_tag attachment, alt: filename
+- else
+  = link_to filename, url_for(attachment), target: "_blank", rel: "noopener"

@@ -26,18 +26,49 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".details-list dt", text: "Club member"
     assert_select ".details-list dd", text: "Yes"
     assert_select "a[href='#{edit_profile_path}']", text: "Edit profile"
-    assert_select "button", text: "Delete account"
+    assert_select "button", text: "Delete account", count: 0
     assert_select "h2", text: "Transactions"
     assert_select ".transactions-table", count: 0
     assert_select "p.muted", text: "No completed payments yet."
-    assert_select "dialog.confirmation-modal", text: /Are you sure you want to delete your account\?/
-    assert_select "dialog.confirmation-modal", text: /This will delete all history and current trips/
-    assert_select "label[for='confirmation_text']", text: /Type Delete Me to Confirm/
-    assert_select "label[for='confirmation_text'] .required-marker", text: "*"
-    assert_select "input[name='confirmation_text'][required]"
-    assert_select "input[type='submit'][disabled]", value: "Delete account"
+    assert_select "h2", text: "Inbox"
+    assert_select "a[href='#{help_requests_path}']", text: "All Help Requests"
+    assert_select "p.muted", text: "No help requests yet."
+    assert_select "dialog.confirmation-modal", count: 0
     assert_select "a", text: "Yosemite Valley Spring"
     assert_select "a[href='#{admin_trip_path(trips(:yosemite))}']", text: "Manage trip"
+  end
+
+  test "profile inbox shows the five most recent help requests" do
+    user = users(:alex)
+    6.times do |index|
+      HelpRequest.create!(
+        user: user,
+        reason: "site_issue",
+        subject: "Profile inbox request #{index}",
+        name: user.full_name,
+        email: user.email,
+        message: "Profile inbox request #{index}",
+        created_at: index.days.ago
+      )
+    end
+    HelpRequest.create!(
+      user: users(:sam),
+      reason: "other",
+      subject: "Sam request",
+      name: "Sam Lee",
+      email: "sam@example.com",
+      message: "Sam should not show"
+    )
+    log_in_as(user)
+
+    get profile_url
+
+    assert_response :success
+    assert_select "h2", text: "Inbox"
+    assert_select ".profile-inbox-table tbody tr", count: 5
+    assert_select "td", text: /Report site issue/, count: 5
+    assert_select "td", text: /Sam should not show/, count: 0
+    assert_select "a[href='#{help_requests_path}']", text: "All Help Requests"
   end
 
   test "profile hides coordinated trips section when user coordinates no trips" do
@@ -139,6 +170,14 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type='password'][data-password-visibility-target='input']", count: 2
     assert_select "input[type='radio'][name='user[member]']", count: 0
     assert_select "fieldset.radio-field", count: 0
+    assert_select "h2", text: "Account"
+    assert_select "button", text: "Delete account"
+    assert_select "dialog.confirmation-modal", text: /Are you sure you want to delete your account\?/
+    assert_select "dialog.confirmation-modal", text: /This will delete all history and current trips/
+    assert_select "label[for='confirmation_text']", text: /Type Delete Me to Confirm/
+    assert_select "label[for='confirmation_text'] .required-marker", text: "*"
+    assert_select "input[name='confirmation_text'][required]"
+    assert_select "input[type='submit'][disabled]", value: "Delete account"
   end
 
   test "logged in user can update profile without changing member status" do

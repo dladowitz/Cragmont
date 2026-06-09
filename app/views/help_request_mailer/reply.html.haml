@@ -1,0 +1,5 @@
+%h1 Cragmont help request reply
+%p Hi #{@help_request.name},
+%p= simple_format(@reply.message)
+%p= link_to "Reply to this message on the site", @reply_url
+%p Thanks for helping us keep the site dialed.
