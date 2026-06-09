@@ -59,6 +59,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "input[name='trip[name]']"
     assert_select "select[name='trip[campsite_coordinator_id]']", count: 0
+    assert_select ".coordinator-picker", count: 0
 
     patch admin_trip_url(trips(:jtree)), params: {
       trip: {
@@ -1029,6 +1030,13 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     get new_admin_trip_url
 
     assert_response :success
+    assert_select "select[name='trip[campsite_coordinator_id]']", count: 0
+    assert_select ".coordinator-picker[data-controller='participant-picker']"
+    assert_select "input[type='hidden'][name='trip[campsite_coordinator_id]'][data-participant-picker-target='input'][value='']"
+    assert_select "button.participant-picker-button[role='combobox']", text: "Unassigned"
+    assert_select "input.participant-picker-search[placeholder='Search coordinators']"
+    assert_select "button.participant-picker-option[data-value='']", text: "Unassigned"
+    assert_select "button.participant-picker-option[data-value='#{users(:alex).id}']", text: "Alex Rivera"
   end
 
   test "can update trip" do
@@ -1074,6 +1082,9 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     get edit_admin_trip_url(trip)
 
     assert_response :success
+    assert_select ".coordinator-picker[data-controller='participant-picker']"
+    assert_select "input[type='hidden'][name='trip[campsite_coordinator_id]'][value='']"
+    assert_select "button.participant-picker-button[role='combobox']", text: "Unassigned"
     assert_select ".danger-form-action [data-controller='modal'] > button.button.danger.secondary", text: "Delete trip"
     assert_select "dialog.confirmation-modal", text: /Delete trip\?/
     assert_select "dialog.confirmation-modal", text: /transaction history will be preserved/

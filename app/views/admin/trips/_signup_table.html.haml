@@ -192,7 +192,10 @@
                               %span Yes
                           %section.admin-add-participant-fields.admin-waitlist-waive-fields{hidden: true}
                             .field
-                              = required_label_tag waive_reason_id, "Reason"
+                              = label_tag waive_reason_id, class: "required-inline-label" do
+                                Reason
+                                %span.required-marker{"aria-hidden" => "true"} *
+                                %span.visually-hidden required
                               = select_tag "campsite_signup[waived_reason_type]", options_for_select([["Campsite Coordinator", "campsite_coordinator"], ["Other", "other"]]), include_blank: "Choose a reason", id: waive_reason_id, disabled: true, data: { action: "admin-participant#toggleSelectedCampsite" }
                             .field.admin-waitlist-other-waive-reason-field{hidden: true}
                               = required_label_tag other_waive_reason_id, "Other reason"
