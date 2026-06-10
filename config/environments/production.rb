@@ -1,5 +1,4 @@
 require "active_support/core_ext/integer/time"
-require Rails.root.join("app/mailers/mailgun_delivery_method")
 
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
@@ -55,10 +54,6 @@ Rails.application.configure do
   config.solid_queue.connects_to = { database: { writing: :queue } }
 
   # Send email through Mailgun's Heroku add-on.
-  config.action_mailer.add_delivery_method :mailgun, MailgunDeliveryMethod, {
-    api_key: ENV.fetch("MAILGUN_API_KEY"),
-    domain: ENV.fetch("MAILGUN_DOMAIN")
-  }
   config.action_mailer.delivery_method = :mailgun
   config.action_mailer.raise_delivery_errors = true
 
