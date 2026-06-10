@@ -1,4 +1,5 @@
 require "active_support/core_ext/integer/time"
+require Rails.root.join("app/mailers/mailgun_delivery_method")
 
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
@@ -53,23 +54,18 @@ Rails.application.configure do
   config.active_job.queue_adapter = :solid_queue
   config.solid_queue.connects_to = { database: { writing: :queue } }
 
-  # Ignore bad email addresses and do not raise email delivery errors.
-  # Set this to true and configure the email server for immediate delivery to raise delivery errors.
-  # config.action_mailer.raise_delivery_errors = false
+  # Send email through Mailgun's Heroku add-on.
+  config.action_mailer.add_delivery_method :mailgun, MailgunDeliveryMethod, {
+    api_key: ENV.fetch("MAILGUN_API_KEY"),
+    domain: ENV.fetch("MAILGUN_DOMAIN")
+  }
+  config.action_mailer.delivery_method = :mailgun
+  config.action_mailer.raise_delivery_errors = true
 
   # Set host to be used by links generated in mailer templates and redirects.
   app_host = ENV.fetch("APP_HOST", "cragmontclimbing.com")
   config.action_mailer.default_url_options = { host: app_host, protocol: "https" }
   Rails.application.routes.default_url_options = { host: app_host, protocol: "https" }
-
-  # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
-  # config.action_mailer.smtp_settings = {
-  #   user_name: Rails.application.credentials.dig(:smtp, :user_name),
-  #   password: Rails.application.credentials.dig(:smtp, :password),
-  #   address: "smtp.example.com",
-  #   port: 587,
-  #   authentication: :plain
-  # }
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
@@ -89,6 +85,8 @@ Rails.application.configure do
   #
   # Skip DNS rebinding protection for the default health check endpoint.
   config.hosts << app_host
+  config.hosts << "www.#{app_host}" unless app_host.start_with?("www.")
+  config.hosts << app_host.delete_prefix("www.") if app_host.start_with?("www.")
   config.hosts << /.*\.herokuapp\.com/
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 end
