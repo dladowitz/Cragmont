@@ -1,4 +1,5 @@
 require "active_support/core_ext/integer/time"
+require_relative "../canonical_app_host"
 
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
@@ -58,7 +59,7 @@ Rails.application.configure do
   config.action_mailer.raise_delivery_errors = true
 
   # Set host to be used by links generated in mailer templates and redirects.
-  app_host = ENV.fetch("APP_HOST", "cragmontclimbing.com")
+  app_host = CanonicalAppHost.normalize(ENV.fetch("APP_HOST", "www.cragmontclimbing.com"))
   config.action_mailer.default_url_options = { host: app_host, protocol: "https" }
   Rails.application.routes.default_url_options = { host: app_host, protocol: "https" }
 
