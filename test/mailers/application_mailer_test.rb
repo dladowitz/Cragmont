@@ -48,4 +48,27 @@ class ApplicationMailerTest < ActionMailer::TestCase
       Net::HTTP.define_singleton_method(:post_form, original_post_form)
     end
   end
+
+  test "mailgun delivery method sends simple mail body as text" do
+    delivery_method = MailgunDeliveryMethod.new(api_key: "test-key", domain: "mg.example.com")
+    mail = Mail.new(
+      from: "Cragmont Climbing <postmaster@mg.example.com>",
+      to: users(:alex).email,
+      subject: "Test",
+      body: "Simple text"
+    )
+
+    original_post_form = Net::HTTP.method(:post_form)
+    test_case = self
+    Net::HTTP.define_singleton_method(:post_form) do |_uri, params|
+      test_case.assert_equal "Simple text", params[:text]
+      Net::HTTPSuccess.new("1.1", "200", "OK")
+    end
+
+    delivery_method.deliver!(mail)
+  ensure
+    if original_post_form
+      Net::HTTP.define_singleton_method(:post_form, original_post_form)
+    end
+  end
 end

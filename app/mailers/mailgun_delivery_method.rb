@@ -35,7 +35,11 @@ class MailgunDeliveryMethod
   end
 
   def text_body(mail)
-    mail.text_part&.decoded || (mail.mime_type == "text/plain" ? mail.decoded : nil)
+    return mail.text_part.decoded if mail.text_part
+    return mail.decoded if mail.mime_type == "text/plain"
+    return if mail.html_part || mail.mime_type == "text/html"
+
+    mail.body.decoded
   end
 
   def html_body(mail)
