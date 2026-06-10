@@ -1,5 +1,4 @@
 - background_image_url = "#{root_url.chomp("/")}#{asset_path("backgrounds/vent-five-emperor-boulder-shorter.jpg")}"
-- dark_mode_background_image_url = "#{root_url.chomp("/")}#{asset_path("backgrounds/vent-five-emperor-boulder-shorter-dark-mode.jpg")}"
 !!!
 %html
   %head
@@ -33,10 +32,18 @@
         border-collapse: collapse;
       }
 
+      img {
+        border: 0;
+        display: block;
+        line-height: 100%;
+        outline: none;
+        text-decoration: none;
+      }
+
       .email-body p {
         margin: 0 0 18px;
-        font-size: 16px;
-        line-height: 1.65;
+        font-size: 17px;
+        line-height: 1.55;
       }
 
       .email-body a {
@@ -56,48 +63,50 @@
         forced-color-adjust: none;
       }
 
-      @media (prefers-color-scheme: dark) {
-        .email-background {
-          background-image: linear-gradient(rgba(23, 35, 29, 0.16), rgba(23, 35, 29, 0.24)), url('#{dark_mode_background_image_url}') !important;
-        }
-      }
-
       @media only screen and (max-width: 640px) {
         .email-shell {
           width: 100% !important;
-          margin-left: 0 !important;
         }
 
         .email-card {
-          padding: 28px 22px !important;
+          padding: 28px 24px !important;
         }
 
         .email-header,
         .email-footer {
-          padding-left: 22px !important;
-          padding-right: 22px !important;
+          padding-left: 24px !important;
+          padding-right: 24px !important;
+        }
+
+        .email-logo-main {
+          font-size: 34px !important;
+        }
+
+        .email-logo-sub {
+          font-size: 20px !important;
         }
       }
   %body{style: "margin: 0; padding: 0; background-color: #17231d; color-scheme: only light; forced-color-adjust: none; font-family: Arial, Helvetica, sans-serif;"}
     %table{role: "presentation", width: "100%", cellpadding: "0", cellspacing: "0", style: "min-width: 100%; background-color: #17231d; color-scheme: only light; forced-color-adjust: none;"}
       %tr
-        %td.email-background{align: "center", style: "background-color: #17231d; background-image: linear-gradient(rgba(23, 35, 29, 0.16), rgba(23, 35, 29, 0.24)), url('#{background_image_url}'); background-position: center bottom; background-size: cover; color-scheme: only light; forced-color-adjust: none; padding: 42px 16px 120px;"}
-          %table.email-shell{role: "presentation", width: "620", cellpadding: "0", cellspacing: "0", style: "width: 620px; max-width: 100%; margin-left: 20%;"}
+        %td.email-background{align: "center", style: "background-color: #17231d; color-scheme: only light; forced-color-adjust: none; padding: 28px 12px;"}
+          %table.email-shell{role: "presentation", width: "620", cellpadding: "0", cellspacing: "0", style: "width: 620px; max-width: 100%; background-color: #fffaf0;"}
             %tr
-              %td.email-header{style: "padding: 0 34px 22px; color: #f8f4ea; text-align: left;"}
-                %p{style: "display: inline-grid; gap: 0; margin: 0; color: #fff; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 0.95; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.42);"}
-                  %span{style: "display: block; font-size: 40px; font-weight: 800;"}
+              %td.email-header{style: "background-color: #17231d; padding: 30px 34px 24px; color: #f8f4ea; text-align: left;"}
+                %p{style: "margin: 0; color: #ffffff; font-family: Arial, Helvetica, sans-serif; line-height: 1;"}
+                  %span.email-logo-main{style: "display: block; font-size: 42px; font-weight: 800; letter-spacing: 0;"}
                     Cragmont
-                  %small{style: "display: block; color: #fff; font-size: 24px; font-weight: 800; letter-spacing: 0; text-transform: uppercase;"}
+                  %span.email-logo-sub{style: "display: block; color: #ffffff; font-size: 22px; font-weight: 800; letter-spacing: 0; text-transform: uppercase;"}
                     Climbing Club
             %tr
-              %td.email-card.email-body{style: "background: rgba(255, 250, 240, 0.8); border: 1px solid rgba(255, 255, 255, 0.45); border-radius: 8px; box-shadow: 0 18px 44px rgba(0, 0, 0, 0.18); color: #21302a; padding: 38px 40px;"}
+              %td{style: "background-color: #17231d;"}
+                %img{src: background_image_url, width: "620", alt: "Marin Coast, Emperor Boulder", style: "display: block; width: 100%; max-width: 620px; height: auto;"}/
+            %tr
+              %td.email-card.email-body{style: "background-color: #fffaf0; color: #21302a; padding: 36px 40px 32px;"}
                 = yield
             %tr
-              %td.email-footer{style: "padding: 24px 34px 0; color: #f8f4ea; font-size: 13px; line-height: 1.6; text-align: left;"}
+              %td.email-footer{style: "background-color: #17231d; padding: 22px 34px 26px; color: #f8f4ea; font-size: 13px; line-height: 1.6; text-align: left;"}
                 %p{style: "margin: 0 0 8px; font-weight: 700;"}
                   See you at the crag.
-          %table{role: "presentation", width: "100%", cellpadding: "0", cellspacing: "0", style: "width: 100%;"}
-            %tr
-              %td{align: "right", style: "padding: 76px 18px 0; color: rgba(255, 255, 255, 0.82); font-size: 13px; line-height: 1.4; text-align: right; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);"}
-                Marin Coast, Emperor Boulder
+                %br/
+                Cragmont Climbing Club
