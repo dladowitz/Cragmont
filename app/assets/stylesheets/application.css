@@ -449,6 +449,10 @@ input[type="submit"]:disabled {
   object-position: center;
 }
 
+.home-mobile-beta-notice {
+  display: none;
+}
+
 .home-hero-caption {
   position: absolute;
   right: clamp(16px, 5vw, 48px);
@@ -4083,7 +4087,7 @@ textarea {
   }
 
   body.password-reset-edit-page .public-main {
-    display: block;
+    display: block !important;
   }
 
   body.password-reset-edit-page .auth-panel {

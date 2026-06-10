@@ -1,7 +1,33 @@
 = render "shared/public_header"
+:css
+  @media (max-width: 600px) {
+    .home-mobile-beta-notice {
+      position: absolute;
+      top: 36px;
+      left: 50%;
+      z-index: 1;
+      display: block !important;
+      width: min(82vw, 520px);
+      padding: 20px;
+      transform: translateX(-50%);
+      border: 2px solid var(--accent);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 16px 38px rgba(0, 0, 0, 0.24);
+      color: var(--text);
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+  }
 %main.public-main.home-main
   %section.home-hero
     = image_tag "home-hero.png", alt: "", class: "home-hero-image"
+    .home-mobile-beta-notice{ style: "display: none;" }
+      This site is still in beta. It hasn't been designed for mobile phones yet. 
+      %br
+      %br
+      While you likely CAN make it work you're gonna get a ton of rope drag.
     .home-hero-caption Matthes Crest, Yosemite National Park
     .home-hero-copy
       %h1 Climbing
