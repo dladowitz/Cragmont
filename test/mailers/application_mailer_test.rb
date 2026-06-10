@@ -7,10 +7,10 @@ class ApplicationMailerTest < ActionMailer::TestCase
 
     assert_includes html, "Cragmont"
     assert_includes html, "Climbing Club"
-    assert_includes html, "vent-five-emperor-boulder"
     assert_includes html, "font-family: Arial, Helvetica, sans-serif"
-    assert_includes html, "max-width: 620px"
-    assert_includes html, "Marin Coast, Emperor Boulder"
+    assert_includes html, "width: 620px"
+    assert_not_includes html, "vent-five-emperor-boulder"
+    assert_not_includes html, "Marin Coast, Emperor Boulder"
     assert_not_includes html, "margin-left: 20%"
     assert_not_includes html, "email-footer"
   end
