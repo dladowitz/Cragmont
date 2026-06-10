@@ -7,10 +7,26 @@ class ApplicationMailerTest < ActionMailer::TestCase
 
     assert_includes html, "Cragmont"
     assert_includes html, "Climbing Club"
-    assert_includes html, "vent-five-emperor-boulder"
     assert_includes html, "font-family: Arial, Helvetica, sans-serif"
-    assert_includes html, "margin-left: 20%"
-    assert_includes html, "See you at the crag."
+    assert_includes html, "width: 620px"
+    assert_not_includes html, "vent-five-emperor-boulder"
+    assert_not_includes html, "Marin Coast, Emperor Boulder"
+    assert_not_includes html, "margin-left: 20%"
+    assert_not_includes html, "email-footer"
+  end
+
+  test "html emails do not add duplicate layout signoff" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    mail = GuestWaiverMailer.with(
+      signup: signup,
+      added_by: users(:alex),
+      waiver_url: "https://example.com/waiver"
+    ).needed
+    html = mail.html_part.body.decoded
+
+    assert_includes html, "See you at the Crag."
+    assert_equal 1, html.scan("See you at the Crag.").size
+    assert_not_includes html, "email-footer"
   end
 
   test "text emails include shared header and footer" do
