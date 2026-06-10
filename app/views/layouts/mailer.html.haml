@@ -57,8 +57,7 @@
 
       .email-background,
       .email-card,
-      .email-header,
-      .email-footer {
+      .email-header {
         color-scheme: only light;
         forced-color-adjust: none;
       }
@@ -72,8 +71,7 @@
           padding: 28px 24px !important;
         }
 
-        .email-header,
-        .email-footer {
+        .email-header {
           padding-left: 24px !important;
           padding-right: 24px !important;
         }
@@ -104,9 +102,3 @@
             %tr
               %td.email-card.email-body{style: "background-color: #fffaf0; color: #21302a; padding: 36px 40px 32px;"}
                 = yield
-            %tr
-              %td.email-footer{style: "background-color: #17231d; padding: 22px 34px 26px; color: #f8f4ea; font-size: 13px; line-height: 1.6; text-align: left;"}
-                %p{style: "margin: 0 0 8px; font-weight: 700;"}
-                  See you at the crag.
-                %br/
-                Cragmont Climbing Club
