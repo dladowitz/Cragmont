@@ -1,4 +1,5 @@
 require "active_support/core_ext/integer/time"
+require_relative "../canonical_app_host"
 
 Rails.application.configure do
   # Staging should behave like production unless a staging-only integration
@@ -28,7 +29,7 @@ Rails.application.configure do
   config.action_mailer.delivery_method = :letter_opener_web
   config.action_mailer.raise_delivery_errors = true
 
-  app_host = ENV.fetch("APP_HOST", "staging.cragmontclimbing.com")
+  app_host = CanonicalAppHost.normalize(ENV.fetch("APP_HOST", "staging.cragmontclimbing.com"))
   config.action_mailer.default_url_options = { host: app_host, protocol: "https" }
   Rails.application.routes.default_url_options = { host: app_host, protocol: "https" }
 

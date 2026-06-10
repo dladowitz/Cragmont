@@ -1,6 +1,14 @@
 require "test_helper"
+require Rails.root.join("config/canonical_app_host")
 
 class ApplicationMailerTest < ActionMailer::TestCase
+  test "canonical app host adds www to the public apex domain" do
+    assert_equal "www.cragmontclimbing.com", CanonicalAppHost.normalize("cragmontclimbing.com")
+    assert_equal "www.cragmontclimbing.com", CanonicalAppHost.normalize(" www.cragmontclimbing.com ")
+    assert_equal "staging.cragmontclimbing.com", CanonicalAppHost.normalize("staging.cragmontclimbing.com")
+    assert_equal "localhost", CanonicalAppHost.normalize("localhost")
+  end
+
   test "html emails use Cragmont template" do
     mail = PasswordResetMailer.with(user: users(:alex), token: "reset-token").reset
     html = mail.html_part.body.decoded
