@@ -1,4 +1,4 @@
 class ApplicationMailer < ActionMailer::Base
-  default from: "from@example.com"
+  default from: ENV.fetch("MAILER_FROM", "Cragmont Climbing <postmaster@#{ENV.fetch('MAILGUN_DOMAIN', 'cragmontclimbing.com')}>")
   layout "mailer"
 end
