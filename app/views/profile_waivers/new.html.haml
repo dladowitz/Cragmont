@@ -1,0 +1,39 @@
+- content_for :body_class, "profile-waiver-new-page"
+= render "shared/public_header"
+%main.public-main
+  %section.panel
+    .panel-header
+      %div
+        %h1 Current Waiver
+        %p.muted= "Sign your #{Date.current.year} Cragmont waiver."
+    = form_with url: profile_waiver_path, method: :post, class: "waiver-form", data: { turbo: false, controller: "waiver-signature" } do
+      %section.waiver-intro
+        .waiver-intro-copy
+          - TripSignupWaiver.acknowledgement_blocks.each do |block|
+            %p= block
+      %section.waiver-text{"data-action" => "scroll->waiver-signature#checkWaiverScroll", "data-waiver-signature-target" => "waiver"}
+        .waiver-document
+          - TripSignupWaiver.blocks.each_with_index do |block, index|
+            - if TripSignupWaiver.title_block?(index)
+              %h3.waiver-title= block
+            - elsif TripSignupWaiver.warning_block?(index)
+              %p.waiver-warning= block
+            - elsif TripSignupWaiver.summary_heading_block?(index)
+              %h4.waiver-summary-heading= block
+            - else
+              %p= block
+      .signature-field
+        .signature-label-row
+          %label{for: "profile-waiver-signature"}
+            Signature
+            = required_marker
+          %span You must view all the text to sign
+        %canvas.signature-pad#profile-waiver-signature{"data-waiver-signature-target" => "canvas", height: "120", width: "560"}
+        = hidden_field_tag "waiver[waiver_signature_data]", "", data: { waiver_signature_target: "input" }
+        = hidden_field_tag "waiver[waiver_acknowledged_at]", "", data: { waiver_signature_target: "acknowledgementInput" }
+      .form-actions.waiver-signature-actions
+        %button.button.secondary{"data-action" => "waiver-signature#clear", type: "button"} Clear signature
+        .waiver-signature-submit-actions
+          = link_to "Cancel", profile_path, class: "button secondary"
+          = button_tag "Submit Waiver", type: :submit, class: "button", data: { waiver_signature_target: "submit" }, disabled: true
+%p.background-image-caption Castle Valley, UT. Castleton Tower.

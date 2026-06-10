@@ -147,6 +147,16 @@ class CampsiteSignupTest < ActiveSupport::TestCase
     assert signup.waiver_signed?
   end
 
+  test "minor trip waiver satisfies later adult-only signup in same trip year" do
+    minor_signup = create_campsite_signup!(campsite: campsites(:jtree_a), user: users(:sam))
+    minor_signup.campsite_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
+    waiver = attach_test_waiver_to(minor_signup).waiver
+    adult_only_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+
+    assert waiver.trip_minor?
+    assert adult_only_signup.waiver_signed?
+  end
+
   test "knows refund cutoff timing and amount" do
     signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     signup.payments.create!(

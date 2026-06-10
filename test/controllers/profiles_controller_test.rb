@@ -25,6 +25,8 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".details-list dd", text: "555-0100"
     assert_select ".details-list dt", text: "Club member"
     assert_select ".details-list dd", text: "Yes"
+    assert_select ".details-list dt", text: "Current Waiver"
+    assert_select "a[href='#{new_profile_waiver_path}']", text: "Missing"
     assert_select "a[href='#{edit_profile_path}']", text: "Edit profile"
     assert_select "button", text: "Delete account", count: 0
     assert_select "h2", text: "Transactions"
@@ -36,6 +38,45 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_select "dialog.confirmation-modal", count: 0
     assert_select "a", text: "Yosemite Valley Spring"
     assert_select "a[href='#{admin_trip_path(trips(:yosemite))}']", text: "Manage trip"
+  end
+
+  test "profile shows current waiver modal and download action" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    waiver = attach_test_waiver_to(signup).waiver
+    log_in_as(users(:sam))
+
+    get profile_url
+
+    assert_response :success
+    inline_path = "#{rails_blob_path(waiver.document, disposition: "inline")}#view=FitH"
+    download_path = rails_blob_path(waiver.document, disposition: "attachment")
+    assert_select ".details-list dt", text: "Current Waiver"
+    assert_select "button[aria-controls='profile-current-waiver']", text: waiver.waiver_signed_at.strftime("%m/%d/%y")
+    assert_select "dialog#profile-current-waiver" do
+      assert_select "h2", "Waiver"
+      assert_select "iframe.waiver-document-iframe[src='#{inline_path}']"
+      assert_select "a[href='#{download_path}']", text: "Download Waiver"
+    end
+  end
+
+  test "user can sign current waiver from profile" do
+    log_in_as(users(:sam))
+
+    assert_difference "Waiver.count", 1 do
+      post profile_waiver_url, params: {
+        waiver: {
+          waiver_signature_data: SIGNATURE_DATA_URL,
+          waiver_acknowledged_at: Time.current.iso8601
+        }
+      }
+    end
+
+    waiver = users(:sam).waivers.order(:created_at).last
+    assert_redirected_to profile_url
+    assert_equal Date.current.year, waiver.waiver_year
+    assert waiver.annual_adult?
+    assert waiver.document.attached?
+    assert_equal "On belay! Your current waiver is signed.", flash[:notice]
   end
 
   test "profile inbox shows the five most recent help requests" do

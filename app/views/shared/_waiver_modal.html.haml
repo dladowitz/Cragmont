@@ -1,0 +1,19 @@
+- button_label = local_assigns.fetch(:button_label, "View")
+- button_class = local_assigns.fetch(:button_class, "info-link-button")
+- modal_id = local_assigns.fetch(:modal_id, "waiver-#{waiver.id}")
+- inline_waiver_path = "#{rails_blob_path(waiver.document, disposition: 'inline')}#view=FitH"
+- download_waiver_path = rails_blob_path(waiver.document, disposition: 'attachment')
+%div{"data-controller" => "modal"}
+  %button{class: button_class, "aria-controls" => modal_id, "data-action" => "modal#open", type: "button"}= button_label
+  %dialog.signup-modal.waiver-document-modal{id: modal_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+    .signup-modal-content
+      .waiver-document-header
+        %h2 Waiver
+        %p.muted
+          = waiver.display_type
+          signed #{waiver.waiver_signed_at.to_fs(:long)}
+      .waiver-document-frame
+        %iframe.waiver-document-iframe{src: inline_waiver_path, title: "Waiver PDF"}
+      .form-actions
+        %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+        = link_to "Download Waiver", download_waiver_path, class: "button"

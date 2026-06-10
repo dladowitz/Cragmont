@@ -6,6 +6,7 @@ class ProfilesController < ApplicationController
     @coordinated_trips = @user.coordinated_trips.order(start_date: :asc, name: :asc)
     @ledger_entries = TripTransactionLedger.for_user(@user)
     @recent_help_requests = @user.help_requests.recent_first.limit(5)
+    @current_waiver = @user.current_waiver_for_year(Date.current.year)
   end
 
   def edit

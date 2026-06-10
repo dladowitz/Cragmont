@@ -221,12 +221,9 @@
               = render "payment_controls", signup: signup, trip: signup_trip, missing_dates: missing_dates, missing_waiver: missing_waiver, participant_details_link: participant_details_link, read_only: payment_read_only
           %td
             - if signup.waiver_signed?
-              .waiver-download
-                - signed_on = signup.waiver_signed_at.strftime("%m/%d/%y")
-                = link_to rails_blob_path(signup.waiver_document, disposition: "attachment"), class: "waiver-download-link", aria: { label: "Download waiver signed on #{signed_on}" } do
-                  %span= signed_on
-                  %svg.waiver-download-icon{ aria: { hidden: "true" }, fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg" }
-                    %path{ d: "M12 3v12m0 0 4-4m-4 4-4-4M5 21h14", stroke: "currentColor", "stroke-linecap" => "round", "stroke-linejoin" => "round", "stroke-width" => "2" }
+              = link_to admin_user_path(signup.user), class: "waiver-check-link", aria: { label: "View #{signup.user.full_name}'s waivers" } do
+                %svg.waiver-check-icon{ aria: { hidden: "true" }, fill: "none", height: "18", viewbox: "0 0 24 24", width: "18", xmlns: "http://www.w3.org/2000/svg" }
+                  %path{ d: "M20 6 9 17l-5-5", stroke: "currentColor", "stroke-linecap" => "round", "stroke-linejoin" => "round", "stroke-width" => "2.5" }
             - else
               - if read_only
                 %span.missing-value Missing

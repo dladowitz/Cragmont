@@ -15,6 +15,7 @@ class CampsiteSignup < ApplicationRecord
   belongs_to :trip
   belongs_to :campsite, optional: true
   belongs_to :user
+  belongs_to :waiver, optional: true
   belongs_to :guest_of_signup,
     class_name: "CampsiteSignup",
     optional: true,
@@ -194,6 +195,9 @@ class CampsiteSignup < ApplicationRecord
   end
 
   def waiver_signed?
+    return true if waiver&.current?
+    return true if !includes_minors? && user.current_waiver_for_year(trip.start_date.year).present?
+
     waiver_signed_at.present? && waiver_document.attached?
   end
 

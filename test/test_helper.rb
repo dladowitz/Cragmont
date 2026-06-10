@@ -59,12 +59,38 @@ module ActiveSupport
       signature = WaiverSignatureData.new(SIGNATURE_DATA_URL)
       waiver_text = TripSignupWaiver.text
       acknowledgement_text = TripSignupWaiver.acknowledgement_text
+      signed_at = Time.current
+
+      waiver = Waiver.create!(
+        user: signup.user,
+        trip: signup.trip,
+        campsite_signup: signup,
+        waiver_year: signup.trip.start_date.year,
+        waiver_type: signup.includes_minors? ? "trip_minor" : "annual_adult",
+        waiver_acknowledged_at: signed_at,
+        waiver_acknowledgement_text: acknowledgement_text,
+        waiver_acknowledgement_text_digest: ::Digest::SHA256.hexdigest(acknowledgement_text),
+        waiver_signed_at: signed_at,
+        waiver_signer_name: signup.user.full_name,
+        waiver_text: waiver_text,
+        waiver_text_digest: ::Digest::SHA256.hexdigest(waiver_text),
+        waiver_signature_digest: signature.digest,
+        waiver_ip_address: "127.0.0.1",
+        waiver_user_agent: "Rails test"
+      )
+      waiver.signature_image.attach(io: StringIO.new(signature.bytes), filename: "signature.png", content_type: "image/png")
+      waiver.document.attach(
+        io: StringIO.new(WaiverPdf.new(waiver: waiver, signature_png: signature.bytes).render),
+        filename: waiver.document_filename,
+        content_type: "application/pdf"
+      )
 
       signup.update!(
+        waiver: waiver,
         waiver_acknowledged_at: Time.current,
         waiver_acknowledgement_text: acknowledgement_text,
         waiver_acknowledgement_text_digest: ::Digest::SHA256.hexdigest(acknowledgement_text),
-        waiver_signed_at: Time.current,
+        waiver_signed_at: signed_at,
         waiver_signer_name: signup.user.full_name,
         waiver_text: waiver_text,
         waiver_text_digest: ::Digest::SHA256.hexdigest(waiver_text),

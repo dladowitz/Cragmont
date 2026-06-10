@@ -126,4 +126,16 @@ class UserTest < ActiveSupport::TestCase
     assert coordinator.admin_access?
     assert_not participant.admin_access?
   end
+
+  test "finds latest current waiver for a calendar year" do
+    old_signup = create_campsite_signup!(campsite: campsites(:jtree_a), user: users(:sam))
+    old_waiver = attach_test_waiver_to(old_signup).waiver
+    old_waiver.update!(waiver_signed_at: 2.days.ago)
+    new_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    new_waiver = attach_test_waiver_to(new_signup).waiver
+
+    assert_equal new_waiver, users(:sam).current_waiver_for_year(2026)
+    assert_not_equal old_waiver, users(:sam).current_waiver_for_year(2026)
+    assert_nil users(:sam).current_waiver_for_year(2027)
+  end
 end
