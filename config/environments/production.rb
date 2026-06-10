@@ -89,6 +89,8 @@ Rails.application.configure do
   #
   # Skip DNS rebinding protection for the default health check endpoint.
   config.hosts << app_host
+  config.hosts << "www.#{app_host}" unless app_host.start_with?("www.")
+  config.hosts << app_host.delete_prefix("www.") if app_host.start_with?("www.")
   config.hosts << /.*\.herokuapp\.com/
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 end
