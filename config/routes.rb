@@ -14,7 +14,9 @@ Rails.application.routes.draw do
   resource :registration, only: %i[new create]
   resource :session, only: %i[new create destroy]
   resources :password_resets, only: %i[new create edit update], param: :token
-  resource :profile, only: %i[show edit update destroy]
+  resource :profile, only: %i[show edit update destroy] do
+    resource :waiver, only: %i[new create], controller: "profile_waivers"
+  end
   get "help", to: "help_requests#new", as: :new_help_request
   post "help", to: "help_requests#create", as: :create_help_request
   resources :help_requests, only: %i[index show] do

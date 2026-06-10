@@ -15,6 +15,13 @@
           %div
             %dt Club member
             %dd= @user.member? ? "Yes" : "No"
+          %div
+            %dt Current Waiver
+            %dd
+              - if @current_waiver.present?
+                = render "shared/waiver_modal", waiver: @current_waiver, button_label: @current_waiver.waiver_signed_at.strftime("%m/%d/%y"), modal_id: "profile-current-waiver"
+              - else
+                = link_to "Missing", new_profile_waiver_path, class: "missing-value missing-link"
       .actions
         = link_to "Edit profile", edit_profile_path, class: "button secondary"
   %section.panel

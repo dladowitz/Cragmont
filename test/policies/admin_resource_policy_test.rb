@@ -9,13 +9,15 @@ class AdminResourcePolicyTest < ActiveSupport::TestCase
     assign_role(@finance_admin, :finance_admin)
   end
 
-  test "user and site setting policies are super admin only" do
+  test "user writes and site setting policies are super admin only while user show allows admins" do
     assert UserPolicy.new(@super_admin, users(:sam)).update?
+    assert UserPolicy.new(@super_admin, users(:sam)).show?
     assert SiteSettingPolicy.new(@super_admin, SiteSetting.current).update?
 
     assert_not UserPolicy.new(@trip_admin, users(:sam)).update?
+    assert UserPolicy.new(@trip_admin, users(:sam)).show?
     assert_not SiteSettingPolicy.new(@trip_admin, SiteSetting.current).update?
-    assert_not UserPolicy.new(@finance_admin, users(:sam)).show?
+    assert UserPolicy.new(@finance_admin, users(:sam)).show?
   end
 
   test "campground policy allows super and trip admins only" do

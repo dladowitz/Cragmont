@@ -473,10 +473,9 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select "th", text: "Status", count: 0
       assert_select ".status.waitlisted-status", count: 0
     end
-    assert_select ".waiver-download a.waiver-download-link", text: /\d{2}\/\d{2}\/\d{2}/
-    assert_select ".waiver-download a.waiver-download-link[aria-label^='Download waiver signed on']"
-    assert_select ".waiver-download a.waiver-download-link svg.waiver-download-icon"
-    assert_select ".waiver-download", text: /Download/, count: 0
+    assert_select "a.waiver-check-link[href='#{admin_user_path(users(:sam))}']"
+    assert_select "a.waiver-check-link svg.waiver-check-icon"
+    assert_select ".waiver-download", count: 0
   end
 
   test "confirmed participant reservation actions hide move site when trip has one campsite" do

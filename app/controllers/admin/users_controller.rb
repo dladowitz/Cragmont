@@ -10,6 +10,7 @@ class Admin::UsersController < Admin::BaseController
   def show
     authorize @user
     @coordinated_trips = @user.coordinated_trips.order(start_date: :asc, name: :asc)
+    @waivers = @user.waivers.includes(:trip, campsite_signup: [ :trip, :campsite, :campsite_signup_minors ]).with_attached_document.current_first
   end
 
   def new

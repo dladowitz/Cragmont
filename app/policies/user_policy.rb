@@ -4,7 +4,7 @@ class UserPolicy < ApplicationPolicy
   end
 
   def show?
-    super_admin?
+    user&.admin_access?
   end
 
   def create?

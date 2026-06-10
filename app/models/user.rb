@@ -18,6 +18,7 @@ class User < ApplicationRecord
     dependent: :nullify,
     inverse_of: :registered_by
   has_many :campsite_signups, dependent: :restrict_with_error
+  has_many :waivers, dependent: :destroy
   has_many :help_requests, dependent: :nullify
   has_many :help_request_replies, dependent: :restrict_with_error
   has_many :issued_refunds,
@@ -95,6 +96,15 @@ class User < ApplicationRecord
 
   def admin_access?
     super_admin? || finance_admin? || trip_admin? || coordinated_trips.exists?
+  end
+
+  def current_waiver_for_year(year)
+    waivers
+      .signed
+      .for_year(year)
+      .with_attached_document
+      .current_first
+      .detect(&:current?)
   end
 
   def generate_password_reset_token!

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_09_100500) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_10_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -135,6 +135,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_100500) do
     t.datetime "waiver_acknowledged_at"
     t.text "waiver_acknowledgement_text"
     t.string "waiver_acknowledgement_text_digest"
+    t.bigint "waiver_id"
     t.string "waiver_ip_address"
     t.string "waiver_signature_digest"
     t.datetime "waiver_signed_at"
@@ -155,6 +156,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_100500) do
     t.index ["waitlist_eligible_at"], name: "index_campsite_signups_on_waitlist_eligible_at"
     t.index ["waiver_acknowledged_at"], name: "index_campsite_signups_on_waiver_acknowledged_at"
     t.index ["waiver_acknowledgement_text_digest"], name: "index_campsite_signups_on_waiver_acknowledgement_text_digest"
+    t.index ["waiver_id"], name: "index_campsite_signups_on_waiver_id"
     t.index ["waiver_signature_digest"], name: "index_campsite_signups_on_waiver_signature_digest"
     t.index ["waiver_signed_at"], name: "index_campsite_signups_on_waiver_signed_at"
     t.index ["waiver_text_digest"], name: "index_campsite_signups_on_waiver_text_digest"
@@ -344,6 +346,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_100500) do
     t.index ["password_reset_token_digest"], name: "index_users_on_password_reset_token_digest", unique: true
   end
 
+  create_table "waivers", force: :cascade do |t|
+    t.bigint "campsite_signup_id"
+    t.datetime "created_at", null: false
+    t.bigint "trip_id"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.datetime "waiver_acknowledged_at"
+    t.text "waiver_acknowledgement_text"
+    t.string "waiver_acknowledgement_text_digest"
+    t.string "waiver_ip_address"
+    t.string "waiver_signature_digest"
+    t.datetime "waiver_signed_at", null: false
+    t.string "waiver_signer_name"
+    t.text "waiver_text"
+    t.string "waiver_text_digest"
+    t.string "waiver_type", null: false
+    t.string "waiver_user_agent"
+    t.integer "waiver_year", null: false
+    t.index ["campsite_signup_id"], name: "index_waivers_on_campsite_signup_id"
+    t.index ["trip_id"], name: "index_waivers_on_trip_id"
+    t.index ["user_id", "waiver_year"], name: "index_waivers_on_user_id_and_waiver_year"
+    t.index ["user_id"], name: "index_waivers_on_user_id"
+    t.index ["waiver_signature_digest"], name: "index_waivers_on_waiver_signature_digest"
+    t.index ["waiver_signed_at"], name: "index_waivers_on_waiver_signed_at"
+    t.index ["waiver_text_digest"], name: "index_waivers_on_waiver_text_digest"
+    t.index ["waiver_type"], name: "index_waivers_on_waiver_type"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "campsite_signup_minors", "campsite_signups"
@@ -355,6 +385,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_100500) do
   add_foreign_key "campsite_signups", "campsites"
   add_foreign_key "campsite_signups", "trips"
   add_foreign_key "campsite_signups", "users"
+  add_foreign_key "campsite_signups", "waivers"
   add_foreign_key "campsites", "campgrounds"
   add_foreign_key "campsites", "trips"
   add_foreign_key "campsites", "users", column: "registered_by_id"
@@ -368,4 +399,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_100500) do
   add_foreign_key "trips", "users", column: "campsite_coordinator_id"
   add_foreign_key "user_roles", "roles"
   add_foreign_key "user_roles", "users"
+  add_foreign_key "waivers", "campsite_signups", on_delete: :nullify
+  add_foreign_key "waivers", "trips"
+  add_foreign_key "waivers", "users"
 end

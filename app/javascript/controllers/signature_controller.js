@@ -17,6 +17,7 @@ export default class extends Controller {
     nextSubmitText: String,
     paySubmitText: String,
     primaryParticipantName: String,
+    currentWaiverAvailable: Boolean,
     showCapacityWarning: Boolean,
     uncountedMinorAgeLimit: Number,
     waitlistIntent: String,
@@ -174,6 +175,11 @@ export default class extends Controller {
 
     if (this.guestSignupSelected() && !this.requiredFieldsComplete(this.guestFieldsTarget, "requiredForGuest")) {
       this.element.reportValidity()
+      return
+    }
+
+    if (!this.waiverRequiredForCurrentSelection()) {
+      this.element.requestSubmit()
       return
     }
 
@@ -388,7 +394,7 @@ export default class extends Controller {
 
   prepareDirectSignup() {
     if (this.hasFeeFieldsTarget) this.feeFieldsTarget.hidden = false
-    if (this.hasSignupStepSubmitTarget) this.signupStepSubmitTarget.textContent = this.nextSubmitTextValue
+    if (this.hasSignupStepSubmitTarget) this.signupStepSubmitTarget.textContent = this.signupStepSubmitText()
     if (this.hasIntentTarget) this.intentTarget.value = this.directSignupIntentValue
     this.toggleAttendanceDateRequirements(true)
   }
@@ -413,6 +419,10 @@ export default class extends Controller {
 
     if (this.hasSubmitTarget) {
       this.submitTarget.textContent = paymentRequired ? this.paySubmitTextValue : this.freeSubmitTextValue
+    }
+
+    if (this.hasSignupStepSubmitTarget && !this.waitlistFallbackActive()) {
+      this.signupStepSubmitTarget.textContent = this.signupStepSubmitText()
     }
 
     if (!this.hasPaymentSummaryTarget) return
@@ -615,6 +625,19 @@ export default class extends Controller {
 
   feeConfigured() {
     return this.firstTwoNightsFeeCentsValue > 0 || this.extraNightFeeCentsValue > 0 || this.minorFeeCentsValue > 0 || this.minorExtraNightFeeCentsValue > 0
+  }
+
+  waiverRequiredForCurrentSelection() {
+    return !this.currentWaiverAvailableValue || this.minorSignupSelected() || this.existingMinorLineItemsValue.length > 0
+  }
+
+  signupStepSubmitText() {
+    if (this.waiverRequiredForCurrentSelection()) return this.nextSubmitTextValue
+
+    const amountCents = this.paymentAmountCents()
+    const paymentRequired = amountCents === null ? this.feeConfigured() : amountCents > 0
+
+    return paymentRequired ? this.paySubmitTextValue : this.freeSubmitTextValue
   }
 
   formatCurrency(cents) {

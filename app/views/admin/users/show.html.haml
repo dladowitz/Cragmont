@@ -27,6 +27,29 @@
         class: "button danger",                                                         |
         form: { data: { turbo_confirm: "Are you sure you want to delete this user?" } } |
 %section.panel
+  %h2 Waivers
+  - if @waivers.any?
+    %table
+      %thead
+        %tr
+          %th Signed
+          %th Year
+          %th Type
+          %th Trip
+          %th Minors
+          %th Waiver
+      %tbody
+        - @waivers.each do |waiver|
+          %tr
+            %td= waiver.waiver_signed_at.to_fs(:long)
+            %td= waiver.waiver_year
+            %td= waiver.display_type
+            %td= waiver.trip&.name || "Standalone"
+            %td= waiver.minors_summary
+            %td= render "shared/waiver_modal", waiver: waiver, button_label: "View", modal_id: "admin-user-waiver-#{waiver.id}"
+  - else
+    %p.muted No waivers signed yet.
+%section.panel
   %h2 Coordinated trips
   - if @coordinated_trips.any?
     = render "admin/trips/table", trips: @coordinated_trips

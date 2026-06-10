@@ -67,8 +67,44 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_select ".details-list dd", text: "No"
     assert_select ".details-list dt", text: "Roles"
     assert_select ".details-list dd", text: "Super Admin"
+    assert_select "h2", "Waivers"
+    assert_select "section.panel", text: /No waivers signed yet/
     assert_select "form[data-turbo-confirm='Are you sure you want to delete this user?']"
     assert_select "a", text: "Yosemite Valley Spring"
+  end
+
+  test "user details show waiver history with modal download" do
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    waiver = attach_test_waiver_to(signup).waiver
+
+    get admin_user_url(users(:sam))
+
+    assert_response :success
+    inline_path = "#{rails_blob_path(waiver.document, disposition: "inline")}#view=FitH"
+    download_path = rails_blob_path(waiver.document, disposition: "attachment")
+    assert_select "h2", "Waivers"
+    assert_select "table" do
+      assert_select "td", text: waiver.waiver_signed_at.to_fs(:long)
+      assert_select "td", text: "2026"
+      assert_select "td", text: "Annual adult"
+      assert_select "td", text: "Yosemite Valley Spring"
+      assert_select "button[aria-controls='admin-user-waiver-#{waiver.id}']", text: "View"
+    end
+    assert_select "dialog#admin-user-waiver-#{waiver.id}" do
+      assert_select "h2", "Waiver"
+      assert_select "iframe.waiver-document-iframe[src='#{inline_path}']"
+      assert_select "a[href='#{download_path}']", text: "Download Waiver"
+    end
+  end
+
+  test "any admin access can view user details" do
+    trips(:jtree).update!(campsite_coordinator: users(:sam))
+    log_in_as(users(:sam))
+
+    get admin_user_url(users(:alex))
+
+    assert_response :success
+    assert_select ".panel-header", text: /Alex Rivera/
   end
 
   test "user details show default password status" do

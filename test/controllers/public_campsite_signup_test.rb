@@ -268,6 +268,28 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_equal TripSignupWaiver.text, signup.waiver_text
   end
 
+  test "current annual waiver skips signature for adult only trip signup" do
+    previous_signup = create_campsite_signup!(campsite: campsites(:jtree_a), user: users(:sam))
+    current_waiver = attach_test_waiver_to(previous_signup).waiver
+    log_in_as(users(:sam))
+
+    assert_difference "CampsiteSignup.count", 1 do
+      assert_no_difference "Waiver.count" do
+        post signup_url_for, params: {
+          campsite_signup: {
+            arrival_date: "2026-06-13",
+            checkout_date: "2026-06-15"
+          }
+        }
+      end
+    end
+
+    signup = CampsiteSignup.find_by!(trip: trips(:yosemite), user: users(:sam))
+    assert_redirected_to trip_url(trips(:yosemite))
+    assert_equal current_waiver, signup.waiver
+    assert signup.waiver_signed?
+  end
+
   test "paid signup creates pending payment and confirms from Stripe webhook" do
     SiteSetting.current.update!(first_two_nights_fee: "50", extra_night_fee: "10")
     log_in_as(users(:sam))
@@ -564,6 +586,24 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_includes signup.waiver_acknowledgement_text, TripSignupWaiver::MINOR_RESPONSIBILITY_TEXT
     assert_includes signup.waiver_text, TripSignupWaiver::MINOR_RESPONSIBILITY_TEXT
     assert signup.waiver_document.attached?
+    assert signup.waiver.trip_minor?
+  end
+
+  test "current annual waiver does not skip signing when minors are included" do
+    previous_signup = create_campsite_signup!(campsite: campsites(:jtree_a), user: users(:sam))
+    attach_test_waiver_to(previous_signup)
+    log_in_as(users(:sam))
+    params = waiver_signature_params_with_minors(
+      { first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child" }
+    )
+    params[:campsite_signup].delete(:waiver_signature_data)
+
+    assert_no_difference "CampsiteSignup.count" do
+      post signup_url_for, params: params
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite))
+    assert_equal "Please sign the waiver before signing up.", flash[:alert]
   end
 
   test "logged in user can sign up with guests" do
@@ -883,6 +923,35 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     end
 
     assert_empty ActionMailer::Base.deliveries
+  end
+
+  test "payment success modal does not list adult guests with current annual waiver" do
+    primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam), status: "confirmed")
+    guest = User.create!(
+      first_name: "Gina",
+      last_name: "Ready",
+      email: "payment-success-ready-guest@example.com",
+      password: "password"
+    )
+    previous_signup = create_campsite_signup!(campsite: campsites(:jtree_a), user: guest)
+    attach_test_waiver_to(previous_signup)
+    create_campsite_signup!(
+      campsite: campsites(:yosemite_a),
+      user: guest,
+      guest_of_signup: primary_signup,
+      guest_position: 1,
+      status: "confirmed"
+    )
+    log_in_as(users(:sam))
+
+    get trip_url(trips(:yosemite), stripe_checkout: "success")
+
+    assert_response :success
+    assert_select "dialog.payment-success-modal" do
+      assert_select "h2", "Get stoked!"
+      assert_select "p", text: /We still need the other adults/, count: 0
+      assert_select "li", text: /Gina Ready/, count: 0
+    end
   end
 
   test "primary participant can email guest waiver link from modal action" do
