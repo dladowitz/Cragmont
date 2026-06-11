@@ -14,7 +14,7 @@
           %legend.visually-hidden Additional participants
           %label
             = check_box_tag "campsite_signup[with_guests]", "1", false, id: "campsite_#{campsite.id}_waitlist_with_guests", data: { waitlist_form_target: "guestToggle", action: "waitlist-form#togglePartyFields" }
-            %span Add an aditional adult (max 2)
+            %span Add an additional adult (max 2)
           %label
             = check_box_tag "campsite_signup[with_minors]", "1", false, id: "campsite_#{campsite.id}_waitlist_with_minors", data: { waitlist_form_target: "minorToggle", action: "waitlist-form#togglePartyFields" }
             %span Add minors (under 18)
