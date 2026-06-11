@@ -47,7 +47,7 @@
         %legend.visually-hidden Additional participants
         %label
           = check_box_tag "campsite_signup[with_guests]", "1", false, id: guests_toggle_id, data: { signature_target: "guestToggle", action: "signature#togglePartyFields" }
-          %span Add adult
+          %span Add an additional adult (max 2)
         %label
           = check_box_tag "campsite_signup[with_minors]", "1", false, id: minors_toggle_id, data: { signature_target: "minorToggle", action: "signature#togglePartyFields" }
           %span Add minors (under 18)
