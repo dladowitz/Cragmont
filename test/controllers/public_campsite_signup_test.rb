@@ -1040,7 +1040,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "button", text: "Sign up for this campsite"
     assert_select "dialog.signup-modal"
-    assert_select ".signup-kind-options", text: /Add an additional adult \(max 2\)/
+    assert_select ".signup-kind-options", text: /Add additional adults \(max 2\)/
     assert_select ".signup-kind-options", text: /Who are you signing up\?/, count: 0
     assert_select ".signup-kind-options", text: /Add minors \(under 18\)/
     assert_select "input[type='checkbox'][name='campsite_signup[with_minors]'][value='1']"
@@ -1071,7 +1071,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     end
     assert_select "button[data-action='signature#continueSignup'][data-signature-target='signupStepSubmit']", text: "Next"
     assert_select ".capacity-warning[hidden]", text: /You've exceeded the space available for this campsite\. Your party will be placed on the waitlist\./, count: 2
-    assert_select ".guest-fields", text: /Adult information\s+\(Max 2\)/
+    assert_select ".guest-fields", text: /Additional Adults\s/
     assert_select ".guest-fields .guest-field-row", count: 4
     assert_select ".guest-fields .guest-field-row[hidden]", count: 2
     assert_select ".guest-fields button.add-person-link", text: "Add another adult"
@@ -1447,7 +1447,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_select ".waitlist-form .minor-fields[hidden]", text: /Minor information/
       assert_select ".waitlist-form .minor-fields[data-required-dataset-key='requiredForMinor']"
       assert_select ".waitlist-form .minor-fields input[data-required-for-minor='true']", count: 8
-      assert_select ".waitlist-form .guest-fields[hidden]", text: /Adult information/
+      assert_select ".waitlist-form .guest-fields[hidden]", text: /Additional Adults/
       assert_select ".waitlist-form .guest-fields[data-required-dataset-key='requiredForGuest']"
       assert_select ".waitlist-form .guest-fields input[data-required-for-guest='true']", count: 6
     end

@@ -47,14 +47,13 @@
         %legend.visually-hidden Additional participants
         %label
           = check_box_tag "campsite_signup[with_guests]", "1", false, id: guests_toggle_id, data: { signature_target: "guestToggle", action: "signature#togglePartyFields" }
-          %span Add an additional adult (max 2)
+          %span Add additional adults (max 2)
         %label
           = check_box_tag "campsite_signup[with_minors]", "1", false, id: minors_toggle_id, data: { signature_target: "minorToggle", action: "signature#togglePartyFields" }
           %span Add minors (under 18)
       %section.guest-fields{"data-party-fields" => "guest", "data-required-dataset-key" => "requiredForGuest", "data-signature-target" => "guestFields", :hidden => ""}
         %h3
-          Adult information
-          %span.section-limit (Max #{CampsiteSignup::MAX_GUESTS_PER_SIGNUP})
+          Additional Adults
         - CampsiteSignup::MAX_GUESTS_PER_SIGNUP.times do |index|
           .guest-field-row{"data-party-row" => "", "data-party-row-visible" => (index.zero? ? "true" : "false"), hidden: !index.zero?}
             %button.remove-person-button{"aria-label" => "Remove guest", "data-action" => "signature#removePartyRow", type: "button"} X
