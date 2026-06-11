@@ -1040,7 +1040,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "button", text: "Sign up for this campsite"
     assert_select "dialog.signup-modal"
-    assert_select ".signup-kind-options", text: /Add and aditional adult (max 2)/
+    assert_select ".signup-kind-options", text: /Add an aditional adult (max 2)/
     assert_select ".signup-kind-options", text: /Who are you signing up\?/, count: 0
     assert_select ".signup-kind-options", text: /Add minors \(under 18\)/
     assert_select "input[type='checkbox'][name='campsite_signup[with_minors]'][value='1']"
