@@ -48,6 +48,9 @@ gem "aws-sdk-s3", "~> 1.225"
 # Render Rails views with HAML templates.
 gem "haml-rails", "~> 3.0"
 
+# Render admin-managed Markdown content pages.
+gem "commonmarker", "~> 2.0"
+
 # Authorize admin actions with small, explicit policy classes.
 gem "pundit", "~> 2.5"
 

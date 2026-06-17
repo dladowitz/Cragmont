@@ -19,6 +19,7 @@ class TripsController < ApplicationController
   end
 
   def what_to_expect
+    @content_page = ContentPage.current!("what_to_expect")
   end
 
   def show

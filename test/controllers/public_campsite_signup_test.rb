@@ -40,7 +40,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", "What to expect on a Cragmont trip"
-    assert_select ".trip-expectation-intro strong", "Cragmont trips are a shared base camp, not a guided trip."
+    assert_select ".content-page-markdown strong", "Cragmont trips are a shared base camp, not a guided trip."
     assert_select "h2", "Do I need a partner to come on a trip?"
     assert_select "h2", "Will Cragmont teach me to climb outside?"
     assert_select "h2", "Do you know any professional climbing companies I can take classes from?"
@@ -51,6 +51,22 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "a[href='https://www.saanoadventures.com/']", text: "SANNO Adventures"
     assert_select "a[href='#{new_help_request_path}']", text: "Get Help"
     assert_select ".background-image-caption", "Fairview Dome, Yosemite National Park"
+  end
+
+  test "trip what to expect page renders editable content page copy" do
+    ContentPage.current!("what_to_expect").update!(
+      title: "Custom what to expect",
+      subtitle: "Custom subtitle.",
+      body: "## Custom heading\n\nCustom **body** copy."
+    )
+
+    get what_to_expect_trips_url
+
+    assert_response :success
+    assert_select "h1", "Custom what to expect"
+    assert_select ".panel-header .muted", "Custom subtitle."
+    assert_select ".content-page-markdown h2", "Custom heading"
+    assert_select ".content-page-markdown strong", "body"
   end
 
   test "liability warning appears on public trip pages" do

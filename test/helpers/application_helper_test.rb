@@ -52,6 +52,24 @@ class ApplicationHelperTest < ActionView::TestCase
     end
   end
 
+  test "render content page markdown allows safe formatting and external links" do
+    html = render_content_page_markdown("## Heading\n\nA [guide](https://example.com) and **bold text**.")
+
+    assert_includes html, "<h2>Heading</h2>"
+    assert_includes html, "<strong>bold text</strong>"
+    assert_includes html, 'href="https://example.com"'
+    assert_includes html, 'target="_blank"'
+    assert_includes html, 'rel="noopener"'
+    assert_not_includes html, 'class="anchor"'
+  end
+
+  test "render content page markdown strips unsafe html" do
+    html = render_content_page_markdown("<script>alert('whipper')</script>\n\n[bad](javascript:alert('x'))")
+
+    assert_not_includes html, "<script"
+    assert_not_includes html, "javascript:"
+  end
+
   test "staging environment shows letter opener footer for super admins" do
     super_admin = users(:alex)
 

@@ -2194,6 +2194,31 @@ body.trips-index-page .trips-index-panel .muted {
   color: var(--muted);
 }
 
+.content-page-markdown {
+  display: block;
+}
+
+.content-page-markdown h2 {
+  margin: 26px 0 10px;
+  color: var(--accent-dark);
+  font-size: 1.15rem;
+}
+
+.content-page-markdown h2:first-child {
+  margin-top: 0;
+}
+
+.content-page-markdown p,
+.content-page-markdown ul,
+.content-page-markdown ol {
+  margin: 0 0 14px;
+}
+
+.content-page-markdown ul,
+.content-page-markdown ol {
+  padding-left: 22px;
+}
+
 body.session-new-page .auth-panel,
 body.password-reset-new-page .auth-panel,
 body.password-reset-edit-page .auth-panel {
@@ -3854,6 +3879,82 @@ th {
   grid-column: 1 / -1;
 }
 
+.content-page-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 0.8fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.content-page-editor-field {
+  display: grid;
+  gap: 14px;
+}
+
+.markdown-formatting-guide,
+.content-page-preview-panel {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfaf7;
+}
+
+.markdown-formatting-guide h3,
+.content-page-preview-header h3 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.markdown-formatting-heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.markdown-formatting-heading h3 {
+  margin: 0;
+}
+
+.markdown-formatting-heading a {
+  font-size: 0.9rem;
+}
+
+.markdown-formatting-guide ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.markdown-formatting-guide code {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: #eef4f1;
+  color: var(--accent-dark);
+  font-size: 0.9rem;
+}
+
+.content-page-preview-header {
+  margin-bottom: 14px;
+}
+
+.content-page-preview-header p {
+  margin: 0;
+}
+
+.content-page-preview {
+  min-height: 320px;
+  padding: 18px;
+  border: 1px solid #e7e0d2;
+  border-radius: 8px;
+  background: #fffaf0;
+}
+
 .field {
   display: grid;
   gap: 6px;
@@ -4265,6 +4366,10 @@ textarea {
 
   .trips-index-notices {
     margin-top: 0;
+  }
+
+  .content-page-editor {
+    grid-template-columns: 1fr;
   }
 
   .campsite-signup-action {
