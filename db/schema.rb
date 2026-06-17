@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_17_123000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_17_124500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -478,6 +478,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_17_123000) do
     t.index ["password_reset_token_digest"], name: "index_users_on_password_reset_token_digest", unique: true
   end
 
+  create_table "waiver_minors", force: :cascade do |t|
+    t.integer "age", null: false
+    t.datetime "created_at", null: false
+    t.string "first_name", null: false
+    t.string "last_name", null: false
+    t.string "relationship", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "waiver_id", null: false
+    t.index ["age"], name: "index_waiver_minors_on_age"
+    t.index ["waiver_id"], name: "index_waiver_minors_on_waiver_id"
+  end
+
   create_table "waivers", force: :cascade do |t|
     t.bigint "campsite_signup_id"
     t.datetime "created_at", null: false
@@ -537,6 +549,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_17_123000) do
   add_foreign_key "trips", "users", column: "campsite_coordinator_id"
   add_foreign_key "user_roles", "roles"
   add_foreign_key "user_roles", "users"
+  add_foreign_key "waiver_minors", "waivers"
   add_foreign_key "waivers", "campsite_signups", on_delete: :nullify
   add_foreign_key "waivers", "trips"
   add_foreign_key "waivers", "users"

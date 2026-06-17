@@ -2,7 +2,7 @@ require "digest"
 require "stringio"
 
 class WaiverCreator
-  def initialize(user:, signature:, acknowledged_at:, request:, trip: nil, campsite_signup: nil, waiver_year: nil)
+  def initialize(user:, signature:, acknowledged_at:, request:, trip: nil, campsite_signup: nil, waiver_year: nil, minor_attributes: [])
     @user = user
     @signature = signature
     @acknowledged_at = acknowledged_at
@@ -10,6 +10,7 @@ class WaiverCreator
     @trip = trip || campsite_signup&.trip
     @campsite_signup = campsite_signup
     @waiver_year = waiver_year || @trip&.start_date&.year || Date.current.year
+    @minor_attributes = minor_attributes
   end
 
   def create!
@@ -17,6 +18,7 @@ class WaiverCreator
 
     Waiver.transaction do
       waiver = Waiver.create!(waiver_attributes)
+      minor_attributes_for_waiver.each { |attributes| waiver.waiver_minors.create!(attributes) }
       attach_files!(waiver)
       sync_signup_legacy_waiver!(waiver) if @campsite_signup.present?
     end
@@ -27,15 +29,36 @@ class WaiverCreator
   private
 
   def waiver_type
-    @campsite_signup&.includes_minors? ? "trip_minor" : "annual_adult"
+    includes_minors? ? "trip_minor" : "annual_adult"
   end
 
   def waiver_text
-    @waiver_text ||= TripSignupWaiver.text(includes_minors: @campsite_signup&.includes_minors?)
+    @waiver_text ||= TripSignupWaiver.text(includes_minors: includes_minors?)
   end
 
   def acknowledgement_text
-    @acknowledgement_text ||= TripSignupWaiver.acknowledgement_text(includes_minors: @campsite_signup&.includes_minors?)
+    @acknowledgement_text ||= TripSignupWaiver.acknowledgement_text(includes_minors: includes_minors?)
+  end
+
+  def includes_minors?
+    minor_attributes_for_waiver.any?
+  end
+
+  def minor_attributes_for_waiver
+    @minor_attributes_for_waiver ||= if @minor_attributes.present?
+      @minor_attributes
+    elsif @campsite_signup&.includes_minors?
+      @campsite_signup.campsite_signup_minors.map do |minor|
+        {
+          first_name: minor.first_name,
+          last_name: minor.last_name,
+          age: minor.age,
+          relationship: minor.relationship
+        }
+      end
+    else
+      []
+    end
   end
 
   def waiver_attributes

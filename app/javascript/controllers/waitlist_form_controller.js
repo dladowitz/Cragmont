@@ -8,8 +8,13 @@ export default class extends Controller {
   }
 
   togglePartyFields() {
-    this.toggleFieldGroup(this.minorFieldsTarget, this.minorToggleTarget.checked)
-    this.toggleFieldGroup(this.guestFieldsTarget, this.guestToggleTarget.checked)
+    if (this.hasMinorFieldsTarget && this.hasMinorToggleTarget) {
+      this.toggleFieldGroup(this.minorFieldsTarget, this.minorToggleTarget.checked)
+    }
+
+    if (this.hasGuestFieldsTarget && this.hasGuestToggleTarget) {
+      this.toggleFieldGroup(this.guestFieldsTarget, this.guestToggleTarget.checked)
+    }
   }
 
   toggleFieldGroup(group, selected) {

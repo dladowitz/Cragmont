@@ -1,0 +1,15 @@
+%p
+  #{@user.full_name}, Get Stoked!
+
+%p
+  #{@requested_by.full_name} sent you a request to sign the Cragmont waiver.
+
+%p
+  You can sign it here:
+  = link_to "Waiver Link", @waiver_url
+  \.
+
+%p
+  See you at the Crag.
+  %br/
+  Cragmont Climbing Club

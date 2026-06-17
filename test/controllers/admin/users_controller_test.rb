@@ -68,9 +68,42 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_select ".details-list dt", text: "Roles"
     assert_select ".details-list dd", text: "Super Admin"
     assert_select "h2", "Waivers"
+    assert_select "button", text: "Send Waiver Signing Request"
+    assert_select "dialog" do
+      assert_select "h2", "Send a request to sign the Cragmont waiver"
+      assert_select "a.missing-details-link[href*='/waiver_requests/']", text: "Waiver Link"
+      assert_select "button", text: "Copy Link"
+      assert_select "button", text: "Email Link to User"
+    end
     assert_select "section.panel", text: /No waivers signed yet/
     assert_select "form[data-turbo-confirm='Are you sure you want to delete this user?']"
     assert_select "a", text: "Yosemite Valley Spring"
+  end
+
+  test "can email standalone waiver signing request" do
+    assert_difference "ActionMailer::Base.deliveries.size", 1 do
+      post email_waiver_request_admin_user_url(users(:sam)), as: :json
+    end
+
+    assert_response :success
+    response_body = JSON.parse(response.body)
+    assert_equal "Email sent", response_body.fetch("button_text")
+    mail = ActionMailer::Base.deliveries.last
+    assert_equal [ users(:sam).email ], mail.to
+    assert_equal "Cragmont Waiver Signing Request", mail.subject
+    assert_match %r{/waiver_requests/}, mail.text_part.body.decoded
+  end
+
+  test "waiver signing request email requires user email" do
+    user = User.create!(first_name: "No", last_name: "Email", email: nil, password: "password")
+
+    assert_no_difference "ActionMailer::Base.deliveries.size" do
+      post email_waiver_request_admin_user_url(user), as: :json
+    end
+
+    assert_response :unprocessable_entity
+    response_body = JSON.parse(response.body)
+    assert_equal "Email failed", response_body.fetch("button_text")
   end
 
   test "user details show waiver history with modal download" do
@@ -94,6 +127,29 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
       assert_select "h2", "Waiver"
       assert_select "iframe.waiver-document-iframe[src='#{inline_path}']"
       assert_select "a[href='#{download_path}']", text: "Download Waiver"
+    end
+  end
+
+  test "user details show standalone waiver minors" do
+    signature = WaiverSignatureData.new(SIGNATURE_DATA_URL)
+    waiver = WaiverCreator.new(
+      user: users(:sam),
+      signature: signature,
+      acknowledged_at: Time.current,
+      request: ActionDispatch::TestRequest.create,
+      minor_attributes: [
+        { first_name: "Mika", last_name: "Lee", age: "12", relationship: "Child" }
+      ]
+    ).create!
+
+    get admin_user_url(users(:sam))
+
+    assert_response :success
+    assert_select "table" do
+      assert_select "td", text: "Trip with minors"
+      assert_select "td", text: "Standalone"
+      assert_select "td", text: "Mika Lee"
+      assert_select "button[aria-controls='admin-user-waiver-#{waiver.id}']", text: "View"
     end
   end
 

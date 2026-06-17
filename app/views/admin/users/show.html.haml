@@ -27,7 +27,11 @@
         class: "button danger",                                                         |
         form: { data: { turbo_confirm: "Are you sure you want to delete this user?" } } |
 %section.panel
-  %h2 Waivers
+  .panel-header
+    %div
+      %h2 Waivers
+    .actions
+      = render "waiver_request_modal", user: @user
   - if @waivers.any?
     %table
       %thead

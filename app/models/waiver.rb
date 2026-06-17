@@ -4,6 +4,7 @@ class Waiver < ApplicationRecord
   belongs_to :user
   belongs_to :trip, optional: true
   belongs_to :campsite_signup, optional: true
+  has_many :waiver_minors, dependent: :destroy
 
   has_one_attached :document
   has_one_attached :signature_image
@@ -41,9 +42,11 @@ class Waiver < ApplicationRecord
   end
 
   def minors_summary
-    return "None" unless campsite_signup&.includes_minors?
+    minors = waiver_minors.to_a
+    minors = campsite_signup.campsite_signup_minors.to_a if minors.empty? && campsite_signup&.includes_minors?
+    return "None" if minors.empty?
 
-    campsite_signup.campsite_signup_minors.map(&:full_name).to_sentence
+    minors.map(&:full_name).to_sentence
   end
 
   private

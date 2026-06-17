@@ -59,7 +59,14 @@ class WaiverPdf
   end
 
   def includes_minors?
-    signup&.includes_minors?
+    minors.any?
+  end
+
+  def minors
+    @minors ||= begin
+      direct_minors = @waiver.waiver_minors.to_a
+      direct_minors.presence || signup&.campsite_signup_minors&.to_a || []
+    end
   end
 
   def detail(pdf, label, value)
@@ -104,7 +111,7 @@ class WaiverPdf
 
     pdf.move_down 10
     pdf.text "Minors covered by this waiver", size: 12, style: :bold
-    signup.campsite_signup_minors.each do |minor|
+    minors.each do |minor|
       detail(pdf, "Name", minor.full_name)
       detail(pdf, "Age", minor.age)
       detail(pdf, "Relationship", minor.relationship.to_s.downcase)
