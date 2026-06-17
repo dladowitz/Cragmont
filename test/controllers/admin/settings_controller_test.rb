@@ -19,6 +19,9 @@ class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_select "label[for='site_setting_extra_night_fee']", text: "Additional Nights Fee"
     assert_select "label[for='site_setting_minor_fee']", text: "Minor One or Two Nights"
     assert_select "label[for='site_setting_minor_extra_night_fee']", text: "Minor Additional Nights Fee"
+    assert_select "label[for='site_setting_liability_warning']", text: /Liability Warning/
+    assert_select "label[for='site_setting_liability_warning'] .required-marker", text: "*"
+    assert_select "textarea[name='site_setting[liability_warning]']", text: /Cragmont is not a teaching organization/
     assert_select ".currency-field", count: 4
     assert_select ".currency-field span", text: "$", count: 4
     assert_select "input[name='site_setting[first_two_nights_fee]'][value='30.00']"
@@ -34,7 +37,8 @@ class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
         first_two_nights_fee: "35.50",
         extra_night_fee: "10",
         minor_fee: "5.25",
-        minor_extra_night_fee: "3"
+        minor_extra_night_fee: "3",
+        liability_warning: "Custom admin liability warning."
       }
     }
 
@@ -45,6 +49,7 @@ class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1000, setting.extra_night_fee_cents
     assert_equal 525, setting.minor_fee_cents
     assert_equal 300, setting.minor_extra_night_fee_cents
+    assert_equal "Custom admin liability warning.", setting.liability_warning
   end
 
   test "renders validation errors" do
@@ -54,7 +59,8 @@ class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
         first_two_nights_fee: "0",
         extra_night_fee: "0",
         minor_fee: "0",
-        minor_extra_night_fee: "0"
+        minor_extra_night_fee: "0",
+        liability_warning: SiteSetting::DEFAULT_LIABILITY_WARNING
       }
     }
 

@@ -65,4 +65,5 @@
           %span.pagination-summary Page #{@archived_current_page} of #{@archived_total_pages}
           - if @archived_current_page < @archived_total_pages
             = link_to "Next", trips_path(archived_page: @archived_current_page + 1, anchor: "archived-trips"), class: "button secondary"
+  = render "shared/liability_warning"
 %p.background-image-caption Half Dome, Regular Northwest Face

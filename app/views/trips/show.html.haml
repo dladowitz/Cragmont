@@ -308,6 +308,7 @@
           %dd= mail_to @trip.campsite_coordinator.email if @trip.campsite_coordinator.email.present?
     - else
       %p.muted Not yet set
+  = render "shared/liability_warning"
   - if @completion_signup.present?
     = render "participant_details_modal", trip: @trip, signup: @completion_signup
   - if @show_payment_success_modal

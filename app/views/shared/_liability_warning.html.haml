@@ -1,0 +1,4 @@
+- liability_warning = SiteSetting.current.liability_warning.to_s.strip
+- if liability_warning.present?
+  %section.public-liability-warning{aria: {label: "Liability warning"}}
+    = simple_format(liability_warning)

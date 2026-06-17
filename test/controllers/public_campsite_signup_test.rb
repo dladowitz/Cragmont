@@ -53,6 +53,25 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".background-image-caption", "Fairview Dome, Yosemite National Park"
   end
 
+  test "liability warning appears on public trip pages" do
+    SiteSetting.current.update!(liability_warning: "Custom liability warning for public pages.")
+
+    get root_url
+
+    assert_response :success
+    assert_select ".public-liability-warning", text: /Custom liability warning for public pages/
+
+    get trips_url
+
+    assert_response :success
+    assert_select ".public-liability-warning", text: /Custom liability warning for public pages/
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select ".public-liability-warning", text: /Custom liability warning for public pages/
+  end
+
   test "trips index shows archived trips five at a time" do
     archived_trips = 6.times.map do |index|
       Trip.create!(
