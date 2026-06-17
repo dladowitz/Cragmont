@@ -1,5 +1,5 @@
 class Admin::UsersController < Admin::BaseController
-  before_action :set_user, only: %i[show edit update destroy]
+  before_action :set_user, only: %i[show edit update destroy email_waiver_request]
   before_action :set_roles, only: %i[new edit create update]
 
   def index
@@ -10,7 +10,7 @@ class Admin::UsersController < Admin::BaseController
   def show
     authorize @user
     @coordinated_trips = @user.coordinated_trips.order(start_date: :asc, name: :asc)
-    @waivers = @user.waivers.includes(:trip, campsite_signup: [ :trip, :campsite, :campsite_signup_minors ]).with_attached_document.current_first
+    @waivers = @user.waivers.includes(:trip, :waiver_minors, campsite_signup: [ :trip, :campsite, :campsite_signup_minors ]).with_attached_document.current_first
   end
 
   def new
@@ -55,6 +55,29 @@ class Admin::UsersController < Admin::BaseController
     end
   end
 
+  def email_waiver_request
+    authorize @user, :show?
+
+    if @user.email.blank?
+      message = "Wow, that was a whipper. #{@user.full_name} does not have an email address."
+      respond_to do |format|
+        format.html { redirect_to admin_user_path(@user), alert: message }
+        format.json { render json: { message: message, button_text: "Email failed" }, status: :unprocessable_entity }
+      end
+    else
+      WaiverRequestMailer.with(
+        user: @user,
+        requested_by: current_user,
+        waiver_url: waiver_request_url(waiver_request_token(@user))
+      ).sign_request.deliver_now
+      message = "On belay! The waiver signing request was emailed to #{@user.full_name}."
+      respond_to do |format|
+        format.html { redirect_to admin_user_path(@user), notice: message }
+        format.json { render json: { message: message, button_text: "Email sent" } }
+      end
+    end
+  end
+
   private
 
   def set_user
@@ -64,6 +87,10 @@ class Admin::UsersController < Admin::BaseController
   def set_roles
     Role.seed_defaults!
     @roles = Role.order(:name)
+  end
+
+  def waiver_request_token(user)
+    user.signed_id(purpose: :standalone_waiver_request)
   end
 
   def user_params

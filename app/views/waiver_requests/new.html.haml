@@ -1,0 +1,65 @@
+- content_for :body_class, "profile-waiver-new-page"
+= render "shared/public_header"
+%main.public-main
+  %section.panel
+    .panel-header
+      %div
+        %h1 Cragmont Waiver
+        %p.muted= "#{@user.full_name}, sign your #{Date.current.year} Cragmont waiver."
+    = form_with url: waiver_request_path(params[:token]), method: :post, class: "waiver-form", data: { turbo: false, controller: "waiver-signature waitlist-form" } do
+      %fieldset.signup-kind-options
+        %legend.visually-hidden Additional participants
+        %label
+          = check_box_tag "waiver[with_minors]", "1", false, id: "waiver-request-minors-toggle", data: { waitlist_form_target: "minorToggle", action: "waitlist-form#togglePartyFields" }
+          %span Add minors (under 18)
+      %section.minor-fields{"data-party-fields" => "minor", "data-required-dataset-key" => "requiredForMinor", "data-waitlist-form-target" => "minorFields", :hidden => ""}
+        %h3
+          Minor information
+          %span.section-limit (Max 2)
+        - 2.times do |index|
+          .minor-field-row{"data-party-row" => "", "data-party-row-visible" => (index.zero? ? "true" : "false"), hidden: !index.zero?}
+            %button.remove-person-button{"aria-label" => "Remove minor", "data-action" => "waitlist-form#removePartyRow", type: "button"} X
+            %div
+              = required_label_tag "waiver_request_minor_#{index}_first_name", "First name"
+              = text_field_tag "waiver[waiver_minors_attributes][#{index}][first_name]", "", id: "waiver_request_minor_#{index}_first_name", data: { required_for_minor: "true" }
+            %div
+              = required_label_tag "waiver_request_minor_#{index}_last_name", "Last name"
+              = text_field_tag "waiver[waiver_minors_attributes][#{index}][last_name]", "", id: "waiver_request_minor_#{index}_last_name", data: { required_for_minor: "true" }
+            %div
+              = required_label_tag "waiver_request_minor_#{index}_age", "Age"
+              = number_field_tag "waiver[waiver_minors_attributes][#{index}][age]", "", id: "waiver_request_minor_#{index}_age", min: 0, max: 17, data: { required_for_minor: "true" }
+            %div
+              = required_label_tag "waiver_request_minor_#{index}_relationship", "Relationship"
+              = text_field_tag "waiver[waiver_minors_attributes][#{index}][relationship]", "", id: "waiver_request_minor_#{index}_relationship", placeholder: "Parent, Guardian, Uncle, etc", data: { required_for_minor: "true" }
+          - if index.zero?
+            %button.add-person-link{"data-action" => "waitlist-form#revealPartyRow", "data-add-party-row" => "", type: "button"} Add another minor
+      %section.waiver-intro
+        .waiver-intro-copy
+          - TripSignupWaiver.acknowledgement_blocks.each do |block|
+            %p= block
+      %section.waiver-text{"data-action" => "scroll->waiver-signature#checkWaiverScroll", "data-waiver-signature-target" => "waiver"}
+        .waiver-document
+          - TripSignupWaiver.blocks.each_with_index do |block, index|
+            - if TripSignupWaiver.title_block?(index)
+              %h3.waiver-title= block
+            - elsif TripSignupWaiver.warning_block?(index)
+              %p.waiver-warning= block
+            - elsif TripSignupWaiver.summary_heading_block?(index)
+              %h4.waiver-summary-heading= block
+            - else
+              %p= block
+      .signature-field
+        .signature-label-row
+          %label{for: "waiver-request-signature"}
+            Signature
+            = required_marker
+          %span You must view all the text to sign
+        %canvas.signature-pad#waiver-request-signature{"data-waiver-signature-target" => "canvas", height: "120", width: "560"}
+        = hidden_field_tag "waiver[waiver_signature_data]", "", data: { waiver_signature_target: "input" }
+        = hidden_field_tag "waiver[waiver_acknowledged_at]", "", data: { waiver_signature_target: "acknowledgementInput" }
+      .form-actions.waiver-signature-actions
+        %button.button.secondary{"data-action" => "waiver-signature#clear", type: "button"} Clear signature
+        .waiver-signature-submit-actions
+          = link_to "Cancel", root_path, class: "button secondary"
+          = button_tag "Submit Waiver", type: :submit, class: "button", data: { waiver_signature_target: "submit" }, disabled: true
+%p.background-image-caption Castle Valley, UT. Castleton Tower.

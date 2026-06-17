@@ -1,0 +1,10 @@
+- lines = []
+- lines << "#{@user.full_name}, Get Stoked!"
+- lines << ""
+- lines << "#{@requested_by.full_name} sent you a request to sign the Cragmont waiver."
+- lines << ""
+- lines << "You can sign it here: #{@waiver_url}"
+- lines << ""
+- lines << "See you at the Crag."
+- lines << "Cragmont Climbing Club"
+!= lines.join("\n")

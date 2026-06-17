@@ -14,6 +14,8 @@ Rails.application.routes.draw do
   resource :registration, only: %i[new create]
   resource :session, only: %i[new create destroy]
   resources :password_resets, only: %i[new create edit update], param: :token
+  get "waiver_requests/:token", to: "waiver_requests#new", as: :waiver_request
+  post "waiver_requests/:token", to: "waiver_requests#create"
   resource :profile, only: %i[show edit update destroy] do
     resource :waiver, only: %i[new create], controller: "profile_waivers"
   end
@@ -47,7 +49,9 @@ Rails.application.routes.draw do
       patch :resolve, on: :member
     end
     resources :help_notification_subscribers, only: %i[index create destroy]
-    resources :users
+    resources :users do
+      post :email_waiver_request, on: :member
+    end
     resources :campgrounds
     resources :trips do
       patch :restore, on: :member
