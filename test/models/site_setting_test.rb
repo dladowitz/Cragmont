@@ -10,6 +10,7 @@ class SiteSettingTest < ActiveSupport::TestCase
     assert_equal 0, setting.extra_night_fee_cents
     assert_equal 0, setting.minor_fee_cents
     assert_equal 0, setting.minor_extra_night_fee_cents
+    assert_equal SiteSetting::DEFAULT_LIABILITY_WARNING, setting.liability_warning
   end
 
   test "stores dollar fee inputs as cents" do

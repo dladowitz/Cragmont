@@ -23,7 +23,8 @@ class Admin::SettingsController < Admin::BaseController
       :first_two_nights_fee,
       :extra_night_fee,
       :minor_fee,
-      :minor_extra_night_fee
+      :minor_extra_night_fee,
+      :liability_warning
     )
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_10_120001) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_17_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -229,6 +229,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_10_120001) do
     t.datetime "created_at", null: false
     t.integer "extra_night_fee_cents", default: 0, null: false
     t.integer "first_two_nights_fee_cents", default: 0, null: false
+    t.text "liability_warning", default: "Cragmont is not a teaching organization. It's a social base camp. We create shared spaces to connect with other climbers. We hope you'll exchange knowledge and learn from one another. However, Cragmont does not test or vet members. It's up to you to decide what knowledge is correct and what might lead to danger. If you are new to climbing, the best way to help with these decisions is to take classes from professional guides.", null: false
     t.integer "minor_extra_night_fee_cents", default: 0, null: false
     t.integer "minor_fee_cents", default: 0, null: false
     t.integer "uncounted_minor_age_limit", default: 13, null: false

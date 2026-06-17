@@ -49,6 +49,15 @@ class ApplicationMailerTest < ActionMailer::TestCase
     assert_includes text, "See you at the crag.\nCragmont Climbing Club"
   end
 
+  test "emails use editable liability warning from settings" do
+    SiteSetting.current.update!(liability_warning: "Custom email liability warning.")
+
+    mail = PasswordResetMailer.with(user: users(:alex), token: "reset-token").reset
+
+    assert_includes mail.html_part.body.decoded, "Custom email liability warning."
+    assert_includes mail.text_part.body.decoded, "Custom email liability warning."
+  end
+
   test "mailgun delivery method posts rendered email to mailgun api" do
     delivery_method = MailgunDeliveryMethod.new(api_key: "test-key", domain: "mg.example.com")
     mail = PasswordResetMailer.with(user: users(:alex), token: "reset-token").reset
