@@ -24,6 +24,12 @@ module ApplicationHelper
     Rails.env.to_s.titleize
   end
 
+  def google_analytics_measurement_id
+    return unless Rails.env.production?
+
+    ENV["GOOGLE_ANALYTICS_MEASUREMENT_ID"].presence
+  end
+
   def help_request_status_class(status)
     case status
     when "replied"

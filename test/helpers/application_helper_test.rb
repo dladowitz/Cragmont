@@ -20,6 +20,38 @@ class ApplicationHelperTest < ActionView::TestCase
     end
   end
 
+  test "google analytics measurement id is production only" do
+    with_env("GOOGLE_ANALYTICS_MEASUREMENT_ID" => "G-CRAGMONT1") do
+      with_rails_env("production") do
+        assert_equal "G-CRAGMONT1", google_analytics_measurement_id
+      end
+
+      with_rails_env("staging") do
+        assert_nil google_analytics_measurement_id
+      end
+
+      with_rails_env("development") do
+        assert_nil google_analytics_measurement_id
+      end
+
+      with_rails_env("test") do
+        assert_nil google_analytics_measurement_id
+      end
+    end
+  end
+
+  test "google analytics measurement id is blank without production config" do
+    with_rails_env("production") do
+      with_env("GOOGLE_ANALYTICS_MEASUREMENT_ID" => nil) do
+        assert_nil google_analytics_measurement_id
+      end
+
+      with_env("GOOGLE_ANALYTICS_MEASUREMENT_ID" => "") do
+        assert_nil google_analytics_measurement_id
+      end
+    end
+  end
+
   test "staging environment shows letter opener footer for super admins" do
     super_admin = users(:alex)
 

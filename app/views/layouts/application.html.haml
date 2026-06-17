@@ -10,6 +10,14 @@
     = csrf_meta_tags
     = csp_meta_tag
     = yield :head
+    - google_analytics_id = google_analytics_measurement_id
+    - if google_analytics_id.present?
+      %script{ async: true, src: "https://www.googletagmanager.com/gtag/js?id=#{u(google_analytics_id)}" }
+      :javascript
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag("js", new Date());
+        gtag("config", #{google_analytics_id.to_json});
     %link{:href => "/icon.svg?v=4", :rel => "icon", :type => "image/svg+xml"}/
     %link{:href => "/icon.png?v=4", :rel => "alternate icon", :type => "image/png"}/
     %link{:href => "/icon.png?v=4", :rel => "apple-touch-icon"}/
