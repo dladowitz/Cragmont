@@ -26,6 +26,7 @@ Rails.application.routes.draw do
   get "payment_requests/:token", to: "trip_payment_requests#show", as: :trip_payment_request
 
   resources :trips, only: %i[index show] do
+    get "what-to-expect", on: :collection
     post "guest_waiver_emails/:id", to: "guest_waiver_emails#create", as: :guest_waiver_email
     resources :campsites, only: [] do
       resource :campsite_signup, only: %i[create destroy] do

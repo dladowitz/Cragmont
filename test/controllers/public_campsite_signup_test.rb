@@ -30,7 +30,16 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "a", text: "Yosemite Valley Spring"
     assert_select "a", text: "Joshua Tree Winter", count: 0
+    assert_select ".trips-faq-callout a[href='#{what_to_expect_trips_path}']", text: "here."
     assert_select ".background-image-caption", "Half Dome, Regular Northwest Face"
+  end
+
+  test "trip what to expect page renders" do
+    get what_to_expect_trips_url
+
+    assert_response :success
+    assert_select "h1", "What to expect on a Cragmont trip"
+    assert_select "p", text: /Cragmont trips are community camping and climbing weekends/
   end
 
   test "trips index shows archived trips five at a time" do

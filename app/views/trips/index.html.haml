@@ -3,17 +3,22 @@
 %main.public-main
   %section.panel.trips-index-panel
     .panel-header
-      %div
+      .trips-index-copy
         %h1 Trips
         %p.muted 
           Pick 
           = link_to "your next route,", "https://www.mountainproject.com/area/105708959/california", target: "_blank"
           grab a campsite, and get the crew moving.
-      .public-beta-notice
-        %strong In Beta
-        %span
-          This site is still getting dialed in. If you find issues
-          = link_to "let us know.", new_help_request_path
+        .public-beta-notice.trips-faq-callout
+          %span
+            Want to know what to expect on a Cragmont trip? Read 
+            = link_to "here.", what_to_expect_trips_path
+      .trips-index-notices
+        .public-beta-notice
+          %strong In Beta
+          %span
+            This site is still getting dialed in. If you find issues
+            = link_to "let us know.", new_help_request_path
     - if @trips.any?
       .trip-cards
         - @trips.each do |trip|

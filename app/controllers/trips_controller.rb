@@ -18,6 +18,9 @@ class TripsController < ApplicationController
       .limit(ARCHIVED_TRIPS_PER_PAGE)
   end
 
+  def what_to_expect
+  end
+
   def show
     @campsites = @trip.campsites.includes(:campground, campsite_signups: [ :user, :campsite_signup_minors, { guest_of_signup: :user } ]).order(:arrival_date, :site_number)
     @current_signup = @trip.campsite_signups.active.includes(:campsite, :payments, { guest_of_signup: :user }, guest_signups: [ :user, :campsite ]).find_by(user: current_user) if user_signed_in?

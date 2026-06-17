@@ -330,13 +330,46 @@ body.trip-show-page .public-beta-notice strong {
   font-size: 0.83rem;
 }
 
-body.trips-index-page .trips-index-panel .public-beta-notice,
+body.trips-index-page .trips-index-notices .public-beta-notice,
 body.trip-show-page .trip-summary-header .public-beta-notice {
   flex: 0 0 auto;
   justify-content: flex-end;
   justify-self: end;
   max-width: 620px;
   text-align: right;
+}
+
+.trips-index-notices {
+  display: grid;
+  flex: 0 1 620px;
+  gap: 6px;
+}
+
+.trips-index-notices .public-beta-notice {
+  box-sizing: border-box;
+  justify-content: flex-start;
+  max-width: none;
+  text-align: left;
+  width: 100%;
+}
+
+.trips-index-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.trips-faq-callout {
+  align-self: start;
+  box-sizing: border-box;
+  display: flex;
+  flex: none;
+  justify-content: flex-start;
+  justify-self: start;
+  margin-left: 0;
+  margin-top: 12px;
+  max-width: 720px;
+  text-align: left;
+  width: 100%;
 }
 
 .public-nav {
