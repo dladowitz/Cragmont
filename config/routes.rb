@@ -39,6 +39,9 @@ Rails.application.routes.draw do
   namespace :admin do
     root to: redirect("/admin/trips")
     resource :settings, only: %i[show update]
+    resources :content_pages, param: :slug, only: %i[edit update] do
+      post :preview, on: :collection
+    end
     resources :help_requests, only: %i[index show] do
       post :reply, on: :member
       patch :resolve, on: :member

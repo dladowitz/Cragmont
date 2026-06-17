@@ -11,6 +11,8 @@
       = link_to "Campgrounds", admin_campgrounds_path
     - if policy(User).index?
       = link_to "Users", admin_users_path
+    - if policy(ContentPage).edit?
+      = link_to "Content", edit_admin_content_page_path("what_to_expect")
     - if policy(SiteSetting.current).show?
       = link_to "Settings", admin_settings_path
     = button_to "Logout", session_path, method: :delete, class: "button secondary"

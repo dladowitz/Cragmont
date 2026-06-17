@@ -1,0 +1,50 @@
+= render "admin/shared/header", title: "Content"
+%section.panel
+  .panel-header
+    %div
+      %h2 Edit #{@content_page.title}
+      %p.muted
+        This field accepts full Markdown formatting.
+        = link_to "View the full Markdown syntax guide.", "https://www.markdownguide.org/basic-syntax/", target: "_blank", rel: "noopener"
+  = form_with model: [:admin, @content_page], url: admin_content_page_path(@content_page.slug), method: :patch, class: "admin-form", data: { controller: "markdown-preview", markdown_preview_url_value: preview_admin_content_pages_path } do |form|
+    = render "admin/shared/errors", record: @content_page
+    .form-grid
+      %div
+        = required_label form, :title
+        = form.text_field :title, required: true
+      %div
+        = form.label :subtitle
+        = form.text_field :subtitle
+      .form-grid-full
+        = required_label form, :body, "Body"
+        .content-page-editor
+          .content-page-editor-field
+            = form.text_area :body, rows: 24, required: true, data: { markdown_preview_target: "source", action: "input->markdown-preview#queuePreview" }
+            %aside.markdown-formatting-guide{"aria-label" => "Markdown formatting reference"}
+              .markdown-formatting-heading
+                %h3 Markdown quick reference
+                = link_to "Full Markdown Reference", "https://www.markdownguide.org/extended-syntax/", target: "_blank", rel: "noopener"
+              %ul
+                %li
+                  %code ## Heading
+                  %span creates a section heading
+                %li
+                  %code **bold text**
+                  %span creates bold text
+                %li
+                  %code *italic text*
+                  %span creates italic text
+                %li
+                  %code - List item
+                  %span creates a bulleted list
+                %li
+                  %code [Link text](https://example.com)
+                  %span creates a link
+          .content-page-preview-panel
+            .content-page-preview-header
+              %h3 Preview
+              %p.muted Updates as you type.
+            .content-page-markdown.content-page-preview{data: { markdown_preview_target: "preview" }}
+              = render_content_page_markdown(@content_page.body)
+    .form-actions
+      = form.submit "Save content", class: "button"

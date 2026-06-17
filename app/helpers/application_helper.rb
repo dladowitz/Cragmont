@@ -1,3 +1,5 @@
+require "commonmarker"
+
 module ApplicationHelper
   def required_marker
     safe_join([
@@ -28,6 +30,18 @@ module ApplicationHelper
     return unless Rails.env.production?
 
     ENV["GOOGLE_ANALYTICS_MEASUREMENT_ID"].presence
+  end
+
+  def render_content_page_markdown(markdown)
+    html = Commonmarker.to_html(markdown.to_s)
+    html = html.gsub(%r{<a href="#[^"]+" aria-hidden="true" class="anchor" id="[^"]+"></a>}, "")
+    sanitized_html = sanitize(
+      html,
+      tags: %w[p h2 h3 h4 ul ol li strong em a br],
+      attributes: %w[href title target rel]
+    )
+
+    add_external_link_attributes(sanitized_html)
   end
 
   def help_request_status_class(status)
@@ -102,6 +116,18 @@ module ApplicationHelper
     else
       Rails.root.join("tmp", "letter_opener")
     end
+  end
+
+  def add_external_link_attributes(html)
+    fragment = Nokogiri::HTML5.fragment(html)
+    fragment.css("a[href]").each do |link|
+      next unless link["href"].match?(%r{\Ahttps?://}i)
+
+      link["target"] = "_blank"
+      link["rel"] = "noopener"
+    end
+
+    fragment.to_html.html_safe
   end
 
   class PaymentFeeBreakdown
