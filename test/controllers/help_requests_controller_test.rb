@@ -18,6 +18,7 @@ class HelpRequestsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='help_request[email]'][required]"
     assert_select "textarea[name='help_request[message]'][required]"
     assert_select "input[type='file'][name='help_request[images][]'][multiple]"
+    assert_select ".background-image-caption", "The Rostrum, Yosemite National Park"
   end
 
   test "signed in user contact fields render as display text" do

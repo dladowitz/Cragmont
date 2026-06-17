@@ -1,0 +1,81 @@
+- content_for :body_class, "trip-what-to-expect-page"
+-# Community and guide resource links used in the public trip FAQ.
+- whatsapp_community_url = "https://chat.whatsapp.com/DngyoeuFkg61oCZXPyyAgX?mode=gi_t"
+- email_list_url = "https://www.cragmontclimbingclub.org/join-the-list"
+- vertical_pursuits_url = "https://www.verticalpursuitsclimbing.com/"
+- lovers_leap_guides_url = "https://loversleap.net/"
+- sanno_adventures_url = "https://www.saanoadventures.com/"
+= render "shared/public_header"
+%main.public-main
+  %section.panel.trip-what-to-expect-panel
+    .panel-header
+      %div
+        %h1 What to expect on a Cragmont trip
+        %p.muted A quick topo for your first outing with the club.
+    %section.trip-expectation-copy
+      .trip-expectation-intro
+        %p
+          %strong Cragmont trips are a shared base camp, not a guided trip.
+        %p The goal is to bring climbers together and give them space to camp, exchange beta, cook, prep, and socialize with other climbers.
+        %p We secure campsites so there is space for that to happen. In the mornings and evenings, participants often gather around tables and campfires to share what they plan to climb or what they climbed that day.
+        %p This is a great space to ask about routes to help plan your adventures for the weekend. Often you'll hear about epics you may want to avoid (or repeat depending on your appetite!)
+
+      .trip-expectation-faq
+        %section.trip-expectation-question
+          %h2 Do I need a partner to come on a trip?
+          %p You do not need a partner to show up, but you will generally want one so you can get out climbing.
+          %p Most climbers come on trips with climbing partners already lined up. Occasionally, you may find someone at camp who is also looking for a partner, though it can be hard to know whether they have the same climbing goals, skills, and risk tolerance.
+          %p
+            If you do not have a partner lined up, join our
+            = link_to "WhatsApp Community", whatsapp_community_url, target: "_blank", rel: "noopener"
+            and look for a partner for the weekend. You can also
+            = link_to "sign up for our email list", email_list_url, target: "_blank", rel: "noopener"
+            and send a message to the group.
+
+        %section.trip-expectation-question
+          %h2 Will Cragmont teach me to climb outside?
+          %p No. Cragmont does not provide formal instruction, and we do not test members on their climbing skills or teaching ability. Every participant brings a different mix of experience, judgment, and skills, which may or may not be what you need.
+
+        %section.trip-expectation-question
+          %h2 Can I learn climbing skills from people on trips?
+          %p Maybe. Many people you meet on trips have deep knowledge of climbing systems and are often happy to share what they know with newer and experienced climbers alike.
+          %p That said, it is up to you to decide whom to listen to and whom to climb with. It takes time to know whether someone is giving you sound climbing information when it comes to how to set up anchors, place gear, or evaluate a system.
+          %p One of the best ways to build that judgment is to take a class from a professional guiding company. Once you learn the basics, you will be better equipped to decide whom to trust when receiving new climbing information.
+
+        %section.trip-expectation-question
+          %h2 Do climbing parties climb together or separate on trips?
+          %p Both happen. Some parties have specific multi-pitch goals that do not lend themselves well to larger groups, so they head out separately during the day and come back to camp to share stories.
+          %p Other days, multiple parties decide to go to the same single-pitch cragging wall. In those instances, people may put up a few ropes and share anchors and routes. When this happens it's organic and not planned by the club. 
+          %p You are responsible for deciding whether you trust the person who set up an anchor or rope. Ask questions, make sure you understand the setup, and decide whether you have enough knowledge to vet their skills. Remember that you are trusting your life to the gear and systems you choose to use.
+
+        %section.trip-expectation-question
+          %h2 Do I need to be a club member to join a trip?
+          %p Nope. Trips are open to everyone, and signups are first come, first served. Club members only get priority for parking spots at a site and for moving off the waitlist if a trip is full.
+
+        %section.trip-expectation-question
+          %h2 Do I need to be a climber to join a trip?
+          %p Nope. Sometimes climbers come on trips and decide to take it easy for the weekend. They might hike, spend time at the river, or simply hang out with friends who are climbing.
+          %p Often climbers come with friends who are not climbers so spend time with them instead of climbing.
+          %p As long as you are friendly and like the outdoors, you are welcome.
+
+        %section.trip-expectation-question
+          %h2 Do you know any professional climbing companies I can take classes from?
+          %p Here are a few companies our members have taken classes with or recommended:
+          %ul.trip-expectation-links
+            %li
+              = link_to "Vertical Pursuits", vertical_pursuits_url, target: "_blank", rel: "noopener"
+              %span (based around Lake Tahoe)
+            %li
+              = link_to "Lovers Leap Guides", lovers_leap_guides_url, target: "_blank", rel: "noopener"
+              %span (based around South Lake Tahoe)
+          %p We do not have firsthand knowledge of this Bay Area company, but it may be worth checking out and evaluating for yourself:
+          %ul.trip-expectation-links
+            %li= link_to "SANNO Adventures", sanno_adventures_url, target: "_blank", rel: "noopener"
+
+        %section.trip-expectation-question
+          %h2 I have more questions
+          %p
+            We would love to hear from you. Send us a message on our
+            = link_to "Get Help", new_help_request_path
+            page.
+%p.background-image-caption Fairview Dome, Yosemite National Park

@@ -86,6 +86,20 @@ body.registration-new-page {
     url("backgrounds/tuolumne-meadows-cathedral-peak.jpg") center / cover fixed;
 }
 
+body.trip-what-to-expect-page {
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgb(15 23 20 / 24%), rgb(15 23 20 / 64%)),
+    url("backgrounds/tuolumne-meadows-fairview-dome.jpg") center / cover fixed;
+}
+
+body.help-request-page {
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgb(15 23 20 / 24%), rgb(15 23 20 / 64%)),
+    url("backgrounds/yosemite-national-park-the-rostrum.jpg") center / cover fixed;
+}
+
 body.trip-show-page {
   min-height: 100vh;
   background:
@@ -113,6 +127,10 @@ body.not-found-page .site-name,
 body.not-found-page .site-name small,
 body.registration-new-page .site-name,
 body.registration-new-page .site-name small,
+body.trip-what-to-expect-page .site-name,
+body.trip-what-to-expect-page .site-name small,
+body.help-request-page .site-name,
+body.help-request-page .site-name small,
 body.trip-show-page .site-name,
 body.trip-show-page .site-name small,
 body.profile-show-page .site-name,
@@ -129,6 +147,8 @@ body.password-reset-new-page .public-nav a,
 body.password-reset-edit-page .public-nav a,
 body.not-found-page .public-nav a,
 body.registration-new-page .public-nav a,
+body.trip-what-to-expect-page .public-nav a,
+body.help-request-page .public-nav a,
 body.trip-show-page .public-nav a,
 body.profile-show-page .public-nav a,
 body.profile-edit-page .public-nav a {
@@ -330,13 +350,66 @@ body.trip-show-page .public-beta-notice strong {
   font-size: 0.83rem;
 }
 
-body.trips-index-page .trips-index-panel .public-beta-notice,
+body.trips-index-page .trips-index-notices .public-beta-notice,
 body.trip-show-page .trip-summary-header .public-beta-notice {
   flex: 0 0 auto;
   justify-content: flex-end;
   justify-self: end;
   max-width: 620px;
   text-align: right;
+}
+
+.trips-index-notices {
+  display: grid;
+  flex: 0 1 620px;
+  gap: 6px;
+  margin-top: 54px;
+}
+
+.trips-index-notices .public-beta-notice {
+  box-sizing: border-box;
+  justify-content: flex-start;
+  justify-self: end;
+  max-width: none;
+  text-align: left;
+  width: fit-content;
+}
+
+.trips-index-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.trips-faq-callout {
+  align-self: start;
+  box-sizing: border-box;
+  display: flex;
+  flex: none;
+  justify-content: flex-start;
+  justify-self: start;
+  margin-left: 0;
+  margin-top: 12px;
+  max-width: 720px;
+  text-align: left;
+  width: fit-content;
+}
+
+body.trips-index-page .trips-index-panel .trips-faq-callout {
+  justify-content: flex-start;
+  justify-self: start;
+  text-align: left;
+}
+
+body.trips-index-page .trips-index-panel .trips-faq-callout,
+body.trips-index-page .trips-index-notices .public-beta-notice {
+  height: 44px;
+}
+
+body.trips-index-page .trips-index-notices .public-beta-notice {
+  justify-content: flex-start;
+  justify-self: end;
+  text-align: left;
+  width: fit-content;
 }
 
 .public-nav {
@@ -1940,7 +2013,16 @@ body.help-request-show-page .help-admin-detail h1 {
 }
 
 body.trips-index-page .trips-index-panel {
+  margin-bottom: 100px;
   padding-block: 18px 20px;
+  border-color: rgb(255 255 255 / 56%);
+  background: rgb(255 255 255 / 88%);
+  box-shadow: 0 24px 72px rgb(0 0 0 / 26%);
+  backdrop-filter: blur(6px);
+}
+
+body.help-request-page .help-panel,
+body.trip-what-to-expect-page .trip-what-to-expect-panel {
   border-color: rgb(255 255 255 / 56%);
   background: rgb(255 255 255 / 88%);
   box-shadow: 0 24px 72px rgb(0 0 0 / 26%);
@@ -2020,6 +2102,62 @@ body.trips-index-page .trips-index-panel .muted {
 
 .archived-trip-meta dd {
   margin: 0;
+}
+
+.trip-what-to-expect-panel {
+  max-width: 960px;
+  padding-block: 18px 22px;
+}
+
+.trip-what-to-expect-panel .panel-header {
+  margin-bottom: 14px;
+}
+
+.trip-what-to-expect-panel h1 {
+  margin-block: 0 6px;
+}
+
+.trip-what-to-expect-panel .muted {
+  margin-bottom: 0;
+}
+
+.trip-expectation-copy {
+  display: grid;
+  gap: 22px;
+  max-width: 78ch;
+}
+
+.trip-expectation-intro,
+.trip-expectation-question {
+  display: grid;
+  gap: 10px;
+}
+
+.trip-expectation-intro p,
+.trip-expectation-question p,
+.trip-expectation-question ul {
+  margin-block: 0;
+}
+
+.trip-expectation-question h2 {
+  margin-block: 0;
+  color: var(--accent-dark);
+  font-size: 1.15rem;
+}
+
+.trip-expectation-faq {
+  display: grid;
+  gap: 26px;
+}
+
+.trip-expectation-links {
+  display: grid;
+  gap: 6px;
+  padding-left: 20px;
+}
+
+.trip-expectation-links span {
+  color: var(--muted);
 }
 
 body.session-new-page .auth-panel,
@@ -4085,6 +4223,10 @@ textarea {
   .public-beta-notice {
     flex-basis: auto;
     max-width: none;
+  }
+
+  .trips-index-notices {
+    margin-top: 0;
   }
 
   .campsite-signup-action {
