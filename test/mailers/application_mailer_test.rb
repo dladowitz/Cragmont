@@ -17,6 +17,8 @@ class ApplicationMailerTest < ActionMailer::TestCase
     assert_includes html, "Climbing Club"
     assert_includes html, "font-family: Arial, Helvetica, sans-serif"
     assert_includes html, "width: 620px"
+    assert_includes html, "Cragmont is not a teaching organization. It's a social base camp."
+    assert_includes html, "email-liability-note"
     assert_not_includes html, "vent-five-emperor-boulder"
     assert_not_includes html, "Marin Coast, Emperor Boulder"
     assert_not_includes html, "margin-left: 20%"
@@ -43,6 +45,7 @@ class ApplicationMailerTest < ActionMailer::TestCase
 
     assert_match(/\ACragmont Climbing Club/, text)
     assert_includes text, "Hi #{users(:alex).first_name},"
+    assert_includes text, "Cragmont is not a teaching organization. It's a social base camp."
     assert_includes text, "See you at the crag.\nCragmont Climbing Club"
   end
 
