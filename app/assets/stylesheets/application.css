@@ -1101,7 +1101,17 @@ body.trip-show-page .public-liability-warning {
 }
 
 .trip-summary-header {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: stretch;
   margin-bottom: 12px;
+  width: 100%;
+}
+
+.trip-summary-header > * {
+  min-width: 0;
+  justify-self: stretch;
 }
 
 .trip-summary-copy {
@@ -1109,21 +1119,57 @@ body.trip-show-page .public-liability-warning {
   gap: 8px;
 }
 
+.trip-summary-top-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.trip-summary-bottom-row {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+}
+
 .trip-summary-copy h2,
 .trip-summary-copy p {
   margin-bottom: 0;
 }
 
+.trip-admin-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 36px;
+  align-items: flex-start;
+  width: 100%;
+}
+
 .coordinator-summary {
   display: grid;
   gap: 4px;
-  margin-top: 12px;
 }
 
 .coordinator-contact {
   display: flex;
   flex-wrap: wrap;
   gap: 6px 12px;
+}
+
+.trip-reimbursement-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  justify-content: flex-end;
+  margin-left: auto;
+  color: var(--ink);
+  text-align: right;
+}
+
+.trip-reimbursement-summary .status {
+  display: inline-block;
 }
 
 .trip-location-line {
@@ -3939,6 +3985,11 @@ th {
 .danger-status {
   background: #fff1f0;
   color: var(--danger);
+}
+
+.success-status {
+  background: #ecf8f2;
+  color: var(--accent);
 }
 
 .warning-status {

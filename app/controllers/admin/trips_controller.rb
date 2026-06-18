@@ -30,6 +30,8 @@ class Admin::TripsController < Admin::BaseController
     @trip_payment_requests = @trip.trip_payment_requests.order(created_at: :desc)
     @trip_payment_request = trip_payment_request
     @trip_revenue_summary = TripRevenueSummary.call(@trip)
+    @reimbursable_campsites = @campsites.select { |campsite| campsite.registration_fee_cents.positive? }
+    @reimbursed_campsites_count = @reimbursable_campsites.count(&:registration_reimbursed?)
     @trip_expense_refunds = CampsiteSignupPaymentRefund.trip_expense_refund_type
       .joins(campsite_signup_payment: :campsite_signup)
       .where(campsite_signups: { trip_id: @trip.id })
