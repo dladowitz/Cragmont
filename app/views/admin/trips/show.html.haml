@@ -1,44 +1,57 @@
 = render "admin/shared/header", title: @trip.name
 - parking_policy_tooltip = "Reserved Spots are assigned to the person who registered the site. Then to the Campsite Coordinator. Then to club members.\n\nOther spots are set to Open and are first come, first serve."
 - uncounted_minor_tooltip = "Children under 10 don't count against Total Capacity"
+- reimbursable_campsites_count = @reimbursable_campsites.size
+- if reimbursable_campsites_count.zero? || @reimbursed_campsites_count == reimbursable_campsites_count
+  - reimbursement_status_class = "success-status"
+- elsif @reimbursed_campsites_count.zero?
+  - reimbursement_status_class = "danger-status"
+- else
+  - reimbursement_status_class = "warning-status"
 - if @participant_link_signup.present?
   = render "participant_link_modal", trip: @trip, signup: @participant_link_signup
 %section.panel.trip-overview
   .panel-header.trip-summary-header
-    .trip-summary-copy
-      %h2= @trip.name
-      .trip-location-line
-        %p= @trip.location
-        %span.eyebrow= @trip.status.titleize
-      %p
-        = @trip.start_date.to_fs(:long)
-        to #{@trip.end_date.to_fs(:long)}
-      .coordinator-summary
-        %strong Campsite coordinator:
-        - if @trip.campsite_coordinator.present?
-          .coordinator-contact
-            %span= @trip.campsite_coordinator.full_name
-            - if @trip.campsite_coordinator.email.present?
-              %span= mail_to @trip.campsite_coordinator.email
-            - if @trip.campsite_coordinator.phone.present?
-              %span= @trip.campsite_coordinator.phone
-        - else
-          .coordinator-contact
-            %span.muted Not set yet
-            - if policy(@trip).assign_coordinator?
-              = link_to "Update", edit_admin_trip_path(@trip)
+    .trip-summary-top-row
+      .trip-summary-copy
+        %h2= @trip.name
+        .trip-location-line
+          %p= @trip.location
+          %span.eyebrow= @trip.status.titleize
+        %p
+          = @trip.start_date.to_fs(:long)
+          to #{@trip.end_date.to_fs(:long)}
+      .actions
+        - if policy(@trip).manage_payments?
+          = link_to "Transactions", admin_trip_transactions_path(@trip), class: "button secondary"
+        - if @trip.deleted?
+          - if policy(@trip).restore?
+            = button_to "Restore trip", restore_admin_trip_path(@trip), method: :patch, class: "button"
+        - elsif policy(@trip).edit?
+          = link_to "Edit trip", edit_admin_trip_path(@trip), class: "button secondary"
+    .trip-summary-bottom-row
+      .trip-admin-meta-row
+        .coordinator-summary
+          %strong Campsite coordinator:
+          - if @trip.campsite_coordinator.present?
+            .coordinator-contact
+              %span= @trip.campsite_coordinator.full_name
+              - if @trip.campsite_coordinator.email.present?
+                %span= mail_to @trip.campsite_coordinator.email
+              - if @trip.campsite_coordinator.phone.present?
+                %span= @trip.campsite_coordinator.phone
+          - else
+            .coordinator-contact
+              %span.muted Not set yet
+              - if policy(@trip).assign_coordinator?
+                = link_to "Update", edit_admin_trip_path(@trip)
+        .trip-reimbursement-summary
+          %strong Reimbursements:
+          %span.status{class: reimbursement_status_class}= "#{@reimbursed_campsites_count} of #{reimbursable_campsites_count}"
       - if @trip.description.present?
         .description
           %strong Notes:
           = simple_format(@trip.description)
-    .actions
-      - if policy(@trip).manage_payments?
-        = link_to "Transactions", admin_trip_transactions_path(@trip), class: "button secondary"
-      - if @trip.deleted?
-        - if policy(@trip).restore?
-          = button_to "Restore trip", restore_admin_trip_path(@trip), method: :patch, class: "button"
-      - elsif policy(@trip).edit?
-        = link_to "Edit trip", edit_admin_trip_path(@trip), class: "button secondary"
   - if @trip.deleted?
     .deleted-trip-banner
       %strong This trip has been deleted.

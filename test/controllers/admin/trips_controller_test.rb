@@ -125,6 +125,10 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     get admin_trip_url(trips(:yosemite))
 
     assert_response :success
+    assert_select ".trip-reimbursement-summary" do
+      assert_select "strong", text: "Reimbursements:"
+      assert_select ".status.warning-status", text: "1 of 2"
+    end
     assert_select ".campsite-registration-fees-panel", count: 0
     assert_select "h2", text: "Campsite Registration Fees", count: 0
     assert_select "#admin-campsite-#{unreimbursed_campsite.id} .campsite-fee-summary" do
@@ -146,6 +150,31 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select "dialog.campsite-registration-reimbursement-modal", text: /Recorded By\s*Alex Rivera/
       assert_select "dialog.campsite-registration-reimbursement-modal", text: /Reimbursed By\s*Sam Lee/
     end
+
+    reimbursed_campsite.update!(registration_reimbursed_at: nil, registration_reimbursed_by: nil, registration_reimbursement_method: nil, registration_reimbursement_recorded_by: nil, registration_reimbursement_notes: nil)
+
+    get admin_trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select ".trip-reimbursement-summary .status.danger-status", text: "0 of 2"
+
+    unreimbursed_campsite.update!(
+      registration_reimbursed_at: Time.zone.local(2026, 6, 17),
+      registration_reimbursed_by: users(:sam),
+      registration_reimbursement_method: "venmo",
+      registration_reimbursement_recorded_by: users(:alex)
+    )
+    reimbursed_campsite.update!(
+      registration_reimbursed_at: Time.zone.local(2026, 6, 18),
+      registration_reimbursed_by: users(:sam),
+      registration_reimbursement_method: "venmo",
+      registration_reimbursement_recorded_by: users(:alex)
+    )
+
+    get admin_trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select ".trip-reimbursement-summary .status.success-status", text: "2 of 2"
   end
 
   test "trip admin can manage campgrounds but not users or settings" do
@@ -1065,7 +1094,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select "tr", text: /Upper Pines site A12\s+\$100\.00\s+\$20\.00\s+\$80\.00/
       assert_select "tr", text: /Upper Pines site A13\s+\$0\.00\s+\$0\.00\s+\$0\.00/
       assert_select "tr.trip-revenue-subtotal", text: /Campsite revenue\s+\$80\.00/
-      assert_select "tr", text: /One-time payment requests\s+\$25\.00/
+      assert_select "tr", text: /Extra payments\s+\$25\.00/
       assert_select "tr.trip-revenue-total", text: /Total revenue\s+\$105\.00/
       assert_select "tr.trip-revenue-expense", text: /Trip Expense\s+Sam Lee\s+Firewood\s+-\$10\.00/ do
         assert_select "a[href='#{admin_trip_transactions_path(trip, anchor: "transaction-payment-#{payment.id}")}']", text: "Trip Expense"
