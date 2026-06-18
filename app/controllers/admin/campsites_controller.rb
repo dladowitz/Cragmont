@@ -1,7 +1,7 @@
 class Admin::CampsitesController < Admin::BaseController
   before_action :set_trip
   before_action :ensure_trip_not_deleted
-  before_action :set_campsite, only: %i[edit update destroy]
+  before_action :set_campsite, only: %i[edit update destroy record_registration_reimbursement]
   before_action :set_campgrounds, only: %i[new create edit update]
   before_action :set_users, only: %i[new create edit update]
 
@@ -45,6 +45,16 @@ class Admin::CampsitesController < Admin::BaseController
     end
   end
 
+  def record_registration_reimbursement
+    authorize @trip, :manage_payments?
+
+    if @campsite.update(registration_reimbursement_params.merge(registration_reimbursement_recorded_by: current_user))
+      redirect_to admin_trip_path(@trip), notice: "On belay! Campsite reimbursement was recorded."
+    else
+      redirect_to admin_trip_path(@trip), alert: "Wow, that was a whipper. #{@campsite.errors.full_messages.to_sentence}", status: :see_other
+    end
+  end
+
   private
 
   def set_trip
@@ -73,6 +83,7 @@ class Admin::CampsitesController < Admin::BaseController
     params.require(:campsite).permit(
       :campground_id,
       :registered_by_id,
+      :registration_fee,
       :registration_number,
       :site_number,
       :arrival_date,
@@ -80,6 +91,15 @@ class Admin::CampsitesController < Admin::BaseController
       :participant_capacity,
       :car_capacity,
       :notes
+    )
+  end
+
+  def registration_reimbursement_params
+    params.require(:campsite).permit(
+      :registration_reimbursed_at,
+      :registration_reimbursed_by_id,
+      :registration_reimbursement_method,
+      :registration_reimbursement_notes
     )
   end
 end

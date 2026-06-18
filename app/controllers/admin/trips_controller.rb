@@ -15,7 +15,15 @@ class Admin::TripsController < Admin::BaseController
 
   def show
     authorize @trip
-    @campsites = @trip.campsites.includes(:campground, :registered_by, campsite_signups: [ { payments: { refunds: :refunded_by } }, :user, :campsite_signup_minors, { guest_of_signup: :user } ]).order(:arrival_date, :site_number)
+    @campsites = @trip.campsites
+      .includes(
+        :campground,
+        :registered_by,
+        :registration_reimbursed_by,
+        :registration_reimbursement_recorded_by,
+        campsite_signups: [ { payments: { refunds: :refunded_by } }, :user, :campsite_signup_minors, { guest_of_signup: :user } ]
+      )
+      .order(:arrival_date, :site_number)
     @waitlisted_signups = @trip.waitlisted_signups
     @trip_participant_user_ids = @trip.campsite_signups.active.distinct.pluck(:user_id)
     @participant_link_signup = participant_link_signup

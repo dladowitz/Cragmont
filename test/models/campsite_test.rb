@@ -34,6 +34,47 @@ class CampsiteTest < ActiveSupport::TestCase
     assert_includes campsite.errors[:car_capacity], "must be greater than or equal to 0"
   end
 
+  test "registration fee converts dollars to cents" do
+    campsite = campsites(:yosemite_a)
+
+    campsite.registration_fee = "$123.45"
+
+    assert_equal 12345, campsite.registration_fee_cents
+    assert_equal BigDecimal("123.45"), campsite.registration_fee
+  end
+
+  test "registration fee cannot be negative" do
+    campsite = campsites(:yosemite_a)
+    campsite.registration_fee = "-1.00"
+
+    assert_not campsite.valid?
+    assert_includes campsite.errors[:registration_fee_cents], "must be greater than or equal to 0"
+  end
+
+  test "registration reimbursement details must be complete" do
+    campsite = campsites(:yosemite_a)
+    campsite.registration_reimbursed_at = Time.current
+
+    assert_not campsite.valid?
+    assert_includes campsite.errors[:registration_reimbursed_by], "must be selected"
+    assert_includes campsite.errors[:registration_reimbursement_method], "must be selected"
+    assert_includes campsite.errors[:registration_reimbursement_recorded_by], "must be selected"
+
+    campsite.registration_reimbursed_by = users(:sam)
+    campsite.registration_reimbursement_method = "venmo"
+    campsite.registration_reimbursement_recorded_by = users(:alex)
+
+    assert campsite.valid?
+  end
+
+  test "registration reimbursement method label is human readable" do
+    campsite = campsites(:yosemite_a)
+
+    campsite.registration_reimbursement_method = "stripe"
+
+    assert_equal "Stripe", campsite.registration_reimbursement_method_label
+  end
+
   test "checkout date must be after arrival date" do
     campsite = campsites(:yosemite_a)
     campsite.checkout_date = campsite.arrival_date

@@ -2,8 +2,16 @@ class Campsite < ApplicationRecord
   belongs_to :trip
   belongs_to :campground
   belongs_to :registered_by, class_name: "User", optional: true, inverse_of: :registered_campsites
+  belongs_to :registration_reimbursed_by, class_name: "User", optional: true
+  belongs_to :registration_reimbursement_recorded_by, class_name: "User", optional: true
   has_many :campsite_signups
   has_many :participants, through: :campsite_signups, source: :user
+
+  REIMBURSEMENT_METHODS = {
+    "venmo" => "Venmo",
+    "stripe" => "Stripe",
+    "other" => "Other"
+  }.freeze
 
   before_destroy :ensure_no_active_signups
   before_destroy :detach_canceled_signups
@@ -15,8 +23,28 @@ class Campsite < ApplicationRecord
   validates :car_capacity,
     presence: true,
     numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :registration_fee_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :registration_reimbursement_method, inclusion: { in: REIMBURSEMENT_METHODS.keys }, allow_blank: true
+  validate :reimbursement_details_complete
   validate :checkout_date_after_arrival_date
   validate :reservation_dates_within_trip_dates
+
+  def registration_fee
+    BigDecimal(registration_fee_cents.to_i.to_s) / 100
+  end
+
+  def registration_fee=(amount)
+    normalized_amount = amount.to_s.delete("$,").strip
+    self.registration_fee_cents = normalized_amount.present? ? (BigDecimal(normalized_amount) * 100).round : 0
+  end
+
+  def registration_reimbursed?
+    registration_reimbursed_at.present?
+  end
+
+  def registration_reimbursement_method_label
+    REIMBURSEMENT_METHODS.fetch(registration_reimbursement_method, "None")
+  end
 
   def confirmed_signup_count
     confirmed_capacity_count
@@ -138,5 +166,22 @@ class Campsite < ApplicationRecord
     return if value.between?(trip.start_date, trip.end_date)
 
     errors.add(attribute, "must be within the trip dates")
+  end
+
+  def reimbursement_details_complete
+    return unless reimbursement_started?
+
+    errors.add(:registration_reimbursed_at, "can't be blank") if registration_reimbursed_at.blank?
+    errors.add(:registration_reimbursed_by, "must be selected") if registration_reimbursed_by.blank?
+    errors.add(:registration_reimbursement_method, "must be selected") if registration_reimbursement_method.blank?
+    errors.add(:registration_reimbursement_recorded_by, "must be selected") if registration_reimbursement_recorded_by.blank?
+  end
+
+  def reimbursement_started?
+    registration_reimbursed_at.present? ||
+      registration_reimbursed_by.present? ||
+      registration_reimbursement_method.present? ||
+      registration_reimbursement_recorded_by.present? ||
+      registration_reimbursement_notes.present?
   end
 end

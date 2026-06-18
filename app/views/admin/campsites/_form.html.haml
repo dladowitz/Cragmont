@@ -1,34 +1,46 @@
 = form_with model: [:admin, trip, campsite], class: "admin-form" do |form|
   = render "admin/shared/errors", record: campsite
   - if campgrounds.any?
-    .form-grid
-      .field
-        = required_label form, :campground_id, "Campground"
-        = form.collection_select :campground_id, campgrounds, :id, :name, { prompt: "Select a campground" }, required: true
-      .field
-        = required_label form, :site_number
-        = form.text_field :site_number, required: true
-      .field
-        = form.label :registered_by_id, "Registered by"
-        = form.collection_select :registered_by_id, @users, :id, :full_name, { include_blank: "Unassigned" }
-      .field
-        = form.label :registration_number
-        = form.text_field :registration_number
-      .field
-        = required_label form, :arrival_date
-        = form.date_field :arrival_date, min: trip.start_date, max: trip.end_date, required: true
-      .field
-        = required_label form, :checkout_date
-        = form.date_field :checkout_date, min: trip.start_date, max: trip.end_date, required: true
-      .field
-        = required_label form, :participant_capacity
-        = form.number_field :participant_capacity, min: 0, max: 50, required: true
-      .field
-        = required_label form, :car_capacity
-        = form.number_field :car_capacity, min: 0, required: true
-    .field
-      = form.label :notes
-      = form.text_area :notes, rows: 5
+    .campsite-form-sections
+      .campsite-form-section
+        .form-grid
+          .field
+            = required_label form, :campground_id, "Campground"
+            = form.collection_select :campground_id, campgrounds, :id, :name, { prompt: "Select a campground" }, required: true
+          .field
+            = required_label form, :site_number
+            = form.text_field :site_number, required: true
+      .campsite-form-section
+        .form-grid
+          .field
+            = required_label form, :arrival_date
+            = form.date_field :arrival_date, min: trip.start_date, max: trip.end_date, required: true
+          .field
+            = required_label form, :checkout_date
+            = form.date_field :checkout_date, min: trip.start_date, max: trip.end_date, required: true
+          .field
+            = required_label form, :participant_capacity
+            = form.number_field :participant_capacity, min: 0, max: 50, required: true
+          .field
+            = required_label form, :car_capacity
+            = form.number_field :car_capacity, min: 0, required: true
+      .campsite-form-section
+        .form-grid
+          .field
+            = form.label :registered_by_id, "Registered by"
+            = form.collection_select :registered_by_id, @users, :id, :full_name, { include_blank: "Unassigned" }
+          .field
+            = form.label :registration_fee, "Registration cost"
+            .currency-field
+              %span $
+              = form.number_field :registration_fee, min: 0, step: 0.01, value: number_with_precision(campsite.registration_fee, precision: 2)
+          .field
+            = form.label :registration_number
+            = form.text_field :registration_number
+      .campsite-form-section
+        .field
+          = form.label :notes
+          = form.text_area :notes, rows: 5
     .form-actions
       = form.submit
       = link_to "Cancel", admin_trip_path(trip), class: "button secondary"

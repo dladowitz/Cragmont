@@ -109,6 +109,45 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_url
   end
 
+  test "trip details show campsite registration fee tracking" do
+    unreimbursed_campsite = campsites(:yosemite_a)
+    reimbursed_campsite = campsites(:yosemite_b)
+    unreimbursed_campsite.update!(registration_fee: "84.25")
+    reimbursed_campsite.update!(
+      registration_fee: "92.50",
+      registration_reimbursed_at: Time.zone.local(2026, 6, 16),
+      registration_reimbursed_by: users(:sam),
+      registration_reimbursement_method: "venmo",
+      registration_reimbursement_recorded_by: users(:alex),
+      registration_reimbursement_notes: "Venmo confirmation 123"
+    )
+
+    get admin_trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select ".campsite-registration-fees-panel", count: 0
+    assert_select "h2", text: "Campsite Registration Fees", count: 0
+    assert_select "#admin-campsite-#{unreimbursed_campsite.id} .campsite-fee-summary" do
+      assert_select ".campsite-registration-fee-line", text: /Fees Paid:\s*\$84.25/
+      assert_select ".campsite-registration-fee-line", text: /Reimbursed:\s*Record Now/
+      assert_select "button.reimbursement-status-link", text: "Record Now"
+      assert_select "form[action='#{record_registration_reimbursement_admin_trip_campsite_path(trips(:yosemite), unreimbursed_campsite)}'][method='post']" do
+        assert_select "select[name='campsite[registration_reimbursed_by_id]']"
+        assert_select "select[name='campsite[registration_reimbursement_method]']"
+        assert_select "input[name='campsite[registration_reimbursed_at]'][type='date']"
+        assert_select "textarea[name='campsite[registration_reimbursement_notes]']"
+      end
+    end
+    assert_select "#admin-campsite-#{reimbursed_campsite.id} .campsite-fee-summary" do
+      assert_select ".campsite-registration-fee-line", text: /Fees Paid:\s*\$92.50/
+      assert_select ".campsite-registration-fee-line", text: /Reimbursed:\s*Jun 16, 2026/
+      assert_select "button.reimbursement-status-link", text: "Jun 16, 2026"
+      assert_select "dialog.campsite-registration-reimbursement-modal", text: /Venmo confirmation 123/
+      assert_select "dialog.campsite-registration-reimbursement-modal", text: /Recorded By\s*Alex Rivera/
+      assert_select "dialog.campsite-registration-reimbursement-modal", text: /Reimbursed By\s*Sam Lee/
+    end
+  end
+
   test "trip admin can manage campgrounds but not users or settings" do
     trip_admin = users(:sam)
     assign_role(trip_admin, :trip_admin)
@@ -934,7 +973,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h2", "Trip Expenses"
-    assert_select "section.panel", text: /Trip Expenses/ do
+    assert_select "section.trip-expenses-panel", text: /Trip Expenses/ do
       assert_select "th", text: "Participant"
       assert_select "th", text: "Amount"
       assert_select "th", text: "Refunded By"
@@ -982,6 +1021,8 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
 
   test "trip details shows trip revenue summary" do
     trip = trips(:yosemite)
+    campsites(:yosemite_a).update!(registration_fee: "84.25")
+    campsites(:yosemite_b).update!(registration_fee: "92.50")
     payment = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam)).payments.create!(
       source: "stripe",
       status: "partially_refunded",
@@ -1002,6 +1043,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       status: "succeeded",
       initiated_by: "admin",
       refund_type: "trip_expense",
+      reason: "Firewood",
       source: "stripe",
       currency: "usd"
     )
@@ -1019,14 +1061,27 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "section.trip-revenue-panel" do
-      assert_select "h2", "Trip Revenue"
+      assert_select "h2", "Trip Profitability"
       assert_select "tr", text: /Upper Pines site A12\s+\$100\.00\s+\$20\.00\s+\$80\.00/
       assert_select "tr", text: /Upper Pines site A13\s+\$0\.00\s+\$0\.00\s+\$0\.00/
       assert_select "tr.trip-revenue-subtotal", text: /Campsite revenue\s+\$80\.00/
       assert_select "tr", text: /One-time payment requests\s+\$25\.00/
       assert_select "tr.trip-revenue-total", text: /Total revenue\s+\$105\.00/
-      assert_select "tr.trip-revenue-expense", text: /Trip expense refunds\s+-\$10\.00/
-      assert_select "tr.trip-revenue-final", text: /Final trip revenue\s+\$95\.00/
+      assert_select "tr.trip-revenue-expense", text: /Trip Expense\s+Sam Lee\s+Firewood\s+-\$10\.00/ do
+        assert_select "a[href='#{admin_trip_transactions_path(trip, anchor: "transaction-payment-#{payment.id}")}']", text: "Trip Expense"
+      end
+      assert_select "tr.trip-revenue-expense" do
+        assert_select "td:first-child", text: /Upper Pines site A12\s+Registration Fee/ do
+          assert_select "button.reimbursement-status-link", text: "Registration Fee"
+          assert_select "dialog.campsite-registration-reimbursement-modal", text: /Site Name\s+Upper Pines/
+          assert_select "dialog.campsite-registration-reimbursement-modal", text: /Fees Paid\s+\$84\.25/
+        end
+        assert_select "td:last-child", text: "-$84.25"
+      end
+      assert_select "tr.trip-revenue-expense td:first-child", text: /Upper Pines site A13\s+Registration Fee/
+      assert_select "tr.trip-expense-total", text: /Total expenses\s+-\$186\.75/
+      assert_select "tr.trip-revenue-final", text: /Trip profit\s+-\$81\.75/
+      assert_select "tr.trip-revenue-final td[colspan='3']", text: "Trip profit"
     end
   end
 

@@ -58,7 +58,9 @@ Rails.application.routes.draw do
       resources :transactions, only: :index, controller: "trip_transactions" do
         post :refund, on: :member
       end
-      resources :campsites, except: %i[index show]
+      resources :campsites, except: %i[index show] do
+        patch :record_registration_reimbursement, on: :member
+      end
       resources :campsite_signups, only: %i[create] do
         patch :make_waitlist_eligible, on: :member
         patch :revoke_waitlist_eligibility, on: :member

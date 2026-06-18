@@ -4,6 +4,36 @@ class TripRevenueSummary
       "#{campsite.campground.name} site #{campsite.site_number}"
     end
   end
+  RegistrationFeeLine = Struct.new(:campsite, :fee_cents, keyword_init: true) do
+    def campsite_label
+      "#{campsite.campground.name} site #{campsite.site_number}"
+    end
+
+    def label
+      "#{campsite_label} registration fee"
+    end
+  end
+  TripExpenseLine = Struct.new(:refund, keyword_init: true) do
+    def payment
+      refund.campsite_signup_payment
+    end
+
+    def participant_name
+      payment.campsite_signup.user.full_name
+    end
+
+    def reason
+      refund.reason.presence || "None"
+    end
+
+    def amount_cents
+      refund.amount_cents
+    end
+
+    def transaction_anchor
+      "transaction-payment-#{payment.id}"
+    end
+  end
 
   attr_reader :trip
 
@@ -37,6 +67,12 @@ class TripRevenueSummary
     campsite_lines.sum(&:net_cents)
   end
 
+  def campsite_registration_fee_lines
+    @campsite_registration_fee_lines ||= trip.campsites.includes(:campground).order(:arrival_date, :site_number).map do |campsite|
+      RegistrationFeeLine.new(campsite: campsite, fee_cents: campsite.registration_fee_cents)
+    end
+  end
+
   def one_time_payment_requests_cents
     @one_time_payment_requests_cents ||= trip.trip_payment_requests.paid.sum(:amount_cents)
   end
@@ -46,15 +82,25 @@ class TripRevenueSummary
   end
 
   def trip_expense_refund_cents
-    @trip_expense_refund_cents ||= CampsiteSignupPaymentRefund.trip_expense_refund_type
+    trip_expense_lines.sum(&:amount_cents)
+  end
+
+  def trip_expense_lines
+    @trip_expense_lines ||= CampsiteSignupPaymentRefund.trip_expense_refund_type
       .succeeded
       .joins(campsite_signup_payment: :campsite_signup)
       .where(campsite_signups: { trip_id: trip.id })
-      .sum(:amount_cents)
+      .includes(campsite_signup_payment: { campsite_signup: :user })
+      .order(refunded_at: :desc, created_at: :desc)
+      .map { |refund| TripExpenseLine.new(refund: refund) }
+  end
+
+  def campsite_registration_fee_cents
+    campsite_registration_fee_lines.sum(&:fee_cents)
   end
 
   def total_expense_cents
-    trip_expense_refund_cents
+    trip_expense_refund_cents + campsite_registration_fee_cents
   end
 
   def final_total_cents
