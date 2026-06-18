@@ -1196,20 +1196,81 @@ body.trip-show-page .public-liability-warning {
   margin-left: 0;
 }
 
-.table-actions .campsite-registration {
-  margin-top: 12px;
+.admin-campsite-card-header .campsite-registration {
+  align-self: start;
   color: var(--muted);
+  display: grid;
+  gap: 6px;
+  grid-area: registration;
   line-height: 1.35;
   text-align: left;
   white-space: normal;
 }
 
-.table-actions .campsite-registration p {
+.admin-campsite-card-header .campsite-registration p {
   margin: 0;
 }
 
-.table-actions .campsite-registration .small-link {
+.admin-campsite-card-header .campsite-registration .small-link {
   font-size: 0.9rem;
+}
+
+.campsite-card-actions {
+  display: grid;
+  gap: 12px;
+  grid-area: actions;
+  justify-self: end;
+  justify-items: start;
+}
+
+.campsite-action-buttons {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.campsite-action-buttons.table-actions [data-controller="modal"] {
+  margin: 0;
+}
+
+.admin-campsite-card-header .campsite-action-buttons.table-actions > [data-controller="modal"]:first-child {
+  margin: 0;
+}
+
+.campsite-fee-summary {
+  color: var(--muted);
+  display: grid;
+  gap: 6px;
+  grid-area: fees;
+  align-self: start;
+  line-height: 1.35;
+  text-align: left;
+  white-space: normal;
+}
+
+.campsite-fee-summary .campsite-registration-fee-line {
+  display: flex;
+  gap: 4px;
+  align-items: baseline;
+  margin: 0;
+}
+
+.campsite-fee-summary .admin-table-action-button {
+  font-size: 0.95rem;
+}
+
+.reimbursement-status-link {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+}
+
+.reimbursement-status-link:hover {
+  color: var(--accent-dark);
 }
 
 .disabled-tooltip {
@@ -1441,21 +1502,44 @@ body.trip-show-page .public-liability-warning {
 
 .trip-revenue-subtotal td,
 .trip-revenue-total td,
+.trip-expense-total td,
 .trip-revenue-final td {
   font-weight: 800;
 }
 
 .trip-revenue-total td {
   border-top: 2px solid var(--line);
+  border-bottom: 12px solid transparent;
 }
 
 .trip-revenue-expense td:last-child {
   color: var(--danger);
 }
 
+.registration-fee-modal-trigger {
+  display: inline;
+}
+
+.trip-expense-total td {
+  border-top: 2px solid var(--line);
+}
+
+.trip-expense-total td:last-child {
+  color: var(--danger);
+}
+
 .trip-revenue-final td {
-  border-top: 2px solid var(--accent);
-  font-size: 1.05rem;
+  padding-top: 24px;
+  padding-bottom: 24px;
+  border-top: 4px solid var(--accent-dark);
+  border-bottom: 1px solid var(--line);
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.trip-revenue-final td:last-child {
+  text-align: right;
 }
 
 .campsite-card-list,
@@ -1496,12 +1580,30 @@ body.trip-show-page .public-liability-warning {
   transform: translateY(-1px);
 }
 
-.campsite-card-header,
-.admin-campsite-card-header {
+.campsite-card-header {
   display: flex;
   justify-content: space-between;
   gap: 18px;
   align-items: start;
+}
+
+.admin-campsite-card-header {
+  display: grid;
+  grid-template-columns: minmax(330px, 1fr) minmax(260px, 0.8fr) minmax(190px, auto) auto;
+  grid-template-areas:
+    "heading heading heading actions"
+    "dates registration fees actions";
+  column-gap: 18px;
+  row-gap: 8px;
+  align-items: start;
+}
+
+.admin-campsite-card-header .campsite-card-summary {
+  grid-area: heading;
+}
+
+.admin-campsite-card-header .date-pair {
+  grid-area: dates;
 }
 
 .campsite-card-header h3,
@@ -1543,7 +1645,7 @@ body.trip-show-page .public-liability-warning {
 }
 
 .admin-campsite-card-header .date-pair {
-  margin-top: 8px;
+  margin-top: 0;
 }
 
 .admin-campsite-card .campsite-stats {
@@ -3879,6 +3981,34 @@ th {
   grid-column: 1 / -1;
 }
 
+.campsite-form-sections {
+  display: grid;
+  gap: 34px;
+}
+
+.campsite-form-section {
+  display: grid;
+  gap: 18px;
+}
+
+.campsite-form-section .form-grid {
+  align-items: start;
+}
+
+.campsite-form-section .field:only-child {
+  max-width: none;
+}
+
+.campsite-form-section textarea {
+  width: 100%;
+}
+
+.campsite-date-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
 .content-page-editor {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(340px, 0.8fr);
@@ -4359,6 +4489,20 @@ textarea {
     flex-direction: column;
   }
 
+  .admin-campsite-card-header {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "heading"
+      "dates"
+      "registration"
+      "actions"
+      "fees";
+  }
+
+  .campsite-card-actions {
+    justify-self: stretch;
+  }
+
   .public-beta-notice {
     flex-basis: auto;
     max-width: none;
@@ -4406,6 +4550,7 @@ textarea {
   .form-grid,
   .stats,
   .attendance-date-row,
+  .campsite-date-row,
   .fee-section-row,
   .minor-field-row,
   .guest-field-row,

@@ -1,8 +1,8 @@
 %section.panel.trip-revenue-panel
   .panel-header
     %div
-      %h2 Trip Revenue
-      %p.muted Revenue collected for this trip after participant refunds and recorded expenses.
+      %h2 Trip Profitability
+      %p.muted Revenue collected for this trip after participant refunds and recorded costs.
   %table.trip-revenue-table
     %thead
       %tr
@@ -32,13 +32,64 @@
         %td
         %td
         %td= format_cents(summary.total_revenue_cents)
-      %tr.trip-revenue-expense
-        %td Trip expense refunds
+      - summary.trip_expense_lines.each do |line|
+        %tr.trip-revenue-expense
+          %td= link_to "Trip Expense", admin_trip_transactions_path(summary.trip, anchor: line.transaction_anchor)
+          %td= line.participant_name
+          %td= line.reason
+          %td= "-#{format_cents(line.amount_cents)}"
+      - summary.campsite_registration_fee_lines.each do |line|
+        %tr.trip-revenue-expense
+          %td
+            = line.campsite_label
+            %span.registration-fee-modal-trigger{"data-controller" => "modal"}
+              %button.reimbursement-status-link{"data-action" => "modal#open", type: "button"} Registration Fee
+              %dialog.signup-modal.campsite-registration-reimbursement-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                .signup-modal-content
+                  %div
+                    %h2 Campsite registration fee
+                    %p= line.campsite_label
+                  %dl.details-list.transaction-details-list
+                    %div
+                      %dt Site Name
+                      %dd= line.campsite.campground.name
+                    %div
+                      %dt Site Number
+                      %dd= line.campsite.site_number
+                    %div
+                      %dt Registered By
+                      %dd= line.campsite.registered_by&.full_name || "None"
+                    %div
+                      %dt Fees Paid
+                      %dd= format_cents(line.fee_cents)
+                    %div
+                      %dt Reimbursed
+                      %dd= line.campsite.registration_reimbursed? ? "Yes" : "No"
+                    %div
+                      %dt Date of Reimbursement
+                      %dd= line.campsite.registration_reimbursed_at&.strftime("%b %-d, %Y") || "None"
+                    %div
+                      %dt Reimbursed By
+                      %dd= line.campsite.registration_reimbursed_by&.full_name || "None"
+                    %div
+                      %dt Reimbursement Method
+                      %dd= line.campsite.registration_reimbursement_method_label
+                    %div
+                      %dt Recorded By
+                      %dd= line.campsite.registration_reimbursement_recorded_by&.full_name || "None"
+                    %div
+                      %dt Notes
+                      %dd= line.campsite.registration_reimbursement_notes.presence || "None"
+                  .form-actions
+                    %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+          %td
+          %td
+          %td= "-#{format_cents(line.fee_cents)}"
+      %tr.trip-expense-total
+        %td Total expenses
         %td
         %td
-        %td= "-#{format_cents(summary.trip_expense_refund_cents)}"
+        %td= "-#{format_cents(summary.total_expense_cents)}"
       %tr.trip-revenue-final
-        %td Final trip revenue
-        %td
-        %td
+        %td{colspan: 3} Trip profit
         %td= format_cents(summary.final_total_cents)

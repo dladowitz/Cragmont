@@ -80,45 +80,49 @@
       - @campsites.each do |campsite|
         %section.admin-campsite-card{id: "admin-campsite-#{campsite.id}"}
           .admin-campsite-card-header
-            %div
+            .campsite-card-summary
               .campsite-heading-line
                 %h4
                   = campsite.campground.name
                   site #{campsite.site_number}
                 %p= campsite.campground.location
-              %dl.date-pair
-                %div
-                  %dt Arrival
-                  %dd= campsite.arrival_date.to_fs(:long)
-                %div
-                  %dt Checkout
-                  %dd= campsite.checkout_date.to_fs(:long)
-            %div.table-actions
-              - if !@trip.deleted? && policy(@trip).manage_participants?
-                = render "add_participant_modal", trip: @trip, campsite: campsite, users: @users, trip_participant_user_ids: @trip_participant_user_ids
-              - if !@trip.deleted? && policy(@trip).manage_campsites?
-                = link_to "Edit Campsite", edit_admin_trip_campsite_path(@trip, campsite), class: "button secondary"
-              .campsite-registration
-                %p
-                  %strong Site registered by:
-                  - if campsite.registered_by.present?
-                    = campsite.registered_by.full_name
-                  - elsif @trip.deleted?
-                    None
-                  - elsif policy(@trip).manage_campsites?
-                    = link_to "Update", edit_admin_trip_campsite_path(@trip, campsite), class: "small-link"
-                  - else
-                    None
-                %p
-                  %strong Registration #
-                  - if campsite.registration_number.present?
-                    = campsite.registration_number
-                  - elsif @trip.deleted?
-                    None
-                  - elsif policy(@trip).manage_campsites?
-                    = link_to "Update", edit_admin_trip_campsite_path(@trip, campsite), class: "small-link"
-                  - else
-                    None
+            %dl.date-pair
+              %div
+                %dt Arrival
+                %dd= campsite.arrival_date.to_fs(:long)
+              %div
+                %dt Checkout
+                %dd= campsite.checkout_date.to_fs(:long)
+            .campsite-registration
+              %p
+                %strong Site registered by:
+                - if campsite.registered_by.present?
+                  = campsite.registered_by.full_name
+                - elsif @trip.deleted?
+                  None
+                - elsif policy(@trip).manage_campsites?
+                  = link_to "Update", edit_admin_trip_campsite_path(@trip, campsite), class: "small-link"
+                - else
+                  None
+              %p
+                %strong Registration #
+                - if campsite.registration_number.present?
+                  = campsite.registration_number
+                - elsif @trip.deleted?
+                  None
+                - elsif policy(@trip).manage_campsites?
+                  = link_to "Update", edit_admin_trip_campsite_path(@trip, campsite), class: "small-link"
+                - else
+                  None
+            .campsite-card-actions
+              .table-actions.campsite-action-buttons
+                - if !@trip.deleted? && policy(@trip).manage_participants?
+                  = render "add_participant_modal", trip: @trip, campsite: campsite, users: @users, trip_participant_user_ids: @trip_participant_user_ids
+                - if !@trip.deleted? && policy(@trip).manage_campsites?
+                  = link_to "Edit Campsite", edit_admin_trip_campsite_path(@trip, campsite), class: "button secondary"
+            - if policy(@trip).manage_payments?
+              .campsite-fee-summary
+                = render "registration_reimbursement_status", trip: @trip, campsite: campsite, users: @users
           .stats.campsite-stats
             - if campsite.confirmed_uncounted_minor_count.positive?
               .split-signup-stat
@@ -171,7 +175,7 @@
       = render "signup_table", signups: @waitlisted_signups, waitlist: true, trip: @trip, campsites: @campsites, read_only: @trip.deleted? || !policy(@trip).manage_participants?
 - if policy(@trip).manage_payments?
   = render "payment_requests_panel", trip: @trip, payment_requests: @trip_payment_requests, modal_payment_request: @trip_payment_request
-  %section.panel
+  %section.panel.trip-expenses-panel
     .panel-header
       %div
         %h2 Trip Expenses

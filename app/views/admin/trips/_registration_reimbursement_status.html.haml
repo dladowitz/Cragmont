@@ -1,0 +1,87 @@
+- reimbursement_date = campsite.registration_reimbursed_at&.strftime("%b %-d, %Y")
+%p.campsite-registration-fee-line
+  %strong Fees Paid:
+  = format_cents(campsite.registration_fee_cents)
+.campsite-registration-fee-line
+  %strong Reimbursed:
+  - if campsite.registration_reimbursed?
+    %div{"data-controller" => "modal"}
+      %button.small-link.reimbursement-status-link{"data-action" => "modal#open", type: "button"}= reimbursement_date
+      %dialog.signup-modal.campsite-registration-reimbursement-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+        .signup-modal-content
+          %div
+            %h2 Campsite reimbursement
+            %p
+              = campsite.campground.name
+              site #{campsite.site_number}
+          %dl.details-list.transaction-details-list
+            %div
+              %dt Site Name
+              %dd= campsite.campground.name
+            %div
+              %dt Site Number
+              %dd= campsite.site_number
+            %div
+              %dt Registered By
+              %dd= campsite.registered_by&.full_name || "None"
+            %div
+              %dt Fees Paid
+              %dd= format_cents(campsite.registration_fee_cents)
+            %div
+              %dt Reimbursed
+              %dd Yes
+            %div
+              %dt Date of Reimbursement
+              %dd= reimbursement_date || "None"
+            %div
+              %dt Reimbursed By
+              %dd= campsite.registration_reimbursed_by&.full_name || "None"
+            %div
+              %dt Reimbursement Method
+              %dd= campsite.registration_reimbursement_method_label
+            %div
+              %dt Recorded By
+              %dd= campsite.registration_reimbursement_recorded_by&.full_name || "None"
+            %div
+              %dt Notes
+              %dd= campsite.registration_reimbursement_notes.presence || "None"
+          .form-actions
+            %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+  - elsif !trip.deleted?
+    %div{"data-controller" => "modal", "data-modal-disable-autofocus-value" => "true"}
+      %button.small-link.reimbursement-status-link{"data-action" => "modal#open", type: "button"} Record Now
+      %dialog.signup-modal.campsite-registration-reimbursement-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+        .signup-modal-content
+          %div
+            %h2 Record reimbursement
+            %p
+              = campsite.campground.name
+              site #{campsite.site_number}
+          %dl.details-list.transaction-details-list
+            %div
+              %dt Registered By
+              %dd= campsite.registered_by&.full_name || "None"
+            %div
+              %dt Fees Paid
+              %dd= format_cents(campsite.registration_fee_cents)
+            %div
+              %dt Recorded By
+              %dd= current_user.full_name
+          = form_with model: [:admin, trip, campsite], url: record_registration_reimbursement_admin_trip_campsite_path(trip, campsite), method: :patch, class: "admin-form" do |form|
+            .form-field
+              = required_label form, :registration_reimbursed_by_id, "Reimbursed by"
+              = form.collection_select :registration_reimbursed_by_id, users, :id, :full_name, { prompt: "Select a member" }, required: true
+            .form-field
+              = required_label form, :registration_reimbursement_method, "Reimbursement method"
+              = form.select :registration_reimbursement_method, Campsite::REIMBURSEMENT_METHODS.map { |value, label| [label, value] }, { prompt: "Select a method" }, required: true
+            .form-field
+              = required_label form, :registration_reimbursed_at, "Date of reimbursement"
+              = form.date_field :registration_reimbursed_at, value: Date.current, required: true
+            .form-field
+              = form.label :registration_reimbursement_notes, "Confirmation number or notes"
+              = form.text_area :registration_reimbursement_notes, rows: 3
+            .form-actions
+              %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
+              = form.submit "Record Reimbursement", class: "button"
+  - else
+    Not reimbursed

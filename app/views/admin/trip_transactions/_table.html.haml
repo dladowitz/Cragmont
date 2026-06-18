@@ -5,7 +5,7 @@
 - show_refund_action = local_assigns.fetch(:show_refund_action, false)
 
 - if ledger_entries.any?
-  %table.transactions-table
+  %table.transactions-table{"data-controller" => "transaction-anchor"}
     %thead
       %tr
         - if show_trip
@@ -21,7 +21,7 @@
         - status_label = entry.status_label
         - status_class = entry.status_class
         - trip = payment.campsite_signup.trip
-        %tr
+        %tr{id: "transaction-payment-#{payment.id}"}
           - if show_trip
             %td= link_to trip.name, trip_path(trip)
           %td= entry.participant_name

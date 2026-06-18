@@ -12,6 +12,7 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", "Admin Dashboard"
     assert_select ".panel-header", text: /Yosemite Valley Spring/
     assert_select "select[name='campsite[registered_by_id]']"
+    assert_select "input[name='campsite[registration_fee]']"
     assert_select "input[name='campsite[registration_number]']"
     assert_select "input[name='campsite[arrival_date]'][min='2026-06-12'][max='2026-06-15']"
     assert_select "input[name='campsite[checkout_date]'][min='2026-06-12'][max='2026-06-15']"
@@ -23,6 +24,7 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
         campsite: {
           campground_id: campgrounds(:upper_pines).id,
           registered_by_id: users(:sam).id,
+          registration_fee: "84.25",
           registration_number: "YO-2026-A14",
           site_number: "A14",
           arrival_date: "2026-06-13",
@@ -37,6 +39,7 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_trip_url(trips(:yosemite))
     campsite = Campsite.order(:created_at).last
     assert_equal users(:sam), campsite.registered_by
+    assert_equal 8425, campsite.registration_fee_cents
     assert_equal "YO-2026-A14", campsite.registration_number
   end
 
@@ -61,6 +64,8 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "can render edit campsite form" do
+    campsites(:yosemite_a).update!(registration_fee: "84.25")
+
     get edit_admin_trip_campsite_url(trips(:yosemite), campsites(:yosemite_a))
 
     assert_response :success
@@ -68,6 +73,26 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".panel-header", text: /Yosemite Valley Spring/
     assert_select ".form-actions input[type='submit']"
     assert_select "select[name='campsite[registered_by_id]'] option[value='']", text: "Unassigned"
+    assert_select "input[name='campsite[registration_fee]'][value='84.25']"
+    assert_select ".campsite-form-sections .campsite-form-section", count: 4
+    assert_select ".campsite-form-section:nth-of-type(1)" do
+      assert_select "select[name='campsite[campground_id]']"
+      assert_select "input[name='campsite[site_number]']"
+    end
+    assert_select ".campsite-form-section:nth-of-type(2)" do
+      assert_select "input[name='campsite[arrival_date]']"
+      assert_select "input[name='campsite[checkout_date]']"
+      assert_select "input[name='campsite[participant_capacity]']"
+      assert_select "input[name='campsite[car_capacity]']"
+    end
+    assert_select ".campsite-form-section:nth-of-type(3)" do
+      assert_select "select[name='campsite[registered_by_id]']"
+      assert_select "input[name='campsite[registration_fee]']"
+      assert_select "input[name='campsite[registration_number]']"
+    end
+    assert_select ".campsite-form-section:nth-of-type(4)" do
+      assert_select "textarea[name='campsite[notes]']"
+    end
     assert_select ".form-actions a.button.secondary", text: "Cancel"
     assert_select ".form-actions .danger-form-action [data-controller='modal'] button.button.danger.secondary", text: "Delete campsite"
     assert_select "dialog.confirmation-modal", text: /Delete campsite\?/
@@ -103,6 +128,7 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
       campsite: {
         campground_id: campgrounds(:upper_pines).id,
         registered_by_id: users(:alex).id,
+        registration_fee: "92.50",
         registration_number: "YO-2026-A12B",
         site_number: "A12B",
         arrival_date: campsites(:yosemite_a).arrival_date,
@@ -117,7 +143,27 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "A12B", campsites(:yosemite_a).reload.site_number
     assert_equal 7, campsites(:yosemite_a).participant_capacity
     assert_equal users(:alex), campsites(:yosemite_a).registered_by
+    assert_equal 9250, campsites(:yosemite_a).registration_fee_cents
     assert_equal "YO-2026-A12B", campsites(:yosemite_a).registration_number
+  end
+
+  test "can record campsite registration reimbursement" do
+    patch record_registration_reimbursement_admin_trip_campsite_url(trips(:yosemite), campsites(:yosemite_a)), params: {
+      campsite: {
+        registration_reimbursed_at: "2026-06-16",
+        registration_reimbursed_by_id: users(:sam).id,
+        registration_reimbursement_method: "venmo",
+        registration_reimbursement_notes: "Venmo confirmation 123"
+      }
+    }
+
+    assert_redirected_to admin_trip_url(trips(:yosemite))
+    campsite = campsites(:yosemite_a).reload
+    assert_equal Date.new(2026, 6, 16), campsite.registration_reimbursed_at.to_date
+    assert_equal users(:sam), campsite.registration_reimbursed_by
+    assert_equal "venmo", campsite.registration_reimbursement_method
+    assert_equal users(:alex), campsite.registration_reimbursement_recorded_by
+    assert_equal "Venmo confirmation 123", campsite.registration_reimbursement_notes
   end
 
   test "can clear campsite registered by" do

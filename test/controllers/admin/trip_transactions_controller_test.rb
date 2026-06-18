@@ -99,7 +99,7 @@ class Admin::TripTransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".panel", count: 1
     assert_select ".panel", text: /Payments and refunds for/, count: 0
     assert_select "a[href='#{admin_trip_path(trip)}']", text: "Back to trip"
-    assert_select "table.transactions-table" do
+    assert_select "table.transactions-table[data-controller='transaction-anchor']" do
       assert_equal [
         "Participant",
         "Amount Paid",
@@ -127,6 +127,7 @@ class Admin::TripTransactionsControllerTest < ActionDispatch::IntegrationTest
       assert_not_includes css_select("thead").first.text, "Refund"
       assert_select "button", text: "View", count: 3
       assert_select "button", text: "Issue Refund", count: 3
+      assert_select "tr#transaction-payment-#{stripe_payment.id}"
     end
     assert_select "dialog.transaction-details-modal", count: 3
     detail_sections = css_select("dialog.transaction-details-modal").first.css(".transaction-details-list")
