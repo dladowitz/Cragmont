@@ -75,8 +75,8 @@ class ApplicationMailerTest < ActionMailer::TestCase
 
     mail = PasswordResetMailer.with(user: users(:alex), token: "reset-token").reset
 
-    assert_equal [ "postmaster@cragmontclimbing.com" ], mail.from
-    assert_equal "Cragmont Climbing <postmaster@cragmontclimbing.com>", mail[:from].to_s
+    assert_equal [ "notifications@cragmontclimbing.com" ], mail.from
+    assert_equal "Cragmont Climbing <notifications@cragmontclimbing.com>", mail[:from].to_s
   ensure
     ENV["MAILGUN_DOMAIN"] = original_mailgun_domain
     ENV["MAILER_FROM"] = original_mailer_from
@@ -93,11 +93,14 @@ class ApplicationMailerTest < ActionMailer::TestCase
       test_case.assert_equal "api:test-key", uri.userinfo
       test_case.assert_equal "api.mailgun.net", uri.host
       test_case.assert_equal "/v3/mg.example.com/messages", uri.path
-      test_case.assert_equal "Cragmont Climbing <postmaster@cragmontclimbing.com>", params[:from]
+      test_case.assert_equal "Cragmont Climbing <notifications@cragmontclimbing.com>", params[:from]
       test_case.assert_equal test_case.users(:alex).email, params[:to]
       test_case.assert_equal "Reset your Cragmont password", params[:subject]
       test_case.assert_includes params[:text], "Hi #{test_case.users(:alex).first_name},"
       test_case.assert_includes params[:html], "Cragmont"
+      test_case.assert_equal "no", params["o:tracking"]
+      test_case.assert_equal "no", params["o:tracking-clicks"]
+      test_case.assert_equal "no", params["o:tracking-opens"]
 
       response
     end
