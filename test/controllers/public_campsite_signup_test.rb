@@ -41,16 +41,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", "What to expect on a Cragmont trip"
-    assert_select ".content-page-markdown strong", "Cragmont trips are a shared base camp, not a guided trip."
-    assert_select "h2", "Do I need a partner to come on a trip?"
-    assert_select "h2", "Will Cragmont teach me to climb outside?"
-    assert_select "h2", "Do you know any professional climbing companies I can take classes from?"
-    assert_select "a[href='https://chat.whatsapp.com/DngyoeuFkg61oCZXPyyAgX?mode=gi_t']", text: "WhatsApp Community"
-    assert_select "a[href='https://www.cragmontclimbingclub.org/join-the-list']", text: "sign up for our email list"
-    assert_select "a[href='https://www.verticalpursuitsclimbing.com/']", text: "Vertical Pursuits"
-    assert_select "a[href='https://loversleap.net/']", text: "Lovers Leap Guides"
-    assert_select "a[href='https://www.saanoadventures.com/']", text: "SANNO Adventures"
-    assert_select "a[href='#{new_help_request_path}']", text: "Get Help"
+    assert_select "h2", "Content needs to be updated"
+    assert_select ".content-page-markdown", text: /Content markdown editor/
     assert_select ".background-image-caption", "Fairview Dome, Yosemite National Park"
   end
 

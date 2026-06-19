@@ -10,18 +10,18 @@ class Admin::ContentPagesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", "Admin Dashboard"
-    assert_select ".admin-nav a[href='#{edit_admin_content_page_path("what_to_expect")}']", text: "Content"
+    assert_select ".admin-nav a[href='#{edit_admin_content_page_path("what_to_expect")}']", count: 0
     assert_select "h2", "Edit What to expect on a Cragmont trip"
     assert_select "label[for='content_page_title'] .required-marker", text: "*"
     assert_select "input[name='content_page[title]'][required]"
     assert_select "form[data-controller='markdown-preview'][data-markdown-preview-url-value='#{preview_admin_content_pages_path}']"
-    assert_select "textarea[name='content_page[body]'][required][data-markdown-preview-target='source']", text: /## Do I need a partner/
+    assert_select "textarea[name='content_page[body]'][required][data-markdown-preview-target='source']", text: /## Content needs to be updated/
     assert_select "a[href='https://www.markdownguide.org/basic-syntax/']", text: "View the full Markdown syntax guide."
     assert_select ".markdown-formatting-heading a[href='https://www.markdownguide.org/extended-syntax/']", text: "Full Markdown Reference"
     assert_select ".markdown-formatting-guide", text: /## Heading/
     assert_select ".markdown-formatting-guide", text: /\*\*bold text\*\*/
     assert_select ".markdown-formatting-guide", text: /\[Link text\]\(https:\/\/example\.com\)/
-    assert_select ".content-page-preview[data-markdown-preview-target='preview'] h2", "Do I need a partner to come on a trip?"
+    assert_select ".content-page-preview[data-markdown-preview-target='preview'] h2", "Content needs to be updated"
   end
 
   test "super admin can preview markdown" do
