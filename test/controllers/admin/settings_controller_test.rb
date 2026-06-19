@@ -13,6 +13,8 @@ class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", "Admin Dashboard"
     assert_select "h2", "Settings"
+    assert_select ".admin-nav a", text: "Content", count: 0
+    assert_select ".panel-header a[href='#{edit_admin_content_page_path("what_to_expect")}']", text: "Edit What to Expect page"
     assert_select "label", text: /Age limit of uncounted minors/
     assert_select "label[for='site_setting_uncounted_minor_age_limit'] .required-marker", text: "*"
     assert_select "label[for='site_setting_first_two_nights_fee']", text: "One or Two Nights"

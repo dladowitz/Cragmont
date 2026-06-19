@@ -1,7 +1,9 @@
 = render "admin/shared/header", title: "Settings"
 %section.panel
-  %div
+  .panel-header
     %h2 Settings
+    - if policy(ContentPage).edit?
+      = link_to "Edit What to Expect page", edit_admin_content_page_path("what_to_expect"), class: "button secondary"
   = form_with model: @site_setting, url: admin_settings_path, method: :patch, class: "admin-form" do |form|
     = render "admin/shared/errors", record: @site_setting
     .form-grid

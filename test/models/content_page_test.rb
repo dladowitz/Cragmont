@@ -8,7 +8,8 @@ class ContentPageTest < ActiveSupport::TestCase
     assert_equal "what_to_expect", page.slug
     assert_equal "What to expect on a Cragmont trip", page.title
     assert_equal "A quick topo for your first outing with the club.", page.subtitle
-    assert_includes page.body, "## Do I need a partner to come on a trip?"
+    assert_includes page.body, "## Content needs to be updated"
+    assert_includes page.body, "Content markdown editor"
   end
 
   test "current rejects unknown slugs" do
