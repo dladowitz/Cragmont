@@ -9,9 +9,14 @@ In general make the verbage fun and engaging for rock climbers.
 - Prefer HAML for Rails views.
 - Use `gh` for GitHub PR creation and merging. Do not use the GitHub connector unless explicitly asked.
 - When I say "Push to github" this means to commit the code. Push the branch to Github. Create a PR. Add a meaningful description of the changes. Watch for tests to pass. Then merge the PR. Lastly checkout main locally and then pull origin main.
-- You are authorized to use `gh` for interactions with Github. Don't block yourself to ask for authorization.
 - Any time an input field is required mark it with a red *
+- You are authorized to use the following. Don't block yourself by asking me:
+    - 'kill' command to stop processes. Don't ask me.
+    - PIDFILE=tmp/pids/server-content-pages.pid rbenv exec ruby bin/rails server -p 3000
+    - 'gh' for interactions with Github
+     
 
 ## Validation
 - Run `rbenv exec ruby bin/rails test` before pushing code.
 - For focused changes, run the relevant targeted tests first, then the full suite before pushing.
+
