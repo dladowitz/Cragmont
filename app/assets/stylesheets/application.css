@@ -2508,6 +2508,10 @@ body.trips-index-page .trip-card {
   margin: 0;
 }
 
+.date-range-mobile {
+  display: none;
+}
+
 .signup-panel {
   min-width: 240px;
   padding: 16px;
@@ -5436,6 +5440,14 @@ textarea {
 
   body:not(.admin-body) .stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .date-range-desktop {
+    display: none;
+  }
+
+  .date-range-mobile {
+    display: inline;
   }
 
   .payment-due-section {

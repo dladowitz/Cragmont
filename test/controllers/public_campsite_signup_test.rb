@@ -30,7 +30,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] h2", text: "Yosemite Valley Spring"
-    assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}']", text: /06\/12\/26\s*to 06\/15\/26/
+    assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] .date-range-desktop", text: /June 12, 2026\s*to June 15, 2026/
+    assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] .date-range-mobile", text: /06\/12\/26\s*to 06\/15\/26/
     assert_select ".trip-card[href='#{trip_path(trips(:jtree))}']", count: 0
     assert_select "a", text: "View trip", count: 0
     assert_select ".trips-faq-callout a[href='#{what_to_expect_trips_path}']", text: "here."
