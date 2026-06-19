@@ -3,9 +3,10 @@
 - show_waived_reason = local_assigns.fetch(:show_waived_reason, true)
 - show_trip = local_assigns.fetch(:show_trip, false)
 - show_refund_action = local_assigns.fetch(:show_refund_action, false)
+- public_table = local_assigns.fetch(:public_table, false)
 
 - if ledger_entries.any?
-  %table.transactions-table{"data-controller" => "transaction-anchor"}
+  %table.transactions-table{class: ("public-card-table" if public_table), "data-controller" => "transaction-anchor"}
     %thead
       %tr
         - if show_trip
@@ -23,13 +24,13 @@
         - trip = payment.campsite_signup.trip
         %tr{id: "transaction-payment-#{payment.id}"}
           - if show_trip
-            %td= link_to trip.name, trip_path(trip)
-          %td= entry.participant_name
-          %td= format_cents(entry.amount_cents)
-          %td
+            %td{"data-label" => "Trip"}= link_to trip.name, trip_path(trip)
+          %td{"data-label" => "Participant"}= entry.participant_name
+          %td{"data-label" => "Amount Paid"}= format_cents(entry.amount_cents)
+          %td{"data-label" => "Status"}
             %span.status.transaction-status{class: status_class}= status_label
-          %td= entry.occurred_at&.strftime("%-m/%-d/%y %l:%M %p") || "None"
-          %td
+          %td{"data-label" => "Paid At"}= entry.occurred_at&.strftime("%-m/%-d/%y %l:%M %p") || "None"
+          %td{"data-label" => "Details"}
             %div{"data-controller" => "modal"}
               %button.button.secondary.admin-table-action-button{"data-action" => "modal#open", type: "button"} View
               %dialog.signup-modal.transaction-details-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}

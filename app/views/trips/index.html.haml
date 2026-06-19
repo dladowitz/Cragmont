@@ -1,5 +1,8 @@
 - content_for :body_class, "trips-index-page"
 = render "shared/public_header"
+.trips-mobile-hero{aria: {hidden: "true"}}
+  %h1.trips-mobile-hero-title Trips
+  %span.trips-mobile-hero-caption Half Dome, Regular Northwest Face
 %main.public-main
   %section.panel.trips-index-panel
     .panel-header
@@ -11,7 +14,6 @@
             = link_to "here.", what_to_expect_trips_path
       .trips-index-notices
         .public-beta-notice
-          %strong In Beta
           %span
             This site is still getting dialed in. If you find issues
             = link_to "let us know.", new_help_request_path

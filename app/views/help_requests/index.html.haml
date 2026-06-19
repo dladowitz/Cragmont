@@ -10,7 +10,7 @@
       = link_to "New request", new_help_request_path, class: "button"
     - if @help_requests.any?
       .table-wrapper
-        %table
+        %table.public-card-table
           %thead
             %tr
               %th View
@@ -21,11 +21,11 @@
           %tbody
             - @help_requests.each do |help_request|
               %tr
-                %td= link_to "View", help_request_path(help_request), class: "button secondary admin-table-action-button"
-                %td= help_request.subject
-                %td
+                %td{"data-label" => "View"}= link_to "View", help_request_path(help_request), class: "button secondary admin-table-action-button"
+                %td{"data-label" => "Subject"}= help_request.subject
+                %td{"data-label" => "Status"}
                   = help_request_status_pill(help_request)
-                %td= help_request.replies.size
-                %td= help_request.created_at.to_fs(:long)
+                %td{"data-label" => "Replies"}= help_request.replies.size
+                %td{"data-label" => "Sent"}= help_request.created_at.to_fs(:long)
     - else
       %p.muted You have not sent any help requests yet.

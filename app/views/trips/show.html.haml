@@ -22,7 +22,6 @@
             %strong Notes:
             = simple_format(@trip.description)
       .public-beta-notice
-        %strong In Beta
         %span
           This site is still getting dialed in. If you find issues
           = link_to "let us know.", new_help_request_path
@@ -188,7 +187,7 @@
               .confirmed-signups-section
                 %h4 Confirmed participants
                 - if campsite.confirmed_signups.any?
-                  %table.confirmed-participants-table
+                  %table.confirmed-participants-table.public-card-table
                     %thead
                       %tr
                         %th Participant
@@ -210,10 +209,10 @@
                         - next_signup = display_signups[index + 1]
                         - party_last = party_guest && (!next_signup&.guest? || next_signup.guest_of_signup_id != signup.guest_of_signup_id)
                         %tr{class: [("public-party-primary-row" if party_primary), ("public-party-guest-row" if party_guest), ("public-party-last-row" if party_last)].compact}
-                          %td
+                          %td{"data-label" => "Participant"}
                             %span.public-party-participant-name= signup.user.public_name
-                          %td= signup.attendance_date_range
-                          %td
+                          %td{"data-label" => "Dates"}= signup.attendance_date_range
+                          %td{"data-label" => "Parking"}
                             - if signup.first_come_first_serve?
                               %span.parking-status-with-tooltip
                                 %span.parking-status-label= signup.parking_status_label
@@ -222,7 +221,7 @@
                                   %span.info-tooltip-box{role: "tooltip"}= open_spot_tooltip
                             - else
                               = signup.parking_status_label
-                          %td
+                          %td{"data-label" => "Waiver"}
                             - waiver_missing = !signup.waiver_signed?
                             - if waiver_missing
                               - if user_signed_in? && signup.guest? && signup.guest_of_signup&.user_id == current_user.id
@@ -249,8 +248,8 @@
                                 Missing
                             - else
                               Signed
-                          %td= signup.user.member? ? "Yes" : "No"
-                          %td
+                          %td{"data-label" => "Member"}= signup.user.member? ? "Yes" : "No"
+                          %td{"data-label" => "Minors"}
                             - minor_age_summary = signup.public_minor_age_summary(age_limit: @trip.uncounted_minor_age_limit)
                             - unless minor_age_summary == "None"
                               = minor_age_summary
@@ -261,7 +260,7 @@
           .trip-waitlist-heading
             %h3 Trip waitlist
             %p.trip-waitlist-note Waitlist priority goes to club members
-          %table.waitlist-table
+          %table.waitlist-table.public-card-table
             %thead
               %tr
                 %th.waitlist-priority-column Priority
@@ -277,13 +276,13 @@
                 - direct_signup_available = @campsites.any? { |campsite| campsite.direct_signup_available? && campsite.available_participant_capacity >= signup.party_capacity_count }
                 - signup_available_from_cards = signup_confirmation_campsites.any? || direct_signup_available
                 %tr
-                  %td.waitlist-priority-column= index + 1
-                  %td= signup.public_waitlist_name
-                  %td= signup.user.member? ? "Member" : "Non-member"
-                  %td= signup.created_at.in_time_zone.strftime("%-m/%-d/%y %-l:%M%P")
-                  %td= signup.waitlist_eligible? ? "Enabled" : "Disabled"
-                  %td.waitlist-availability-column= signup_available_from_cards ? "Yes" : "No"
-                  %td.waitlist-action-column
+                  %td.waitlist-priority-column{"data-label" => "Priority"}= index + 1
+                  %td{"data-label" => "Participant"}= signup.public_waitlist_name
+                  %td{"data-label" => "Member"}= signup.user.member? ? "Member" : "Non-member"
+                  %td{"data-label" => "Joined"}= signup.created_at.in_time_zone.strftime("%-m/%-d/%y %-l:%M%P")
+                  %td{"data-label" => "Self Signup"}= signup.waitlist_eligible? ? "Enabled" : "Disabled"
+                  %td.waitlist-availability-column{"data-label" => "Availability"}= signup_available_from_cards ? "Yes" : "No"
+                  %td.waitlist-action-column{"data-label" => "Action"}
                     - if !@trip.archived? && @current_signup&.waitlisted? && signup.id == @current_signup.id
                       %div{"data-controller" => "modal"}
                         %button.button.danger{"data-action" => "modal#open", :type => "button"} Remove From Waitlist

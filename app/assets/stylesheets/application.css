@@ -168,6 +168,10 @@ body.profile-edit-page .public-nav a {
   pointer-events: none;
 }
 
+.trips-mobile-hero {
+  display: none;
+}
+
 .error-main {
   display: grid;
   min-height: calc(100svh - 160px);
@@ -347,7 +351,12 @@ body.trip-show-page .public-beta-notice {
 
 body.trips-index-page .public-beta-notice strong,
 body.trip-show-page .public-beta-notice strong {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
   font-size: 0.83rem;
+  line-height: inherit;
+  text-transform: none;
 }
 
 body.trips-index-page .trips-index-notices .public-beta-notice,
@@ -417,6 +426,17 @@ body.trips-index-page .trips-index-notices .public-beta-notice {
   flex-wrap: wrap;
   gap: 10px;
   align-items: center;
+}
+
+.public-nav-shell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.public-nav-checkbox,
+.public-nav-toggle {
+  display: none;
 }
 
 .public-nav a,
@@ -520,10 +540,6 @@ input[type="submit"]:disabled {
   height: 100%;
   object-fit: cover;
   object-position: center;
-}
-
-.home-mobile-beta-notice {
-  display: none;
 }
 
 .home-hero-caption {
@@ -4531,8 +4547,507 @@ textarea {
 }
 
 @media (max-width: 760px) {
-  .admin-header,
+  body.trips-index-page,
+  body.session-new-page,
+  body.password-reset-new-page,
+  body.password-reset-edit-page,
+  body.not-found-page,
+  body.registration-new-page,
+  body.trip-what-to-expect-page,
+  body.help-request-page,
+  body.trip-show-page,
+  body.profile-show-page,
+  body.profile-edit-page {
+    background-attachment: scroll;
+  }
+
+  body.trips-index-page {
+    background: var(--bg);
+  }
+
+  body.home-page .site-name,
+  body.home-page .site-name small,
+  body.trips-index-page .site-name,
+  body.trips-index-page .site-name small {
+    color: #fff;
+    text-shadow: 0 2px 10px rgb(0 0 0 / 62%);
+  }
+
   .public-header,
+  .public-main,
+  .flash-messages {
+    width: min(100% - 20px, 1280px);
+  }
+
+  .public-header {
+    position: relative;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 0 12px;
+  }
+
+  body.home-page .public-header,
+  body.trips-index-page .public-header {
+    position: absolute;
+    z-index: 20;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    margin-inline: 0;
+    padding: 16px 10px 12px;
+  }
+
+  .public-brand {
+    flex: 1 1 auto;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .site-name span {
+    font-size: 1.35rem;
+  }
+
+  .site-name small {
+    font-size: 0.82rem;
+  }
+
+  .public-admin-link {
+    min-height: 34px;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+
+  .public-nav-shell {
+    position: relative;
+    flex: 0 0 auto;
+  }
+
+  .public-nav-checkbox {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .public-nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border: 1px solid rgb(255 255 255 / 72%);
+    border-radius: 6px;
+    background: rgb(255 255 255 / 92%);
+    color: var(--accent-dark);
+    cursor: pointer;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .public-nav-checkbox:focus-visible + .public-nav-toggle {
+    outline: 3px solid rgb(47 111 94 / 22%);
+    outline-offset: 2px;
+  }
+
+  .public-nav-toggle-icon,
+  .public-nav-toggle-icon::before,
+  .public-nav-toggle-icon::after {
+    display: block;
+    width: 18px;
+    height: 2px;
+    border-radius: 999px;
+    background: currentColor;
+    content: "";
+  }
+
+  .public-nav-toggle-icon {
+    position: relative;
+  }
+
+  .public-nav-toggle-icon::before,
+  .public-nav-toggle-icon::after {
+    position: absolute;
+    left: 0;
+  }
+
+  .public-nav-toggle-icon::before {
+    top: -6px;
+  }
+
+  .public-nav-toggle-icon::after {
+    top: 6px;
+  }
+
+  .public-nav {
+    position: absolute;
+    z-index: 40;
+    top: calc(100% + 8px);
+    right: 0;
+    display: none;
+    width: min(260px, calc(100vw - 20px));
+    padding: 10px;
+    border: 1px solid rgb(255 255 255 / 58%);
+    border-radius: 8px;
+    background: rgb(255 255 255 / 96%);
+    box-shadow: 0 18px 44px rgb(0 0 0 / 22%);
+    backdrop-filter: blur(8px);
+  }
+
+  .public-nav-checkbox:checked ~ .public-nav {
+    display: grid;
+    gap: 8px;
+  }
+
+  .public-nav form {
+    margin: 0;
+  }
+
+  .public-nav a,
+  .public-nav .nav-button {
+    justify-content: flex-start;
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .public-main {
+    padding-bottom: 20px;
+  }
+
+  .home-main {
+    width: 100%;
+  }
+
+  body.home-page .home-main {
+    padding-top: 0;
+  }
+
+  .public-main > .panel,
+  .panel {
+    padding: 16px;
+  }
+
+  .background-image-caption {
+    display: none;
+  }
+
+  body.home-page .home-hero-caption {
+    right: 10px;
+    bottom: 10px;
+    display: block;
+    max-width: 180px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: right;
+    text-shadow: 0 2px 8px rgb(0 0 0 / 58%);
+  }
+
+  .trips-mobile-hero {
+    position: relative;
+    display: block;
+    min-height: clamp(150px, 38vw, 220px);
+    margin: 0 0 14px;
+    background:
+      linear-gradient(180deg, rgb(15 23 20 / 58%), rgb(15 23 20 / 16%) 52%, rgb(15 23 20 / 38%)),
+      url("backgrounds/half-dome-ledge.jpg") center 58% / cover;
+  }
+
+  body.home-page .public-admin-link,
+  body.home-page .public-nav-toggle,
+  body.trips-index-page .public-admin-link,
+  body.trips-index-page .public-nav-toggle {
+    border-color: rgb(255 255 255 / 78%);
+    background: rgb(15 23 20 / 18%);
+    color: #fff;
+    text-shadow: 0 2px 8px rgb(0 0 0 / 54%);
+    backdrop-filter: blur(4px);
+  }
+
+  .trips-mobile-hero-title {
+    position: absolute;
+    left: 10px;
+    bottom: 18px;
+    margin: 0;
+    color: #fff;
+    font-size: 2.25rem;
+    line-height: 1;
+    text-shadow: 0 3px 12px rgb(0 0 0 / 62%);
+  }
+
+  .trips-mobile-hero-caption {
+    position: absolute;
+    right: 12px;
+    bottom: 10px;
+    color: rgb(255 255 255 / 88%);
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-shadow: 0 2px 8px rgb(0 0 0 / 58%);
+  }
+
+  .home-hero {
+    min-height: 100svh;
+  }
+
+  .home-hero::after {
+    background:
+      linear-gradient(180deg, rgba(12, 19, 25, 0.6), rgba(12, 19, 25, 0.08) 34%, rgba(12, 19, 25, 0)),
+      linear-gradient(90deg, rgba(12, 19, 25, 0.75), rgba(12, 19, 25, 0.38) 68%, rgba(12, 19, 25, 0.18)),
+      linear-gradient(0deg, rgba(12, 19, 25, 0.66), rgba(12, 19, 25, 0) 54%);
+  }
+
+  .home-hero-copy {
+    width: min(100% - 28px, 1120px);
+    padding-block: 28px 36px;
+  }
+
+  .home-hero h1 {
+    font-size: 2.4rem;
+    line-height: 0.96;
+  }
+
+  .home-hero p:not(.eyebrow) {
+    margin-block: 20px;
+    font-size: 1rem;
+  }
+
+  .home-hero .button {
+    min-height: 46px;
+  }
+
+  body:not(.admin-body) input:not([type="submit"]),
+  body:not(.admin-body) select,
+  body:not(.admin-body) textarea {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .public-liability-warning,
+  body.trips-index-page .public-liability-warning,
+  body.trip-show-page .public-liability-warning {
+    width: min(100% - 20px, 960px);
+    margin-block: 18px 24px;
+    padding: 12px 14px;
+  }
+
+  body.trips-index-page .trips-index-panel {
+    width: 100%;
+    margin-bottom: 28px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  body.trips-index-page .public-main {
+    width: 100%;
+  }
+
+  body.trips-index-page .trips-index-panel .panel-header {
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  body.trips-index-page .trips-index-copy {
+    flex: none;
+  }
+
+  body.trips-index-page .trips-index-panel h1 {
+    display: none;
+  }
+
+  body.trips-index-page .trips-index-panel .trips-faq-callout {
+    margin-top: 4px;
+  }
+
+  body.trips-index-page .trips-index-panel .trips-faq-callout,
+  body.trips-index-page .trips-index-notices .public-beta-notice {
+    height: auto;
+  }
+
+  body.trips-index-page .trips-index-notices .public-beta-notice,
+  body.trips-index-page .trips-index-panel .trips-faq-callout,
+  body.trip-show-page .trip-summary-header .public-beta-notice {
+    justify-self: stretch;
+    width: 100%;
+    text-align: left;
+  }
+
+  body.trips-index-page .trips-index-notices .public-beta-notice {
+    margin-top: 0;
+  }
+
+  body.trips-index-page .archived-trips-panel {
+    width: 100%;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .trip-title-line {
+    gap: 8px;
+  }
+
+  .trip-title-line h1 {
+    font-size: 1.75rem;
+    line-height: 1.08;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .stats > div {
+    padding: 12px;
+  }
+
+  .stats strong {
+    font-size: 1.45rem;
+  }
+
+  .split-signup-stat {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .parking-breakdown {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .campsite-card {
+    gap: 14px;
+    padding: 14px;
+  }
+
+  .campsite-card-header h3 {
+    font-size: 1.12rem;
+    line-height: 1.2;
+  }
+
+  .campsite-card-summary .date-pair {
+    margin-top: 10px;
+  }
+
+  .campsite-signup-action > [data-controller~="modal"],
+  .campsite-signup-action > [data-controller~="modal"] > .button,
+  .campsite-signup-action > .button,
+  .waitlist-action-buttons,
+  .waitlist-confirm-action,
+  .waitlist-direct-signup-control {
+    width: 100%;
+  }
+
+  .campsite-signup-action .button,
+  .waitlist-action-buttons .button {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .signup-modal,
+  .confirmation-modal {
+    width: min(100vw - 16px, 960px);
+    max-height: calc(100dvh - 16px);
+  }
+
+  .signup-modal-content,
+  .confirmation-modal-content {
+    gap: 16px;
+    padding: 16px;
+    max-height: calc(100dvh - 16px);
+  }
+
+  .signup-modal .form-actions,
+  .confirmation-modal .form-actions,
+  body:not(.admin-body) .form-actions {
+    align-items: stretch;
+  }
+
+  .signup-modal .form-actions .button,
+  .signup-modal .form-actions button,
+  .signup-modal .form-actions input[type="submit"],
+  .confirmation-modal .form-actions .button,
+  .confirmation-modal .form-actions button,
+  body:not(.admin-body) .form-actions .button,
+  body:not(.admin-body) .form-actions button,
+  body:not(.admin-body) .form-actions input[type="submit"] {
+    justify-content: center;
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .attendance-fields,
+  .fee-fields,
+  .signup-kind-options,
+  .minor-fields,
+  .guest-fields,
+  .waiver-intro-copy,
+  .waiver-text {
+    padding: 14px;
+  }
+
+  .signup-kind-options label {
+    width: 100%;
+  }
+
+  .fee-rate,
+  .payment-line-detail {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .fee-rate strong,
+  .payment-line-detail strong {
+    white-space: normal;
+  }
+
+  .waiver-text {
+    max-height: min(420px, 42dvh);
+  }
+
+  .waiver-document p {
+    font-size: 1.05rem;
+  }
+
+  .waiver-title {
+    font-size: 1.25rem;
+  }
+
+  .signature-pad {
+    height: 150px;
+  }
+
+  .minor-field-row,
+  .guest-field-row {
+    gap: 10px;
+  }
+
+  .remove-person-button {
+    justify-self: end;
+    margin-bottom: 0;
+  }
+
+  .help-layout {
+    gap: 18px;
+  }
+
+  .help-request-form textarea {
+    min-height: 160px;
+  }
+
+  .admin-header,
   .panel-header,
   .campsite-card-header,
   .admin-campsite-card-header {
@@ -4555,12 +5070,19 @@ textarea {
   }
 
   .public-beta-notice {
+    flex: none;
     flex-basis: auto;
     max-width: none;
   }
 
   .trips-index-notices {
+    flex: none;
+    gap: 10px;
     margin-top: 0;
+  }
+
+  .panel-header .public-beta-notice {
+    flex: none;
   }
 
   .content-page-editor {
@@ -4612,6 +5134,10 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+  body:not(.admin-body) .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .payment-due-section {
     width: 100%;
   }
@@ -4636,6 +5162,78 @@ textarea {
   table {
     display: block;
     overflow-x: auto;
+  }
+
+  body:not(.admin-body) .public-card-table {
+    display: grid;
+    gap: 12px;
+    overflow: visible;
+    border-collapse: separate;
+    table-layout: auto;
+  }
+
+  body:not(.admin-body) .public-card-table thead {
+    display: none;
+  }
+
+  body:not(.admin-body) .public-card-table tbody {
+    display: grid;
+    gap: 12px;
+  }
+
+  body:not(.admin-body) .public-card-table tr {
+    display: grid;
+    gap: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fbfaf7;
+  }
+
+  body:not(.admin-body) .public-card-table td {
+    display: grid;
+    grid-template-columns: minmax(104px, 0.4fr) minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+    min-width: 0;
+    padding: 9px 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+    overflow-wrap: anywhere;
+    width: auto !important;
+  }
+
+  body:not(.admin-body) .public-card-table td:last-child {
+    border-bottom: 0;
+  }
+
+  body:not(.admin-body) .public-card-table td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 0.76rem;
+    font-weight: 850;
+    line-height: 1.25;
+    text-transform: uppercase;
+  }
+
+  body:not(.admin-body) .public-card-table td .button,
+  body:not(.admin-body) .public-card-table td button {
+    justify-content: center;
+    width: 100%;
+  }
+
+  body:not(.admin-body) .confirmed-participants-table td,
+  body:not(.admin-body) .waitlist-table td {
+    grid-template-columns: minmax(104px, 0.4fr) minmax(0, 1fr);
+  }
+
+  body:not(.admin-body) .public-party-guest-row > td:first-child {
+    padding-left: 0;
+  }
+
+  body:not(.admin-body) .public-party-guest-row .public-party-participant-name::before {
+    content: "Guest: ";
+    color: var(--muted);
+    font-weight: 750;
   }
 }
 

@@ -20,7 +20,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "h1", text: "Camping"
     assert_select "h1", text: "Community"
     assert_select "p", text: /Yosemite/
-    assert_select ".home-mobile-beta-notice", text: "This site is still in beta. It hasn't been designed for mobile phones yet. While you likely CAN make it work you're gonna get a ton of rope drag."
+    assert_select ".home-mobile-beta-notice", count: 0
     assert_select "a[href='#{trips_path}']", text: /View trips/
     assert_select "script[src*='googletagmanager.com']", count: 0
   end
