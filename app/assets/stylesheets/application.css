@@ -172,6 +172,10 @@ body.profile-edit-page .public-nav a {
   display: none;
 }
 
+.trip-show-mobile-hero {
+  display: none;
+}
+
 .error-main {
   display: grid;
   min-height: calc(100svh - 160px);
@@ -2263,19 +2267,26 @@ body.trips-index-page .trips-index-panel .muted {
 
 .archived-trip-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.75fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.75fr);
   gap: 16px;
   align-items: center;
   padding: 12px 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fbfaf7;
+  color: inherit;
+  text-decoration: none;
 }
 
 .archived-trip-row h3,
 .archived-trip-row p,
 .archived-trip-row dl {
   margin: 0;
+}
+
+.archived-trip-row h3 {
+  color: var(--accent);
+  text-decoration: underline;
 }
 
 .archived-trip-row p,
@@ -2429,19 +2440,44 @@ body.trips-index-page .trip-card {
 
 .trip-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.8fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.8fr);
   gap: 20px;
   align-items: center;
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fbfaf7;
+  color: inherit;
+  text-decoration: none;
 }
 
 .trip-card h2,
 .trip-card p,
 .trip-card dl {
   margin: 0;
+}
+
+.trip-card h2 {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.trip-card:hover,
+.trip-card:focus-visible,
+.archived-trip-row:hover,
+.archived-trip-row:focus-visible {
+  border-color: #c7ddd4;
+  background: #fff;
+  box-shadow: 0 8px 20px rgb(31 41 51 / 8%);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.trip-card:focus-visible,
+.archived-trip-row:focus-visible {
+  box-shadow:
+    0 0 0 3px rgb(47 111 94 / 20%),
+    0 8px 20px rgb(31 41 51 / 8%);
 }
 
 .trip-card p,
@@ -4561,14 +4597,17 @@ textarea {
     background-attachment: scroll;
   }
 
-  body.trips-index-page {
+  body.trips-index-page,
+  body.trip-show-page {
     background: var(--bg);
   }
 
   body.home-page .site-name,
   body.home-page .site-name small,
   body.trips-index-page .site-name,
-  body.trips-index-page .site-name small {
+  body.trips-index-page .site-name small,
+  body.trip-show-page .site-name,
+  body.trip-show-page .site-name small {
     color: #fff;
     text-shadow: 0 2px 10px rgb(0 0 0 / 62%);
   }
@@ -4588,7 +4627,8 @@ textarea {
   }
 
   body.home-page .public-header,
-  body.trips-index-page .public-header {
+  body.trips-index-page .public-header,
+  body.trip-show-page .public-header {
     position: absolute;
     z-index: 20;
     top: 0;
@@ -4760,7 +4800,9 @@ textarea {
   body.home-page .public-admin-link,
   body.home-page .public-nav-toggle,
   body.trips-index-page .public-admin-link,
-  body.trips-index-page .public-nav-toggle {
+  body.trips-index-page .public-nav-toggle,
+  body.trip-show-page .public-admin-link,
+  body.trip-show-page .public-nav-toggle {
     border-color: rgb(255 255 255 / 78%);
     background: rgb(15 23 20 / 18%);
     color: #fff;
@@ -4787,6 +4829,60 @@ textarea {
     font-size: 0.72rem;
     font-weight: 700;
     line-height: 1.2;
+    text-shadow: 0 2px 8px rgb(0 0 0 / 58%);
+  }
+
+  .trip-show-mobile-hero {
+    position: relative;
+    display: grid;
+    align-items: end;
+    min-height: clamp(230px, 64vw, 320px);
+    margin: 0 0 14px;
+    padding: 88px 10px 18px;
+    background:
+      linear-gradient(180deg, rgb(15 23 20 / 60%), rgb(15 23 20 / 12%) 46%, rgb(15 23 20 / 52%)),
+      url("backgrounds/joshua-tree-irs-wall.jpg") center 58% / cover;
+    color: #fff;
+  }
+
+  .trip-show-mobile-hero-copy {
+    display: grid;
+    gap: 7px;
+    padding-right: 92px;
+  }
+
+  .trip-show-mobile-hero .trip-title-line {
+    gap: 8px;
+  }
+
+  .trip-show-mobile-hero h1 {
+    margin: 0;
+    color: #fff;
+    font-size: 2.25rem;
+    line-height: 1;
+    text-shadow: 0 3px 12px rgb(0 0 0 / 62%);
+  }
+
+  .trip-show-mobile-location,
+  .trip-show-mobile-dates {
+    margin: 0;
+    color: rgb(255 255 255 / 92%);
+    font-size: 0.96rem;
+    font-weight: 750;
+    line-height: 1.25;
+    text-shadow: 0 2px 8px rgb(0 0 0 / 58%);
+  }
+
+  .trip-show-mobile-hero-caption {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    max-width: 108px;
+    color: rgb(255 255 255 / 88%);
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: right;
     text-shadow: 0 2px 8px rgb(0 0 0 / 58%);
   }
 
@@ -4850,6 +4946,10 @@ textarea {
     width: 100%;
   }
 
+  body.trip-show-page .public-main {
+    width: 100%;
+  }
+
   body.trips-index-page .trips-index-panel .panel-header {
     gap: 10px;
     margin-bottom: 10px;
@@ -4892,6 +4992,58 @@ textarea {
     background: transparent;
     box-shadow: none;
     backdrop-filter: none;
+  }
+
+  body.trip-show-page .panel {
+    width: 100%;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  body.trip-show-page .trip-overview,
+  body.trip-show-page .campsites-panel {
+    margin-bottom: 24px;
+  }
+
+  body.trip-show-page .trip-summary-copy > .trip-title-line,
+  body.trip-show-page .trip-summary-copy > h2,
+  body.trip-show-page .trip-summary-copy > p {
+    display: none;
+  }
+
+  body.trip-show-page .trip-summary-header {
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  body.trip-show-page .campsites-panel > h2,
+  body.trip-show-page .public-main > .panel > h2 {
+    margin-bottom: 10px;
+  }
+
+  body.trip-show-page .campsite-card-list {
+    margin-left: -5px;
+    margin-right: -10px;
+  }
+
+  body.trip-show-page .campsite-card,
+  body.trip-show-page .trip-waitlist-section {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  body.trip-show-page .trip-waitlist-section {
+    margin-left: -5px;
+    margin-right: -10px;
+    border-left: 4px solid #b47a00;
+  }
+
+  body.trip-show-page .trip-waitlist-note {
+    flex-basis: 100%;
   }
 
   .trip-title-line {
@@ -5234,6 +5386,117 @@ textarea {
     content: "Guest: ";
     color: var(--muted);
     font-weight: 750;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table {
+    gap: 0;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table tbody {
+    gap: 0;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table tr {
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
+    border-radius: 0;
+    background: transparent;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table tr:last-child {
+    border-bottom: 0;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table td {
+    grid-template-columns: minmax(82px, 0.36fr) minmax(0, 1fr);
+    gap: 10px;
+    padding: 5px 0;
+    border-bottom: 0;
+    color: var(--text);
+    font-size: 0.9rem;
+    line-height: 1.25;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table td:first-child {
+    grid-template-columns: 1fr;
+    padding-top: 10px;
+    padding-bottom: 2px;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table td:nth-child(2) {
+    grid-template-columns: 1fr;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table td:last-child {
+    padding-bottom: 10px;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table td:empty {
+    display: none;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table td.public-empty-value {
+    display: none;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table td:first-child::before,
+  body.trip-show-page .confirmed-participants-table.public-card-table td:nth-child(2)::before {
+    content: none;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table td::before {
+    font-size: 0.68rem;
+    line-height: 1.2;
+  }
+
+  body.trip-show-page .confirmed-participants-table .public-party-participant-name {
+    color: var(--text);
+    font-size: 1rem;
+    font-weight: 850;
+    line-height: 1.2;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table .public-party-primary-row,
+  body.trip-show-page .confirmed-participants-table.public-card-table .public-party-guest-row {
+    background: #fff;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table .public-party-primary-row {
+    margin-top: 8px;
+    padding: 8px 10px 0;
+    border: 1px solid var(--line);
+    border-bottom: 0;
+    border-radius: 8px 8px 0 0;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table .public-party-guest-row {
+    padding: 0 10px;
+    border-right: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table .public-party-guest-row.public-party-last-row {
+    border-bottom: 1px solid var(--line);
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table .public-party-last-row {
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0 0 8px 8px;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table .public-party-primary-row > td,
+  body.trip-show-page .confirmed-participants-table.public-card-table .public-party-guest-row > td,
+  body.trip-show-page .confirmed-participants-table.public-card-table .public-party-last-row > td {
+    border: 0;
+    background: transparent;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table .public-party-primary-row > td:first-child,
+  body.trip-show-page .confirmed-participants-table.public-card-table .public-party-guest-row > td:first-child {
+    padding-left: 0;
   }
 }
 
