@@ -1,6 +1,12 @@
 require "net/http"
 
 class MailgunDeliveryMethod
+  DELIVERABILITY_OPTIONS = {
+    "o:tracking" => "no",
+    "o:tracking-clicks" => "no",
+    "o:tracking-opens" => "no"
+  }.freeze
+
   def initialize(settings)
     @api_key = settings.fetch(:api_key)
     @domain = settings.fetch(:domain)
@@ -31,7 +37,7 @@ class MailgunDeliveryMethod
       subject: mail.subject.to_s,
       text: text_body(mail),
       html: html_body(mail)
-    }.compact_blank
+    }.merge(DELIVERABILITY_OPTIONS).compact_blank
   end
 
   def text_body(mail)
