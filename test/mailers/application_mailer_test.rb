@@ -22,8 +22,8 @@ class ApplicationMailerTest < ActionMailer::TestCase
     assert_includes html, "src=\"http://example.com/assets/email/vent-five-emperor-boulder-header"
     assert_includes html, "alt=\"Emperor Boulder, Marin Coast\""
     assert_includes html, "email-image-header"
-    assert_includes html, "email-image-caption"
     assert_includes html, "Emperor Boulder, Marin Coast"
+    assert_not_includes html, "email-image-caption"
     assert_not_includes html, "background-image"
     assert_not_includes html, "margin-left: 20%"
     assert_not_includes html, "email-footer"
@@ -37,9 +37,14 @@ class ApplicationMailerTest < ActionMailer::TestCase
       waiver_url: "https://example.com/waiver"
     ).needed
     html = mail.html_part.body.decoded
+    text = mail.text_part.body.decoded
 
+    assert_includes html, "Sam Lee, double check that knot before leaving the ground."
+    assert_includes text, "Sam Lee, double check that knot before leaving the ground."
     assert_includes html, "See you at the Crag."
     assert_equal 1, html.scan("See you at the Crag.").size
+    assert_not_includes html, "Get Stoked"
+    assert_not_includes text, "Get Stoked"
     assert_not_includes html, "email-footer"
   end
 

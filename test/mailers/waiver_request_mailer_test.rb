@@ -15,8 +15,12 @@ class WaiverRequestMailerTest < ActionMailer::TestCase
 
     assert_equal "Cragmont Waiver Signing Request", mail.subject
     assert_equal [ users(:sam).email ], mail.to
+    assert_includes mail.html_part.body.decoded, "Sam Lee, double check that knot before leaving the ground."
     assert_includes mail.html_part.body.decoded, "Alex Rivera sent you a request to sign the Cragmont waiver."
     assert_includes mail.html_part.body.decoded, waiver_url
+    assert_includes mail.text_part.body.decoded, "Sam Lee, double check that knot before leaving the ground."
     assert_includes mail.text_part.body.decoded, "You can sign it here: #{waiver_url}"
+    assert_not_includes mail.html_part.body.decoded, "Get Stoked"
+    assert_not_includes mail.text_part.body.decoded, "Get Stoked"
   end
 end
