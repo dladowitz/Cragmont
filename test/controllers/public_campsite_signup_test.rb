@@ -33,7 +33,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".trip-card[href='#{trip_path(trips(:jtree))}']", count: 0
     assert_select "a", text: "View trip", count: 0
     assert_select ".trips-faq-callout a[href='#{what_to_expect_trips_path}']", text: "here."
-    assert_select ".background-image-caption", "Half Dome, Regular Northwest Face"
+    assert_select ".background-image-caption", "Regular Northwest Face, Half Dome"
   end
 
   test "trip what to expect page renders" do
@@ -168,7 +168,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", "Yosemite Valley Spring"
     assert_select "h2", "Yosemite Valley, CA"
-    assert_select ".background-image-caption", "Joshua Tree, IRS Wall"
+    assert_select ".background-image-caption", "IRS Wall, Joshua Tree"
     assert_select "h2", "Campsite coordinator"
     assert_select ".details-list", text: /Alex Rivera/
     assert_select ".details-list", text: /alex@example.com/

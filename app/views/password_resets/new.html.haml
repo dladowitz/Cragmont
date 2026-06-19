@@ -1,5 +1,8 @@
 - content_for :body_class, "password-reset-new-page"
 = render "shared/public_header"
+.public-mobile-hero.public-mobile-hero-password-reset
+  %h1.public-mobile-hero-title Reset password
+  %span.public-mobile-hero-caption Castleton Tower, Castle Valley, UT
 %main.public-main
   %section.panel.auth-panel
     %h1 Reset password
@@ -10,4 +13,4 @@
       .form-actions
         = submit_tag "Send reset link"
         = link_to "Back to log in", new_session_path, class: "button secondary"
-%p.background-image-caption Castle Valley, UT, The Rectory
+%p.background-image-caption Castleton Tower, Castle Valley, UT
