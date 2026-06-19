@@ -1,5 +1,8 @@
 - content_for :body_class, "session-new-page"
 = render "shared/public_header"
+.public-mobile-hero.public-mobile-hero-session
+  %h1.public-mobile-hero-title Log in
+  %span.public-mobile-hero-caption Super Crack, Indian Creek
 %main.public-main
   %section.panel.auth-panel
     %h1 Log in
@@ -14,4 +17,4 @@
         = form.submit "Log in", class: "auth-primary-action"
         = link_to "Create account", new_registration_path, class: "button secondary"
         = link_to "Forgot password?", new_password_reset_path, class: "button secondary"
-%p.background-image-caption Indian Creek, Super Crack
+%p.background-image-caption Super Crack, Indian Creek

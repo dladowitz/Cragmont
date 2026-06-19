@@ -11,7 +11,7 @@ class PasswordResetsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a[href='#{new_password_reset_path}']", "Forgot password?"
-    assert_select ".background-image-caption", "Indian Creek, Super Crack"
+    assert_select ".background-image-caption", "Super Crack, Indian Creek"
   end
 
   test "reset request form renders required email field" do
@@ -23,7 +23,7 @@ class PasswordResetsControllerTest < ActionDispatch::IntegrationTest
     assert_select "label[for='email'] .required-marker", text: "*"
     assert_select "input[type='email'][name='email'][required]"
     assert_select "input[type='submit'][value='Send reset link']"
-    assert_select ".background-image-caption", "Castle Valley, UT, The Rectory"
+    assert_select ".background-image-caption", "Castleton Tower, Castle Valley, UT"
   end
 
   test "known email receives password reset link" do

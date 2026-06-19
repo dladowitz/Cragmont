@@ -172,6 +172,10 @@ body.profile-edit-page .public-nav a {
   display: none;
 }
 
+.public-mobile-hero {
+  display: none;
+}
+
 .trip-show-mobile-hero {
   display: none;
 }
@@ -4598,6 +4602,10 @@ textarea {
   }
 
   body.trips-index-page,
+  body.session-new-page,
+  body.password-reset-new-page,
+  body.registration-new-page,
+  body.help-request-page,
   body.trip-show-page {
     background: var(--bg);
   }
@@ -4606,6 +4614,14 @@ textarea {
   body.home-page .site-name small,
   body.trips-index-page .site-name,
   body.trips-index-page .site-name small,
+  body.session-new-page .site-name,
+  body.session-new-page .site-name small,
+  body.password-reset-new-page .site-name,
+  body.password-reset-new-page .site-name small,
+  body.registration-new-page .site-name,
+  body.registration-new-page .site-name small,
+  body.help-request-page .site-name,
+  body.help-request-page .site-name small,
   body.trip-show-page .site-name,
   body.trip-show-page .site-name small {
     color: #fff;
@@ -4628,6 +4644,10 @@ textarea {
 
   body.home-page .public-header,
   body.trips-index-page .public-header,
+  body.session-new-page .public-header,
+  body.password-reset-new-page .public-header,
+  body.registration-new-page .public-header,
+  body.help-request-page .public-header,
   body.trip-show-page .public-header {
     position: absolute;
     z-index: 20;
@@ -4797,10 +4817,48 @@ textarea {
       url("backgrounds/half-dome-ledge.jpg") center 58% / cover;
   }
 
+  .public-mobile-hero {
+    position: relative;
+    display: block;
+    min-height: clamp(200px, 52vw, 280px);
+    margin: 0 0 14px;
+    background:
+      linear-gradient(180deg, rgb(15 23 20 / 60%), rgb(15 23 20 / 14%) 48%, rgb(15 23 20 / 42%)),
+      var(--public-mobile-hero-image) center / cover;
+  }
+
+  .public-mobile-hero-help {
+    --public-mobile-hero-image: url("backgrounds/yosemite-national-park-the-rostrum.jpg");
+    background-position: center 50%;
+  }
+
+  .public-mobile-hero-session {
+    --public-mobile-hero-image: url("backgrounds/indian-creek-super-crack.jpg");
+    background-position: center 50%;
+  }
+
+  .public-mobile-hero-password-reset {
+    --public-mobile-hero-image: url("backgrounds/castle-valley-the-rectory.jpg");
+    background-position: center 50%;
+  }
+
+  .public-mobile-hero-registration {
+    --public-mobile-hero-image: url("backgrounds/tuolumne-meadows-cathedral-peak.jpg");
+    background-position: center 48%;
+  }
+
   body.home-page .public-admin-link,
   body.home-page .public-nav-toggle,
   body.trips-index-page .public-admin-link,
   body.trips-index-page .public-nav-toggle,
+  body.session-new-page .public-admin-link,
+  body.session-new-page .public-nav-toggle,
+  body.password-reset-new-page .public-admin-link,
+  body.password-reset-new-page .public-nav-toggle,
+  body.registration-new-page .public-admin-link,
+  body.registration-new-page .public-nav-toggle,
+  body.help-request-page .public-admin-link,
+  body.help-request-page .public-nav-toggle,
   body.trip-show-page .public-admin-link,
   body.trip-show-page .public-nav-toggle {
     border-color: rgb(255 255 255 / 78%);
@@ -4821,6 +4879,23 @@ textarea {
     text-shadow: 0 3px 12px rgb(0 0 0 / 62%);
   }
 
+  .public-mobile-hero-title {
+    position: absolute;
+    left: 10px;
+    bottom: 18px;
+    max-width: calc(100% - 130px);
+    margin: 0;
+    color: #fff;
+    font-size: 2.25rem;
+    line-height: 1;
+    text-shadow: 0 3px 12px rgb(0 0 0 / 62%);
+  }
+
+  .public-mobile-hero-title-stacked {
+    max-width: 220px;
+    line-height: 0.96;
+  }
+
   .trips-mobile-hero-caption {
     position: absolute;
     right: 12px;
@@ -4830,6 +4905,28 @@ textarea {
     font-weight: 700;
     line-height: 1.2;
     text-shadow: 0 2px 8px rgb(0 0 0 / 58%);
+  }
+
+  .public-mobile-hero-caption {
+    position: absolute;
+    right: 12px;
+    bottom: 10px;
+    display: block;
+    max-width: min(180px, calc(100% - 24px));
+    color: rgb(255 255 255 / 88%);
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    text-align: right;
+    text-shadow: 0 2px 8px rgb(0 0 0 / 58%);
+  }
+
+  body.session-new-page .auth-panel > h1,
+  body.password-reset-new-page .auth-panel > h1,
+  body.registration-new-page .public-main > .panel > h1,
+  body.help-request-page .help-panel .panel-header h1 {
+    display: none;
   }
 
   .trip-show-mobile-hero {

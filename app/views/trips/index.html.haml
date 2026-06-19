@@ -2,7 +2,7 @@
 = render "shared/public_header"
 .trips-mobile-hero{aria: {hidden: "true"}}
   %h1.trips-mobile-hero-title Trips
-  %span.trips-mobile-hero-caption Half Dome, Regular Northwest Face
+  %span.trips-mobile-hero-caption Regular Northwest Face, Half Dome
 %main.public-main
   %section.panel.trips-index-panel
     .panel-header
@@ -42,7 +42,6 @@
       .panel-header
         %div
           %h2 Archived trips
-          %p.muted Past routes you can still browse. Archived trips are closed for new participants.
       .archived-trip-list
         - @archived_trips.each do |trip|
           = link_to trip_path(trip), class: "archived-trip-row", aria: { label: "View #{trip.name}" } do
@@ -66,4 +65,4 @@
           - if @archived_current_page < @archived_total_pages
             = link_to "Next", trips_path(archived_page: @archived_current_page + 1, anchor: "archived-trips"), class: "button secondary"
   = render "shared/liability_warning"
-%p.background-image-caption Half Dome, Regular Northwest Face
+%p.background-image-caption Regular Northwest Face, Half Dome

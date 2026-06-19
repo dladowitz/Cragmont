@@ -15,7 +15,7 @@
     %p.trip-show-mobile-dates
       = @trip.start_date.to_fs(:long)
       to #{@trip.end_date.to_fs(:long)}
-  %span.trip-show-mobile-hero-caption Joshua Tree, IRS Wall
+  %span.trip-show-mobile-hero-caption IRS Wall, Joshua Tree
 %main.public-main
   %section.panel.trip-overview
     .panel-header.trip-summary-header
@@ -325,4 +325,4 @@
     = render "participant_details_modal", trip: @trip, signup: @completion_signup
   - if @show_payment_success_modal
     = render "payment_success_modal", trip: @trip, missing_waiver_links: @payment_success_missing_waiver_links
-%p.background-image-caption Joshua Tree, IRS Wall
+%p.background-image-caption IRS Wall, Joshua Tree
