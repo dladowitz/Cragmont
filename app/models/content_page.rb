@@ -50,12 +50,12 @@ class ContentPage < ApplicationRecord
 
     ## Do you know any professional climbing companies I can take classes from?
 
-    Here are a few companies our members have taken classes with or recommended:
+    Here are a few companies our members have taken classes with and recommend:
 
     - [Vertical Pursuits](https://www.verticalpursuitsclimbing.com/) (based around Lake Tahoe)
     - [Lovers Leap Guides](https://loversleap.net/) (based around South Lake Tahoe)
 
-    We do not have firsthand knowledge of this Bay Area company, but it may be worth checking out and evaluating for yourself:
+    We do not have firsthand knowledge of this company, but they are local to the Bay Area so may be worth checking out:
 
     - [SANNO Adventures](https://www.saanoadventures.com/)
 

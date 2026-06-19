@@ -7,7 +7,15 @@
   %section.panel
     %h1 Create account
     = form_with model: @user, url: registration_path, class: "admin-form" do |form|
-      = render "admin/shared/errors", record: @user
+      - if @user.errors.of_kind?(:email, :taken)
+        .form-errors.registration-existing-account-alert
+          %h2 You already have a Cragmont account
+          %p
+            That email address is already connected to an account. If you do not know the password, use the
+            = link_to "Password Reset", new_password_reset_path
+            flow to choose a new one.
+      - else
+        = render "admin/shared/errors", record: @user
       .form-grid
         .field
           = required_label form, :first_name

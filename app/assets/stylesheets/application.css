@@ -4447,6 +4447,16 @@ textarea {
   background: #fff4f2;
 }
 
+.form-errors p {
+  margin: 10px 0 0;
+  line-height: 1.5;
+}
+
+.form-errors a {
+  color: var(--accent-dark);
+  font-weight: 800;
+}
+
 .empty-state {
   border: 1px dashed var(--line);
   background: #fbfaf7;
@@ -4634,6 +4644,32 @@ textarea {
     width: min(100% - 20px, 1280px);
   }
 
+  body.home-page .flash-messages,
+  body.trips-index-page .flash-messages,
+  body.session-new-page .flash-messages,
+  body.password-reset-new-page .flash-messages,
+  body.registration-new-page .flash-messages,
+  body.help-request-page .flash-messages,
+  body.trip-show-page .flash-messages {
+    position: absolute;
+    z-index: 18;
+    top: 82px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    margin: 0;
+  }
+
+  body.home-page .flash-messages .flash,
+  body.trips-index-page .flash-messages .flash,
+  body.session-new-page .flash-messages .flash,
+  body.password-reset-new-page .flash-messages .flash,
+  body.registration-new-page .flash-messages .flash,
+  body.help-request-page .flash-messages .flash,
+  body.trip-show-page .flash-messages .flash {
+    padding: 12px 14px;
+  }
+
   .public-header {
     position: relative;
     flex-direction: row;
@@ -4817,6 +4853,10 @@ textarea {
       url("backgrounds/half-dome-ledge.jpg") center 58% / cover;
   }
 
+  body.trips-index-page:has(.flash-messages) .trips-mobile-hero {
+    min-height: clamp(230px, 56vw, 300px);
+  }
+
   .public-mobile-hero {
     position: relative;
     display: block;
@@ -4825,6 +4865,13 @@ textarea {
     background:
       linear-gradient(180deg, rgb(15 23 20 / 60%), rgb(15 23 20 / 14%) 48%, rgb(15 23 20 / 42%)),
       var(--public-mobile-hero-image) center / cover;
+  }
+
+  body.session-new-page:has(.flash-messages) .public-mobile-hero,
+  body.password-reset-new-page:has(.flash-messages) .public-mobile-hero,
+  body.registration-new-page:has(.flash-messages) .public-mobile-hero,
+  body.help-request-page:has(.flash-messages) .public-mobile-hero {
+    min-height: clamp(280px, 68vw, 360px);
   }
 
   .public-mobile-hero-help {
@@ -4940,6 +4987,10 @@ textarea {
       linear-gradient(180deg, rgb(15 23 20 / 60%), rgb(15 23 20 / 12%) 46%, rgb(15 23 20 / 52%)),
       url("backgrounds/joshua-tree-irs-wall.jpg") center 58% / cover;
     color: #fff;
+  }
+
+  body.trip-show-page:has(.flash-messages) .trip-show-mobile-hero {
+    min-height: clamp(300px, 76vw, 390px);
   }
 
   .trip-show-mobile-hero-copy {
