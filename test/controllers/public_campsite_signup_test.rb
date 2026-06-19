@@ -29,8 +29,9 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     get trips_url
 
     assert_response :success
-    assert_select "a", text: "Yosemite Valley Spring"
-    assert_select "a", text: "Joshua Tree Winter", count: 0
+    assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] h2", text: "Yosemite Valley Spring"
+    assert_select ".trip-card[href='#{trip_path(trips(:jtree))}']", count: 0
+    assert_select "a", text: "View trip", count: 0
     assert_select ".trips-faq-callout a[href='#{what_to_expect_trips_path}']", text: "here."
     assert_select ".background-image-caption", "Half Dome, Regular Northwest Face"
   end
@@ -105,9 +106,9 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".archived-trips-panel" do
       assert_select "h2", "Archived trips"
       archived_trips[1..5].each do |trip|
-        assert_select "a[href='#{trip_path(trip)}']", text: trip.name
+        assert_select ".archived-trip-row[href='#{trip_path(trip)}'] h3", text: trip.name
       end
-      assert_select "a", text: archived_trips.first.name, count: 0
+      assert_select ".archived-trip-row[href='#{trip_path(archived_trips.first)}']", count: 0
       assert_select ".pagination-summary", "Page 1 of 2"
       assert_select "a[href='#{trips_path(archived_page: 2, anchor: "archived-trips")}']", text: "Next"
     end
@@ -116,9 +117,9 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".archived-trips-panel" do
-      assert_select "a[href='#{trip_path(archived_trips.first)}']", text: archived_trips.first.name
+      assert_select ".archived-trip-row[href='#{trip_path(archived_trips.first)}'] h3", text: archived_trips.first.name
       archived_trips[1..5].each do |trip|
-        assert_select "a", text: trip.name, count: 0
+        assert_select ".archived-trip-row[href='#{trip_path(trip)}']", count: 0
       end
       assert_select ".pagination-summary", "Page 2 of 2"
       assert_select "a[href='#{trips_path(archived_page: 1, anchor: "archived-trips")}']", text: "Previous"

@@ -3,6 +3,19 @@
 - open_spot_tooltip = "Open Spots are first come, first serve.\nWhoever arrives at the campsite first can claim for the weekend"
 - uncounted_minor_tooltip = "Children under 10 don't count against Total Capacity"
 = render "shared/public_header"
+.trip-show-mobile-hero
+  .trip-show-mobile-hero-copy
+    .trip-title-line
+      %h1= @trip.name
+      - if @trip.capacity_full?
+        %span.status.danger-status Trip Full
+      - elsif @trip.almost_full?
+        %span.status.warning-status Almost Full
+    %p.trip-show-mobile-location= @trip.location
+    %p.trip-show-mobile-dates
+      = @trip.start_date.to_fs(:long)
+      to #{@trip.end_date.to_fs(:long)}
+  %span.trip-show-mobile-hero-caption Joshua Tree, IRS Wall
 %main.public-main
   %section.panel.trip-overview
     .panel-header.trip-summary-header
@@ -249,8 +262,8 @@
                             - else
                               Signed
                           %td{"data-label" => "Member"}= signup.user.member? ? "Yes" : "No"
-                          %td{"data-label" => "Minors"}
-                            - minor_age_summary = signup.public_minor_age_summary(age_limit: @trip.uncounted_minor_age_limit)
+                          - minor_age_summary = signup.public_minor_age_summary(age_limit: @trip.uncounted_minor_age_limit)
+                          %td{class: ("public-empty-value" if minor_age_summary == "None"), "data-label" => "Minors"}
                             - unless minor_age_summary == "None"
                               = minor_age_summary
                 - else

@@ -20,9 +20,9 @@
     - if @trips.any?
       .trip-cards
         - @trips.each do |trip|
-          %article.trip-card
+          = link_to trip_path(trip), class: "trip-card", aria: { label: "View #{trip.name}" } do
             %div
-              %h2= link_to trip.name, trip_path(trip)
+              %h2= trip.name
               %p= trip.location
             %dl.trip-card-meta
               %div
@@ -35,7 +35,6 @@
                 %dd
                   = trip.total_participant_capacity
                   participants
-            = link_to "View trip", trip_path(trip), class: "button secondary"
     - else
       %p.muted No published trips are available right now.
   - if @archived_trips.any?
@@ -46,9 +45,9 @@
           %p.muted Past routes you can still browse. Archived trips are closed for new participants.
       .archived-trip-list
         - @archived_trips.each do |trip|
-          %article.archived-trip-row
+          = link_to trip_path(trip), class: "archived-trip-row", aria: { label: "View #{trip.name}" } do
             %div
-              %h3= link_to trip.name, trip_path(trip)
+              %h3= trip.name
               %p= trip.location
             %dl.archived-trip-meta
               %div
@@ -59,7 +58,6 @@
               %div
                 %dt Sites
                 %dd= trip.campsite_count
-            = link_to "View trip", trip_path(trip), class: "button secondary"
       - if @archived_total_pages > 1
         %nav.pagination{aria: {label: "Archived trip pages"}}
           - if @archived_current_page > 1
