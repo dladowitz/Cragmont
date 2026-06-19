@@ -1,12 +1,16 @@
-%body
-  %header.public-header
-    .public-brand
-      = link_to root_path, class: "site-name" do
-        %span Cragmont
-        %small Climbing Club
-      - if current_user&.admin_access?
-        = link_to "Admin", admin_root_path, class: "public-admin-link"
-    %nav.public-nav
+%header.public-header
+  .public-brand
+    = link_to root_path, class: "site-name" do
+      %span Cragmont
+      %small Climbing Club
+    - if current_user&.admin_access?
+      = link_to "Admin", admin_root_path, class: "public-admin-link"
+  .public-nav-shell
+    %input#public-nav-toggle.public-nav-checkbox{type: "checkbox", aria: {label: "Toggle navigation menu"}}
+    %label.public-nav-toggle{for: "public-nav-toggle"}
+      %span.public-nav-toggle-text Menu
+      %span.public-nav-toggle-icon{aria: {hidden: "true"}}
+    %nav.public-nav{aria: {label: "Primary"}}
       - if user_signed_in?
         = link_to current_user.full_name, profile_path
         = link_to "Trips", trips_path
