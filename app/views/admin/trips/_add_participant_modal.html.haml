@@ -15,7 +15,7 @@
   - signed_up = signed_up_user_ids.include?(user.id)
   - option_label = user.email.present? ? "#{user.full_name} (#{user.email})" : user.full_name
   - option_label = "#{option_label} - already on trip" if signed_up
-  - { label: option_label, value: user.id, disabled: signed_up }
+  - { label: option_label, value: user.id, disabled: signed_up, search_text: [user.full_name, user.email].compact.join(" ").downcase }
 %div{"data-controller" => "modal"}
   %button.button.secondary{"aria-controls" => modal_id, "data-action" => "modal#open", type: "button"} Add Participant
   %dialog.signup-modal.admin-add-participant-modal{id: modal_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
@@ -51,7 +51,7 @@
                 %ul.participant-picker-list{id: "#{user_select_id}-list", role: "listbox"}
                   - user_picker_options.each do |option|
                     %li
-                      %button.participant-picker-option{type: "button", role: "option", disabled: option[:disabled], aria: { selected: "false" }, data: { participant_picker_target: "option", action: "participant-picker#choose", value: option[:value], label: option[:label], search_text: option[:label].downcase }}
+                      %button.participant-picker-option{type: "button", role: "option", disabled: option[:disabled], aria: { selected: "false" }, data: { participant_picker_target: "option", action: "participant-picker#choose", value: option[:value], label: option[:label], search_text: option[:search_text] }}
                         %span= option[:label]
                   %li.participant-picker-empty{hidden: true, data: { participant_picker_target: "empty" }} No participants found.
         %section.admin-add-participant-fields{"data-admin-participant-target" => "newFields", hidden: true}

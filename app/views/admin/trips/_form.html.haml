@@ -1,6 +1,6 @@
 = form_with model: [:admin, trip], class: "admin-form" do |form|
   - coordinator_field_id = "trip_campsite_coordinator_id"
-  - coordinator_options = [{ label: "Unassigned", value: "" }] + @users.map { |user| { label: user.full_name, value: user.id } }
+  - coordinator_options = [{ label: "Unassigned", value: "", search_text: "unassigned" }] + @users.map { |user| { label: user.full_name, value: user.id, search_text: [user.full_name, user.email].compact.join(" ").downcase } }
   - selected_coordinator_value = trip.campsite_coordinator_id.to_s
   - selected_coordinator_label = trip.campsite_coordinator&.full_name || "Unassigned"
   = render "admin/shared/errors", record: trip
@@ -13,10 +13,10 @@
       = form.text_field :location, required: true
     .field
       = required_label form, :start_date
-      = form.date_field :start_date, required: true
+      = form.date_field :start_date, required: true, data: { controller: "date-picker", action: "click->date-picker#show focus->date-picker#show" }
     .field
       = required_label form, :end_date
-      = form.date_field :end_date, required: true
+      = form.date_field :end_date, required: true, data: { controller: "date-picker", action: "click->date-picker#show focus->date-picker#show" }
     .field
       = required_label form, :status
       = form.select :status, Trip.statuses.keys.map { |status| [status.titleize, status] }, {}, required: true
@@ -34,7 +34,7 @@
               - coordinator_options.each do |option|
                 - selected_option = option[:value].to_s == selected_coordinator_value
                 %li
-                  %button.participant-picker-option{type: "button", role: "option", aria: { selected: selected_option.to_s }, data: { participant_picker_target: "option", action: "participant-picker#choose", value: option[:value], label: option[:label], search_text: option[:label].downcase }}
+                  %button.participant-picker-option{type: "button", role: "option", aria: { selected: selected_option.to_s }, data: { participant_picker_target: "option", action: "participant-picker#choose", value: option[:value], label: option[:label], search_text: option[:search_text] }}
                     %span= option[:label]
               %li.participant-picker-empty{hidden: true, data: { participant_picker_target: "empty" }} No coordinators found.
   .field

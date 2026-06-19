@@ -1,4 +1,8 @@
 = form_with model: [:admin, trip, campsite], class: "admin-form" do |form|
+  - registered_by_field_id = "campsite_registered_by_id"
+  - registered_by_options = [{ label: "Unassigned", value: "", search_text: "unassigned" }] + @users.map { |user| { label: user.full_name, value: user.id, search_text: [user.full_name, user.email].compact.join(" ").downcase } }
+  - selected_registered_by_value = campsite.registered_by_id.to_s
+  - selected_registered_by_label = campsite.registered_by&.full_name || "Unassigned"
   = render "admin/shared/errors", record: campsite
   - if campgrounds.any?
     .campsite-form-sections
@@ -14,10 +18,10 @@
         .form-grid
           .field
             = required_label form, :arrival_date
-            = form.date_field :arrival_date, min: trip.start_date, max: trip.end_date, required: true
+            = form.date_field :arrival_date, min: trip.start_date, max: trip.end_date, required: true, data: { controller: "date-picker", action: "click->date-picker#show focus->date-picker#show" }
           .field
             = required_label form, :checkout_date
-            = form.date_field :checkout_date, min: trip.start_date, max: trip.end_date, required: true
+            = form.date_field :checkout_date, min: trip.start_date, max: trip.end_date, required: true, data: { controller: "date-picker", action: "click->date-picker#show focus->date-picker#show" }
           .field
             = required_label form, :participant_capacity
             = form.number_field :participant_capacity, min: 0, max: 50, required: true
@@ -28,7 +32,20 @@
         .form-grid
           .field
             = form.label :registered_by_id, "Registered by"
-            = form.collection_select :registered_by_id, @users, :id, :full_name, { include_blank: "Unassigned" }
+            .participant-picker.registered-by-picker{"data-controller" => "participant-picker", "data-participant-picker-placeholder-value" => "Unassigned", "data-action" => "keydown->participant-picker#keydown"}
+              = form.hidden_field :registered_by_id, value: selected_registered_by_value, id: registered_by_field_id, data: { participant_picker_target: "input" }
+              %button.participant-picker-button{type: "button", role: "combobox", aria: { expanded: "false", controls: "#{registered_by_field_id}-list", haspopup: "listbox" }, data: { participant_picker_target: "button", action: "participant-picker#toggle" }}
+                %span{"data-participant-picker-target" => "label"}= selected_registered_by_label
+                %span.participant-picker-chevron{"aria-hidden" => "true"}
+              .participant-picker-panel{hidden: true, data: { participant_picker_target: "panel" }}
+                = search_field_tag nil, "", class: "participant-picker-search", placeholder: "Search participants", autocomplete: "off", data: { participant_picker_target: "search", action: "input->participant-picker#filter" }
+                %ul.participant-picker-list{id: "#{registered_by_field_id}-list", role: "listbox"}
+                  - registered_by_options.each do |option|
+                    - selected_option = option[:value].to_s == selected_registered_by_value
+                    %li
+                      %button.participant-picker-option{type: "button", role: "option", aria: { selected: selected_option.to_s }, data: { participant_picker_target: "option", action: "participant-picker#choose", value: option[:value], label: option[:label], search_text: option[:search_text] }}
+                        %span= option[:label]
+                  %li.participant-picker-empty{hidden: true, data: { participant_picker_target: "empty" }} No participants found.
           .field
             = form.label :registration_fee, "Registration cost"
             .currency-field

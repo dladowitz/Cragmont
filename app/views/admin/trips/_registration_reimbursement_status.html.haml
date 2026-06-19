@@ -76,7 +76,7 @@
               = form.select :registration_reimbursement_method, Campsite::REIMBURSEMENT_METHODS.map { |value, label| [label, value] }, { prompt: "Select a method" }, required: true
             .form-field
               = required_label form, :registration_reimbursed_at, "Date of reimbursement"
-              = form.date_field :registration_reimbursed_at, value: Date.current, required: true
+              = form.date_field :registration_reimbursed_at, value: Date.current, required: true, data: { controller: "date-picker", action: "click->date-picker#show focus->date-picker#show" }
             .form-field
               = form.label :registration_reimbursement_notes, "Confirmation number or notes"
               = form.text_area :registration_reimbursement_notes, rows: 3
