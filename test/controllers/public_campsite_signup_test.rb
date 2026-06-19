@@ -276,6 +276,30 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_not User.order(:created_at).last.member?
   end
 
+  test "registration with existing email links to password reset" do
+    assert_no_difference "User.count" do
+      post registration_url, params: {
+        user: {
+          first_name: "Alex",
+          last_name: "Rivera",
+          email: "ALEX@example.com",
+          phone: "555-0200",
+          password: "password",
+          password_confirmation: "password"
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select ".registration-existing-account-alert" do
+      assert_select "h2", "You already have a Cragmont account"
+      assert_select "p", text: /That email address is already connected to an account/
+      assert_select "a[href='#{new_password_reset_path}']", "Password Reset"
+    end
+    assert_select ".form-errors", text: /Email has already been taken/, count: 0
+    assert_select "input[type='email'][name='user[email]'][value='ALEX@example.com']"
+  end
+
   test "registration form has password visibility controls" do
     get new_registration_url
 
