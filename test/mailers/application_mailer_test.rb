@@ -67,6 +67,21 @@ class ApplicationMailerTest < ActionMailer::TestCase
     assert_includes mail.text_part.body.decoded, "Custom email liability warning."
   end
 
+  test "default sender stays on public domain when mailgun uses sending subdomain" do
+    original_mailgun_domain = ENV["MAILGUN_DOMAIN"]
+    original_mailer_from = ENV["MAILER_FROM"]
+    ENV["MAILGUN_DOMAIN"] = "mg.cragmontclimbing.com"
+    ENV.delete("MAILER_FROM")
+
+    mail = PasswordResetMailer.with(user: users(:alex), token: "reset-token").reset
+
+    assert_equal [ "postmaster@cragmontclimbing.com" ], mail.from
+    assert_equal "Cragmont Climbing <postmaster@cragmontclimbing.com>", mail[:from].to_s
+  ensure
+    ENV["MAILGUN_DOMAIN"] = original_mailgun_domain
+    ENV["MAILER_FROM"] = original_mailer_from
+  end
+
   test "mailgun delivery method posts rendered email to mailgun api" do
     delivery_method = MailgunDeliveryMethod.new(api_key: "test-key", domain: "mg.example.com")
     mail = PasswordResetMailer.with(user: users(:alex), token: "reset-token").reset
