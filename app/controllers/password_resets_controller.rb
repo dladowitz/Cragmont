@@ -8,7 +8,7 @@ class PasswordResetsController < ApplicationController
     user = User.find_by(email: reset_email) if reset_email.present?
 
     if user.blank?
-      flash.now[:alert] = "That email isn't tied into Cragmont yet. Check the address or create an account."
+      flash.now[:alert] = "We couldn't find an account with that email address. Double check the spelling or create an account with that email address"
       render :new, status: :unprocessable_entity
       return
     end
