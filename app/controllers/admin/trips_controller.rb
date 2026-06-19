@@ -123,7 +123,7 @@ class Admin::TripsController < Admin::BaseController
   end
 
   def set_users
-    @users = User.order(:last_name, :first_name)
+    @users = User.order(:first_name, :last_name)
   end
 
   def selected_trip_statuses

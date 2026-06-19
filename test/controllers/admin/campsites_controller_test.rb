@@ -6,16 +6,25 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "can render new campsite form" do
+    aaron = User.create!(first_name: "Aaron", last_name: "Zephyr", email: "aaron-campsite-picker@example.com", password: "password")
+    zoe = User.create!(first_name: "Zoe", last_name: "Able", email: "zoe-campsite-picker@example.com", password: "password")
+
     get new_admin_trip_campsite_url(trips(:yosemite))
 
     assert_response :success
     assert_select "h1", "Admin Dashboard"
     assert_select ".panel-header", text: /Yosemite Valley Spring/
-    assert_select "select[name='campsite[registered_by_id]']"
+    assert_select ".registered-by-picker[data-controller='participant-picker']"
+    assert_select "input[type='hidden'][name='campsite[registered_by_id]'][data-participant-picker-target='input'][value='']"
+    assert_select "button.participant-picker-button[role='combobox']", text: "Unassigned"
+    assert_select "input.participant-picker-search[placeholder='Search participants']"
+    assert_select "button.participant-picker-option[data-value='']", text: "Unassigned"
+    assert_select "button.participant-picker-option[data-value='#{users(:alex).id}']", text: "Alex Rivera"
+    assert_operator response.body.index("data-value=\"#{aaron.id}\""), :<, response.body.index("data-value=\"#{zoe.id}\"")
     assert_select "input[name='campsite[registration_fee]']"
     assert_select "input[name='campsite[registration_number]']"
-    assert_select "input[name='campsite[arrival_date]'][min='2026-06-12'][max='2026-06-15']"
-    assert_select "input[name='campsite[checkout_date]'][min='2026-06-12'][max='2026-06-15']"
+    assert_select "input[name='campsite[arrival_date]'][min='2026-06-12'][max='2026-06-15'][data-controller='date-picker'][data-action*='click->date-picker#show'][data-action*='focus->date-picker#show']"
+    assert_select "input[name='campsite[checkout_date]'][min='2026-06-12'][max='2026-06-15'][data-controller='date-picker'][data-action*='click->date-picker#show'][data-action*='focus->date-picker#show']"
   end
 
   test "can add campsite to trip" do
@@ -72,7 +81,10 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", "Admin Dashboard"
     assert_select ".panel-header", text: /Yosemite Valley Spring/
     assert_select ".form-actions input[type='submit']"
-    assert_select "select[name='campsite[registered_by_id]'] option[value='']", text: "Unassigned"
+    assert_select ".registered-by-picker[data-controller='participant-picker']"
+    assert_select "input[type='hidden'][name='campsite[registered_by_id]'][data-participant-picker-target='input'][value='#{campsites(:yosemite_a).registered_by_id}']"
+    assert_select "button.participant-picker-button[role='combobox']", text: campsites(:yosemite_a).registered_by.full_name
+    assert_select "button.participant-picker-option[data-value='']", text: "Unassigned"
     assert_select "input[name='campsite[registration_fee]'][value='84.25']"
     assert_select ".campsite-form-sections .campsite-form-section", count: 4
     assert_select ".campsite-form-section:nth-of-type(1)" do
@@ -80,13 +92,13 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
       assert_select "input[name='campsite[site_number]']"
     end
     assert_select ".campsite-form-section:nth-of-type(2)" do
-      assert_select "input[name='campsite[arrival_date]']"
-      assert_select "input[name='campsite[checkout_date]']"
+      assert_select "input[name='campsite[arrival_date]'][data-controller='date-picker'][data-action*='click->date-picker#show'][data-action*='focus->date-picker#show']"
+      assert_select "input[name='campsite[checkout_date]'][data-controller='date-picker'][data-action*='click->date-picker#show'][data-action*='focus->date-picker#show']"
       assert_select "input[name='campsite[participant_capacity]']"
       assert_select "input[name='campsite[car_capacity]']"
     end
     assert_select ".campsite-form-section:nth-of-type(3)" do
-      assert_select "select[name='campsite[registered_by_id]']"
+      assert_select ".registered-by-picker[data-controller='participant-picker']"
       assert_select "input[name='campsite[registration_fee]']"
       assert_select "input[name='campsite[registration_number]']"
     end

@@ -138,7 +138,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select "form[action='#{record_registration_reimbursement_admin_trip_campsite_path(trips(:yosemite), unreimbursed_campsite)}'][method='post']" do
         assert_select "select[name='campsite[registration_reimbursed_by_id]']"
         assert_select "select[name='campsite[registration_reimbursement_method]']"
-        assert_select "input[name='campsite[registration_reimbursed_at]'][type='date']"
+        assert_select "input[name='campsite[registration_reimbursed_at]'][type='date'][data-controller='date-picker'][data-action*='click->date-picker#show'][data-action*='focus->date-picker#show']"
         assert_select "textarea[name='campsite[registration_reimbursement_notes]']"
       end
     end
@@ -1147,6 +1147,9 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "can render new trip form" do
+    aaron = User.create!(first_name: "Aaron", last_name: "Zephyr", email: "aaron-trip-picker@example.com", password: "password")
+    zoe = User.create!(first_name: "Zoe", last_name: "Able", email: "zoe-trip-picker@example.com", password: "password")
+
     get new_admin_trip_url
 
     assert_response :success
@@ -1157,6 +1160,9 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input.participant-picker-search[placeholder='Search coordinators']"
     assert_select "button.participant-picker-option[data-value='']", text: "Unassigned"
     assert_select "button.participant-picker-option[data-value='#{users(:alex).id}']", text: "Alex Rivera"
+    assert_operator response.body.index("data-value=\"#{aaron.id}\""), :<, response.body.index("data-value=\"#{zoe.id}\"")
+    assert_select "input[name='trip[start_date]'][type='date'][data-controller='date-picker'][data-action*='click->date-picker#show'][data-action*='focus->date-picker#show']"
+    assert_select "input[name='trip[end_date]'][type='date'][data-controller='date-picker'][data-action*='click->date-picker#show'][data-action*='focus->date-picker#show']"
   end
 
   test "can update trip" do
@@ -1205,6 +1211,8 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".coordinator-picker[data-controller='participant-picker']"
     assert_select "input[type='hidden'][name='trip[campsite_coordinator_id]'][value='']"
     assert_select "button.participant-picker-button[role='combobox']", text: "Unassigned"
+    assert_select "input[name='trip[start_date]'][type='date'][data-controller='date-picker'][data-action*='click->date-picker#show'][data-action*='focus->date-picker#show']"
+    assert_select "input[name='trip[end_date]'][type='date'][data-controller='date-picker'][data-action*='click->date-picker#show'][data-action*='focus->date-picker#show']"
     assert_select ".danger-form-action [data-controller='modal'] > button.button.danger.secondary", text: "Delete trip"
     assert_select "dialog.confirmation-modal", text: /Delete trip\?/
     assert_select "dialog.confirmation-modal", text: /transaction history will be preserved/

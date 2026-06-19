@@ -76,7 +76,7 @@ class Admin::CampsitesController < Admin::BaseController
   end
 
   def set_users
-    @users = User.order(:last_name, :first_name)
+    @users = User.order(:first_name, :last_name)
   end
 
   def campsite_params
