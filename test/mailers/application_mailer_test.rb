@@ -67,10 +67,8 @@ class ApplicationMailerTest < ActionMailer::TestCase
     assert_includes mail.text_part.body.decoded, "Custom email liability warning."
   end
 
-  test "default sender stays on public domain when mailgun uses sending subdomain" do
-    original_mailgun_domain = ENV["MAILGUN_DOMAIN"]
+  test "default sender stays on public domain" do
     original_mailer_from = ENV["MAILER_FROM"]
-    ENV["MAILGUN_DOMAIN"] = "mg.cragmontclimbing.com"
     ENV.delete("MAILER_FROM")
 
     mail = PasswordResetMailer.with(user: users(:alex), token: "reset-token").reset
@@ -78,12 +76,11 @@ class ApplicationMailerTest < ActionMailer::TestCase
     assert_equal [ "notifications@cragmontclimbing.com" ], mail.from
     assert_equal "Cragmont Climbing <notifications@cragmontclimbing.com>", mail[:from].to_s
   ensure
-    ENV["MAILGUN_DOMAIN"] = original_mailgun_domain
     ENV["MAILER_FROM"] = original_mailer_from
   end
 
   test "mailgun delivery method posts rendered email to mailgun api" do
-    delivery_method = MailgunDeliveryMethod.new(api_key: "test-key", domain: "mg.example.com")
+    delivery_method = MailgunDeliveryMethod.new(api_key: "test-key", domain: "cragmontclimbing.com")
     mail = PasswordResetMailer.with(user: users(:alex), token: "reset-token").reset
     response = Net::HTTPSuccess.new("1.1", "200", "OK")
 
@@ -92,7 +89,7 @@ class ApplicationMailerTest < ActionMailer::TestCase
     Net::HTTP.define_singleton_method(:post_form) do |uri, params|
       test_case.assert_equal "api:test-key", uri.userinfo
       test_case.assert_equal "api.mailgun.net", uri.host
-      test_case.assert_equal "/v3/mg.example.com/messages", uri.path
+      test_case.assert_equal "/v3/cragmontclimbing.com/messages", uri.path
       test_case.assert_equal "Cragmont Climbing <notifications@cragmontclimbing.com>", params[:from]
       test_case.assert_equal test_case.users(:alex).email, params[:to]
       test_case.assert_equal "Reset your Cragmont password", params[:subject]
@@ -113,9 +110,9 @@ class ApplicationMailerTest < ActionMailer::TestCase
   end
 
   test "mailgun delivery method sends simple mail body as text" do
-    delivery_method = MailgunDeliveryMethod.new(api_key: "test-key", domain: "mg.example.com")
+    delivery_method = MailgunDeliveryMethod.new(api_key: "test-key", domain: "cragmontclimbing.com")
     mail = Mail.new(
-      from: "Cragmont Climbing <postmaster@mg.example.com>",
+      from: "Cragmont Climbing <notifications@cragmontclimbing.com>",
       to: users(:alex).email,
       subject: "Test",
       body: "Simple text"
