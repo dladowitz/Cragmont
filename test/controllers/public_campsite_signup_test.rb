@@ -1910,10 +1910,11 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_nil signup.campsite
   end
 
-  test "trip detail shows almost full warning at sixty percent capacity" do
+  test "trip detail shows almost full warning at seventy five percent capacity" do
     trip = trips(:yosemite)
-    6.times do |index|
-      create_campsite_signup!(campsite: campsites(:yosemite_a), user: User.create!(
+    7.times do |index|
+      campsite = index < 6 ? campsites(:yosemite_a) : campsites(:yosemite_b)
+      create_campsite_signup!(campsite:, user: User.create!(
         first_name: "Almost",
         last_name: "FullView#{index}",
         email: "almost-full-view#{index}@example.com",
@@ -1924,9 +1925,22 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     get trip_url(trip)
 
     assert_response :success
+    assert_select ".trip-title-line .warning-status", count: 0
+    assert_select ".stats .warning-stat", count: 0
+
+    create_campsite_signup!(campsite: campsites(:yosemite_b), user: User.create!(
+      first_name: "Almost",
+      last_name: "FullViewThreshold",
+      email: "almost-full-view-threshold@example.com",
+      password: "password"
+    ))
+
+    get trip_url(trip)
+
+    assert_response :success
     assert_select ".trip-title-line .warning-status", text: "Almost Full"
     assert_select ".trip-title-line .danger-status", count: 0
-    assert_select ".stats .warning-stat", text: /4/
+    assert_select ".stats .warning-stat", text: /2/
     assert_select ".stats .warning-stat", text: /Open Spaces/
   end
 

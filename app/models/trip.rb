@@ -1,5 +1,6 @@
 class Trip < ApplicationRecord
   STATUSES = %w[draft published archived].freeze
+  ALMOST_FULL_CAPACITY_THRESHOLD = 0.75
 
   belongs_to :campsite_coordinator,
     class_name: "User",
@@ -67,7 +68,7 @@ class Trip < ApplicationRecord
   def almost_full?
     return false if capacity_full? || total_participant_capacity.zero?
 
-    confirmed_signup_count.to_f / total_participant_capacity >= 0.6
+    confirmed_signup_count.to_f / total_participant_capacity >= ALMOST_FULL_CAPACITY_THRESHOLD
   end
 
   def waitlisted_signups
