@@ -84,16 +84,27 @@ class TripTest < ActiveSupport::TestCase
     SiteSetting.current.update!(uncounted_minor_age_limit: 13)
   end
 
-  test "knows when capacity is almost full" do
+  test "knows when capacity reaches the almost full threshold" do
     trip = trips(:yosemite)
-    6.times do |index|
-      create_campsite_signup!(campsite: campsites(:yosemite_a), user: User.create!(
+
+    7.times do |index|
+      campsite = index < 6 ? campsites(:yosemite_a) : campsites(:yosemite_b)
+      create_campsite_signup!(campsite:, user: User.create!(
         first_name: "Almost",
         last_name: "Full#{index}",
         email: "almost-full#{index}@example.com",
         password: "password"
       ))
     end
+
+    assert_not trip.almost_full?
+
+    create_campsite_signup!(campsite: campsites(:yosemite_b), user: User.create!(
+      first_name: "Almost",
+      last_name: "FullThreshold",
+      email: "almost-full-threshold@example.com",
+      password: "password"
+    ))
 
     assert trip.almost_full?
     assert_not trip.capacity_full?
