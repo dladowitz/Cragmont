@@ -1138,12 +1138,15 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
           start_date: "2026-08-01",
           end_date: "2026-08-04",
           description: "Tuff and sport climbing.",
+          whatsapp_group: "https://chat.whatsapp.com/smith-rock-summer",
           status: "draft"
         }
       }
     end
 
-    assert_redirected_to admin_trip_url(Trip.order(:created_at).last)
+    trip = Trip.order(:created_at).last
+    assert_redirected_to admin_trip_url(trip)
+    assert_equal "https://chat.whatsapp.com/smith-rock-summer", trip.whatsapp_group
   end
 
   test "can render new trip form" do
@@ -1173,6 +1176,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
         start_date: trips(:jtree).start_date,
         end_date: trips(:jtree).end_date,
         description: trips(:jtree).description,
+        whatsapp_group: "https://chat.whatsapp.com/jtree-winter-session",
         status: "published",
         campsite_coordinator_id: users(:sam).id
       }
@@ -1181,6 +1185,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_trip_url(trips(:jtree))
     assert_equal "Joshua Tree Winter Session", trips(:jtree).reload.name
     assert trips(:jtree).published?
+    assert_equal "https://chat.whatsapp.com/jtree-winter-session", trips(:jtree).whatsapp_group
     assert_equal users(:sam), trips(:jtree).campsite_coordinator
   end
 
@@ -1213,6 +1218,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select "button.participant-picker-button[role='combobox']", text: "Unassigned"
     assert_select "input[name='trip[start_date]'][type='date'][data-controller='date-picker'][data-action*='click->date-picker#show'][data-action*='focus->date-picker#show']"
     assert_select "input[name='trip[end_date]'][type='date'][data-controller='date-picker'][data-action*='click->date-picker#show'][data-action*='focus->date-picker#show']"
+    assert_select "input[name='trip[whatsapp_group]'][type='url']"
     assert_select ".danger-form-action [data-controller='modal'] > button.button.danger.secondary", text: "Delete trip"
     assert_select "dialog.confirmation-modal", text: /Delete trip\?/
     assert_select "dialog.confirmation-modal", text: /transaction history will be preserved/
