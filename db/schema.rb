@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_23_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_23_143000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -404,6 +404,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_23_120000) do
     t.index ["trip_id"], name: "index_trip_payment_requests_on_trip_id"
   end
 
+  create_table "trip_readiness_completions", force: :cascade do |t|
+    t.datetime "completed_at", null: false
+    t.bigint "completed_by_id"
+    t.datetime "created_at", null: false
+    t.string "task_key", null: false
+    t.bigint "trip_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["completed_by_id"], name: "index_trip_readiness_completions_on_completed_by_id"
+    t.index ["trip_id", "task_key"], name: "index_trip_readiness_completions_on_trip_and_task", unique: true
+    t.index ["trip_id"], name: "index_trip_readiness_completions_on_trip_id"
+  end
+
   create_table "trip_signup_minors", force: :cascade do |t|
     t.integer "age", null: false
     t.datetime "created_at", null: false
@@ -451,9 +463,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_23_120000) do
     t.date "end_date", null: false
     t.string "location", null: false
     t.string "name", null: false
+    t.text "photo_album_url"
     t.date "start_date", null: false
     t.string "status", default: "draft", null: false
     t.datetime "updated_at", null: false
+    t.text "weather_url"
     t.text "whatsapp_group"
     t.index ["campsite_coordinator_id"], name: "index_trips_on_campsite_coordinator_id"
     t.index ["deleted_at"], name: "index_trips_on_deleted_at"
@@ -556,6 +570,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_23_120000) do
   add_foreign_key "trip_payment_requests", "trips"
   add_foreign_key "trip_payment_requests", "users", column: "canceled_by_id"
   add_foreign_key "trip_payment_requests", "users", column: "created_by_id"
+  add_foreign_key "trip_readiness_completions", "trips"
+  add_foreign_key "trip_readiness_completions", "users", column: "completed_by_id"
   add_foreign_key "trip_signup_minors", "trip_signups"
   add_foreign_key "trips", "users", column: "campsite_coordinator_id"
   add_foreign_key "user_roles", "roles"

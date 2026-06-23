@@ -75,6 +75,15 @@ module ApplicationHelper
     [ "https://dashboard.stripe.com", account_path, environment_path, "payments", payment_intent_id ].compact.join("/")
   end
 
+  def safe_external_url(url)
+    uri = URI.parse(url.to_s)
+    return unless uri.is_a?(URI::HTTP) && uri.host.present?
+
+    uri.to_s
+  rescue URI::InvalidURIError
+    nil
+  end
+
   def payment_fee_breakdown(payment)
     PaymentFeeBreakdown.new(payment).line_items
   end

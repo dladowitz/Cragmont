@@ -10,6 +10,7 @@ class Trip < ApplicationRecord
   has_many :campsite_signups, dependent: :destroy
   has_many :participants, through: :campsite_signups, source: :user
   has_many :trip_payment_requests, dependent: :destroy
+  has_many :trip_readiness_completions, dependent: :destroy
 
   before_destroy :ensure_no_active_signups, prepend: true
 

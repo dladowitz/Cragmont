@@ -15,8 +15,15 @@
     %p.trip-show-mobile-dates
       = @trip.start_date.to_fs(:long)
       to #{@trip.end_date.to_fs(:long)}
-    - if @trip.whatsapp_group.present?
-      = link_to "Join the WhatsApp Group", @trip.whatsapp_group, class: "trip-whatsapp-link trip-whatsapp-mobile-link", target: "_blank", rel: "noopener"
+    - whatsapp_group_url = safe_external_url(@trip.whatsapp_group)
+    - weather_url = safe_external_url(@trip.weather_url)
+    - photo_album_url = safe_external_url(@trip.photo_album_url)
+    - if whatsapp_group_url.present?
+      = link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link trip-mobile-resource-link trip-whatsapp-mobile-link", target: "_blank", rel: "noopener"
+    - if weather_url.present?
+      = link_to "Weather", weather_url, class: "trip-resource-link trip-mobile-resource-link trip-weather-mobile-link", target: "_blank", rel: "noopener"
+    - if photo_album_url.present?
+      = link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-mobile-resource-link trip-photo-album-mobile-link", target: "_blank", rel: "noopener"
   %span.trip-show-mobile-hero-caption IRS Wall, Joshua Tree
 %main.public-main
   %section.panel.trip-overview
@@ -41,8 +48,14 @@
             Want to know what to expect on a Cragmont trip? Read 
             = link_to "here.", what_to_expect_trips_path
       .trips-index-notices.trip-summary-notices
-        - if @trip.whatsapp_group.present?
-          = link_to "Join the WhatsApp Group", @trip.whatsapp_group, class: "trip-whatsapp-link", target: "_blank", rel: "noopener"
+        - if whatsapp_group_url.present? || weather_url.present? || photo_album_url.present?
+          .trip-resource-links
+            - if whatsapp_group_url.present?
+              = link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link trip-whatsapp-link", target: "_blank", rel: "noopener"
+            - if weather_url.present?
+              = link_to "Weather", weather_url, class: "trip-resource-link trip-weather-link", target: "_blank", rel: "noopener"
+            - if photo_album_url.present?
+              = link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-photo-album-link", target: "_blank", rel: "noopener"
         .public-beta-notice.site-feedback-callout
           %span
             This site is still getting dialed in. If you find issues

@@ -429,7 +429,13 @@ body.trip-show-page .trip-summary-notices {
   margin-top: 0;
 }
 
-.trip-whatsapp-link {
+.trip-resource-links {
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+}
+
+.trip-resource-link {
   justify-self: end;
   color: var(--accent-dark);
   font-size: 1.15rem;
@@ -437,7 +443,7 @@ body.trip-show-page .trip-summary-notices {
   line-height: 1.2;
 }
 
-.trip-whatsapp-mobile-link {
+.trip-mobile-resource-link {
   display: none;
 }
 
@@ -4087,6 +4093,190 @@ th {
   color: #936100;
 }
 
+.trip-readiness-overview,
+.trip-readiness-category {
+  margin-bottom: 24px;
+}
+
+.trip-readiness-header,
+.trip-readiness-category-header,
+.trip-readiness-summary {
+  align-items: center;
+}
+
+.trip-readiness-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.trip-readiness-task-list {
+  display: grid;
+  gap: 12px;
+}
+
+.trip-readiness-task {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.trip-readiness-task.is-complete {
+  border-color: #bfe8d5;
+  background: #fbfffd;
+}
+
+.trip-readiness-task-status {
+  display: flex;
+  justify-content: center;
+}
+
+.trip-readiness-checkmark,
+.trip-readiness-open-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.trip-readiness-checkmark {
+  gap: 5px;
+  min-width: 58px;
+  padding: 0 12px;
+  background: #ecf8f2;
+  color: var(--accent);
+}
+
+.trip-readiness-checkmark-icon {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.trip-readiness-open-circle {
+  width: 30px;
+  border: 2px solid #e7ddd2;
+  background: #fff;
+}
+
+.trip-readiness-task-copy {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+
+.trip-readiness-task-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.trip-readiness-task h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.trip-readiness-kind-status {
+  background: #eef4ff;
+  color: #1f5fbf;
+}
+
+.trip-readiness-completion-meta {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.trip-readiness-task-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-self: end;
+}
+
+.trip-readiness-toggle-form {
+  margin: 0;
+}
+
+.trip-readiness-campsite-group {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.trip-readiness-campsite-header,
+.trip-readiness-campsite-check {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.trip-readiness-campsite-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.trip-readiness-campsite-title-row h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.trip-readiness-campsite-checks {
+  display: grid;
+  gap: 10px;
+  padding-left: 20px;
+}
+
+.trip-readiness-campsite-check {
+  grid-template-columns: 78px max-content auto;
+  justify-content: start;
+  padding: 10px 0;
+}
+
+.trip-readiness-campsite-check h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.trip-readiness-small-button {
+  min-height: 28px;
+  padding: 3px 8px;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 700px) {
+  .trip-readiness-task {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+
+  .trip-readiness-task-actions {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .trip-readiness-campsite-header,
+  .trip-readiness-campsite-check {
+    grid-template-columns: 1fr;
+  }
+
+  .trip-readiness-campsite-checks {
+    padding-left: 0;
+  }
+}
+
 .draft-status {
   background: #fff8db;
   color: #936100;
@@ -5055,7 +5245,7 @@ textarea {
     text-shadow: 0 2px 8px rgb(0 0 0 / 58%);
   }
 
-  .trip-whatsapp-mobile-link {
+  .trip-mobile-resource-link {
     display: inline;
     justify-self: start;
     color: #fff;
@@ -5212,7 +5402,7 @@ textarea {
     margin-bottom: 22px;
   }
 
-  .trip-summary-notices .trip-whatsapp-link {
+  .trip-summary-notices .trip-resource-link {
     display: none;
   }
 

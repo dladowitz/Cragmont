@@ -77,6 +77,14 @@ class TripPolicyTest < ActiveSupport::TestCase
     assert_not policy.manage_payments?
   end
 
+  test "permitted attributes include trip resource links" do
+    permitted_attributes = TripPolicy.new(@super_admin, @trip).permitted_attributes
+
+    assert_includes permitted_attributes, :whatsapp_group
+    assert_includes permitted_attributes, :weather_url
+    assert_includes permitted_attributes, :photo_album_url
+  end
+
   test "scope returns all trips for global admins and assigned trips for coordinators" do
     assert_includes TripPolicy::Scope.new(@super_admin, Trip).resolve, @trip
     assert_includes TripPolicy::Scope.new(@finance_admin, Trip).resolve, trips(:yosemite)

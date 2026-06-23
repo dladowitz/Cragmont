@@ -157,7 +157,11 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public trip detail shows trip campsite and coordinator info" do
-    trips(:yosemite).update!(whatsapp_group: "https://chat.whatsapp.com/yosemite-spring")
+    trips(:yosemite).update!(
+      whatsapp_group: "https://chat.whatsapp.com/yosemite-spring",
+      weather_url: "https://forecast.weather.gov/yosemite-spring",
+      photo_album_url: "https://photos.app.goo.gl/yosemite-spring"
+    )
 
     get trip_url(trips(:yosemite))
 
@@ -166,7 +170,11 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "h2", "Yosemite Valley, CA"
     assert_select ".background-image-caption", "IRS Wall, Joshua Tree"
     assert_select ".trip-show-mobile-hero .trip-whatsapp-mobile-link[href='https://chat.whatsapp.com/yosemite-spring'][target='_blank'][rel='noopener']", text: "Join the WhatsApp Group"
+    assert_select ".trip-show-mobile-hero .trip-weather-mobile-link[href='https://forecast.weather.gov/yosemite-spring'][target='_blank'][rel='noopener']", text: "Weather"
+    assert_select ".trip-show-mobile-hero .trip-photo-album-mobile-link[href='https://photos.app.goo.gl/yosemite-spring'][target='_blank'][rel='noopener']", text: "Photo Album"
     assert_select ".trip-summary-notices a.trip-whatsapp-link[href='https://chat.whatsapp.com/yosemite-spring'][target='_blank'][rel='noopener']", text: "Join the WhatsApp Group"
+    assert_select ".trip-summary-notices a.trip-weather-link[href='https://forecast.weather.gov/yosemite-spring'][target='_blank'][rel='noopener']", text: "Weather"
+    assert_select ".trip-summary-notices a.trip-photo-album-link[href='https://photos.app.goo.gl/yosemite-spring'][target='_blank'][rel='noopener']", text: "Photo Album"
     assert_select ".trip-summary-header .trips-faq-callout a[href='#{what_to_expect_trips_path}']", text: "here."
     assert_select ".trip-summary-header .site-feedback-callout a[href='#{new_help_request_path}']", text: "let us know."
     assert_select "h2", "Campsite coordinator"
