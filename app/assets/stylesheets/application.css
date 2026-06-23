@@ -368,7 +368,7 @@ body.trip-show-page .public-beta-notice strong {
 }
 
 body.trips-index-page .trips-index-notices .public-beta-notice,
-body.trip-show-page .trip-summary-header .public-beta-notice {
+body.trip-show-page .trip-summary-header .site-feedback-callout {
   flex: 0 0 auto;
   justify-content: flex-end;
   justify-self: end;
@@ -417,8 +417,34 @@ body.trips-index-page .trips-index-panel .trips-faq-callout {
   text-align: left;
 }
 
+body.trip-show-page .trip-summary-header .trips-faq-callout {
+  justify-content: flex-start;
+  justify-self: start;
+  text-align: left;
+}
+
+body.trip-show-page .trip-summary-notices {
+  align-self: stretch;
+  align-content: space-between;
+  margin-top: 0;
+}
+
+.trip-whatsapp-link {
+  justify-self: end;
+  color: var(--accent-dark);
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.trip-whatsapp-mobile-link {
+  display: none;
+}
+
 body.trips-index-page .trips-index-panel .trips-faq-callout,
-body.trips-index-page .trips-index-notices .public-beta-notice {
+body.trips-index-page .trips-index-notices .public-beta-notice,
+body.trip-show-page .trip-summary-header .trips-faq-callout,
+body.trip-show-page .trip-summary-header .site-feedback-callout {
   height: 44px;
 }
 
@@ -1127,7 +1153,7 @@ body.trip-show-page .public-liability-warning {
 .trip-summary-header {
   display: grid;
   gap: 16px;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 620px);
   justify-content: stretch;
   margin-bottom: 12px;
   width: 100%;
@@ -5025,6 +5051,14 @@ textarea {
     text-shadow: 0 2px 8px rgb(0 0 0 / 58%);
   }
 
+  .trip-whatsapp-mobile-link {
+    display: inline;
+    justify-self: start;
+    color: #fff;
+    font-size: 1rem;
+    text-shadow: 0 2px 8px rgb(0 0 0 / 58%);
+  }
+
   .trip-show-mobile-hero-caption {
     position: absolute;
     right: 10px;
@@ -5120,7 +5154,8 @@ textarea {
   }
 
   body.trips-index-page .trips-index-panel .trips-faq-callout,
-  body.trips-index-page .trips-index-notices .public-beta-notice {
+  body.trips-index-page .trips-index-notices .public-beta-notice,
+  body.trip-show-page .trip-summary-header .public-beta-notice {
     height: auto;
   }
 
@@ -5169,7 +5204,12 @@ textarea {
 
   body.trip-show-page .trip-summary-header {
     gap: 10px;
-    margin-bottom: 10px;
+    grid-template-columns: 1fr;
+    margin-bottom: 22px;
+  }
+
+  .trip-summary-notices .trip-whatsapp-link {
+    display: none;
   }
 
   body.trip-show-page .campsites-panel > h2,
@@ -5377,6 +5417,8 @@ textarea {
     flex: none;
     flex-basis: auto;
     max-width: none;
+    padding: 13px 24px 16px;
+    line-height: 1.32;
   }
 
   .trips-index-notices {

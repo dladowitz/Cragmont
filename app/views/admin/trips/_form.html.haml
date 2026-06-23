@@ -37,6 +37,9 @@
                   %button.participant-picker-option{type: "button", role: "option", aria: { selected: selected_option.to_s }, data: { participant_picker_target: "option", action: "participant-picker#choose", value: option[:value], label: option[:label], search_text: option[:search_text] }}
                     %span= option[:label]
               %li.participant-picker-empty{hidden: true, data: { participant_picker_target: "empty" }} No coordinators found.
+    .field
+      = form.label :whatsapp_group, "WhatsApp group"
+      = form.url_field :whatsapp_group
   .field
     = form.label :description
     = form.text_area :description, rows: 5
