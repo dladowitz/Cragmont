@@ -1153,7 +1153,7 @@ body.trip-show-page .public-liability-warning {
 .trip-summary-header {
   display: grid;
   gap: 16px;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 620px);
+  grid-template-columns: minmax(0, 1fr);
   justify-content: stretch;
   margin-bottom: 12px;
   width: 100%;
@@ -1167,6 +1167,10 @@ body.trip-show-page .public-liability-warning {
 .trip-summary-copy {
   display: grid;
   gap: 8px;
+}
+
+body.trip-show-page .trip-summary-header {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 620px);
 }
 
 .trip-summary-top-row {
