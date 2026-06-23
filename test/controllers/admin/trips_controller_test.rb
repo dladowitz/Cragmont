@@ -1139,6 +1139,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
           end_date: "2026-08-04",
           description: "Tuff and sport climbing.",
           whatsapp_group: "https://chat.whatsapp.com/smith-rock-summer",
+          weather_url: "https://forecast.weather.gov/smith-rock",
           status: "draft"
         }
       }
@@ -1147,6 +1148,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     trip = Trip.order(:created_at).last
     assert_redirected_to admin_trip_url(trip)
     assert_equal "https://chat.whatsapp.com/smith-rock-summer", trip.whatsapp_group
+    assert_equal "https://forecast.weather.gov/smith-rock", trip.weather_url
   end
 
   test "can render new trip form" do
@@ -1177,6 +1179,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
         end_date: trips(:jtree).end_date,
         description: trips(:jtree).description,
         whatsapp_group: "https://chat.whatsapp.com/jtree-winter-session",
+        weather_url: "https://forecast.weather.gov/jtree-winter-session",
         status: "published",
         campsite_coordinator_id: users(:sam).id
       }
@@ -1186,6 +1189,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Joshua Tree Winter Session", trips(:jtree).reload.name
     assert trips(:jtree).published?
     assert_equal "https://chat.whatsapp.com/jtree-winter-session", trips(:jtree).whatsapp_group
+    assert_equal "https://forecast.weather.gov/jtree-winter-session", trips(:jtree).weather_url
     assert_equal users(:sam), trips(:jtree).campsite_coordinator
   end
 
@@ -1219,6 +1223,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='trip[start_date]'][type='date'][data-controller='date-picker'][data-action*='click->date-picker#show'][data-action*='focus->date-picker#show']"
     assert_select "input[name='trip[end_date]'][type='date'][data-controller='date-picker'][data-action*='click->date-picker#show'][data-action*='focus->date-picker#show']"
     assert_select "input[name='trip[whatsapp_group]'][type='url']"
+    assert_select "input[name='trip[weather_url]'][type='url']"
     assert_select ".danger-form-action [data-controller='modal'] > button.button.danger.secondary", text: "Delete trip"
     assert_select "dialog.confirmation-modal", text: /Delete trip\?/
     assert_select "dialog.confirmation-modal", text: /transaction history will be preserved/

@@ -429,7 +429,13 @@ body.trip-show-page .trip-summary-notices {
   margin-top: 0;
 }
 
-.trip-whatsapp-link {
+.trip-resource-links {
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+}
+
+.trip-resource-link {
   justify-self: end;
   color: var(--accent-dark);
   font-size: 1.15rem;
@@ -437,7 +443,7 @@ body.trip-show-page .trip-summary-notices {
   line-height: 1.2;
 }
 
-.trip-whatsapp-mobile-link {
+.trip-mobile-resource-link {
   display: none;
 }
 
@@ -5055,7 +5061,7 @@ textarea {
     text-shadow: 0 2px 8px rgb(0 0 0 / 58%);
   }
 
-  .trip-whatsapp-mobile-link {
+  .trip-mobile-resource-link {
     display: inline;
     justify-self: start;
     color: #fff;
@@ -5212,7 +5218,7 @@ textarea {
     margin-bottom: 22px;
   }
 
-  .trip-summary-notices .trip-whatsapp-link {
+  .trip-summary-notices .trip-resource-link {
     display: none;
   }
 

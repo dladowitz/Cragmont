@@ -16,7 +16,9 @@
       = @trip.start_date.to_fs(:long)
       to #{@trip.end_date.to_fs(:long)}
     - if @trip.whatsapp_group.present?
-      = link_to "Join the WhatsApp Group", @trip.whatsapp_group, class: "trip-whatsapp-link trip-whatsapp-mobile-link", target: "_blank", rel: "noopener"
+      = link_to "Join the WhatsApp Group", @trip.whatsapp_group, class: "trip-resource-link trip-mobile-resource-link trip-whatsapp-mobile-link", target: "_blank", rel: "noopener"
+    - if @trip.weather_url.present?
+      = link_to "Weather", @trip.weather_url, class: "trip-resource-link trip-mobile-resource-link trip-weather-mobile-link", target: "_blank", rel: "noopener"
   %span.trip-show-mobile-hero-caption IRS Wall, Joshua Tree
 %main.public-main
   %section.panel.trip-overview
@@ -41,8 +43,12 @@
             Want to know what to expect on a Cragmont trip? Read 
             = link_to "here.", what_to_expect_trips_path
       .trips-index-notices.trip-summary-notices
-        - if @trip.whatsapp_group.present?
-          = link_to "Join the WhatsApp Group", @trip.whatsapp_group, class: "trip-whatsapp-link", target: "_blank", rel: "noopener"
+        - if @trip.whatsapp_group.present? || @trip.weather_url.present?
+          .trip-resource-links
+            - if @trip.whatsapp_group.present?
+              = link_to "Join the WhatsApp Group", @trip.whatsapp_group, class: "trip-resource-link trip-whatsapp-link", target: "_blank", rel: "noopener"
+            - if @trip.weather_url.present?
+              = link_to "Weather", @trip.weather_url, class: "trip-resource-link trip-weather-link", target: "_blank", rel: "noopener"
         .public-beta-notice.site-feedback-callout
           %span
             This site is still getting dialed in. If you find issues
