@@ -129,6 +129,14 @@ class ApplicationHelperTest < ActionView::TestCase
     end
   end
 
+  test "safe external url only allows web urls" do
+    assert_equal "https://example.com/weather", safe_external_url("https://example.com/weather")
+    assert_equal "http://example.com/weather", safe_external_url("http://example.com/weather")
+    assert_nil safe_external_url("javascript:alert('whipper')")
+    assert_nil safe_external_url("/relative-path")
+    assert_nil safe_external_url("not a url")
+  end
+
   private
 
   def with_rails_env(env_name)
