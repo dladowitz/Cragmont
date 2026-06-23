@@ -299,6 +299,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_select "#admin-campsite-#{campsites(:yosemite_a).id} .campsite-stats", text: /Cars/, count: 0
     assert_select ".trip-summary-header .actions a.button.secondary", text: "Edit trip"
+    assert_select ".trip-summary-header .actions a.button.secondary[href='#{readiness_admin_trip_path(trips(:yosemite))}']", text: "Trip Readiness"
     assert_select ".trip-summary-header .actions a.button.secondary[href='#{admin_trip_transactions_path(trips(:yosemite))}']", text: "Transactions"
     assert_select ".trip-summary-header .actions .button.danger", text: "Delete trip", count: 0
     assert_select ".campground-group", count: 0
@@ -1140,6 +1141,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
           description: "Tuff and sport climbing.",
           whatsapp_group: "https://chat.whatsapp.com/smith-rock-summer",
           weather_url: "https://forecast.weather.gov/smith-rock",
+          photo_album_url: "https://photos.app.goo.gl/smith-rock",
           status: "draft"
         }
       }
@@ -1149,6 +1151,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_trip_url(trip)
     assert_equal "https://chat.whatsapp.com/smith-rock-summer", trip.whatsapp_group
     assert_equal "https://forecast.weather.gov/smith-rock", trip.weather_url
+    assert_equal "https://photos.app.goo.gl/smith-rock", trip.photo_album_url
   end
 
   test "can render new trip form" do
@@ -1180,6 +1183,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
         description: trips(:jtree).description,
         whatsapp_group: "https://chat.whatsapp.com/jtree-winter-session",
         weather_url: "https://forecast.weather.gov/jtree-winter-session",
+        photo_album_url: "https://photos.app.goo.gl/jtree-winter-session",
         status: "published",
         campsite_coordinator_id: users(:sam).id
       }
@@ -1190,6 +1194,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert trips(:jtree).published?
     assert_equal "https://chat.whatsapp.com/jtree-winter-session", trips(:jtree).whatsapp_group
     assert_equal "https://forecast.weather.gov/jtree-winter-session", trips(:jtree).weather_url
+    assert_equal "https://photos.app.goo.gl/jtree-winter-session", trips(:jtree).photo_album_url
     assert_equal users(:sam), trips(:jtree).campsite_coordinator
   end
 
@@ -1224,6 +1229,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='trip[end_date]'][type='date'][data-controller='date-picker'][data-action*='click->date-picker#show'][data-action*='focus->date-picker#show']"
     assert_select "input[name='trip[whatsapp_group]'][type='url']"
     assert_select "input[name='trip[weather_url]'][type='url']"
+    assert_select "input[name='trip[photo_album_url]'][type='url']"
     assert_select ".danger-form-action [data-controller='modal'] > button.button.danger.secondary", text: "Delete trip"
     assert_select "dialog.confirmation-modal", text: /Delete trip\?/
     assert_select "dialog.confirmation-modal", text: /transaction history will be preserved/

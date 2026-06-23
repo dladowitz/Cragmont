@@ -36,6 +36,11 @@ class User < ApplicationRecord
     foreign_key: :canceled_by_id,
     dependent: :nullify,
     inverse_of: :canceled_by
+  has_many :completed_trip_readiness_tasks,
+    class_name: "TripReadinessCompletion",
+    foreign_key: :completed_by_id,
+    dependent: :nullify,
+    inverse_of: :completed_by
   has_many :user_roles, dependent: :destroy
   has_many :roles, through: :user_roles
   has_many :signed_up_trips, -> { distinct }, through: :campsite_signups, source: :trip

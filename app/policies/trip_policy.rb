@@ -40,7 +40,7 @@ class TripPolicy < ApplicationPolicy
   end
 
   def permitted_attributes
-    attributes = %i[name location start_date end_date description status whatsapp_group weather_url]
+    attributes = %i[name location start_date end_date description status whatsapp_group weather_url photo_album_url]
     attributes << :campsite_coordinator_id if global_trip_admin?
     attributes
   end
