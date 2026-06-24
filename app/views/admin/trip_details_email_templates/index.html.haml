@@ -1,0 +1,29 @@
+= render "admin/shared/header", title: "Trip Details Email Templates"
+
+%section.panel.trip-details-email-panel
+  .panel-header
+    %div
+      %h2 Trip Details Email Templates
+      %p.muted Templates are used as starting points for new trip details email drafts.
+    .actions
+      = link_to "Back to settings", admin_settings_path, class: "button secondary"
+
+  - if @templates.any?
+    %table
+      %thead
+        %tr
+          %th Template
+          %th Area
+          %th Status
+          %th Action
+      %tbody
+        - @templates.each do |template|
+          %tr
+            %td= template.name
+            %td= template.area_key
+            %td
+              - status_class = template.active? ? "success-status" : "warning-status"
+              %span.status{class: status_class}= template.active? ? "Active" : "Inactive"
+            %td= link_to "Edit", edit_admin_trip_details_email_template_path(template), class: "button secondary admin-table-action-button"
+  - else
+    %p.muted No trip details email templates yet.

@@ -1,16 +1,24 @@
 class Trip < ApplicationRecord
   STATUSES = %w[draft published archived].freeze
+  GROUP_FIRE_NIGHT_NONE = "none".freeze
+  GROUP_FIRE_NIGHT_DAYS = %w[monday tuesday wednesday thursday friday saturday sunday].freeze
+  GROUP_FIRE_NIGHTS = ([ GROUP_FIRE_NIGHT_NONE ] + GROUP_FIRE_NIGHT_DAYS).freeze
   ALMOST_FULL_CAPACITY_THRESHOLD = 0.75
 
   belongs_to :campsite_coordinator,
     class_name: "User",
     optional: true,
     inverse_of: :coordinated_trips
+  belongs_to :group_campfire_campsite,
+    class_name: "Campsite",
+    optional: true,
+    inverse_of: :group_campfire_trip
   has_many :campsites, dependent: :destroy
   has_many :campsite_signups, dependent: :destroy
   has_many :participants, through: :campsite_signups, source: :user
   has_many :trip_payment_requests, dependent: :destroy
   has_many :trip_readiness_completions, dependent: :destroy
+  has_one :trip_details_email, dependent: :destroy
 
   before_destroy :ensure_no_active_signups, prepend: true
 
@@ -24,7 +32,9 @@ class Trip < ApplicationRecord
 
   validates :name, :location, :start_date, :end_date, :status, presence: true
   validates :status, inclusion: { in: STATUSES }
+  validates :group_fire_night, inclusion: { in: GROUP_FIRE_NIGHTS }, allow_blank: true
   validate :end_date_after_start_date
+  validate :group_campfire_campsite_belongs_to_trip
 
   def campsite_count
     campsites.size
@@ -95,6 +105,28 @@ class Trip < ApplicationRecord
     update!(deleted_at: nil)
   end
 
+  def group_fire_night_label
+    group_fire_night_planned? ? group_fire_night.titleize : "None"
+  end
+
+  def group_campfire_site_label
+    return "No Group Campfire" if group_campfire_campsite.blank?
+
+    "#{group_campfire_campsite.campground.name} site #{group_campfire_campsite.site_number}"
+  end
+
+  def group_fire_night_planned?
+    group_fire_night.present? && group_fire_night != GROUP_FIRE_NIGHT_NONE
+  end
+
+  def no_group_campfire?
+    group_campfire_campsite.blank? && group_fire_night == GROUP_FIRE_NIGHT_NONE
+  end
+
+  def group_campfire_ready?
+    no_group_campfire? || (group_campfire_campsite.present? && group_fire_night_planned?)
+  end
+
   def waitlist_confirmation_campsites_for(signup)
     return [] unless signup&.waitlist_eligible?
 
@@ -139,5 +171,12 @@ class Trip < ApplicationRecord
     return if end_date >= start_date
 
     errors.add(:end_date, "must be on or after the start date")
+  end
+
+  def group_campfire_campsite_belongs_to_trip
+    return if group_campfire_campsite.blank?
+    return if group_campfire_campsite.trip_id == id
+
+    errors.add(:group_campfire_campsite, "must belong to this trip")
   end
 end

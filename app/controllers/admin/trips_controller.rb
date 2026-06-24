@@ -29,6 +29,7 @@ class Admin::TripsController < Admin::BaseController
     @participant_link_signup = participant_link_signup
     @trip_payment_requests = @trip.trip_payment_requests.order(created_at: :desc)
     @trip_payment_request = trip_payment_request
+    @trip_details_email = @trip.trip_details_email
     @trip_revenue_summary = TripRevenueSummary.call(@trip)
     @trip_readiness_checklist = TripReadinessChecklist.new(@trip)
     @trip_readiness_categories = @trip_readiness_checklist.readiness_categories

@@ -41,6 +41,11 @@ class User < ApplicationRecord
     foreign_key: :completed_by_id,
     dependent: :nullify,
     inverse_of: :completed_by
+  has_many :sent_trip_details_emails,
+    class_name: "TripDetailsEmail",
+    foreign_key: :sent_by_id,
+    dependent: :nullify,
+    inverse_of: :sent_by
   has_many :user_roles, dependent: :destroy
   has_many :roles, through: :user_roles
   has_many :signed_up_trips, -> { distinct }, through: :campsite_signups, source: :trip

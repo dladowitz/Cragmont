@@ -1,0 +1,72 @@
+= render "admin/shared/header", title: "Edit #{@template.name} template"
+
+%section.panel.trip-details-email-panel
+  .panel-header
+    %div
+      %h2 Edit #{@template.name} Template
+      %p.muted
+        This template becomes the starting point for future trip details email drafts.
+        Existing trip drafts and sent emails keep their own copies.
+    .actions
+      = link_to "All templates", admin_trip_details_email_templates_path, class: "button secondary"
+      = link_to "Back to settings", admin_settings_path, class: "button secondary"
+
+  = form_with model: [:admin, @template],
+    url: admin_trip_details_email_template_path(@template),
+    method: :patch,
+    class: "admin-form trip-details-email-form",
+    data: { controller: "markdown-preview", markdown_preview_url_value: preview_admin_trip_details_email_templates_path } do |form|
+    = render "admin/shared/errors", record: @template
+    .form-grid
+      %div
+        = required_label form, :name
+        = form.text_field :name, required: true
+      %div
+        = form.label :area_key, "Area"
+        = text_field_tag :area_key_display, @template.area_key, disabled: true
+      .form-grid-full
+        = required_label form, :subject_template, "Subject"
+        = form.text_field :subject_template, required: true
+      .form-grid-full
+        %label.checkbox-field
+          = form.check_box :active
+          %span Active
+      .form-grid-full
+        = required_label form, :body_markdown, "Body"
+        .content-page-editor.trip-details-email-editor
+          .content-page-editor-field
+            = form.text_area :body_markdown,
+              rows: 28,
+              required: true,
+              data: { markdown_preview_target: "source", action: "input->markdown-preview#queuePreview" }
+            %aside.markdown-formatting-guide{"aria-label" => "Trip details email template reference"}
+              .markdown-formatting-heading
+                %h3 Markdown quick reference
+                = link_to "Full Markdown Reference", "https://www.markdownguide.org/extended-syntax/", target: "_blank", rel: "noopener"
+              %ul
+                %li
+                  %code ## Heading
+                  %span creates a section heading
+                %li
+                  %code **bold text**
+                  %span creates bold text
+                %li
+                  %code - List item
+                  %span creates a bulleted list
+                %li
+                  %code [Link text](https://example.com)
+                  %span creates a link
+                %li
+                  %code {{trip_dates}}
+                  %span inserts trip data when a draft is created
+                %li
+                  %code {{campsite_registration_info}}
+                  %span inserts campsite check-in details
+          .content-page-preview-panel.trip-details-email-preview-panel
+            .content-page-preview-header
+              %h3 Preview
+              %p.muted Placeholders render when a trip draft is created.
+            .content-page-markdown.trip-details-email-markdown{data: { markdown_preview_target: "preview" }}
+              = render_trip_details_email_markdown(@template.body_markdown)
+    .form-actions
+      = form.submit "Save template", class: "button"

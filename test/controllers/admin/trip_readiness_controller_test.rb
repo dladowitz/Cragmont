@@ -23,6 +23,7 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
     assert_select ".trip-readiness-category", count: 3
     assert_select "#readiness-trip", text: /Campsite Coordinator assigned/
     assert_select "#readiness-trip", text: /Create Google Photo Album/
+    assert_select "#readiness-trip", text: /Group campfire site and night set/
     assert_select "#readiness-trip .trip-readiness-trip-group", count: 1
     assert_select "#readiness-trip .trip-readiness-campsite-title-row h3", text: "Yosemite Valley Spring", count: 0
     assert_select "#readiness-trip .trip-readiness-category-title-row.has-trip-heading" do
@@ -37,6 +38,7 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
     assert_select "#readiness-trip a.button.secondary", text: /Add Group/, count: 0
     assert_select "#readiness-trip a.button.secondary", text: /Add Weather/, count: 0
     assert_select "#readiness-trip a.button.secondary", text: /Add Album/, count: 0
+    assert_select "#readiness-trip form[action='#{readiness_task_admin_trip_path(trips(:yosemite), "group_campfire_planned")}']"
     assert_select "#readiness-trip input.trip-readiness-small-button[type='submit'][value='Manually Mark']"
     assert_select "#readiness-trip [data-readiness-task-key='campsite_coordinator_assigned'] .trip-readiness-auto-badge", text: "auto calc"
     assert_select "#readiness-trip [data-readiness-task-key='whatsapp_group_created'] .trip-readiness-auto-badge", text: "auto calc"
@@ -71,14 +73,17 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
     assert_select "#readiness-participant", text: /All waivers signed/
     assert_select "#readiness-participant", text: /All fees paid or waived/
     assert_select "#readiness-participant", text: /Parking assigned/
+    assert_select "#readiness-participant", text: /Send out redacted photo ids/
     assert_select "#readiness-participant", text: /All confirmed participants signed waiver/, count: 0
     assert_select "#readiness-participant", text: /All confirmed primary participants paid or have fees waived/, count: 0
     assert_select "#readiness-participant", text: /All confirmed participants assigned parking/, count: 0
     assert_select "#readiness-participant form[action='#{readiness_task_admin_trip_path(trips(:yosemite), "all_confirmed_participants_signed_waiver")}']"
     assert_select "#readiness-participant form[action='#{readiness_task_admin_trip_path(trips(:yosemite), "all_confirmed_participants_assigned_parking")}']"
+    assert_select "#readiness-participant form[action='#{readiness_task_admin_trip_path(trips(:yosemite), "send_redacted_photo_ids")}']"
     assert_select "#readiness-participant input.trip-readiness-small-button[type='submit'][value='Manually Mark']"
     assert_select "#readiness-participant [data-readiness-task-key='send_trip_details_email'] .trip-readiness-task-subtext",
-      text: "Person who registered site, Registration number and redacted photo id"
+      text: "Create, preview, and send the trip details email before heading out."
+    assert_select "#readiness-participant form[action='#{readiness_task_admin_trip_path(trips(:yosemite), "send_trip_details_email")}']", count: 0
     assert_select "#readiness-participant", text: /campsite registration number/, count: 0
     assert_select "#readiness-post_trip", count: 0
     assert_select ".trip-readiness-category", text: /Send collected money to Treasurer/, count: 0
@@ -86,16 +91,16 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
 
   test "manual tasks can be checked and unchecked" do
     assert_difference "TripReadinessCompletion.count", 1 do
-      patch readiness_task_admin_trip_url(trips(:yosemite), "send_trip_details_email"), params: { completed: "1" }
+      patch readiness_task_admin_trip_url(trips(:yosemite), "add_photo_album_to_older_website"), params: { completed: "1" }
     end
 
     assert_redirected_to readiness_admin_trip_url(trips(:yosemite))
     assert_equal "On belay! Readiness task marked complete.", flash[:notice]
-    completion = trips(:yosemite).trip_readiness_completions.find_by!(task_key: "send_trip_details_email")
+    completion = trips(:yosemite).trip_readiness_completions.find_by!(task_key: "add_photo_album_to_older_website")
     assert_equal users(:alex), completion.completed_by
 
     assert_difference "TripReadinessCompletion.count", -1 do
-      patch readiness_task_admin_trip_url(trips(:yosemite), "send_trip_details_email"), params: { completed: "0" }
+      patch readiness_task_admin_trip_url(trips(:yosemite), "add_photo_album_to_older_website"), params: { completed: "0" }
     end
 
     assert_redirected_to readiness_admin_trip_url(trips(:yosemite))
@@ -157,22 +162,22 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "manual task update can respond with json for background updates" do
-    patch readiness_task_admin_trip_url(trips(:yosemite), "send_trip_details_email"),
+    patch readiness_task_admin_trip_url(trips(:yosemite), "add_photo_album_to_older_website"),
       params: { completed: "1" },
       headers: { "Accept" => "application/json" }
 
     assert_response :success
     response_body = JSON.parse(response.body)
     assert_equal "On belay! Readiness task marked complete.", response_body.fetch("message")
-    assert_equal "send_trip_details_email", response_body.dig("task", "key")
+    assert_equal "add_photo_album_to_older_website", response_body.dig("task", "key")
     assert_equal true, response_body.dig("task", "complete")
     assert_equal "0", response_body.dig("task", "completed_value")
     assert_equal "Mark incomplete", response_body.dig("task", "button_text")
     assert_not response_body.fetch("task").key?("completion_text")
-    assert_equal "participant", response_body.dig("category", "key")
+    assert_equal "trip", response_body.dig("category", "key")
     assert_match(/\A\d+ of \d+\z/, response_body.dig("total", "count_text"))
 
-    patch readiness_task_admin_trip_url(trips(:yosemite), "send_trip_details_email"),
+    patch readiness_task_admin_trip_url(trips(:yosemite), "add_photo_album_to_older_website"),
       params: { completed: "0" },
       headers: { "Accept" => "application/json" }
 
@@ -196,7 +201,7 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
     assert_select ".trip-readiness-task-actions", text: /Read only/
 
     assert_no_difference "TripReadinessCompletion.count" do
-      patch readiness_task_admin_trip_url(trips(:yosemite), "send_trip_details_email"), params: { completed: "1" }
+      patch readiness_task_admin_trip_url(trips(:yosemite), "add_photo_album_to_older_website"), params: { completed: "1" }
     end
 
     assert_redirected_to root_url
@@ -214,7 +219,7 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
     assert_select ".trip-readiness-task-actions", text: /Read only/
 
     assert_no_difference "TripReadinessCompletion.count" do
-      patch readiness_task_admin_trip_url(trip, "send_trip_details_email"), params: { completed: "1" }
+      patch readiness_task_admin_trip_url(trip, "add_photo_album_to_older_website"), params: { completed: "1" }
     end
 
     assert_redirected_to readiness_admin_trip_url(trip)

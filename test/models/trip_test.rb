@@ -27,6 +27,28 @@ class TripTest < ActiveSupport::TestCase
     assert_includes trip.errors[:end_date], "must be on or after the start date"
   end
 
+  test "group campfire campsite must belong to the trip" do
+    trip = trips(:yosemite)
+    trip.group_campfire_campsite = campsites(:jtree_a)
+
+    assert_not trip.valid?
+    assert_includes trip.errors[:group_campfire_campsite], "must belong to this trip"
+  end
+
+  test "group fire night must be a known day when set" do
+    trip = trips(:yosemite)
+    trip.group_fire_night = "funday"
+
+    assert_not trip.valid?
+    assert_includes trip.errors[:group_fire_night], "is not included in the list"
+
+    trip.group_fire_night = "none"
+    assert trip.valid?
+
+    trip.group_fire_night = "sunday"
+    assert trip.valid?
+  end
+
   test "published trip can be created before campsite coordinator is known" do
     trip = trips(:yosemite)
     trip.campsite_coordinator = nil

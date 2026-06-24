@@ -1,0 +1,20 @@
+= render "admin/shared/header", title: "#{@trip.name} trip details email"
+
+%section.panel.trip-details-email-panel
+  .panel-header
+    %div
+      %h2 Start Trip Details Email
+      %p.muted Choose a starting template for the participant email.
+    = link_to "Back to trip", admin_trip_path(@trip), class: "button secondary"
+
+  - if @templates.any?
+    = form_with url: admin_trip_trip_details_email_path(@trip), class: "admin-form" do
+      .field
+        = required_label_tag :trip_details_email_template_id, "Template"
+        = select_tag :trip_details_email_template_id,
+          options_from_collection_for_select(@templates, :id, :name),
+          required: true
+      .form-actions
+        = submit_tag "Create draft", class: "button"
+  - else
+    %p.muted No active trip details email templates are available.

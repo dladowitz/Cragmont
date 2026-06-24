@@ -1153,6 +1153,8 @@ body.trip-show-page .public-liability-warning {
 }
 
 .trip-overview {
+  margin-bottom: 18px;
+  padding-top: 18px;
   padding-bottom: 20px;
 }
 
@@ -1161,7 +1163,7 @@ body.trip-show-page .public-liability-warning {
   gap: 16px;
   grid-template-columns: minmax(0, 1fr);
   justify-content: stretch;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   width: 100%;
 }
 
@@ -1173,6 +1175,66 @@ body.trip-show-page .public-liability-warning {
 .trip-summary-copy {
   display: grid;
   gap: 8px;
+}
+
+.trip-title-line.trip-admin-title-line {
+  display: grid;
+  grid-template-areas:
+    "heading actions"
+    "meta coordinator";
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: flex-start;
+  gap: 8px 28px;
+}
+
+.trip-heading-status {
+  grid-area: heading;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: baseline;
+}
+
+.trip-title-actions {
+  grid-area: actions;
+  display: flex;
+  justify-self: end;
+}
+
+.trip-title-line.trip-admin-title-line h2 {
+  margin: 0;
+}
+
+.trip-title-meta {
+  grid-area: meta;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: baseline;
+  min-width: 0;
+  color: var(--muted);
+}
+
+.trip-title-date,
+.trip-title-location {
+  overflow-wrap: anywhere;
+}
+
+.trip-title-coordinator {
+  grid-area: coordinator;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: baseline;
+  justify-content: flex-end;
+  justify-self: end;
+  min-width: min(100%, 430px);
+  color: var(--text);
+  text-align: right;
+}
+
+.trip-title-coordinator strong {
+  color: var(--text);
 }
 
 body.trip-show-page .trip-summary-header {
@@ -1211,6 +1273,10 @@ body.trip-show-page .trip-summary-header {
   gap: 4px;
 }
 
+.coordinator-summary.trip-title-coordinator {
+  display: flex;
+}
+
 .coordinator-contact {
   display: flex;
   flex-wrap: wrap;
@@ -1230,6 +1296,45 @@ body.trip-show-page .trip-summary-header {
 
 .trip-reimbursement-summary .status {
   display: inline-block;
+}
+
+.trip-management-panel {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+
+.trip-management-header {
+  margin-bottom: 0;
+}
+
+.trip-management-header h2 {
+  margin-bottom: 0;
+}
+
+.trip-management-header p {
+  margin-bottom: 0;
+}
+
+.trip-management-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.trip-management-actions {
+  flex: 1 1 640px;
+}
+
+.trip-management-reimbursement {
+  flex: 0 1 auto;
+  justify-content: flex-start;
+  margin-left: 0;
+  text-align: left;
 }
 
 .trip-location-line {
@@ -4486,6 +4591,10 @@ th {
   gap: 18px;
 }
 
+.settings-content-actions {
+  align-items: flex-start;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4494,6 +4603,19 @@ th {
 
 .form-grid-full {
   grid-column: 1 / -1;
+}
+
+.checkbox-field {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  font-weight: 750;
+}
+
+.checkbox-field input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
 }
 
 .campsite-form-sections {
@@ -4526,7 +4648,7 @@ th {
 
 .content-page-editor {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(340px, 0.8fr);
+  grid-template-columns: minmax(0, 2fr) minmax(340px, 3fr);
   gap: 18px;
   align-items: start;
 }
@@ -4598,6 +4720,117 @@ th {
   border: 1px solid #e7e0d2;
   border-radius: 8px;
   background: #fffaf0;
+}
+
+.trip-details-email-panel {
+  margin-bottom: 20px;
+}
+
+.trip-details-email-form textarea {
+  min-height: 520px;
+}
+
+.trip-details-email-preview-panel {
+  max-height: 760px;
+  overflow: auto;
+}
+
+.trip-details-email-markdown h1,
+.trip-details-email-markdown h2,
+.trip-details-email-markdown h3,
+.trip-details-email-markdown h4 {
+  color: var(--accent-dark);
+  font-weight: 800;
+}
+
+.trip-details-email-markdown h1 {
+  font-size: 1.55rem;
+}
+
+.trip-details-email-markdown h2 {
+  font-size: 1.25rem;
+}
+
+.trip-details-email-markdown h3 {
+  font-size: 1.08rem;
+}
+
+.trip-details-email-markdown hr {
+  height: 1px;
+  margin: 24px 0;
+  border: 0;
+  background: var(--line);
+}
+
+.trip-details-email-blockers,
+.trip-details-email-ready {
+  margin: 18px 0;
+  padding: 14px 16px;
+  border: 1px solid #f4b7b0;
+  border-radius: 8px;
+  background: #fff1f0;
+  color: var(--danger);
+}
+
+.trip-details-email-ready {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  border-color: #9bd4c0;
+  background: #e9f7f1;
+  color: var(--accent-dark);
+}
+
+.trip-details-email-blockers h3,
+.trip-details-email-blockers ul {
+  margin: 0;
+}
+
+.trip-details-email-blockers ul {
+  padding-left: 20px;
+}
+
+.trip-details-email-preview-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.42fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.trip-details-email-rendered,
+.trip-details-email-recipient-panel {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfaf7;
+}
+
+.trip-details-email-subject-preview {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  font-weight: 750;
+}
+
+.trip-details-email-recipient-table {
+  margin-top: 10px;
+}
+
+.trip-details-email-sent-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.trip-details-email-sent-summary > div {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfaf7;
 }
 
 .field {
@@ -5620,6 +5853,26 @@ textarea {
     gap: 8px;
   }
 
+  .trip-title-line.trip-admin-title-line {
+    grid-template-areas:
+      "heading"
+      "meta"
+      "coordinator"
+      "actions";
+    grid-template-columns: 1fr;
+  }
+
+  .trip-title-actions,
+  .trip-title-coordinator {
+    justify-self: start;
+  }
+
+  .trip-title-coordinator {
+    justify-content: flex-start;
+    min-width: 0;
+    text-align: left;
+  }
+
   .trip-title-line h1 {
     font-size: 1.75rem;
     line-height: 1.08;
@@ -5810,6 +6063,11 @@ textarea {
   }
 
   .content-page-editor {
+    grid-template-columns: 1fr;
+  }
+
+  .trip-details-email-preview-layout,
+  .trip-details-email-sent-summary {
     grid-template-columns: 1fr;
   }
 

@@ -35,12 +35,20 @@ class TripPolicy < ApplicationPolicy
     global_trip_admin? || finance_admin? || assigned_campsite_coordinator?
   end
 
+  def manage_trip_details_email?
+    update?
+  end
+
+  def view_trip_details_email?
+    show?
+  end
+
   def assign_coordinator?
     global_trip_admin?
   end
 
   def permitted_attributes
-    attributes = %i[name location start_date end_date description status whatsapp_group weather_url photo_album_url]
+    attributes = %i[name location start_date end_date description status whatsapp_group weather_url photo_album_url group_campfire_campsite_id group_fire_night]
     attributes << :campsite_coordinator_id if global_trip_admin?
     attributes
   end

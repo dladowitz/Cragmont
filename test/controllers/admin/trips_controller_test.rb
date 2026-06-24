@@ -98,7 +98,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     get admin_trip_url(trips(:yosemite))
 
     assert_response :success
-    assert_select ".trip-summary-header .actions a[href='#{admin_trip_transactions_path(trips(:yosemite))}']", text: "Transactions"
+    assert_select ".trip-management-panel .trip-management-actions a[href='#{admin_trip_transactions_path(trips(:yosemite))}']", text: "Transactions"
     assert_select "a", text: "Edit trip", count: 0
     assert_select "a.button.secondary", text: "Add campsite", count: 0
     assert_select ".table-actions > [data-controller='modal'] > button", text: "Add Participant", count: 0
@@ -125,7 +125,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     get admin_trip_url(trips(:yosemite))
 
     assert_response :success
-    assert_select ".trip-reimbursement-summary" do
+    assert_select ".trip-management-panel .trip-reimbursement-summary" do
       assert_select "strong", text: "Campsite Fees Reimbursed:"
       assert_select ".status.warning-status", text: "1 of 2"
     end
@@ -265,9 +265,16 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", "Admin Dashboard"
     assert_select ".admin-public-link", "Public View"
     assert_select ".trip-summary-header", text: /Yosemite Valley Spring/
-    assert_select ".coordinator-summary", text: /Alex Rivera/
-    assert_select ".coordinator-summary", text: /alex@example.com/
-    assert_select ".coordinator-summary", text: /555-0100/
+    assert_select ".trip-summary-header .actions", count: 0
+    assert_select ".trip-admin-title-line", text: /Yosemite Valley Spring/
+    assert_select ".trip-title-meta", text: /Yosemite National Park|Yosemite Valley, CA/
+    assert_select ".trip-heading-status .eyebrow", text: "Published"
+    assert_select ".trip-title-actions a.button.secondary[href='#{edit_admin_trip_path(trips(:yosemite))}']", text: "Edit trip"
+    assert_select ".trip-title-date", text: /June 12, 2026 to June 15, 2026/
+    assert_select ".coordinator-summary a[href='#{admin_user_path(users(:alex))}']", text: "Alex Rivera"
+    assert_select ".coordinator-summary a[href='mailto:alex@example.com']", count: 0
+    assert_select ".coordinator-summary", text: /alex@example.com/, count: 0
+    assert_select ".coordinator-summary", text: /555-0100/, count: 0
     assert_select ".description", text: /Notes:/
     assert_select ".stats", text: /Signed up/
     assert_select ".split-signup-stat section:first-child", text: /1/
@@ -298,22 +305,24 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       end
     end
     assert_select "#admin-campsite-#{campsites(:yosemite_a).id} .campsite-stats", text: /Cars/, count: 0
-    assert_select ".trip-summary-header .actions a.button.secondary", text: "Edit trip"
+    assert_select ".trip-management-panel h2", text: "Manage"
+    assert_select ".trip-management-panel .trip-management-actions a.button.secondary", text: "Edit trip", count: 0
     readiness_checklist = TripReadinessChecklist.new(trips(:yosemite))
     readiness_categories = readiness_checklist.readiness_categories
-    assert_select ".trip-summary-header .actions a.button.secondary[href='#{readiness_admin_trip_path(trips(:yosemite))}']" do
+    assert_select ".trip-management-panel .trip-management-actions a.button.secondary[href='#{readiness_admin_trip_path(trips(:yosemite))}']" do
       assert_select "span", text: "Trip Readiness"
       assert_select ".trip-readiness-summary-button-count.warning-status",
         text: "#{readiness_checklist.completed_count_for(readiness_categories)} of #{readiness_checklist.total_count_for(readiness_categories)}"
     end
     post_trip_category = readiness_checklist.post_trip_category
-    assert_select ".trip-summary-header .actions a.button.secondary[href='#{post_trip_admin_trip_path(trips(:yosemite))}']" do
+    assert_select ".trip-management-panel .trip-management-actions a.button.secondary[href='#{post_trip_admin_trip_path(trips(:yosemite))}']" do
       assert_select "span", text: "Post Trip"
       assert_select ".trip-readiness-summary-button-count.warning-status",
         text: "#{post_trip_category.completed_count} of #{post_trip_category.total_count}"
     end
-    assert_select ".trip-summary-header .actions a.button.secondary[href='#{admin_trip_transactions_path(trips(:yosemite))}']", text: "Transactions"
-    assert_select ".trip-summary-header .actions .button.danger", text: "Delete trip", count: 0
+    assert_select ".trip-management-panel .trip-management-actions a.button.secondary[href='#{admin_trip_trip_details_email_path(trips(:yosemite))}']", text: "Trip Details Email"
+    assert_select ".trip-management-panel .trip-management-actions a.button.secondary[href='#{admin_trip_transactions_path(trips(:yosemite))}']", text: "Transactions"
+    assert_select ".trip-management-panel .trip-management-actions .button.danger", text: "Delete trip", count: 0
     assert_select ".campground-group", count: 0
     assert_select ".admin-campsite-card-header h4", text: "Upper Pines site A12"
     assert_select ".admin-campsite-card-header p", text: "Yosemite National Park"
@@ -1196,6 +1205,8 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
         whatsapp_group: "https://chat.whatsapp.com/jtree-winter-session",
         weather_url: "https://forecast.weather.gov/jtree-winter-session",
         photo_album_url: "https://photos.app.goo.gl/jtree-winter-session",
+        group_campfire_campsite_id: campsites(:jtree_a).id,
+        group_fire_night: "saturday",
         status: "published",
         campsite_coordinator_id: users(:sam).id
       }
@@ -1207,6 +1218,8 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "https://chat.whatsapp.com/jtree-winter-session", trips(:jtree).whatsapp_group
     assert_equal "https://forecast.weather.gov/jtree-winter-session", trips(:jtree).weather_url
     assert_equal "https://photos.app.goo.gl/jtree-winter-session", trips(:jtree).photo_album_url
+    assert_equal campsites(:jtree_a), trips(:jtree).group_campfire_campsite
+    assert_equal "saturday", trips(:jtree).group_fire_night
     assert_equal users(:sam), trips(:jtree).campsite_coordinator
   end
 
@@ -1242,6 +1255,18 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='trip[whatsapp_group]'][type='url']"
     assert_select "input[name='trip[weather_url]'][type='url']"
     assert_select "input[name='trip[photo_album_url]'][type='url']"
+    assert_select "label[for='trip_group_campfire_campsite_id']", text: "Group Campfire Site"
+    assert_select "select[name='trip[group_campfire_campsite_id]']" do
+      assert_select "option[value='']", text: "No Group Campfire"
+      assert_select "option[value='#{campsites(:jtree_a).id}']", text: "Hidden Valley site H4"
+      assert_select "option[value='#{campsites(:yosemite_a).id}']", count: 0
+    end
+    assert_select "label[for='trip_group_fire_night']", text: "Group Campfire Night"
+    assert_select "select[name='trip[group_fire_night]']" do
+      assert_select "option[value='none']", text: "None"
+      assert_select "option[value='monday']", text: "Monday"
+      assert_select "option[value='sunday']", text: "Sunday"
+    end
     assert_select ".danger-form-action [data-controller='modal'] > button.button.danger.secondary", text: "Delete trip"
     assert_select "dialog.confirmation-modal", text: /Delete trip\?/
     assert_select "dialog.confirmation-modal", text: /transaction history will be preserved/

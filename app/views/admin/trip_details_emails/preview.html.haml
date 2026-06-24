@@ -1,0 +1,54 @@
+= render "admin/shared/header", title: "#{@trip.name} trip details email preview"
+
+%section.panel.trip-details-email-panel
+  .panel-header
+    %div
+      %h2 Preview Trip Details Email
+      %p.muted Review the final email and confirmed recipients before sending.
+    .actions
+      = link_to "Edit draft", edit_admin_trip_trip_details_email_path(@trip), class: "button secondary"
+      = link_to "Back to trip", admin_trip_path(@trip), class: "button secondary"
+      - if @blocking_issues.empty?
+        = button_to "Send trip details email", deliver_admin_trip_trip_details_email_path(@trip), method: :post, class: "button"
+
+  - if @blocking_issues.any?
+    .trip-details-email-blockers
+      %h3 Send blockers
+      %ul
+        - @blocking_issues.each do |issue|
+          %li= issue
+  - else
+    .trip-details-email-ready
+      %strong On belay.
+      %span This email is ready to send to confirmed participants.
+
+  .trip-details-email-preview-layout
+    %section.trip-details-email-rendered
+      %h3 Subject
+      %p.trip-details-email-subject-preview= @rendered_subject
+      %h3 Email Body
+      .content-page-markdown.trip-details-email-markdown
+        != @rendered_html
+    %aside.trip-details-email-recipient-panel
+      %h3 Recipients
+      %p.muted= pluralize(@recipients.size, "confirmed participant")
+      - if @recipients.any?
+        %table.trip-details-email-recipient-table
+          %thead
+            %tr
+              %th Participant
+              %th Email
+          %tbody
+            - @recipients.each do |recipient|
+              %tr
+                %td= recipient.recipient_name
+                %td= recipient.email.presence || "Missing"
+      - else
+        %p.muted No confirmed participants yet.
+
+  .form-actions
+    = link_to "Keep editing", edit_admin_trip_trip_details_email_path(@trip), class: "button secondary"
+    - if @blocking_issues.empty?
+      = button_to "Send trip details email", deliver_admin_trip_trip_details_email_path(@trip), method: :post, class: "button"
+    - else
+      %button.button{type: "button", disabled: true} Send trip details email

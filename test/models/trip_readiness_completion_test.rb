@@ -16,14 +16,14 @@ class TripReadinessCompletionTest < ActiveSupport::TestCase
   test "allows each readiness task once per trip" do
     TripReadinessCompletion.create!(
       trip: trips(:yosemite),
-      task_key: "send_trip_details_email",
+      task_key: "add_photo_album_to_older_website",
       completed_at: Time.current,
       completed_by: users(:alex)
     )
 
     duplicate = TripReadinessCompletion.new(
       trip: trips(:yosemite),
-      task_key: "send_trip_details_email",
+      task_key: "add_photo_album_to_older_website",
       completed_at: Time.current,
       completed_by: users(:alex)
     )
