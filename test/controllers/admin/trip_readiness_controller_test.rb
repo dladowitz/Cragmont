@@ -16,23 +16,44 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h2", "Trip Readiness"
-    assert_select ".trip-readiness-category", count: 4
+    assert_select ".trip-readiness-overview .trip-readiness-category-title-row" do
+      assert_select "h2", "Trip Readiness"
+      assert_select "[data-readiness-count-key='overall']", text: /\A\d+ of \d+\z/
+    end
+    assert_select ".trip-readiness-category", count: 3
     assert_select "#readiness-trip", text: /Campsite Coordinator assigned/
     assert_select "#readiness-trip", text: /Create Google Photo Album/
-    assert_select "#readiness-trip a.button.secondary[href='#{edit_admin_trip_path(trips(:yosemite))}']", text: "Add Coordinator"
-    assert_select "#readiness-trip a.button.secondary[href='#{edit_admin_trip_path(trips(:yosemite))}']", text: "Add Group"
-    assert_select "#readiness-trip a.button.secondary[href='#{edit_admin_trip_path(trips(:yosemite))}']", text: "Add Weather"
-    assert_select "#readiness-trip a.button.secondary[href='#{edit_admin_trip_path(trips(:yosemite))}']", text: "Add Album"
-    assert_select "#readiness-trip a[href='https://chat.whatsapp.com/yosemite-readiness'][target='_blank'][rel='noopener']", text: "link"
-    assert_select "#readiness-trip a[href='https://forecast.weather.gov/yosemite-readiness'][target='_blank'][rel='noopener']", text: "link"
-    assert_select "#readiness-trip a[href='https://photos.app.goo.gl/yosemite-readiness'][target='_blank'][rel='noopener']", text: "link"
+    assert_select "#readiness-trip .trip-readiness-trip-group", count: 1
+    assert_select "#readiness-trip .trip-readiness-campsite-title-row h3", text: "Yosemite Valley Spring", count: 0
+    assert_select "#readiness-trip .trip-readiness-category-title-row.has-trip-heading" do
+      assert_select "h2", text: "Trip"
+      assert_select ".trip-readiness-trip-heading", text: /Yosemite Valley Spring/
+      assert_select ".trip-readiness-trip-date", text: /6\/12\/2026 to 6\/15\/2026/
+      assert_select "[data-readiness-count-key='trip']", text: /\A\d+ of \d+\z/
+    end
+    assert_select ".trip-readiness-overview .muted", text: /June 12, 2026/, count: 0
+    assert_select "#readiness-trip a.button.secondary[href='#{edit_admin_trip_path(trips(:yosemite))}']", text: "Update Trip", count: 1
+    assert_select "#readiness-trip a.button.secondary", text: /Add Coordinator/, count: 0
+    assert_select "#readiness-trip a.button.secondary", text: /Add Group/, count: 0
+    assert_select "#readiness-trip a.button.secondary", text: /Add Weather/, count: 0
+    assert_select "#readiness-trip a.button.secondary", text: /Add Album/, count: 0
+    assert_select "#readiness-trip input.trip-readiness-small-button[type='submit'][value='Manually Mark']"
+    assert_select "#readiness-trip [data-readiness-task-key='campsite_coordinator_assigned'] .trip-readiness-auto-badge", text: "auto calc"
+    assert_select "#readiness-trip [data-readiness-task-key='whatsapp_group_created'] .trip-readiness-auto-badge", text: "auto calc"
+    assert_select "#readiness-trip [data-readiness-task-key='weather_link_added'] .trip-readiness-auto-badge", text: "auto calc"
+    assert_select "#readiness-trip [data-readiness-task-key='add_photo_album_to_older_website'] .trip-readiness-auto-badge", count: 0
+    assert_select "#readiness-trip a[href='https://chat.whatsapp.com/yosemite-readiness']", count: 0
+    assert_select "#readiness-trip a[href='https://forecast.weather.gov/yosemite-readiness']", count: 0
+    assert_select "#readiness-trip a[href='https://photos.app.goo.gl/yosemite-readiness']", count: 0
     assert_select "#readiness-campsites", text: /Registered By/
     assert_select "#readiness-campsites", text: /Registration Number/
     assert_select "#readiness-campsites", text: /Registration Cost/
     assert_select "#readiness-campsites .trip-readiness-campsite-group", count: 2
     assert_select "#readiness-campsites .trip-readiness-campsite-title-row h3", text: "Upper Pines site A12"
     assert_select "#readiness-campsites .trip-readiness-campsite-title-row h3", text: "Upper Pines site A13"
-    assert_select "#readiness-campsites .trip-readiness-campsite-title-row .trip-readiness-kind-status", text: "Auto Calculated", count: 2
+    assert_select ".trip-readiness-kind-status", count: 0
+    assert_select ".trip-readiness-category", text: /Auto Calculated/, count: 0
+    assert_select ".trip-readiness-category", text: /Manually Completed/, count: 0
     assert_select "#readiness-campsites a.button.secondary[href='#{edit_admin_trip_campsite_path(trips(:yosemite), campsites(:yosemite_a))}']", text: "Update Campsite"
     assert_select "#readiness-campsites a.button.secondary[href='#{edit_admin_trip_campsite_path(trips(:yosemite), campsites(:yosemite_b))}']", text: "Update Campsite"
     assert_select "#readiness-campsites a.button.secondary", text: /Add Registered By/, count: 0
@@ -40,13 +61,27 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
     assert_select "#readiness-campsites .trip-readiness-campsite-check h4", text: "Registration Number", count: 2
     assert_select "#readiness-campsites .trip-readiness-campsite-check h4", text: "Registration Cost", count: 2
     assert_select "#readiness-campsites form[action='#{readiness_task_admin_trip_path(trips(:yosemite), "campsite_#{campsites(:yosemite_b).id}_registered_by")}']"
-    assert_select "#readiness-campsites input.trip-readiness-small-button[type='submit'][value='Mark Complete']"
+    assert_select "#readiness-campsites input.trip-readiness-small-button[type='submit'][value='Manually Mark']"
+    assert_select "#readiness-campsites [data-readiness-task-key='campsite_#{campsites(:yosemite_a).id}_registered_by'] .trip-readiness-auto-badge", text: "auto calc"
     assert_select "[data-readiness-count-key='overall']"
     assert_select "#readiness-campsites [data-readiness-task-key='campsite_#{campsites(:yosemite_b).id}_registered_by']"
     assert_select "form.trip-readiness-toggle-form[data-controller='readiness-toggle'][data-action='submit->readiness-toggle#submit'][data-turbo='false']"
     assert_select "#readiness-participant", text: /Send out trip details email with check-in info/
-    assert_select "#readiness-participant", text: /campsite registration number/
-    assert_select "#readiness-post_trip", text: /Send collected money to Treasurer/
+    assert_select "#readiness-participant h2", text: "Participants"
+    assert_select "#readiness-participant", text: /All waivers signed/
+    assert_select "#readiness-participant", text: /All fees paid or waived/
+    assert_select "#readiness-participant", text: /Parking assigned/
+    assert_select "#readiness-participant", text: /All confirmed participants signed waiver/, count: 0
+    assert_select "#readiness-participant", text: /All confirmed primary participants paid or have fees waived/, count: 0
+    assert_select "#readiness-participant", text: /All confirmed participants assigned parking/, count: 0
+    assert_select "#readiness-participant form[action='#{readiness_task_admin_trip_path(trips(:yosemite), "all_confirmed_participants_signed_waiver")}']"
+    assert_select "#readiness-participant form[action='#{readiness_task_admin_trip_path(trips(:yosemite), "all_confirmed_participants_assigned_parking")}']"
+    assert_select "#readiness-participant input.trip-readiness-small-button[type='submit'][value='Manually Mark']"
+    assert_select "#readiness-participant [data-readiness-task-key='send_trip_details_email'] .trip-readiness-task-subtext",
+      text: "Person who registered site, Registration number and redacted photo id"
+    assert_select "#readiness-participant", text: /campsite registration number/, count: 0
+    assert_select "#readiness-post_trip", count: 0
+    assert_select ".trip-readiness-category", text: /Send collected money to Treasurer/, count: 0
   end
 
   test "manual tasks can be checked and unchecked" do
@@ -81,18 +116,25 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "#readiness-trip", text: /Create Google Photo Album/
-    assert_select "#readiness-trip", text: /Completed by Alex Rivera/
+    assert_select "#readiness-trip", text: /Completed by Alex Rivera/, count: 0
     assert_select "#readiness-trip form[action='#{readiness_task_admin_trip_path(trips(:yosemite), "create_google_photo_album")}'] input[name='completed'][value='0']"
-    assert_select "#readiness-trip input[type='submit'][value='Mark incomplete']"
+    assert_select "#readiness-trip input.trip-readiness-small-button[type='submit'][value='Mark incomplete']"
+    assert_select "#readiness-trip [data-readiness-task-key='create_google_photo_album'] .trip-readiness-auto-badge", count: 0
   end
 
-  test "non-overridable automatic tasks cannot be toggled" do
-    assert_no_difference "TripReadinessCompletion.count" do
+  test "participant automatic tasks can be manually overridden" do
+    assert_difference "TripReadinessCompletion.count", 1 do
       patch readiness_task_admin_trip_url(trips(:yosemite), "all_confirmed_participants_signed_waiver"), params: { completed: "1" }
     end
 
     assert_redirected_to readiness_admin_trip_url(trips(:yosemite))
-    assert_equal "Wow, that was a whipper. That readiness task cannot be changed.", flash[:alert]
+    assert_equal "On belay! Readiness task marked complete.", flash[:notice]
+
+    get readiness_admin_trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "#readiness-participant form[action='#{readiness_task_admin_trip_path(trips(:yosemite), "all_confirmed_participants_signed_waiver")}'] input[name='completed'][value='0']"
+    assert_select "#readiness-participant input.trip-readiness-small-button[type='submit'][value='Mark incomplete']"
   end
 
   test "campsite tasks can be manually overridden per campsite" do
@@ -126,7 +168,7 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
     assert_equal true, response_body.dig("task", "complete")
     assert_equal "0", response_body.dig("task", "completed_value")
     assert_equal "Mark incomplete", response_body.dig("task", "button_text")
-    assert_match(/Completed by Alex Rivera on/, response_body.dig("task", "completion_text"))
+    assert_not response_body.fetch("task").key?("completion_text")
     assert_equal "participant", response_body.dig("category", "key")
     assert_match(/\A\d+ of \d+\z/, response_body.dig("total", "count_text"))
 
@@ -138,8 +180,8 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
     response_body = JSON.parse(response.body)
     assert_equal false, response_body.dig("task", "complete")
     assert_equal "1", response_body.dig("task", "completed_value")
-    assert_equal "Mark Complete", response_body.dig("task", "button_text")
-    assert_nil response_body.dig("task", "completion_text")
+    assert_equal "Manually Mark", response_body.dig("task", "button_text")
+    assert_not response_body.fetch("task").key?("completion_text")
   end
 
   test "finance admin can view but not change manual tasks" do

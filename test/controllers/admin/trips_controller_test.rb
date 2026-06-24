@@ -126,7 +126,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".trip-reimbursement-summary" do
-      assert_select "strong", text: "Reimbursements:"
+      assert_select "strong", text: "Campsite Fees Reimbursed:"
       assert_select ".status.warning-status", text: "1 of 2"
     end
     assert_select ".campsite-registration-fees-panel", count: 0
@@ -299,7 +299,19 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_select "#admin-campsite-#{campsites(:yosemite_a).id} .campsite-stats", text: /Cars/, count: 0
     assert_select ".trip-summary-header .actions a.button.secondary", text: "Edit trip"
-    assert_select ".trip-summary-header .actions a.button.secondary[href='#{readiness_admin_trip_path(trips(:yosemite))}']", text: "Trip Readiness"
+    readiness_checklist = TripReadinessChecklist.new(trips(:yosemite))
+    readiness_categories = readiness_checklist.readiness_categories
+    assert_select ".trip-summary-header .actions a.button.secondary[href='#{readiness_admin_trip_path(trips(:yosemite))}']" do
+      assert_select "span", text: "Trip Readiness"
+      assert_select ".trip-readiness-summary-button-count.warning-status",
+        text: "#{readiness_checklist.completed_count_for(readiness_categories)} of #{readiness_checklist.total_count_for(readiness_categories)}"
+    end
+    post_trip_category = readiness_checklist.post_trip_category
+    assert_select ".trip-summary-header .actions a.button.secondary[href='#{post_trip_admin_trip_path(trips(:yosemite))}']" do
+      assert_select "span", text: "Post Trip"
+      assert_select ".trip-readiness-summary-button-count.warning-status",
+        text: "#{post_trip_category.completed_count} of #{post_trip_category.total_count}"
+    end
     assert_select ".trip-summary-header .actions a.button.secondary[href='#{admin_trip_transactions_path(trips(:yosemite))}']", text: "Transactions"
     assert_select ".trip-summary-header .actions .button.danger", text: "Delete trip", count: 0
     assert_select ".campground-group", count: 0

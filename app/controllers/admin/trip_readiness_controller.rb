@@ -4,6 +4,9 @@ class Admin::TripReadinessController < Admin::BaseController
   def show
     authorize @trip, :show?
     @checklist = TripReadinessChecklist.new(@trip)
+    @categories = @checklist.readiness_categories
+    @completed_count = @checklist.completed_count_for(@categories)
+    @total_count = @checklist.total_count_for(@categories)
   end
 
   def update
@@ -40,16 +43,20 @@ class Admin::TripReadinessController < Admin::BaseController
 
   def respond_with_success(message)
     respond_to do |format|
-      format.html { redirect_to readiness_admin_trip_path(@trip), notice: message, status: :see_other }
+      format.html { redirect_to readiness_redirect_path, notice: message, status: :see_other }
       format.json { render json: readiness_response_payload(message: message) }
     end
   end
 
   def respond_with_failure(message)
     respond_to do |format|
-      format.html { redirect_to readiness_admin_trip_path(@trip), alert: message, status: :see_other }
+      format.html { redirect_to readiness_redirect_path, alert: message, status: :see_other }
       format.json { render json: { message: message }, status: :unprocessable_entity }
     end
+  end
+
+  def readiness_redirect_path
+    params[:scope] == "post_trip" ? post_trip_admin_trip_path(@trip) : readiness_admin_trip_path(@trip)
   end
 
   def readiness_response_payload(message:)
@@ -57,14 +64,15 @@ class Admin::TripReadinessController < Admin::BaseController
     category = checklist.categories.find { |candidate| candidate.tasks.any? { |task| task.key == task_key } }
     task = category.tasks.find { |candidate| candidate.key == task_key }
 
+    total_categories = total_categories_for(checklist)
+
     {
       message: message,
       task: {
         key: task.key,
         complete: task.complete?,
-        completion_text: completion_text(task),
         completed_value: task.complete? ? "0" : "1",
-        button_text: task.complete? ? "Mark incomplete" : "Mark Complete"
+        button_text: task.complete? ? "Mark incomplete" : "Manually Mark"
       },
       category: {
         key: category.key,
@@ -72,15 +80,13 @@ class Admin::TripReadinessController < Admin::BaseController
         complete: category.completed_count == category.total_count
       },
       total: {
-        count_text: "#{checklist.completed_count} of #{checklist.total_count}",
-        complete: checklist.completed_count == checklist.total_count
+        count_text: "#{checklist.completed_count_for(total_categories)} of #{checklist.total_count_for(total_categories)}",
+        complete: checklist.completed_count_for(total_categories) == checklist.total_count_for(total_categories)
       }
     }
   end
 
-  def completion_text(task)
-    return if task.completion.blank?
-
-    "Completed by #{task.completion.completed_by&.full_name || "Unknown"} on #{task.completion.completed_at.to_fs(:long)}"
+  def total_categories_for(checklist)
+    params[:scope] == "post_trip" ? [ checklist.post_trip_category ] : checklist.readiness_categories
   end
 end
