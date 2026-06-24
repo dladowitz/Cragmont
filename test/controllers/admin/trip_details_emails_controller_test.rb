@@ -85,10 +85,11 @@ class Admin::TripDetailsEmailsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".trip-details-email-markdown h2", text: "Hello"
     assert_select ".trip-details-email-recipient-table" do
       assert_select "th", text: "Participant"
-      assert_select "th", text: "Email"
+      assert_select "th", text: "Email", count: 0
       assert_select "th", text: "Campsite", count: 0
-      assert_select "td", text: "Sam Lee"
-      assert_select "td", text: users(:sam).email
+      assert_select "td.trip-details-email-recipient-contact", count: 1
+      assert_select ".trip-details-email-recipient-name", text: "Sam Lee"
+      assert_select ".trip-details-email-recipient-email", text: users(:sam).email
       assert_select "td", text: /Upper Pines/, count: 0
     end
   end
@@ -126,7 +127,12 @@ class Admin::TripDetailsEmailsControllerTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_select "h2", "Trip Details Email Sent"
     assert_select ".trip-details-email-sent-summary", text: /#{email.subject}/
-    assert_select "td", text: "Sam Lee"
+    assert_select ".trip-details-email-recipient-table" do
+      assert_select "th", text: "Participant"
+      assert_select "th", text: "Email", count: 0
+      assert_select ".trip-details-email-recipient-name", text: "Sam Lee"
+      assert_select ".trip-details-email-recipient-email", text: users(:sam).email
+    end
     assert_select ".status.success-status", text: "Delivered"
     assert_select ".trip-details-email-markdown", text: /Campsite Assignments/
 

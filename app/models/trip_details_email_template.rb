@@ -177,6 +177,15 @@ class TripDetailsEmailTemplate < ApplicationRecord
 
     ---
 
+    ## Trip Photo Album
+
+    There is a trip photo album here: [{{photo_album_url}}]({{photo_album_url}}). We'd love to see what adventures you get up to.
+    Post photos you want to share to it. The photos will automatically get posted to the club Past Trips page: https://www.cragmontclimbingclub.org/past-trips
+
+    If you don't want any photos of you posted on the site let the Campsite Coordinator know and they'll review any uploaded photos.
+
+    ---
+
     ## Cell Phone & WIFI
 
     Reception is very hit or miss in Yosemite. If you need reception you'll generally be able to drive around and find some, though it might be very slow.

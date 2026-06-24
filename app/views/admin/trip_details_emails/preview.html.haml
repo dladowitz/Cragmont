@@ -37,12 +37,15 @@
           %thead
             %tr
               %th Participant
-              %th Email
           %tbody
             - @recipients.each do |recipient|
               %tr
-                %td= recipient.recipient_name
-                %td= recipient.email.presence || "Missing"
+                %td.trip-details-email-recipient-contact
+                  %span.trip-details-email-recipient-name= recipient.recipient_name
+                  - if recipient.email.present?
+                    = mail_to recipient.email, recipient.email, class: "trip-details-email-recipient-email"
+                  - else
+                    %span.trip-details-email-recipient-email.is-missing Missing email
       - else
         %p.muted No confirmed participants yet.
 
