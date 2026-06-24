@@ -1,0 +1,44 @@
+= render "admin/shared/header", title: "#{@trip.name} post trip"
+- editable_readiness = policy(@trip).update? && !@trip.deleted?
+%section.panel.trip-readiness-overview
+  .panel-header.trip-readiness-header
+    .trip-readiness-category-title-row
+      %h2 Post Trip
+      %span.status{class: (@category.completed_count == @category.total_count ? "success-status" : "warning-status"), data: { readiness_count_key: "overall" }}
+        = "#{@category.completed_count} of #{@category.total_count}"
+    .trip-readiness-summary
+      = link_to "Back to trip", admin_trip_path(@trip), class: "button secondary"
+  - if @trip.deleted?
+    .deleted-trip-banner
+      %strong This trip has been deleted.
+      %p Restore the trip before changing post trip tasks.
+
+%section.panel.trip-readiness-category{id: "readiness-#{@category.key}"}
+  .panel-header.trip-readiness-category-header
+    .trip-readiness-category-title-row
+      %h2= @category.name
+      %span.status{class: (@category.completed_count == @category.total_count ? "success-status" : "warning-status"), data: { readiness_count_key: @category.key }}
+        = "#{@category.completed_count} of #{@category.total_count}"
+  .trip-readiness-task-list
+    - @category.tasks.each do |task|
+      .trip-readiness-task{class: [("is-complete" if task.complete?), ("is-manual" if task.manual?), ("is-automatic" if task.automatic?)].compact, data: { readiness_task_key: task.key }}
+        .trip-readiness-task-status{aria: { hidden: "true" }}
+          - if task.complete?
+            %span.trip-readiness-checkmark
+              %span.trip-readiness-checkmark-icon{aria: { hidden: "true" }} ✓
+              %span Done
+          - else
+            %span.trip-readiness-open-circle
+        .trip-readiness-task-copy
+          .trip-readiness-task-title-row
+            %h3= task.name
+            - if task.automatic? && task.source_complete?
+              %span.trip-readiness-auto-badge auto calc
+        .trip-readiness-task-actions
+          - if editable_readiness && (task.manual? || (task.overrideable? && !task.source_complete?))
+            = form_with url: readiness_task_admin_trip_path(@trip, task.key), method: :patch, class: "trip-readiness-toggle-form", data: { controller: "readiness-toggle", action: "submit->readiness-toggle#submit", turbo: false } do
+              = hidden_field_tag :scope, "post_trip"
+              = hidden_field_tag :completed, task.complete? ? "0" : "1"
+              = submit_tag(task.complete? ? "Mark incomplete" : "Manually Mark", class: "button secondary trip-readiness-small-button")
+          - elsif !editable_readiness && (task.manual? || task.overrideable?)
+            %span.muted Read only

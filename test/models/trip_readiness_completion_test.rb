@@ -54,6 +54,28 @@ class TripReadinessCompletionTest < ActiveSupport::TestCase
     assert completion.valid?
   end
 
+  test "allows manual overrides for selected participant readiness tasks" do
+    completion = TripReadinessCompletion.new(
+      trip: trips(:yosemite),
+      task_key: "all_confirmed_participants_signed_waiver",
+      completed_at: Time.current,
+      completed_by: users(:alex)
+    )
+
+    assert completion.valid?
+  end
+
+  test "allows manual overrides for campsite reimbursement readiness" do
+    completion = TripReadinessCompletion.new(
+      trip: trips(:yosemite),
+      task_key: "all_campsites_reimbursed",
+      completed_at: Time.current,
+      completed_by: users(:alex)
+    )
+
+    assert completion.valid?
+  end
+
   test "rejects campsite readiness tasks for another trip" do
     completion = TripReadinessCompletion.new(
       trip: trips(:jtree),

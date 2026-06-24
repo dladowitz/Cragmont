@@ -50,25 +50,6 @@ export default class extends Controller {
 
     const submitButton = taskElement.querySelector(".trip-readiness-toggle-form input[type='submit'], .trip-readiness-toggle-form button[type='submit']")
     this.setButtonLabel(submitButton, task.button_text)
-
-    this.updateCompletionMeta(taskElement, task.completion_text)
-  }
-
-  updateCompletionMeta(taskElement, completionText) {
-    let meta = taskElement.querySelector(".trip-readiness-completion-meta")
-
-    if (!completionText) {
-      meta?.remove()
-      return
-    }
-
-    if (!meta) {
-      meta = document.createElement("p")
-      meta.className = "trip-readiness-completion-meta"
-      taskElement.querySelector(".trip-readiness-task-copy")?.appendChild(meta)
-    }
-
-    meta.textContent = completionText
   }
 
   updateCount(key, count) {

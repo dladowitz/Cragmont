@@ -118,7 +118,18 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
   test "categories include campsites" do
     category_names = TripReadinessChecklist.new(trips(:yosemite)).categories.map(&:name)
 
-    assert_equal [ "Trip", "Campsites", "Participant", "Post Trip" ], category_names
+    assert_equal [ "Trip", "Campsites", "Participants", "Post Trip" ], category_names
+  end
+
+  test "participant checks use short labels and can be manually overridden" do
+    tasks = tasks_by_key(trips(:yosemite))
+
+    assert_equal "All waivers signed", tasks.fetch("all_confirmed_participants_signed_waiver").name
+    assert_equal "All fees paid or waived", tasks.fetch("all_confirmed_primary_participants_paid_or_waived").name
+    assert_equal "Parking assigned", tasks.fetch("all_confirmed_participants_assigned_parking").name
+    assert tasks.fetch("all_confirmed_participants_signed_waiver").overrideable?
+    assert tasks.fetch("all_confirmed_primary_participants_paid_or_waived").overrideable?
+    assert tasks.fetch("all_confirmed_participants_assigned_parking").overrideable?
   end
 
   test "participant checks use confirmed participants and ignore waitlisted participants" do
@@ -209,7 +220,39 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
 
     assert task.manual?
     assert task.complete?
-    assert_includes task.detail, "campsite number"
+    assert_equal "Person who registered site, Registration number and redacted photo id", task.detail
+  end
+
+  test "post trip reimbursement check requires every reimbursable campsite to be reimbursed" do
+    trip = trips(:yosemite)
+    campsites(:yosemite_a).update!(
+      registration_fee: "84.25",
+      registration_reimbursed_at: Time.zone.local(2026, 6, 16),
+      registration_reimbursed_by: users(:sam),
+      registration_reimbursement_method: "venmo",
+      registration_reimbursement_recorded_by: users(:alex)
+    )
+    campsites(:yosemite_b).update!(registration_fee: "92.50")
+
+    task = tasks_by_key(trip.reload).fetch("all_campsites_reimbursed")
+
+    assert task.automatic?
+    assert task.overrideable?
+    assert_not task.complete?
+    assert_not task.source_complete?
+    assert_includes task.detail, "Upper Pines site A13"
+
+    campsites(:yosemite_b).update!(
+      registration_reimbursed_at: Time.zone.local(2026, 6, 17),
+      registration_reimbursed_by: users(:sam),
+      registration_reimbursement_method: "venmo",
+      registration_reimbursement_recorded_by: users(:alex)
+    )
+
+    task = tasks_by_key(trip.reload).fetch("all_campsites_reimbursed")
+
+    assert task.complete?
+    assert task.source_complete?
   end
 
   private

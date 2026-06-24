@@ -37,7 +37,11 @@ class TripReadinessChecklist
     campsite_coordinator_assigned: "Add Coordinator",
     whatsapp_group_created: "Add Group",
     weather_link_added: "Add Weather",
-    create_google_photo_album: "Add Album"
+    create_google_photo_album: "Add Album",
+    all_confirmed_participants_signed_waiver: nil,
+    all_confirmed_primary_participants_paid_or_waived: nil,
+    all_confirmed_participants_assigned_parking: nil,
+    all_campsites_reimbursed: nil
   }.freeze
   CAMPSITE_TASK_KEY_PATTERN = /\Acampsite_(\d+)_(registered_by|registration_number|registration_cost)\z/
 
@@ -94,9 +98,17 @@ class TripReadinessChecklist
     @categories ||= [
       Category.new(key: "trip", name: "Trip", tasks: trip_tasks),
       Category.new(key: "campsites", name: "Campsites", tasks: campsite_tasks),
-      Category.new(key: "participant", name: "Participant", tasks: participant_tasks),
+      Category.new(key: "participant", name: "Participants", tasks: participant_tasks),
       Category.new(key: "post_trip", name: "Post Trip", tasks: post_trip_tasks)
     ]
+  end
+
+  def readiness_categories
+    categories.reject { |category| category.key == "post_trip" }
+  end
+
+  def post_trip_category
+    categories.find { |category| category.key == "post_trip" }
   end
 
   def completed_count
@@ -104,6 +116,14 @@ class TripReadinessChecklist
   end
 
   def total_count
+    categories.sum(&:total_count)
+  end
+
+  def completed_count_for(categories)
+    categories.sum(&:completed_count)
+  end
+
+  def total_count_for(categories)
     categories.sum(&:total_count)
   end
 
@@ -160,21 +180,21 @@ class TripReadinessChecklist
     [
       automatic_task(
         :all_confirmed_participants_signed_waiver,
-        "All confirmed participants signed waiver",
+        "All waivers signed",
         confirmed_participants_ready?(&:waiver_signed?),
         complete_detail: "Every confirmed participant has signed a waiver.",
         incomplete_detail: missing_confirmed_participants_detail(:waiver_signed?, "waiver")
       ),
       automatic_task(
         :all_confirmed_primary_participants_paid_or_waived,
-        "All confirmed primary participants paid or have fees waived",
+        "All fees paid or waived",
         confirmed_primary_participants_ready?(&:payment_paid_or_settled?),
         complete_detail: "Every confirmed primary participant is paid, manual-paid, or waived.",
         incomplete_detail: missing_confirmed_primary_participants_detail(:payment_paid_or_settled?, "payment")
       ),
       automatic_task(
         :all_confirmed_participants_assigned_parking,
-        "All confirmed participants assigned parking",
+        "Parking assigned",
         confirmed_participants_ready? { |signup| !signup.unassigned? },
         complete_detail: "Every confirmed participant has a parking status.",
         incomplete_detail: missing_confirmed_participants_detail(->(signup) { !signup.unassigned? }, "parking")
@@ -182,7 +202,7 @@ class TripReadinessChecklist
       manual_task(
         :send_trip_details_email,
         MANUAL_TASKS.fetch(:send_trip_details_email),
-        "Include campsite number, campsite registration number, the person who registered the site, and that person's photo ID details."
+        "Person who registered site, Registration number and redacted photo id"
       )
     ]
   end
@@ -225,6 +245,13 @@ class TripReadinessChecklist
 
   def post_trip_tasks
     [
+      automatic_task(
+        :all_campsites_reimbursed,
+        "All campsites reimbursed",
+        reimbursable_campsites.any? && reimbursable_campsites.all?(&:registration_reimbursed?),
+        complete_detail: "Every campsite with a registration cost has been reimbursed.",
+        incomplete_detail: unreimbursed_campsites_detail
+      ),
       manual_task(:send_collected_money_to_treasurer, MANUAL_TASKS.fetch(:send_collected_money_to_treasurer)),
       manual_task(:send_photo_upload_reminder, MANUAL_TASKS.fetch(:send_photo_upload_reminder))
     ]
@@ -302,6 +329,19 @@ class TripReadinessChecklist
 
   def campsites
     @campsites ||= trip.campsites.includes(:campground, :registered_by).order(:arrival_date, :site_number).to_a
+  end
+
+  def reimbursable_campsites
+    @reimbursable_campsites ||= campsites.select { |campsite| campsite.registration_fee_cents.positive? }
+  end
+
+  def unreimbursed_campsites_detail
+    return "No campsites have registration costs to reimburse yet." if reimbursable_campsites.empty?
+
+    missing_names = reimbursable_campsites.reject(&:registration_reimbursed?).map { |campsite| campsite_name(campsite) }
+    return "Every campsite with a registration cost has been reimbursed." if missing_names.empty?
+
+    "Still needs reimbursement: #{missing_names.to_sentence}."
   end
 
   def missing_confirmed_participants_detail(predicate, label)

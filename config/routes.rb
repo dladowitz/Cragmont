@@ -56,6 +56,7 @@ Rails.application.routes.draw do
     resources :trips do
       patch :restore, on: :member
       get "readiness", to: "trip_readiness#show", as: :readiness, on: :member
+      get "post_trip", to: "trip_post_trip#show", as: :post_trip, on: :member
       patch "readiness/:task_key", to: "trip_readiness#update", as: :readiness_task, on: :member
       resources :transactions, only: :index, controller: "trip_transactions" do
         post :refund, on: :member

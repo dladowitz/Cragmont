@@ -1262,6 +1262,16 @@ body.trip-show-page .trip-summary-header {
   align-items: center;
 }
 
+.trip-readiness-summary-button {
+  gap: 10px;
+}
+
+.trip-readiness-summary-button-count {
+  padding: 2px 7px;
+  font-size: 0.82rem;
+  line-height: 1;
+}
+
 .form-actions .danger-form-action {
   margin-left: auto;
 }
@@ -4095,7 +4105,17 @@ th {
 
 .trip-readiness-overview,
 .trip-readiness-category {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+  padding: 18px 20px;
+  --readiness-status-column: 78px;
+  --readiness-copy-column: minmax(420px, 520px);
+  --readiness-action-column: 145px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.trip-readiness-overview {
+  padding-block: 12px;
 }
 
 .trip-readiness-header,
@@ -4110,25 +4130,95 @@ th {
   gap: 12px;
 }
 
+.trip-readiness-header {
+  margin-bottom: 0;
+}
+
+.trip-readiness-category-header {
+  margin-bottom: 10px;
+}
+
+.trip-readiness-header h2,
+.trip-readiness-category-header h2 {
+  margin-bottom: 0;
+  line-height: 1.1;
+}
+
+.trip-readiness-category-title-row .status {
+  padding: 5px 12px;
+  font-size: 1.275rem;
+}
+
+.trip-readiness-header {
+  display: grid;
+  grid-template-columns: var(--readiness-status-column) var(--readiness-copy-column) var(--readiness-action-column);
+  gap: 14px;
+  align-items: center;
+  padding-left: 36px;
+}
+
+.trip-readiness-category-header {
+  display: grid;
+  grid-template-columns: var(--readiness-status-column) var(--readiness-copy-column) var(--readiness-action-column);
+  gap: 14px;
+  padding-left: 36px;
+}
+
+.trip-readiness-header > div,
+.trip-readiness-category-header > div {
+  grid-column: 1 / 3;
+}
+
+.trip-readiness-category-title-row {
+  display: grid;
+  grid-template-columns: var(--readiness-copy-column) max-content;
+  column-gap: 12px;
+  align-items: center;
+}
+
+.trip-readiness-category-header > .button,
+.trip-readiness-category-header > .muted {
+  grid-column: 3;
+  justify-self: start;
+}
+
+.trip-readiness-category-title-row.has-trip-heading {
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
+}
+
+.trip-readiness-trip-heading {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.trip-readiness-header .trip-readiness-summary {
+  display: contents;
+}
+
+.trip-readiness-header .trip-readiness-summary .button {
+  grid-column: 3;
+  justify-self: start;
+}
+
 .trip-readiness-task-list {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .trip-readiness-task {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) auto;
-  gap: 14px;
+  grid-template-columns: var(--readiness-status-column) var(--readiness-copy-column) var(--readiness-action-column);
+  gap: 12px;
   align-items: center;
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #fff;
+  padding: 4px 0 4px 36px;
 }
 
 .trip-readiness-task.is-complete {
-  border-color: #bfe8d5;
-  background: #fbfffd;
+  background: transparent;
 }
 
 .trip-readiness-task-status {
@@ -4182,44 +4272,67 @@ th {
 .trip-readiness-task h3 {
   margin: 0;
   font-size: 1.05rem;
+  line-height: 1.15;
 }
 
-.trip-readiness-kind-status {
-  background: #eef4ff;
-  color: #1f5fbf;
-}
-
-.trip-readiness-completion-meta {
+.trip-readiness-task-subtext {
+  margin: 2px 0 0;
   color: var(--muted);
   font-size: 0.9rem;
+  line-height: 1.2;
 }
 
 .trip-readiness-task-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  justify-self: end;
+  justify-self: start;
+}
+
+.trip-readiness-overview .button,
+.trip-readiness-category .button,
+.trip-readiness-overview input[type="submit"],
+.trip-readiness-category input[type="submit"] {
+  white-space: nowrap;
 }
 
 .trip-readiness-toggle-form {
   margin: 0;
 }
 
-.trip-readiness-campsite-group {
+.trip-readiness-campsite-group,
+.trip-readiness-trip-group {
   display: grid;
-  gap: 12px;
-  padding: 16px;
+  gap: 6px;
+  padding: 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: #fff;
 }
 
 .trip-readiness-campsite-header,
+.trip-readiness-trip-header,
 .trip-readiness-campsite-check {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: var(--readiness-status-column) var(--readiness-copy-column) var(--readiness-action-column);
   gap: 12px;
   align-items: center;
+}
+
+.trip-readiness-campsite-header,
+.trip-readiness-trip-header {
+  padding-left: 20px;
+}
+
+.trip-readiness-campsite-header .trip-readiness-campsite-title-row,
+.trip-readiness-trip-header .trip-readiness-campsite-title-row {
+  grid-column: 1 / 3;
+}
+
+.trip-readiness-campsite-header .button,
+.trip-readiness-trip-header .button {
+  grid-column: 3;
+  justify-self: start;
 }
 
 .trip-readiness-campsite-title-row {
@@ -4232,47 +4345,118 @@ th {
 .trip-readiness-campsite-title-row h3 {
   margin: 0;
   font-size: 1.15rem;
+  line-height: 1.15;
 }
 
-.trip-readiness-campsite-checks {
+.trip-readiness-trip-date {
+  font-size: 0.95rem;
+}
+
+.trip-readiness-campsite-checks,
+.trip-readiness-trip-checks {
   display: grid;
-  gap: 10px;
+  gap: 2px;
   padding-left: 20px;
 }
 
-.trip-readiness-campsite-check {
-  grid-template-columns: 78px max-content auto;
-  justify-content: start;
-  padding: 10px 0;
+.trip-readiness-trip-checks {
+  padding-left: 0;
 }
 
-.trip-readiness-campsite-check h4 {
+.trip-readiness-campsite-check {
+  grid-template-columns: var(--readiness-status-column) var(--readiness-copy-column) var(--readiness-action-column);
+  justify-content: start;
+  padding: 4px 0;
+}
+
+.trip-readiness-group-check {
+  display: grid;
+  grid-template-columns: var(--readiness-status-column) var(--readiness-copy-column) var(--readiness-action-column);
+  gap: 12px;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.trip-readiness-campsite-check h4,
+.trip-readiness-group-check h4 {
   margin: 0;
   font-size: 1rem;
+  line-height: 1.15;
+}
+
+.trip-readiness-auto-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #1f5fbf;
+  font-size: 0.42rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .trip-readiness-small-button {
-  min-height: 28px;
-  padding: 3px 8px;
-  font-size: 0.82rem;
+  min-height: 24px;
+  padding: 2px 7px;
+  font-size: 0.7rem;
 }
 
 @media (max-width: 700px) {
-  .trip-readiness-task {
-    grid-template-columns: 34px minmax(0, 1fr);
+  .trip-readiness-header {
+    grid-template-columns: 1fr;
+    padding-left: 0;
   }
 
-  .trip-readiness-task-actions {
-    grid-column: 2;
+  .trip-readiness-header > div,
+  .trip-readiness-header .trip-readiness-summary .button,
+  .trip-readiness-header .trip-readiness-summary .status {
+    grid-column: auto;
     justify-self: start;
   }
 
-  .trip-readiness-campsite-header,
-  .trip-readiness-campsite-check {
-    grid-template-columns: 1fr;
+  .trip-readiness-header .trip-readiness-summary {
+    display: flex;
   }
 
-  .trip-readiness-campsite-checks {
+  .trip-readiness-category-title-row {
+    grid-template-columns: minmax(0, 1fr) max-content;
+  }
+
+  .trip-readiness-task {
+    grid-template-columns: 34px minmax(0, 1fr);
+    padding: 16px;
+  }
+
+  .trip-readiness-task-actions {
+    grid-column: auto;
+    justify-self: start;
+  }
+
+  .trip-readiness-task > .trip-readiness-task-actions {
+    grid-column: 2;
+  }
+
+  .trip-readiness-campsite-header,
+  .trip-readiness-trip-header,
+  .trip-readiness-group-check,
+  .trip-readiness-campsite-check {
+    grid-template-columns: 1fr;
+    padding-left: 0;
+  }
+
+  .trip-readiness-campsite-header .trip-readiness-campsite-title-row,
+  .trip-readiness-trip-header .trip-readiness-campsite-title-row,
+  .trip-readiness-campsite-header .button,
+  .trip-readiness-trip-header .button {
+    grid-column: auto;
+    justify-self: start;
+  }
+
+  .trip-readiness-campsite-checks,
+  .trip-readiness-trip-checks {
     padding-left: 0;
   }
 }
