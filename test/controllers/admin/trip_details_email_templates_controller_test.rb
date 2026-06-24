@@ -32,7 +32,9 @@ class Admin::TripDetailsEmailTemplatesControllerTest < ActionDispatch::Integrati
     assert_select "form[data-controller='markdown-preview'][data-markdown-preview-url-value='#{preview_admin_trip_details_email_templates_path}']"
     assert_select "textarea[name='trip_details_email_template[body_markdown]'][required][data-markdown-preview-target='source']", text: /Campsite Assignments/
     assert_select "textarea[name='trip_details_email_template[body_markdown]']", text: /## Campfire.*\{\{group_campfire_info\}\}/m
+    assert_select "textarea[name='trip_details_email_template[body_markdown]']", text: /## Trip Photo Album.*\{\{photo_album_url\}\}/m
     assert_select ".trip-details-email-markdown[data-markdown-preview-target='preview'] h2", "Campsite Assignments & Check-In (READ THIS)"
+    assert_select ".trip-details-email-markdown[data-markdown-preview-target='preview'] h2", "Trip Photo Album"
   end
 
   test "super admin can update trip details email template" do

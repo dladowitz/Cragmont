@@ -27,6 +27,18 @@ class TripDetailsEmailRendererTest < ActiveSupport::TestCase
     assert_includes renderer.rendered_html, "<strong>Upper Pines A12</strong>"
   end
 
+  test "interpolates trip photo album url" do
+    @trip.update!(photo_album_url: "https://photos.google.com/share/yosemite-spring")
+    renderer = TripDetailsEmailRenderer.new(
+      trip: @trip,
+      subject: "Details",
+      body_markdown: "## Trip Photo Album\n\nThere is a trip photo album here: [{{photo_album_url}}]({{photo_album_url}})."
+    )
+
+    assert_includes renderer.rendered_markdown, "[https://photos.google.com/share/yosemite-spring](https://photos.google.com/share/yosemite-spring)"
+    assert_includes renderer.rendered_html, 'href="https://photos.google.com/share/yosemite-spring"'
+  end
+
   test "renders fallback group campfire info when no group campfire is selected" do
     renderer = TripDetailsEmailRenderer.new(
       trip: @trip,

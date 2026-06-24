@@ -32,15 +32,15 @@
       %thead
         %tr
           %th Participant
-          %th Email
           %th Campsite
           %th Status
           %th Delivered
       %tbody
         - @recipients.each do |recipient|
           %tr
-            %td= recipient.recipient_name
-            %td= mail_to recipient.email
+            %td.trip-details-email-recipient-contact
+              %span.trip-details-email-recipient-name= recipient.recipient_name
+              = mail_to recipient.email, recipient.email, class: "trip-details-email-recipient-email"
             %td= recipient.campsite_label
             %td
               - status_class = recipient.delivered? ? "success-status" : (recipient.failed? ? "danger-status" : "warning-status")

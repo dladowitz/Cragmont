@@ -13,6 +13,7 @@ class TripDetailsEmailDeliveryTest < ActiveSupport::TestCase
   end
 
   test "sends individual emails to confirmed participants and snapshots what went out" do
+    @trip.update!(photo_album_url: "https://photos.google.com/share/yosemite-spring")
     primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     guest_user = User.create!(first_name: "Gina", last_name: "Guest", email: "gina-trip-details@example.com", password: User::DEFAULT_GUEST_PASSWORD, default_password: true)
     create_campsite_signup!(
@@ -41,7 +42,10 @@ class TripDetailsEmailDeliveryTest < ActiveSupport::TestCase
     assert_includes email.subject, "Upper Pines"
     assert_includes email.body_markdown, "YO-2026-A13"
     assert_includes email.rendered_html_snapshot, "<h2>Campsite Assignments"
+    assert_includes email.rendered_html_snapshot, "<h2>Trip Photo Album</h2>"
+    assert_includes email.rendered_html_snapshot, "https://photos.google.com/share/yosemite-spring"
     assert_not_includes email.rendered_text_snapshot, "{{campsite_registration_info}}"
+    assert_not_includes email.rendered_text_snapshot, "{{photo_album_url}}"
 
     assert_equal [ "Gina Guest", "Sam Lee" ], email.trip_details_email_recipients.order(:recipient_name).pluck(:recipient_name)
     assert_equal 2, email.trip_details_email_recipients.delivered.count
