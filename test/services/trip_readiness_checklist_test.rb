@@ -6,7 +6,9 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
     trip.update!(
       whatsapp_group: "https://chat.whatsapp.com/yosemite-readiness",
       weather_url: "https://forecast.weather.gov/yosemite-readiness",
-      photo_album_url: "https://photos.app.goo.gl/yosemite-readiness"
+      photo_album_url: "https://photos.app.goo.gl/yosemite-readiness",
+      group_campfire_campsite: campsites(:yosemite_a),
+      group_fire_night: "saturday"
     )
 
     tasks = tasks_by_key(trip)
@@ -15,6 +17,31 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
     assert tasks.fetch("whatsapp_group_created").complete?
     assert tasks.fetch("weather_link_added").complete?
     assert tasks.fetch("create_google_photo_album").complete?
+    assert tasks.fetch("group_campfire_planned").complete?
+    assert_equal "Group campfire is planned at Upper Pines site A12 on Saturday.", tasks.fetch("group_campfire_planned").detail
+  end
+
+  test "trip setup group campfire task completes when no group campfire is planned" do
+    trip = trips(:yosemite)
+    trip.update!(group_campfire_campsite: nil, group_fire_night: "none")
+
+    task = tasks_by_key(trip).fetch("group_campfire_planned")
+
+    assert task.complete?
+    assert_equal "No group campfire is planned.", task.detail
+  end
+
+  test "trip setup group campfire task requires a decision" do
+    trip = trips(:yosemite)
+    trip.update!(group_campfire_campsite: nil, group_fire_night: nil)
+
+    task = tasks_by_key(trip).fetch("group_campfire_planned")
+
+    assert task.automatic?
+    assert task.overrideable?
+    assert_not task.complete?
+    assert_equal "Add Campfire", task.update_label
+    assert_equal "Choose a group campfire site and night, or set the fire night to None if there will be no group campfire.", task.detail
   end
 
   test "rejects unsafe resource urls for automatic tasks" do
@@ -127,9 +154,27 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
     assert_equal "All waivers signed", tasks.fetch("all_confirmed_participants_signed_waiver").name
     assert_equal "All fees paid or waived", tasks.fetch("all_confirmed_primary_participants_paid_or_waived").name
     assert_equal "Parking assigned", tasks.fetch("all_confirmed_participants_assigned_parking").name
+    assert_equal "Send out redacted photo ids", tasks.fetch("send_redacted_photo_ids").name
     assert tasks.fetch("all_confirmed_participants_signed_waiver").overrideable?
     assert tasks.fetch("all_confirmed_primary_participants_paid_or_waived").overrideable?
     assert tasks.fetch("all_confirmed_participants_assigned_parking").overrideable?
+    assert tasks.fetch("send_redacted_photo_ids").manual?
+    assert_not tasks.fetch("send_redacted_photo_ids").complete?
+  end
+
+  test "redacted photo id task can be manually completed" do
+    TripReadinessCompletion.create!(
+      trip: trips(:yosemite),
+      task_key: "send_redacted_photo_ids",
+      completed_at: Time.current,
+      completed_by: users(:alex)
+    )
+
+    task = tasks_by_key(trips(:yosemite)).fetch("send_redacted_photo_ids")
+
+    assert task.manual?
+    assert task.complete?
+    assert_equal users(:alex), task.completion.completed_by
   end
 
   test "participant checks use confirmed participants and ignore waitlisted participants" do
@@ -208,19 +253,32 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
     assert_equal "No confirmed participants yet.", tasks.fetch("all_confirmed_participants_signed_waiver").detail
   end
 
-  test "manual task completion comes from persisted records" do
-    TripReadinessCompletion.create!(
-      trip: trips(:yosemite),
-      task_key: "send_trip_details_email",
-      completed_at: Time.current,
-      completed_by: users(:alex)
-    )
-
+  test "trip details email task completes from sent email" do
+    TripDetailsEmailTemplate.ensure_defaults!
+    template = TripDetailsEmailTemplate.find_by!(area_key: "yosemite")
     task = tasks_by_key(trips(:yosemite)).fetch("send_trip_details_email")
 
-    assert task.manual?
+    assert task.automatic?
+    assert_not task.complete?
+    assert_equal "Create, preview, and send the trip details email before heading out.", task.detail
+
+    trips(:yosemite).create_trip_details_email!(
+      trip_details_email_template: template,
+      status: "sent",
+      subject: "Trip details",
+      body_markdown: "Trip details",
+      rendered_html_snapshot: "<p>Trip details</p>",
+      rendered_text_snapshot: "Trip details",
+      template_name_snapshot: "Yosemite",
+      template_area_key_snapshot: "yosemite",
+      sent_at: Time.current,
+      sent_by: users(:alex)
+    )
+
+    task = tasks_by_key(trips(:yosemite).reload).fetch("send_trip_details_email")
+
     assert task.complete?
-    assert_equal "Person who registered site, Registration number and redacted photo id", task.detail
+    assert_equal "Trip details email was sent to participants.", task.detail
   end
 
   test "post trip reimbursement check requires every reimbursable campsite to be reimbursed" do

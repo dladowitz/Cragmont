@@ -8,57 +8,40 @@
   - reimbursement_status_class = "danger-status"
 - else
   - reimbursement_status_class = "warning-status"
+- readiness_completed_count = @trip_readiness_checklist.completed_count_for(@trip_readiness_categories)
+- readiness_total_count = @trip_readiness_checklist.total_count_for(@trip_readiness_categories)
+- post_trip_category = @trip_readiness_checklist.post_trip_category
+- show_trip_details_email_button = @trip_details_email&.sent? ? policy(@trip).view_trip_details_email? : (!@trip.deleted? && policy(@trip).manage_trip_details_email?)
 - if @participant_link_signup.present?
   = render "participant_link_modal", trip: @trip, signup: @participant_link_signup
 %section.panel.trip-overview
   .panel-header.trip-summary-header
-    .trip-summary-top-row
-      .trip-summary-copy
-        %h2= @trip.name
-        .trip-location-line
-          %p= @trip.location
+    .trip-summary-copy
+      .trip-title-line.trip-admin-title-line
+        .trip-heading-status
+          %h2= @trip.name
           %span.eyebrow= @trip.status.titleize
-        %p
-          = @trip.start_date.to_fs(:long)
-          to #{@trip.end_date.to_fs(:long)}
-      .actions
-        = link_to readiness_admin_trip_path(@trip), class: "button secondary trip-readiness-summary-button" do
-          %span Trip Readiness
-          - readiness_completed_count = @trip_readiness_checklist.completed_count_for(@trip_readiness_categories)
-          - readiness_total_count = @trip_readiness_checklist.total_count_for(@trip_readiness_categories)
-          %span.status.trip-readiness-summary-button-count{class: (readiness_completed_count == readiness_total_count ? "success-status" : "warning-status")}
-            = "#{readiness_completed_count} of #{readiness_total_count}"
-        = link_to post_trip_admin_trip_path(@trip), class: "button secondary trip-readiness-summary-button" do
-          %span Post Trip
-          - post_trip_category = @trip_readiness_checklist.post_trip_category
-          %span.status.trip-readiness-summary-button-count{class: (post_trip_category.completed_count == post_trip_category.total_count ? "success-status" : "warning-status")}
-            = "#{post_trip_category.completed_count} of #{post_trip_category.total_count}"
-        - if policy(@trip).manage_payments?
-          = link_to "Transactions", admin_trip_transactions_path(@trip), class: "button secondary"
-        - if @trip.deleted?
-          - if policy(@trip).restore?
-            = button_to "Restore trip", restore_admin_trip_path(@trip), method: :patch, class: "button"
-        - elsif policy(@trip).edit?
-          = link_to "Edit trip", edit_admin_trip_path(@trip), class: "button secondary"
-    .trip-summary-bottom-row
-      .trip-admin-meta-row
-        .coordinator-summary
+        .trip-title-actions
+          - if @trip.deleted?
+            - if policy(@trip).restore?
+              = button_to "Restore trip", restore_admin_trip_path(@trip), method: :patch, class: "button"
+          - elsif policy(@trip).edit?
+            = link_to "Edit trip", edit_admin_trip_path(@trip), class: "button secondary"
+        .trip-title-meta
+          %span.trip-title-location= @trip.location
+          %span.trip-title-date
+            = @trip.start_date.to_fs(:long)
+            to #{@trip.end_date.to_fs(:long)}
+        .coordinator-summary.trip-title-coordinator
           %strong Campsite coordinator:
           - if @trip.campsite_coordinator.present?
             .coordinator-contact
-              %span= @trip.campsite_coordinator.full_name
-              - if @trip.campsite_coordinator.email.present?
-                %span= mail_to @trip.campsite_coordinator.email
-              - if @trip.campsite_coordinator.phone.present?
-                %span= @trip.campsite_coordinator.phone
+              %span= link_to @trip.campsite_coordinator.full_name, admin_user_path(@trip.campsite_coordinator)
           - else
             .coordinator-contact
               %span.muted Not set yet
               - if policy(@trip).assign_coordinator?
                 = link_to "Update", edit_admin_trip_path(@trip)
-        .trip-reimbursement-summary
-          %strong Campsite Fees Reimbursed:
-          %span.status{class: reimbursement_status_class}= "#{@reimbursed_campsites_count} of #{reimbursable_campsites_count}"
       - if @trip.description.present?
         .description
           %strong Notes:
@@ -93,6 +76,27 @@
     %div
       %span Campsites
       %strong= @trip.campsite_count
+%section.panel.trip-management-panel
+  .panel-header.trip-management-header
+    %div
+      %h2 Manage
+  .trip-management-content
+    .actions.trip-management-actions
+      = link_to readiness_admin_trip_path(@trip), class: "button secondary trip-readiness-summary-button" do
+        %span Trip Readiness
+        %span.status.trip-readiness-summary-button-count{class: (readiness_completed_count == readiness_total_count ? "success-status" : "warning-status")}
+          = "#{readiness_completed_count} of #{readiness_total_count}"
+      = link_to post_trip_admin_trip_path(@trip), class: "button secondary trip-readiness-summary-button" do
+        %span Post Trip
+        %span.status.trip-readiness-summary-button-count{class: (post_trip_category.completed_count == post_trip_category.total_count ? "success-status" : "warning-status")}
+          = "#{post_trip_category.completed_count} of #{post_trip_category.total_count}"
+      - if show_trip_details_email_button
+        = link_to "Trip Details Email", admin_trip_trip_details_email_path(@trip), class: "button secondary"
+      - if policy(@trip).manage_payments?
+        = link_to "Transactions", admin_trip_transactions_path(@trip), class: "button secondary"
+    .trip-reimbursement-summary.trip-management-reimbursement
+      %strong Campsite Fees Reimbursed:
+      %span.status{class: reimbursement_status_class}= "#{@reimbursed_campsites_count} of #{reimbursable_campsites_count}"
 %section.panel.campsites-panel
   .panel-header.campsites-panel-header
     %div

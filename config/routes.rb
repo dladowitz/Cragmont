@@ -44,6 +44,9 @@ Rails.application.routes.draw do
     resources :content_pages, param: :slug, only: %i[edit update] do
       post :preview, on: :collection
     end
+    resources :trip_details_email_templates, only: %i[index edit update] do
+      post :preview, on: :collection
+    end
     resources :help_requests, only: %i[index show] do
       post :reply, on: :member
       patch :resolve, on: :member
@@ -58,6 +61,13 @@ Rails.application.routes.draw do
       get "readiness", to: "trip_readiness#show", as: :readiness, on: :member
       get "post_trip", to: "trip_post_trip#show", as: :post_trip, on: :member
       patch "readiness/:task_key", to: "trip_readiness#update", as: :readiness_task, on: :member
+      resource :trip_details_email, only: %i[show new create edit update], controller: "trip_details_emails" do
+        post :markdown_preview
+        get :preview
+        patch :preview
+        patch :reset_from_template
+        post :deliver
+      end
       resources :transactions, only: :index, controller: "trip_transactions" do
         post :refund, on: :member
       end

@@ -4,6 +4,11 @@ class Campsite < ApplicationRecord
   belongs_to :registered_by, class_name: "User", optional: true, inverse_of: :registered_campsites
   belongs_to :registration_reimbursed_by, class_name: "User", optional: true
   belongs_to :registration_reimbursement_recorded_by, class_name: "User", optional: true
+  has_one :group_campfire_trip,
+    class_name: "Trip",
+    foreign_key: :group_campfire_campsite_id,
+    dependent: :nullify,
+    inverse_of: :group_campfire_campsite
   has_many :campsite_signups
   has_many :participants, through: :campsite_signups, source: :user
 

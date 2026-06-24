@@ -3,6 +3,9 @@
   - coordinator_options = [{ label: "Unassigned", value: "", search_text: "unassigned" }] + @users.map { |user| { label: user.full_name, value: user.id, search_text: [user.full_name, user.email].compact.join(" ").downcase } }
   - selected_coordinator_value = trip.campsite_coordinator_id.to_s
   - selected_coordinator_label = trip.campsite_coordinator&.full_name || "Unassigned"
+  - group_campfire_campsites = trip.persisted? ? trip.campsites.includes(:campground).order(:arrival_date, :site_number) : []
+  - group_campfire_options = [["No Group Campfire", ""]] + group_campfire_campsites.map { |campsite| ["#{campsite.campground.name} site #{campsite.site_number}", campsite.id] }
+  - group_fire_night_options = [["None", Trip::GROUP_FIRE_NIGHT_NONE]] + Trip::GROUP_FIRE_NIGHT_DAYS.map { |night| [night.titleize, night] }
   = render "admin/shared/errors", record: trip
   .form-grid
     .field
@@ -43,6 +46,13 @@
     .field
       = form.label :weather_url, "Weather"
       = form.url_field :weather_url
+    - if trip.persisted?
+      .field
+        = form.label :group_campfire_campsite_id, "Group Campfire Site"
+        = form.select :group_campfire_campsite_id, group_campfire_options
+      .field
+        = form.label :group_fire_night, "Group Campfire Night"
+        = form.select :group_fire_night, group_fire_night_options
     .field
       = form.label :photo_album_url, "Google Photo Album"
       = form.url_field :photo_album_url

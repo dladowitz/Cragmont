@@ -1,0 +1,58 @@
+= render "admin/shared/header", title: "#{@trip.name} trip details email"
+
+%section.panel.trip-details-email-panel
+  .panel-header
+    %div
+      %h2 Trip Details Email Sent
+      %p.muted This is the locked copy that went out to participants.
+    .actions
+      = link_to "Back to trip", admin_trip_path(@trip), class: "button secondary"
+
+  .trip-details-email-sent-summary
+    %div
+      %span.muted Subject
+      %strong= @trip_details_email.subject
+    %div
+      %span.muted Template
+      %strong= @trip_details_email.template_name_snapshot
+    %div
+      %span.muted Sent
+      %strong= @trip_details_email.sent_at.strftime("%b %-d, %Y %-l:%M %p")
+    %div
+      %span.muted Sent by
+      %strong= @trip_details_email.sent_by&.full_name || "Unknown"
+
+%section.panel.trip-details-email-panel
+  .panel-header
+    %div
+      %h2 Recipients
+      %p.muted= pluralize(@recipients.size, "participant")
+  - if @recipients.any?
+    %table.trip-details-email-recipient-table
+      %thead
+        %tr
+          %th Participant
+          %th Email
+          %th Campsite
+          %th Status
+          %th Delivered
+      %tbody
+        - @recipients.each do |recipient|
+          %tr
+            %td= recipient.recipient_name
+            %td= mail_to recipient.email
+            %td= recipient.campsite_label
+            %td
+              - status_class = recipient.delivered? ? "success-status" : (recipient.failed? ? "danger-status" : "warning-status")
+              %span.status{class: status_class}= recipient.delivery_status.titleize
+            %td= recipient.delivered_at&.strftime("%b %-d, %Y %-l:%M %p") || "Not delivered"
+  - else
+    %p.muted No recipients were recorded.
+
+%section.panel.trip-details-email-panel
+  .panel-header
+    %div
+      %h2 Email Body
+      %p.muted Exact rendered HTML snapshot.
+  .content-page-markdown.trip-details-email-markdown
+    = sanitize_trip_details_email_html(@trip_details_email.rendered_html_snapshot)

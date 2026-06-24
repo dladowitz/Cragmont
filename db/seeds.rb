@@ -9,6 +9,7 @@
 #   end
 
 Role.seed_defaults!
+TripDetailsEmailTemplate.ensure_defaults!
 
 ENV.fetch("CRAGMONT_SUPER_ADMIN_EMAILS", "").split(",").map(&:strip).reject(&:blank?).each do |email|
   user = User.find_by(email: email)

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_23_143000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_24_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -375,6 +375,56 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_23_143000) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "trip_details_email_recipients", force: :cascade do |t|
+    t.string "campsite_label", null: false
+    t.bigint "campsite_signup_id"
+    t.datetime "created_at", null: false
+    t.datetime "delivered_at"
+    t.string "delivery_status", default: "pending", null: false
+    t.string "email", null: false
+    t.text "error_message"
+    t.string "recipient_name", null: false
+    t.bigint "trip_details_email_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["campsite_signup_id"], name: "idx_trip_details_recipients_on_signup_id"
+    t.index ["delivery_status"], name: "idx_trip_details_recipients_on_delivery_status"
+    t.index ["trip_details_email_id"], name: "idx_trip_details_recipients_on_email_id"
+    t.index ["user_id"], name: "index_trip_details_email_recipients_on_user_id"
+  end
+
+  create_table "trip_details_email_templates", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "area_key", null: false
+    t.text "body_markdown", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "subject_template", null: false
+    t.datetime "updated_at", null: false
+    t.index ["area_key"], name: "index_trip_details_email_templates_on_area_key"
+    t.index ["name", "area_key"], name: "index_trip_details_email_templates_on_name_and_area_key", unique: true
+  end
+
+  create_table "trip_details_emails", force: :cascade do |t|
+    t.text "body_markdown", null: false
+    t.datetime "created_at", null: false
+    t.text "rendered_html_snapshot"
+    t.text "rendered_text_snapshot"
+    t.datetime "sent_at"
+    t.bigint "sent_by_id"
+    t.string "status", default: "draft", null: false
+    t.string "subject", null: false
+    t.string "template_area_key_snapshot"
+    t.string "template_name_snapshot"
+    t.bigint "trip_details_email_template_id", null: false
+    t.bigint "trip_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["sent_by_id"], name: "index_trip_details_emails_on_sent_by_id"
+    t.index ["status"], name: "index_trip_details_emails_on_status"
+    t.index ["trip_details_email_template_id"], name: "idx_trip_details_emails_on_template_id"
+    t.index ["trip_id"], name: "index_trip_details_emails_on_trip_id", unique: true
+  end
+
   create_table "trip_payment_requests", force: :cascade do |t|
     t.integer "amount_cents", default: 0, null: false
     t.datetime "canceled_at"
@@ -461,6 +511,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_23_143000) do
     t.datetime "deleted_at"
     t.text "description"
     t.date "end_date", null: false
+    t.bigint "group_campfire_campsite_id"
+    t.string "group_fire_night"
     t.string "location", null: false
     t.string "name", null: false
     t.text "photo_album_url"
@@ -471,6 +523,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_23_143000) do
     t.text "whatsapp_group"
     t.index ["campsite_coordinator_id"], name: "index_trips_on_campsite_coordinator_id"
     t.index ["deleted_at"], name: "index_trips_on_deleted_at"
+    t.index ["group_campfire_campsite_id"], name: "index_trips_on_group_campfire_campsite_id"
     t.index ["start_date"], name: "index_trips_on_start_date"
     t.index ["status"], name: "index_trips_on_status"
   end
@@ -567,12 +620,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_23_143000) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "trip_details_email_recipients", "campsite_signups", on_delete: :nullify
+  add_foreign_key "trip_details_email_recipients", "trip_details_emails"
+  add_foreign_key "trip_details_email_recipients", "users", on_delete: :nullify
+  add_foreign_key "trip_details_emails", "trip_details_email_templates"
+  add_foreign_key "trip_details_emails", "trips"
+  add_foreign_key "trip_details_emails", "users", column: "sent_by_id"
   add_foreign_key "trip_payment_requests", "trips"
   add_foreign_key "trip_payment_requests", "users", column: "canceled_by_id"
   add_foreign_key "trip_payment_requests", "users", column: "created_by_id"
   add_foreign_key "trip_readiness_completions", "trips"
   add_foreign_key "trip_readiness_completions", "users", column: "completed_by_id"
   add_foreign_key "trip_signup_minors", "trip_signups"
+  add_foreign_key "trips", "campsites", column: "group_campfire_campsite_id"
   add_foreign_key "trips", "users", column: "campsite_coordinator_id"
   add_foreign_key "user_roles", "roles"
   add_foreign_key "user_roles", "users"

@@ -38,6 +38,7 @@ class TripReadinessChecklist
     whatsapp_group_created: "Add Group",
     weather_link_added: "Add Weather",
     create_google_photo_album: "Add Album",
+    group_campfire_planned: "Add Campfire",
     all_confirmed_participants_signed_waiver: nil,
     all_confirmed_primary_participants_paid_or_waived: nil,
     all_confirmed_participants_assigned_parking: nil,
@@ -47,7 +48,7 @@ class TripReadinessChecklist
 
   MANUAL_TASKS = {
     add_photo_album_to_older_website: "Add photo album to older website",
-    send_trip_details_email: "Send out trip details email with check-in info",
+    send_redacted_photo_ids: "Send out redacted photo ids",
     send_collected_money_to_treasurer: "Send collected money to Treasurer",
     send_photo_upload_reminder: "Send reminder to participants to upload photos to album"
   }.freeze
@@ -172,6 +173,14 @@ class TripReadinessChecklist
         incomplete_detail: "Add a Google Photo Album URL on the trip edit page.",
         detail_link_url: photo_album_url
       ),
+      automatic_task(
+        :group_campfire_planned,
+        "Group campfire site and night set",
+        trip.group_campfire_ready?,
+        update_label: OVERRIDABLE_AUTOMATIC_TASKS.fetch(:group_campfire_planned),
+        complete_detail: group_campfire_detail,
+        incomplete_detail: "Choose a group campfire site and night, or set the fire night to None if there will be no group campfire."
+      ),
       manual_task(:add_photo_album_to_older_website, MANUAL_TASKS.fetch(:add_photo_album_to_older_website))
     ]
   end
@@ -199,11 +208,14 @@ class TripReadinessChecklist
         complete_detail: "Every confirmed participant has a parking status.",
         incomplete_detail: missing_confirmed_participants_detail(->(signup) { !signup.unassigned? }, "parking")
       ),
-      manual_task(
+      automatic_task(
         :send_trip_details_email,
-        MANUAL_TASKS.fetch(:send_trip_details_email),
-        "Person who registered site, Registration number and redacted photo id"
-      )
+        "Send out trip details email with check-in info",
+        trip_details_email_sent?,
+        complete_detail: "Trip details email was sent to participants.",
+        incomplete_detail: "Create, preview, and send the trip details email before heading out."
+      ),
+      manual_task(:send_redacted_photo_ids, MANUAL_TASKS.fetch(:send_redacted_photo_ids))
     ]
   end
 
@@ -319,6 +331,10 @@ class TripReadinessChecklist
     @confirmed_primary_participants ||= trip.campsite_signups.confirmed.primary.includes(:payments, :user).to_a
   end
 
+  def trip_details_email_sent?
+    trip.trip_details_email&.sent? || false
+  end
+
   def confirmed_participants_ready?(&block)
     confirmed_participants.any? && confirmed_participants.all?(&block)
   end
@@ -378,6 +394,12 @@ class TripReadinessChecklist
     return "Campsite coordinator is #{trip.campsite_coordinator.full_name}." if trip.campsite_coordinator.present?
 
     "Assign a campsite coordinator before heading out."
+  end
+
+  def group_campfire_detail
+    return "No group campfire is planned." if trip.no_group_campfire?
+
+    "Group campfire is planned at #{trip.group_campfire_site_label} on #{trip.group_fire_night_label}."
   end
 
   def campsite_name(campsite)

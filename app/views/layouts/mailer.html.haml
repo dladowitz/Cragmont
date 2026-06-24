@@ -1,4 +1,5 @@
 - header_image_url = "#{root_url.chomp("/")}#{asset_path("email/vent-five-emperor-boulder-header.jpg")}"
+- dark_mode_header_image_url = "#{root_url.chomp("/")}#{asset_path("email/vent-five-emperor-boulder-header-dark-mode.jpg")}"
 !!!
 %html
   %head
@@ -46,6 +47,48 @@
         line-height: 1.55;
       }
 
+      .email-body h1,
+      .email-body h2,
+      .email-body h3,
+      .email-body h4 {
+        margin: 28px 0 12px;
+        color: #17231d;
+        font-family: Arial, Helvetica, sans-serif;
+        font-weight: 800;
+        line-height: 1.2;
+      }
+
+      .email-body h1 {
+        font-size: 28px;
+      }
+
+      .email-body h2 {
+        font-size: 23px;
+      }
+
+      .email-body h3 {
+        font-size: 19px;
+      }
+
+      .email-body ul,
+      .email-body ol {
+        margin: 0 0 18px;
+        padding-left: 24px;
+        font-size: 17px;
+        line-height: 1.55;
+      }
+
+      .email-body li {
+        margin: 0 0 8px;
+      }
+
+      .email-body hr {
+        height: 1px;
+        margin: 28px 0;
+        border: 0;
+        background: #d8cfbd;
+      }
+
       .email-body a {
         color: #1f6f55;
         font-weight: 700;
@@ -60,6 +103,47 @@
       .email-header {
         color-scheme: only light;
         forced-color-adjust: none;
+      }
+
+      .email-header-image {
+        color-scheme: only light;
+        forced-color-adjust: none;
+        filter: none !important;
+        -webkit-filter: none !important;
+        mix-blend-mode: normal !important;
+      }
+
+      .email-header-image-dark {
+        display: none;
+        max-height: 0;
+        overflow: hidden;
+        mso-hide: all;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .email-header-image-light {
+          display: none !important;
+          max-height: 0 !important;
+          overflow: hidden !important;
+        }
+
+        .email-header-image-dark {
+          display: block !important;
+          max-height: none !important;
+          overflow: visible !important;
+        }
+      }
+
+      [data-ogsc] .email-header-image-light {
+        display: none !important;
+        max-height: 0 !important;
+        overflow: hidden !important;
+      }
+
+      [data-ogsc] .email-header-image-dark {
+        display: block !important;
+        max-height: none !important;
+        overflow: visible !important;
       }
 
       @media only screen and (max-width: 640px) {
@@ -88,7 +172,7 @@
     %table{role: "presentation", width: "100%", cellpadding: "0", cellspacing: "0", style: "min-width: 100%; background-color: #17231d; color-scheme: only light; forced-color-adjust: none;"}
       %tr
         %td.email-background{align: "center", style: "background-color: #17231d; color-scheme: only light; forced-color-adjust: none; padding: 28px 12px;"}
-          %table.email-shell{role: "presentation", width: "620", cellpadding: "0", cellspacing: "0", style: "width: 620px; max-width: 100%; background-color: #fffaf0;"}
+          %table.email-shell{role: "presentation", width: "775", cellpadding: "0", cellspacing: "0", style: "width: 775px; max-width: 100%; background-color: #fffaf0;"}
             %tr
               %td.email-header{style: "background-color: #17231d; padding: 30px 34px 24px; color: #f8f4ea; text-align: left;"}
                 %p{style: "margin: 0; color: #ffffff; font-family: Arial, Helvetica, sans-serif; line-height: 1;"}
@@ -98,7 +182,9 @@
                     Climbing Club
             %tr
               %td.email-image-header{style: "background-color: #17231d;"}
-                %img{src: header_image_url, width: "620", height: "375", alt: "Emperor Boulder, Marin Coast", style: "border: 0; display: block; width: 100%; max-width: 620px; height: auto; line-height: 100%; outline: none; text-decoration: none;"}/
+                %img.email-header-image.email-header-image-light{src: header_image_url, width: "775", height: "469", alt: "Emperor Boulder, Marin Coast", style: "border: 0; display: block; width: 100%; max-width: 775px; height: auto; line-height: 100%; outline: none; text-decoration: none; color-scheme: only light; forced-color-adjust: none; filter: none !important; -webkit-filter: none !important; mix-blend-mode: normal !important;"}/
+                .email-header-image-dark{style: "display: none; max-height: 0; overflow: hidden; mso-hide: all;"}
+                  %img.email-header-image{src: dark_mode_header_image_url, width: "775", height: "469", alt: "Emperor Boulder, Marin Coast", style: "border: 0; display: block; width: 100%; max-width: 775px; height: auto; line-height: 100%; outline: none; text-decoration: none; color-scheme: only light; forced-color-adjust: none; filter: none !important; -webkit-filter: none !important; mix-blend-mode: normal !important;"}/
             %tr
               %td.email-card.email-body{style: "background-color: #fffaf0; color: #21302a; padding: 36px 40px 32px;"}
                 = yield

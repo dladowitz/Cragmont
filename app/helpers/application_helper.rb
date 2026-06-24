@@ -1,6 +1,9 @@
 require "commonmarker"
 
 module ApplicationHelper
+  TRIP_DETAILS_EMAIL_MARKDOWN_TAGS = %w[p h1 h2 h3 h4 ul ol li strong em a br hr].freeze
+  TRIP_DETAILS_EMAIL_MARKDOWN_ATTRIBUTES = %w[href title target rel].freeze
+
   def required_marker
     safe_join([
       tag.span("*", class: "required-marker", aria: { hidden: "true" }),
@@ -39,6 +42,23 @@ module ApplicationHelper
       html,
       tags: %w[p h2 h3 h4 ul ol li strong em a br],
       attributes: %w[href title target rel]
+    )
+
+    add_external_link_attributes(sanitized_html)
+  end
+
+  def render_trip_details_email_markdown(markdown)
+    html = Commonmarker.to_html(markdown.to_s)
+    html = html.gsub(%r{<a href="#[^"]+" aria-hidden="true" class="anchor" id="[^"]+"></a>}, "")
+
+    sanitize_trip_details_email_html(html)
+  end
+
+  def sanitize_trip_details_email_html(html)
+    sanitized_html = sanitize(
+      html.to_s,
+      tags: TRIP_DETAILS_EMAIL_MARKDOWN_TAGS,
+      attributes: TRIP_DETAILS_EMAIL_MARKDOWN_ATTRIBUTES
     )
 
     add_external_link_attributes(sanitized_html)
