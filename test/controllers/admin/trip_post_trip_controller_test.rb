@@ -92,7 +92,7 @@ class Admin::TripPostTripControllerTest < ActionDispatch::IntegrationTest
       meeting_location_url: "https://maps.google.com/?q=Vent+5",
       late_arrival_instructions: "If you are running late, hike toward the main wall.",
       participant_capacity: 8,
-      climbing_types: ["sport"]
+      climbing_types: [ "sport" ]
     )
   end
 end

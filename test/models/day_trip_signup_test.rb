@@ -2,7 +2,7 @@ require "test_helper"
 
 class DayTripSignupTest < ActiveSupport::TestCase
   test "shared gear summary uses none when no gear is selected" do
-    signup = DayTripSignup.new(trip: day_trip, user: users(:sam), climbing_abilities: ["top_rope"])
+    signup = DayTripSignup.new(trip: day_trip, user: users(:sam), climbing_abilities: [ "top_rope" ])
 
     assert_equal "None", signup.shared_gear_summary
   end
@@ -11,7 +11,7 @@ class DayTripSignupTest < ActiveSupport::TestCase
     signup = DayTripSignup.new(
       trip: day_trip,
       user: users(:sam),
-      climbing_abilities: ["top_rope"],
+      climbing_abilities: [ "top_rope" ],
       rope_70m: true
     )
 
@@ -22,7 +22,7 @@ class DayTripSignupTest < ActiveSupport::TestCase
     signup = DayTripSignup.new(
       trip: day_trip,
       user: users(:sam),
-      climbing_abilities: ["top_rope"],
+      climbing_abilities: [ "top_rope" ],
       rope_60m: true,
       quickdraws_and_sport_anchor: true,
       cams_nuts_and_trad_anchor: true
@@ -46,7 +46,7 @@ class DayTripSignupTest < ActiveSupport::TestCase
       meeting_location_url: "https://maps.google.com/?q=Vent+5",
       late_arrival_instructions: "If you are running late, hike toward the main wall.",
       participant_capacity: 8,
-      climbing_types: ["sport", "trad"]
+      climbing_types: [ "sport", "trad" ]
     )
   end
 end

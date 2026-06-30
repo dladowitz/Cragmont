@@ -142,7 +142,7 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
 
   test "admin day trip readiness hides lead climber check for bouldering only trips" do
     trip = create_day_trip!
-    trip.update!(climbing_types: ["bouldering"])
+    trip.update!(climbing_types: [ "bouldering" ])
 
     get readiness_admin_trip_url(trip)
 
@@ -164,7 +164,7 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
 
   test "admin cannot complete hidden lead climber task for bouldering only trips" do
     trip = create_day_trip!
-    trip.update!(climbing_types: ["bouldering"])
+    trip.update!(climbing_types: [ "bouldering" ])
 
     assert_no_difference "TripReadinessCompletion.count" do
       patch readiness_task_admin_trip_url(trip, "verify_enough_lead_climbers"), params: { completed: "1" }
@@ -340,7 +340,7 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
       meeting_location_url: "https://maps.google.com/?q=Vent+5",
       late_arrival_instructions: "If you are running late, hike toward the main wall.",
       participant_capacity: 8,
-      climbing_types: ["sport"]
+      climbing_types: [ "sport" ]
     )
   end
 end

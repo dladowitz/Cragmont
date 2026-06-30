@@ -183,7 +183,7 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
 
   test "day trip lead climber readiness task only appears for sport or trad climbing" do
     trip = create_day_trip!
-    trip.update!(climbing_types: ["bouldering"])
+    trip.update!(climbing_types: [ "bouldering" ])
     checklist = TripReadinessChecklist.new(trip)
     task_keys = checklist.readiness_categories.flat_map(&:tasks).map(&:key)
 
@@ -389,7 +389,7 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
       meeting_location_url: "https://maps.google.com/?q=Vent+5",
       late_arrival_instructions: "If you are running late, hike toward the main wall.",
       participant_capacity: 8,
-      climbing_types: ["sport"]
+      climbing_types: [ "sport" ]
     )
   end
 end

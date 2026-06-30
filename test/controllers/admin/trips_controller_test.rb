@@ -1201,7 +1201,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
           cost_dollars: "$0.00",
           participant_capacity: "12",
           sun_exposure: "Morning shade, afternoon sun",
-          climbing_types: ["sport", "bouldering"]
+          climbing_types: [ "sport", "bouldering" ]
         }
       }
     end
@@ -1213,7 +1213,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_equal trip.start_date, trip.end_date
     assert_equal 12, trip.participant_capacity
     assert_equal "Morning shade, afternoon sun", trip.sun_exposure
-    assert_equal ["sport", "bouldering"], trip.climbing_types
+    assert_equal [ "sport", "bouldering" ], trip.climbing_types
   end
 
   test "day trip climbing type validation is clear for admins" do
@@ -1232,7 +1232,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
           late_arrival_instructions: "If you are running late, hike toward the main wall.",
           cost_dollars: "$0.00",
           participant_capacity: "12",
-          climbing_types: [""]
+          climbing_types: [ "" ]
         }
       }
     end
@@ -1336,7 +1336,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       meeting_location_url: "https://maps.google.com/?q=Vent+5",
       late_arrival_instructions: "If you are running late, hike toward the main wall.",
       participant_capacity: 8,
-      climbing_types: ["sport"]
+      climbing_types: [ "sport" ]
     )
     location_image = WaiverSignatureData.new(SIGNATURE_DATA_URL)
     trip.day_trip_image.attach(io: StringIO.new(location_image.bytes), filename: "vent-5-map.png", content_type: "image/png")
@@ -1391,7 +1391,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       cost_dollars: "0",
       participant_capacity: 12,
       sun_exposure: "Morning shade",
-      climbing_types: ["sport"]
+      climbing_types: [ "sport" ]
     )
 
     patch admin_trip_url(trip), params: {
@@ -1408,12 +1408,12 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
         cost_dollars: "$0.00",
         participant_capacity: trip.participant_capacity,
         sun_exposure: "Full sun",
-        climbing_types: ["", "trad", "bouldering"]
+        climbing_types: [ "", "trad", "bouldering" ]
       }
     }
 
     assert_redirected_to admin_trip_url(trip)
-    assert_equal ["trad", "bouldering"], trip.reload.climbing_types
+    assert_equal [ "trad", "bouldering" ], trip.reload.climbing_types
     assert_equal "Full sun", trip.sun_exposure
   end
 
@@ -1436,11 +1436,11 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       photo_album_url: "https://photos.app.goo.gl/vent5-admin",
       sun_exposure: "Morning sun, afternoon shade",
       participant_capacity: 2,
-      climbing_types: ["sport"]
+      climbing_types: [ "sport" ]
     )
     location_image = WaiverSignatureData.new(SIGNATURE_DATA_URL)
     trip.day_trip_image.attach(io: StringIO.new(location_image.bytes), filename: "vent-5.png", content_type: "image/png")
-    signup = DayTripSignup.create!(trip: trip, user: users(:sam), climbing_abilities: ["top_rope"])
+    signup = DayTripSignup.create!(trip: trip, user: users(:sam), climbing_abilities: [ "top_rope" ])
 
     get admin_trip_url(trip)
 
@@ -1490,9 +1490,9 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       meeting_location_url: "https://maps.google.com/?q=Vent+5",
       late_arrival_instructions: "If you are running late, hike toward the main wall.",
       participant_capacity: 1,
-      climbing_types: ["sport"]
+      climbing_types: [ "sport" ]
     )
-    signup = DayTripSignup.create!(trip: trip, user: users(:sam), climbing_abilities: ["top_rope"])
+    signup = DayTripSignup.create!(trip: trip, user: users(:sam), climbing_abilities: [ "top_rope" ])
     assert trip.reload.capacity_full?
 
     patch move_to_waitlist_admin_trip_day_trip_signup_url(trip, signup)
@@ -1530,12 +1530,12 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       meeting_location_url: "https://maps.google.com/?q=Vent+5",
       late_arrival_instructions: "If you are running late, hike toward the main wall.",
       participant_capacity: 1,
-      climbing_types: ["sport"]
+      climbing_types: [ "sport" ]
     )
     confirmed_user = User.create!(first_name: "Fiona", last_name: "Full", email: "fiona-admin-full@example.com", password: "password")
     waitlisted_user = User.create!(first_name: "Willa", last_name: "Wait", email: "willa-admin-day-trip@example.com", password: "password")
-    DayTripSignup.create!(trip: trip, user: confirmed_user, climbing_abilities: ["top_rope"])
-    signup = DayTripSignup.create!(trip: trip, user: waitlisted_user, climbing_abilities: ["lead"], status: "waitlisted")
+    DayTripSignup.create!(trip: trip, user: confirmed_user, climbing_abilities: [ "top_rope" ])
+    signup = DayTripSignup.create!(trip: trip, user: waitlisted_user, climbing_abilities: [ "lead" ], status: "waitlisted")
     assert trip.reload.capacity_full?
 
     patch move_onto_trip_admin_trip_day_trip_signup_url(trip, signup)
@@ -1569,9 +1569,9 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       meeting_location_url: "https://maps.google.com/?q=Vent+5",
       late_arrival_instructions: "If you are running late, hike toward the main wall.",
       participant_capacity: 1,
-      climbing_types: ["sport"]
+      climbing_types: [ "sport" ]
     )
-    signup = DayTripSignup.create!(trip: trip, user: users(:sam), climbing_abilities: ["top_rope"])
+    signup = DayTripSignup.create!(trip: trip, user: users(:sam), climbing_abilities: [ "top_rope" ])
 
     assert_difference "DayTripSignup.count", -1 do
       delete remove_admin_trip_day_trip_signup_url(trip, signup)

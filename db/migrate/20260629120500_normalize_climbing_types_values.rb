@@ -1,9 +1,9 @@
 class NormalizeClimbingTypesValues < ActiveRecord::Migration[8.1]
   CLIMBING_TYPES = %w[sport trad bouldering].freeze
   LEGACY_TYPE_MAP = {
-    "sport" => ["sport"],
-    "trad" => ["trad"],
-    "both" => ["sport", "trad"]
+    "sport" => [ "sport" ],
+    "trad" => [ "trad" ],
+    "both" => [ "sport", "trad" ]
   }.freeze
 
   def up
@@ -26,7 +26,7 @@ class NormalizeClimbingTypesValues < ActiveRecord::Migration[8.1]
   def normalize_types(raw_value)
     raw_string = raw_value.to_s
     parsed_value = JSON.parse(raw_string)
-    return Array(parsed_value).map(&:to_s).select { |type| type.in?(CLIMBING_TYPES) }.uniq
+    Array(parsed_value).map(&:to_s).select { |type| type.in?(CLIMBING_TYPES) }.uniq
   rescue JSON::ParserError
     LEGACY_TYPE_MAP.fetch(raw_string, [])
   end

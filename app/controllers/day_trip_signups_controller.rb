@@ -12,12 +12,14 @@ class DayTripSignupsController < ApplicationController
       redirect_to trip_path(@trip), alert: "Choose an available climbing ability before tying in."
     elsif signing_up_with_minors? && minor_attributes.empty?
       redirect_to trip_path(@trip), alert: "Add your minor's details before tying in."
-    elsif !ensure_waiver_ready(minor_attributes: minor_attributes)
-      return
-    elsif create_day_trip_signup(signup, minor_attributes)
-      redirect_to trip_path(@trip), notice: "On belay! You've successfully signed up for this day trip."
     else
-      redirect_to trip_path(@trip), alert: signup.errors.full_messages.to_sentence
+      return unless ensure_waiver_ready(minor_attributes: minor_attributes)
+
+      if create_day_trip_signup(signup, minor_attributes)
+        redirect_to trip_path(@trip), notice: "On belay! You've successfully signed up for this day trip."
+      else
+        redirect_to trip_path(@trip), alert: signup.errors.full_messages.to_sentence
+      end
     end
   end
 
@@ -201,5 +203,4 @@ class DayTripSignupsController < ApplicationController
       waiver_user_agent: waiver.waiver_user_agent
     )
   end
-
 end

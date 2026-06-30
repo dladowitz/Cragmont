@@ -82,7 +82,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       late_arrival_instructions: "If you are running late, head toward the crag.",
       participant_capacity: 8,
       sun_exposure: "Afternoon sun",
-      climbing_types: ["sport"],
+      climbing_types: [ "sport" ],
       whatsapp_group: "https://chat.whatsapp.com/vent5",
       weather_url: "https://forecast.weather.gov/vent5",
       mountain_project_url: "https://www.mountainproject.com/area/vent5",
@@ -132,11 +132,11 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       meeting_location_url: "https://maps.google.com/?q=Castle+Rock",
       late_arrival_instructions: "If you are running late, meet us at the main wall.",
       participant_capacity: 8,
-      climbing_types: ["sport"]
+      climbing_types: [ "sport" ]
     )
-    lead_signup = DayTripSignup.create!(trip: trip, user: users(:sam), climbing_abilities: ["lead"])
+    lead_signup = DayTripSignup.create!(trip: trip, user: users(:sam), climbing_abilities: [ "lead" ])
     top_rope_user = User.create!(first_name: "Tara", last_name: "Toprope", email: "tara-toprope@example.com", password: "password")
-    top_rope_signup = DayTripSignup.create!(trip: trip, user: top_rope_user, climbing_abilities: ["top_rope"])
+    top_rope_signup = DayTripSignup.create!(trip: trip, user: top_rope_user, climbing_abilities: [ "top_rope" ])
     top_rope_signup.day_trip_signup_minors.create!(first_name: "Mika", last_name: "Toprope", age: 12, relationship: "Child")
 
     get trip_url(trip)
@@ -149,7 +149,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".stats", text: /Top Rope/, count: 0
     assert_select ".stats", text: /Lead/, count: 0
     assert_select ".stats", text: /Reserved Lead Spots/, count: 0
-    assert_equal ["Participant", "Climbing Skills", "Bringing Gear"], css_select(".day-trip-participants-panel .confirmed-participants-table th").map { |header| header.text.strip }
+    assert_equal [ "Participant", "Climbing Skills", "Bringing Gear" ], css_select(".day-trip-participants-panel .confirmed-participants-table th").map { |header| header.text.strip }
   end
 
   test "public day trip signup opens from crag plan modal" do
@@ -166,7 +166,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       late_arrival_instructions: "If you are running late, head toward https://example.com/crag.",
       participant_capacity: 8,
       sun_exposure: "Afternoon sun",
-      climbing_types: ["sport", "trad"]
+      climbing_types: [ "sport", "trad" ]
     )
     log_in_as(users(:sam))
 
@@ -244,10 +244,10 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       meeting_location_url: "https://maps.google.com/?q=Vent+5",
       late_arrival_instructions: "If you are running late, head toward the crag.",
       participant_capacity: 1,
-      climbing_types: ["sport"]
+      climbing_types: [ "sport" ]
     )
     signed_up_user = User.create!(first_name: "Fiona", last_name: "Full", email: "fiona-full@example.com", password: "password")
-    DayTripSignup.create!(trip: trip, user: signed_up_user, climbing_abilities: ["top_rope"])
+    DayTripSignup.create!(trip: trip, user: signed_up_user, climbing_abilities: [ "top_rope" ])
     log_in_as(users(:sam))
 
     get trip_url(trip)
@@ -268,12 +268,12 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       meeting_location_url: "https://maps.google.com/?q=Vent+5",
       late_arrival_instructions: "If you are running late, head toward the crag.",
       participant_capacity: 1,
-      climbing_types: ["sport"]
+      climbing_types: [ "sport" ]
     )
     confirmed_user = User.create!(first_name: "Fiona", last_name: "Full", email: "fiona-day-confirmed@example.com", password: "password")
     waitlisted_user = User.create!(first_name: "Willa", last_name: "Wait", email: "willa-day-wait@example.com", password: "password")
-    DayTripSignup.create!(trip: trip, user: confirmed_user, climbing_abilities: ["top_rope"])
-    DayTripSignup.create!(trip: trip, user: waitlisted_user, climbing_abilities: ["lead"], status: "waitlisted")
+    DayTripSignup.create!(trip: trip, user: confirmed_user, climbing_abilities: [ "top_rope" ])
+    DayTripSignup.create!(trip: trip, user: waitlisted_user, climbing_abilities: [ "lead" ], status: "waitlisted")
 
     get trip_url(trip)
 
@@ -308,7 +308,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       meeting_location_url: "https://maps.google.com/?q=Vent+5",
       late_arrival_instructions: "If you are running late, head toward the crag.",
       participant_capacity: 8,
-      climbing_types: ["sport"]
+      climbing_types: [ "sport" ]
     )
 
     get trip_url(trip)
@@ -330,7 +330,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       meeting_location_url: "https://maps.google.com/?q=Castle+Rock",
       late_arrival_instructions: "Meet us by the main boulders.",
       participant_capacity: 4,
-      climbing_types: ["bouldering"]
+      climbing_types: [ "bouldering" ]
     )
     log_in_as(users(:sam))
 
@@ -360,7 +360,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_difference "DayTripSignup.count", 1 do
       post trip_day_trip_signup_path(trip), params: {
         day_trip_signup: {
-          climbing_abilities: ["top_rope", "bouldering", "none"],
+          climbing_abilities: [ "top_rope", "bouldering", "none" ],
           rope_60m: "1",
           rope_70m: "1",
           quickdraws_and_sport_anchor: "1",
@@ -373,7 +373,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
               last_name: "Boulder",
               email: "blake-boulder@example.com",
               phone: "555-0188",
-              climbing_abilities: ["lead", "bouldering"]
+              climbing_abilities: [ "lead", "bouldering" ]
             }
           },
           waiver_signature_data: SIGNATURE_DATA_URL,
@@ -384,7 +384,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to trip_url(trip)
     signup = DayTripSignup.find_by!(trip: trip, user: users(:sam))
-    assert_equal ["bouldering"], signup.climbing_abilities
+    assert_equal [ "bouldering" ], signup.climbing_abilities
     assert_equal "Bouldering", signup.skill_level_label
     assert_not signup.rope_60m?
     assert_not signup.rope_70m?
@@ -407,14 +407,14 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       meeting_location_url: "https://maps.google.com/?q=Vent+5",
       late_arrival_instructions: "If you are running late, head toward the crag.",
       participant_capacity: 4,
-      climbing_types: ["sport"]
+      climbing_types: [ "sport" ]
     )
     log_in_as(users(:sam))
 
     assert_difference "DayTripSignup.count", 1 do
       post trip_day_trip_signup_path(trip), params: {
         day_trip_signup: {
-          climbing_abilities: ["top_rope", "lead", "none"],
+          climbing_abilities: [ "top_rope", "lead", "none" ],
           waiver_signature_data: SIGNATURE_DATA_URL,
           waiver_acknowledged_at: Time.current.iso8601
         }
@@ -422,7 +422,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     end
 
     signup = DayTripSignup.find_by!(trip: trip, user: users(:sam))
-    assert_equal ["top_rope", "lead"], signup.climbing_abilities
+    assert_equal [ "top_rope", "lead" ], signup.climbing_abilities
     assert_equal "Top rope and Lead", signup.skill_level_label
   end
 
@@ -438,14 +438,14 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       meeting_location_url: "https://maps.google.com/?q=Vent+5",
       late_arrival_instructions: "If you are running late, head toward the crag.",
       participant_capacity: 4,
-      climbing_types: ["sport"]
+      climbing_types: [ "sport" ]
     )
     log_in_as(users(:sam))
 
     assert_no_difference "DayTripSignup.count" do
       post trip_day_trip_signup_path(trip), params: {
         day_trip_signup: {
-          climbing_abilities: ["none"],
+          climbing_abilities: [ "none" ],
           waiver_signature_data: SIGNATURE_DATA_URL,
           waiver_acknowledged_at: Time.current.iso8601
         }
@@ -468,14 +468,14 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       meeting_location_url: "https://maps.google.com/?q=Castle+Rock",
       late_arrival_instructions: "Meet us by the main boulders.",
       participant_capacity: 4,
-      climbing_types: ["bouldering"]
+      climbing_types: [ "bouldering" ]
     )
     log_in_as(users(:sam))
 
     assert_no_difference "DayTripSignup.count" do
       post trip_day_trip_signup_path(trip), params: {
         day_trip_signup: {
-          climbing_abilities: ["none"],
+          climbing_abilities: [ "none" ],
           waiver_signature_data: SIGNATURE_DATA_URL,
           waiver_acknowledged_at: Time.current.iso8601
         }
