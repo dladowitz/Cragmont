@@ -1,8 +1,8 @@
-= render "admin/shared/header", title: "Settings"
+= render "admin/shared/header", title: "Camping Trip Settings"
 = form_with model: @site_setting, url: admin_settings_path, method: :patch, class: "admin-form" do |form|
   %section.panel
     .panel-header
-      %h2 Settings
+      %h2 Camping Trip Settings
     = render "admin/shared/errors", record: @site_setting
     .form-grid
       %div
@@ -29,19 +29,5 @@
           %span{"aria-hidden" => "true"} $
           = form.number_field :minor_extra_night_fee, min: 0, step: 0.01, value: number_with_precision(@site_setting.minor_extra_night_fee, precision: 2)
     %p.muted Fees are entered in dollars and stored in cents.
-  %section.panel
-    .panel-header
-      %div
-        %h2 Content
-        %p.muted Manage editable public copy, email templates, and the liability note.
-      .actions.settings-content-actions
-        - if policy(ContentPage).edit?
-          = link_to "Edit What to Expect page", edit_admin_content_page_path("what_to_expect"), class: "button secondary"
-        - if policy(TripDetailsEmailTemplate).index?
-          = link_to "Edit Trip Details Email Templates", admin_trip_details_email_templates_path, class: "button secondary"
-    .form-grid
-      .form-grid-full
-        = required_label form, :liability_warning, "Liability Warning"
-        = form.text_area :liability_warning, rows: 6, required: true
-    .form-actions
-      = form.submit "Save settings", class: "button"
+  .form-actions
+    = form.submit "Save settings", class: "button"

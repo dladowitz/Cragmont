@@ -22,17 +22,33 @@ class TripsController < ApplicationController
     @content_page = ContentPage.current!("what_to_expect")
   end
 
+  def day_trip_what_to_expect
+    @content_page = ContentPage.current!("day_trip_what_to_expect")
+    render :what_to_expect
+  end
+
+  def safety
+    @content_page = ContentPage.current!("how_to_think_about_safety")
+  end
+
   def show
-    @campsites = @trip.campsites.includes(:campground, campsite_signups: [ :user, :campsite_signup_minors, { guest_of_signup: :user } ]).order(:arrival_date, :site_number)
-    @current_signup = @trip.campsite_signups.active.includes(:campsite, :payments, { guest_of_signup: :user }, guest_signups: [ :user, :campsite ]).find_by(user: current_user) if user_signed_in?
-    @waitlisted_signups = @trip.waitlisted_signups
-    @waitlist_confirmation_campsites = @current_signup&.waitlisted? ? @trip.waitlist_confirmation_campsites_for(@current_signup) : []
-    @waitlist_confirmation_campsite_ids = @waitlist_confirmation_campsites.map(&:id)
-    @completion_signup = participant_details_signup || guest_details_signup
-    @show_payment_success_modal = payment_success_return?
-    if @show_payment_success_modal
-      missing_waiver_signups = payment_success_missing_waiver_signups
-      @payment_success_missing_waiver_links = payment_success_missing_waiver_links(missing_waiver_signups)
+    if @trip.day_trip?
+      @day_trip_signups = @trip.day_trip_signups.confirmed.primary.includes(:user, :day_trip_signup_minors, guest_signups: :user).order(:created_at)
+      @day_trip_waitlisted_signups = @trip.day_trip_signups.waitlisted.primary.includes(:user, :day_trip_signup_minors, guest_signups: :user).order(:created_at)
+      @current_day_trip_signup = @trip.day_trip_signups.active.includes(:day_trip_signup_minors, guest_signups: :user).find_by(user: current_user) if user_signed_in?
+      render :day_trip_show
+    else
+      @campsites = @trip.campsites.includes(:campground, campsite_signups: [ :user, :campsite_signup_minors, { guest_of_signup: :user } ]).order(:arrival_date, :site_number)
+      @current_signup = @trip.campsite_signups.active.includes(:campsite, :payments, { guest_of_signup: :user }, guest_signups: [ :user, :campsite ]).find_by(user: current_user) if user_signed_in?
+      @waitlisted_signups = @trip.waitlisted_signups
+      @waitlist_confirmation_campsites = @current_signup&.waitlisted? ? @trip.waitlist_confirmation_campsites_for(@current_signup) : []
+      @waitlist_confirmation_campsite_ids = @waitlist_confirmation_campsites.map(&:id)
+      @completion_signup = participant_details_signup || guest_details_signup
+      @show_payment_success_modal = payment_success_return?
+      if @show_payment_success_modal
+        missing_waiver_signups = payment_success_missing_waiver_signups
+        @payment_success_missing_waiver_links = payment_success_missing_waiver_links(missing_waiver_signups)
+      end
     end
   end
 

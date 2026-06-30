@@ -34,21 +34,459 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] .date-range-mobile", text: /06\/12\/26\s*to 06\/15\/26/
     assert_select ".trip-card[href='#{trip_path(trips(:jtree))}']", count: 0
     assert_select "a", text: "View trip", count: 0
-    assert_select ".trips-faq-callout a[href='#{what_to_expect_trips_path}']", text: "here."
+    assert_select ".trips-faq-callout a[href='#{what_to_expect_trips_path}']", text: "camping trips"
+    assert_select ".trips-faq-callout a[href='#{day_trip_what_to_expect_trips_path}']", text: "day trips."
     assert_select ".background-image-caption", "Regular Northwest Face, Half Dome"
   end
 
-  test "trip what to expect page renders" do
+  test "camping trip what to expect page renders" do
     get what_to_expect_trips_url
 
     assert_response :success
-    assert_select "h1", "What to expect on a Cragmont trip"
-    assert_select "h2", "Content needs to be updated"
-    assert_select ".content-page-markdown", text: /Content markdown editor/
+    assert_select "h1", "What to Expect on a Camping Trip"
+    assert_select "h2", "Camping trips"
+    assert_select "h2", text: "Day trips", count: 0
+    assert_select ".content-page-markdown", text: /shared campsites/
     assert_select ".background-image-caption", "Fairview Dome, Yosemite National Park"
   end
 
-  test "trip what to expect page renders editable content page copy" do
+  test "day trip what to expect page renders" do
+    get day_trip_what_to_expect_trips_url
+
+    assert_response :success
+    assert_select "h1", "What to Expect on a Day Trip"
+    assert_select "h2", "Day trips"
+    assert_select ".content-page-markdown a[href='/trips/how-to-think-about-safety']", text: "How to think about safety on trips"
+    assert_select ".background-image-caption", "Fairview Dome, Yosemite National Park"
+  end
+
+  test "trip safety page renders" do
+    get safety_trips_url
+
+    assert_response :success
+    assert_select "h1", "How to think about safety on trips"
+    assert_select "h2", "Before you trust a rope"
+    assert_select ".content-page-markdown", text: /No one at Cragmont is a certified guide/
+  end
+
+  test "public day trip detail renders mobile hero image block" do
+    trip = Trip.create!(
+      trip_type: "day_trip",
+      name: "Vent 5 Day",
+      location: "Mount Tam, CA",
+      start_date: Date.new(2026, 9, 12),
+      status: "published",
+      meeting_time: "19:00",
+      meeting_location: "Vent 5 Parking Trailhead",
+      meeting_location_url: "https://maps.google.com/?q=Vent+5",
+      late_arrival_instructions: "If you are running late, head toward the crag.",
+      participant_capacity: 8,
+      sun_exposure: "Afternoon sun",
+      climbing_types: [ "sport" ],
+      whatsapp_group: "https://chat.whatsapp.com/vent5",
+      weather_url: "https://forecast.weather.gov/vent5",
+      mountain_project_url: "https://www.mountainproject.com/area/vent5",
+      guide_book_url: "https://example.com/guide-book",
+      photo_album_url: "https://photos.app.goo.gl/vent5"
+    )
+
+    get trip_url(trip)
+
+    assert_response :success
+    assert_select ".trip-summary-header .trips-faq-callout", text: /day trip/
+    assert_select ".trip-summary-header .trips-faq-callout a[href='#{day_trip_what_to_expect_trips_path}']", text: "here."
+    assert_select ".trip-summary-copy .trip-title-line" do
+      assert_select ".trip-title-resource-link", count: 0
+    end
+    assert_select ".trip-summary-notices .trip-resource-link", count: 0
+    assert_select ".trip-summary-notices .trip-resource-link", text: "Guide Book", count: 0
+    assert_select ".trip-summary-notices .trip-resource-link", text: "Weather", count: 0
+    assert_select ".trip-show-mobile-hero" do
+      assert_select "h1", "Vent 5 Day"
+      assert_select ".trip-show-mobile-location", "Mount Tam, CA"
+      assert_select ".trip-show-mobile-dates", text: /September 12, 2026 at 7:00pm/
+      assert_select ".trip-mobile-resource-link", count: 0
+      assert_select ".trip-show-mobile-hero-caption", "IRS Wall, Joshua Tree"
+    end
+    assert_operator response.body.index("Additional Resources"), :<, response.body.index("Participants")
+    assert_select ".day-trip-resources-panel" do
+      assert_select "h2", "Additional Resources"
+      assert_select ".additional-resource-detail", text: /Sun Exposure:\s*Afternoon sun/
+      assert_select "a[href='https://chat.whatsapp.com/vent5'][target='_blank'][rel='noopener']", text: "Join the WhatsApp Group"
+      assert_select "a[href='https://forecast.weather.gov/vent5'][target='_blank'][rel='noopener']", text: "Weather"
+      assert_select "a[href='https://www.mountainproject.com/area/vent5'][target='_blank'][rel='noopener']", text: "Mountain Project"
+      assert_select "a[href='https://example.com/guide-book'][target='_blank'][rel='noopener']", text: "Guide Book"
+      assert_select "a[href='https://photos.app.goo.gl/vent5'][target='_blank'][rel='noopener']", text: "Photo Album"
+    end
+  end
+
+  test "public day trip stats show simple capacity counts" do
+    trip = Trip.create!(
+      trip_type: "day_trip",
+      name: "Castle Rock Day",
+      location: "Castle Rock, CA",
+      start_date: Date.new(2026, 9, 19),
+      status: "published",
+      meeting_time: "08:30",
+      meeting_location: "Castle Rock parking lot",
+      meeting_location_url: "https://maps.google.com/?q=Castle+Rock",
+      late_arrival_instructions: "If you are running late, meet us at the main wall.",
+      participant_capacity: 8,
+      climbing_types: [ "sport" ]
+    )
+    lead_signup = DayTripSignup.create!(trip: trip, user: users(:sam), climbing_abilities: [ "lead" ])
+    top_rope_user = User.create!(first_name: "Tara", last_name: "Toprope", email: "tara-toprope@example.com", password: "password")
+    top_rope_signup = DayTripSignup.create!(trip: trip, user: top_rope_user, climbing_abilities: [ "top_rope" ])
+    top_rope_signup.day_trip_signup_minors.create!(first_name: "Mika", last_name: "Toprope", age: 12, relationship: "Child")
+
+    get trip_url(trip)
+
+    assert_response :success
+    assert_equal 1, lead_signup.lead_count
+    assert_select ".stats", text: /Signed up\s*3/
+    assert_select ".stats", text: /Open Spaces\s*5/
+    assert_select ".stats", text: /Total Capacity\s*8/
+    assert_select ".stats", text: /Top Rope/, count: 0
+    assert_select ".stats", text: /Lead/, count: 0
+    assert_select ".stats", text: /Reserved Lead Spots/, count: 0
+    assert_equal [ "Participant", "Climbing Skills", "Bringing Gear" ], css_select(".day-trip-participants-panel .confirmed-participants-table th").map { |header| header.text.strip }
+  end
+
+  test "public day trip signup opens from crag plan modal" do
+    trip = Trip.create!(
+      trip_type: "day_trip",
+      name: "Vent 5 Day",
+      location: "Mount Tam, CA",
+      start_date: Date.new(2026, 9, 12),
+      status: "published",
+      meeting_time: "07:00",
+      meeting_location: "Vent 5 Parking Trailhead",
+      meeting_location_url: "https://maps.google.com/?q=Vent+5",
+      carpool_meeting_spot: "Meet at Good Earth if you want to carpool. https://www.genatural.com/",
+      late_arrival_instructions: "If you are running late, head toward https://example.com/crag.",
+      participant_capacity: 8,
+      sun_exposure: "Afternoon sun",
+      climbing_types: [ "sport", "trad" ]
+    )
+    log_in_as(users(:sam))
+
+    get trip_url(trip)
+
+    assert_response :success
+    assert_select ".day-trip-signup-panel", count: 0
+    assert_select ".day-trip-details-panel" do
+      assert_select "h2", "Crag Plan"
+      assert_select "dl.details-list", text: /Types of climbing/
+      assert_select ".gear-needed-item.is-needed", text: /Sport/
+      assert_select ".gear-needed-item.is-needed", text: /Trad/
+      assert_select ".gear-needed-item", text: /Bouldering/
+      assert_select "dl.details-list", text: /Both/, count: 0
+      assert_select "dl.details-list", text: /Cost\s*Free/
+      assert_select "dl.details-list", text: /Sun Exposure\s*Afternoon sun/
+      assert_select "dl.details-list", text: /Carpooling info\s*Meet at Good Earth if you want to carpool\./
+      assert_select "a[href='https://www.genatural.com/'][target='_blank'][rel='noopener']", text: "https://www.genatural.com/"
+      assert_select "dl.details-list", text: /If you are running late\s*If you are running late, head toward/
+      assert_select "a[href='https://example.com/crag'][target='_blank'][rel='noopener']", text: "https://example.com/crag"
+      assert_select "dl.details-list", text: /\$0\.00/, count: 0
+      assert_select ".day-trip-signup-action [data-controller='modal']" do
+        assert_select "button.day-trip-signup-button[data-action='modal#open']", "Sign Up"
+        assert_select "dialog.day-trip-signup-modal" do
+          assert_select "h2", "Sign Up"
+          assert_select "form.day-trip-signup-form[action='#{trip_day_trip_signup_path(trip)}']" do
+            assert_select ".capacity-warning[hidden]", text: "This trip is currently full. You can sign up for the waitlist"
+            assert_select "legend", text: /Climbing ability/
+            assert_select ".signup-field-subtext", text: "Select the type of climbing you are competent at"
+            assert_select ".climbing-ability-options[data-climbing-ability-group='true']"
+            assert_select "input[type='checkbox'][name='day_trip_signup[climbing_abilities][]'][value='top_rope'][data-action='signature#toggleExclusiveClimbingAbility']"
+            assert_select "input[type='checkbox'][name='day_trip_signup[climbing_abilities][]'][value='lead'][data-action='signature#toggleExclusiveClimbingAbility']"
+            assert_select "input[type='checkbox'][name='day_trip_signup[climbing_abilities][]'][value='bouldering']", count: 0
+            assert_select "input[type='checkbox'][name='day_trip_signup[climbing_abilities][]'][value='none'][data-action='signature#toggleExclusiveClimbingAbility']"
+            assert_select ".climbing-ability-choice > .climbing-ability-definition", count: 0
+            assert_select ".climbing-ability-card .climbing-ability-card-heading", text: /Top Rope Climbing/
+            assert_select ".climbing-ability-card .climbing-ability-card-heading", text: /Lead Climbing/
+            assert_select ".climbing-ability-definition", text: /I feel competent to put on my harness/
+            assert_select ".climbing-ability-definition", text: /I feel competent to lead a route placing protection/
+            assert_select ".climbing-ability-definition", text: /protecting with crash pads/, count: 0
+            assert_select ".climbing-ability-definition", text: /We ask that at a minimum you feel competent Top Rope climbing\./
+            assert_select ".climbing-ability-definition", text: /\(on roped trips\)/, count: 0
+            assert_select "input[type='checkbox'][name='day_trip_signup[with_guest]']", count: 0
+            assert_select "label", text: /Add one adult/, count: 0
+            assert_select ".guest-fields", count: 0
+            assert_select "input[type='checkbox'][name='day_trip_signup[with_minor]'][value='1']"
+            assert_select ".minor-fields .day-trip-minor-field-row" do
+              assert_select "input[name='day_trip_signup[day_trip_signup_minors_attributes][0][first_name]']"
+              assert_select "input[name='day_trip_signup[day_trip_signup_minors_attributes][0][last_name]']"
+              assert_select "input[name='day_trip_signup[day_trip_signup_minors_attributes][0][age]']"
+              assert_select "input[name='day_trip_signup[day_trip_signup_minors_attributes][0][relationship]']"
+            end
+            assert_select "legend", text: "Gear I can bring"
+            assert_select "input[type='checkbox'][name='day_trip_signup[rope_60m]'][value='1']"
+            assert_select "input[type='checkbox'][name='day_trip_signup[rope_70m]'][value='1']"
+            assert_select "input[type='checkbox'][name='day_trip_signup[quickdraws_and_sport_anchor]'][value='1']"
+            assert_select "input[type='checkbox'][name='day_trip_signup[clip_stick]'][value='1']"
+            assert_select "input[type='checkbox'][name='day_trip_signup[cams_nuts_and_trad_anchor]'][value='1']"
+            assert_select "input[name='day_trip_signup[crash_pad_count]']", count: 0
+          end
+        end
+      end
+    end
+  end
+
+  test "public day trip signup button points to waitlist when trip is full" do
+    trip = Trip.create!(
+      trip_type: "day_trip",
+      name: "Full Vent 5",
+      location: "Marin Coast",
+      start_date: Date.new(2026, 9, 13),
+      status: "published",
+      meeting_time: "07:00",
+      meeting_location: "Vent 5 Parking Trailhead",
+      meeting_location_url: "https://maps.google.com/?q=Vent+5",
+      late_arrival_instructions: "If you are running late, head toward the crag.",
+      participant_capacity: 1,
+      climbing_types: [ "sport" ]
+    )
+    signed_up_user = User.create!(first_name: "Fiona", last_name: "Full", email: "fiona-full@example.com", password: "password")
+    DayTripSignup.create!(trip: trip, user: signed_up_user, climbing_abilities: [ "top_rope" ])
+    log_in_as(users(:sam))
+
+    get trip_url(trip)
+
+    assert_response :success
+    assert_select ".day-trip-signup-button.is-waitlist", text: "Sign up for waitlist"
+  end
+
+  test "public day trip detail shows waitlisted participants separately" do
+    trip = Trip.create!(
+      trip_type: "day_trip",
+      name: "Vent 5 Waitlist",
+      location: "Marin Coast",
+      start_date: Date.new(2026, 9, 13),
+      status: "published",
+      meeting_time: "07:00",
+      meeting_location: "Vent 5 Parking Trailhead",
+      meeting_location_url: "https://maps.google.com/?q=Vent+5",
+      late_arrival_instructions: "If you are running late, head toward the crag.",
+      participant_capacity: 1,
+      climbing_types: [ "sport" ]
+    )
+    confirmed_user = User.create!(first_name: "Fiona", last_name: "Full", email: "fiona-day-confirmed@example.com", password: "password")
+    waitlisted_user = User.create!(first_name: "Willa", last_name: "Wait", email: "willa-day-wait@example.com", password: "password")
+    DayTripSignup.create!(trip: trip, user: confirmed_user, climbing_abilities: [ "top_rope" ])
+    DayTripSignup.create!(trip: trip, user: waitlisted_user, climbing_abilities: [ "lead" ], status: "waitlisted")
+
+    get trip_url(trip)
+
+    assert_response :success
+    assert_select ".day-trip-participants-panel:first-of-type" do
+      assert_select "h2", "Participants"
+      assert_select "td", text: "Fiona F."
+      assert_select "td", text: "Willa W.", count: 0
+    end
+    assert_select ".day-trip-waitlist-panel" do
+      assert_select "h2", "Trip waitlist"
+      assert_select "th", text: "Priority", count: 0
+      assert_select "th", text: "Participant"
+      assert_select "th", text: "Climbing Skills"
+      assert_select "th", text: "Bringing Gear"
+      assert_select "td", text: "Willa W."
+      assert_select "td", text: "Lead"
+      assert_select "td", text: "Fiona F.", count: 0
+    end
+  end
+
+  test "public day trip safety reminder uses editable markdown setting" do
+    SiteSetting.current.update!(day_trip_safety_reminder: "## Belay Check\n\nBring **judgment** to the crag.")
+    trip = Trip.create!(
+      trip_type: "day_trip",
+      name: "Vent 5 Safety",
+      location: "Marin Coast",
+      start_date: Date.new(2026, 9, 13),
+      status: "published",
+      meeting_time: "07:00",
+      meeting_location: "Vent 5 Parking Trailhead",
+      meeting_location_url: "https://maps.google.com/?q=Vent+5",
+      late_arrival_instructions: "If you are running late, head toward the crag.",
+      participant_capacity: 8,
+      climbing_types: [ "sport" ]
+    )
+
+    get trip_url(trip)
+
+    assert_response :success
+    assert_select ".day-trip-safety-panel .content-page-markdown h2", "Belay Check"
+    assert_select ".day-trip-safety-panel .content-page-markdown strong", "judgment"
+  end
+
+  test "public day trip signup accepts multiple climbing abilities" do
+    trip = Trip.create!(
+      trip_type: "day_trip",
+      name: "Boulder Bash",
+      location: "Castle Rock, CA",
+      start_date: Date.new(2026, 9, 26),
+      status: "published",
+      meeting_time: "09:00",
+      meeting_location: "Castle Rock parking lot",
+      meeting_location_url: "https://maps.google.com/?q=Castle+Rock",
+      late_arrival_instructions: "Meet us by the main boulders.",
+      participant_capacity: 4,
+      climbing_types: [ "bouldering" ]
+    )
+    log_in_as(users(:sam))
+
+    get trip_url(trip)
+
+    assert_response :success
+    assert_select "form.day-trip-signup-form[action='#{trip_day_trip_signup_path(trip)}']" do
+      assert_select "input[type='checkbox'][name='day_trip_signup[climbing_abilities][]'][value='top_rope']", count: 0
+      assert_select "input[type='checkbox'][name='day_trip_signup[climbing_abilities][]'][value='lead']", count: 0
+      assert_select "input[type='checkbox'][name='day_trip_signup[climbing_abilities][]'][value='bouldering']"
+      assert_select "input[type='checkbox'][name='day_trip_signup[climbing_abilities][]'][value='none'][data-action='signature#toggleExclusiveClimbingAbility']"
+      assert_select ".climbing-ability-definition", text: /We ask that at a minimum you feel competent assessing falls and protecting landing areas\./
+      assert_select ".climbing-ability-definition", text: /We ask that at a minimum you feel competent Top Rope climbing\./, count: 0
+      assert_select "input[type='checkbox'][name='day_trip_signup[with_guest]']", count: 0
+      assert_select ".guest-fields", count: 0
+      assert_select "legend", text: "Gear I can bring"
+      assert_select "input[type='checkbox'][name='day_trip_signup[rope_60m]']", count: 0
+      assert_select "input[type='checkbox'][name='day_trip_signup[rope_70m]']", count: 0
+      assert_select "input[type='checkbox'][name='day_trip_signup[quickdraws_and_sport_anchor]']", count: 0
+      assert_select "input[type='checkbox'][name='day_trip_signup[clip_stick]']", count: 0
+      assert_select "input[type='checkbox'][name='day_trip_signup[cams_nuts_and_trad_anchor]']", count: 0
+      assert_select "input[type='number'][name='day_trip_signup[crash_pad_count]']"
+      assert_select "label", text: /Crash Pad/
+      assert_select "label", text: /How many/
+    end
+
+    assert_difference "DayTripSignup.count", 1 do
+      post trip_day_trip_signup_path(trip), params: {
+        day_trip_signup: {
+          climbing_abilities: [ "top_rope", "bouldering", "none" ],
+          rope_60m: "1",
+          rope_70m: "1",
+          quickdraws_and_sport_anchor: "1",
+          cams_nuts_and_trad_anchor: "1",
+          crash_pad_count: "2",
+          with_guest: "1",
+          guest_attributes: {
+            "0" => {
+              first_name: "Blake",
+              last_name: "Boulder",
+              email: "blake-boulder@example.com",
+              phone: "555-0188",
+              climbing_abilities: [ "lead", "bouldering" ]
+            }
+          },
+          waiver_signature_data: SIGNATURE_DATA_URL,
+          waiver_acknowledged_at: Time.current.iso8601
+        }
+      }
+    end
+
+    assert_redirected_to trip_url(trip)
+    signup = DayTripSignup.find_by!(trip: trip, user: users(:sam))
+    assert_equal [ "bouldering" ], signup.climbing_abilities
+    assert_equal "Bouldering", signup.skill_level_label
+    assert_not signup.rope_60m?
+    assert_not signup.rope_70m?
+    assert_not signup.quickdraws_and_sport_anchor?
+    assert_not signup.cams_nuts_and_trad_anchor?
+    assert_equal 2, signup.crash_pad_count
+    assert_equal "Crash pads (2)", signup.shared_gear_summary
+    assert_empty signup.guest_signups
+  end
+
+  test "public day trip signup does not save none with roped climbing abilities" do
+    trip = Trip.create!(
+      trip_type: "day_trip",
+      name: "Vent 5 Skills",
+      location: "Marin Coast",
+      start_date: Date.new(2026, 10, 3),
+      status: "published",
+      meeting_time: "07:00",
+      meeting_location: "Vent 5 Parking Trailhead",
+      meeting_location_url: "https://maps.google.com/?q=Vent+5",
+      late_arrival_instructions: "If you are running late, head toward the crag.",
+      participant_capacity: 4,
+      climbing_types: [ "sport" ]
+    )
+    log_in_as(users(:sam))
+
+    assert_difference "DayTripSignup.count", 1 do
+      post trip_day_trip_signup_path(trip), params: {
+        day_trip_signup: {
+          climbing_abilities: [ "top_rope", "lead", "none" ],
+          waiver_signature_data: SIGNATURE_DATA_URL,
+          waiver_acknowledged_at: Time.current.iso8601
+        }
+      }
+    end
+
+    signup = DayTripSignup.find_by!(trip: trip, user: users(:sam))
+    assert_equal [ "top_rope", "lead" ], signup.climbing_abilities
+    assert_equal "Top rope and Lead", signup.skill_level_label
+  end
+
+  test "public roped day trip signup rejects none by itself" do
+    trip = Trip.create!(
+      trip_type: "day_trip",
+      name: "Vent 5 Intro",
+      location: "Marin Coast",
+      start_date: Date.new(2026, 10, 4),
+      status: "published",
+      meeting_time: "07:00",
+      meeting_location: "Vent 5 Parking Trailhead",
+      meeting_location_url: "https://maps.google.com/?q=Vent+5",
+      late_arrival_instructions: "If you are running late, head toward the crag.",
+      participant_capacity: 4,
+      climbing_types: [ "sport" ]
+    )
+    log_in_as(users(:sam))
+
+    assert_no_difference "DayTripSignup.count" do
+      post trip_day_trip_signup_path(trip), params: {
+        day_trip_signup: {
+          climbing_abilities: [ "none" ],
+          waiver_signature_data: SIGNATURE_DATA_URL,
+          waiver_acknowledged_at: Time.current.iso8601
+        }
+      }
+    end
+
+    assert_redirected_to trip_url(trip)
+    assert_equal "Choose an available climbing ability before tying in.", flash[:alert]
+  end
+
+  test "public bouldering day trip signup rejects none by itself" do
+    trip = Trip.create!(
+      trip_type: "day_trip",
+      name: "Boulder Basics",
+      location: "Castle Rock, CA",
+      start_date: Date.new(2026, 10, 10),
+      status: "published",
+      meeting_time: "09:00",
+      meeting_location: "Castle Rock parking lot",
+      meeting_location_url: "https://maps.google.com/?q=Castle+Rock",
+      late_arrival_instructions: "Meet us by the main boulders.",
+      participant_capacity: 4,
+      climbing_types: [ "bouldering" ]
+    )
+    log_in_as(users(:sam))
+
+    assert_no_difference "DayTripSignup.count" do
+      post trip_day_trip_signup_path(trip), params: {
+        day_trip_signup: {
+          climbing_abilities: [ "none" ],
+          waiver_signature_data: SIGNATURE_DATA_URL,
+          waiver_acknowledged_at: Time.current.iso8601
+        }
+      }
+    end
+
+    assert_redirected_to trip_url(trip)
+    assert_equal "Choose an available climbing ability before tying in.", flash[:alert]
+  end
+
+  test "camping trip what to expect page renders editable content page copy" do
     ContentPage.current!("what_to_expect").update!(
       title: "Custom what to expect",
       subtitle: "Custom subtitle.",
@@ -62,6 +500,22 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".panel-header .muted", "Custom subtitle."
     assert_select ".content-page-markdown h2", "Custom heading"
     assert_select ".content-page-markdown strong", "body"
+  end
+
+  test "day trip what to expect page renders editable content page copy" do
+    ContentPage.current!("day_trip_what_to_expect").update!(
+      title: "Custom day trip what to expect",
+      subtitle: "Custom day trip subtitle.",
+      body: "## Custom day trip heading\n\nCustom **day trip** copy."
+    )
+
+    get day_trip_what_to_expect_trips_url
+
+    assert_response :success
+    assert_select "h1", "Custom day trip what to expect"
+    assert_select ".panel-header .muted", "Custom day trip subtitle."
+    assert_select ".content-page-markdown h2", "Custom day trip heading"
+    assert_select ".content-page-markdown strong", "day trip"
   end
 
   test "liability warning appears on public trip pages" do
@@ -175,9 +629,10 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".trip-summary-notices a.trip-whatsapp-link[href='https://chat.whatsapp.com/yosemite-spring'][target='_blank'][rel='noopener']", text: "Join the WhatsApp Group"
     assert_select ".trip-summary-notices a.trip-weather-link[href='https://forecast.weather.gov/yosemite-spring'][target='_blank'][rel='noopener']", text: "Weather"
     assert_select ".trip-summary-notices a.trip-photo-album-link[href='https://photos.app.goo.gl/yosemite-spring'][target='_blank'][rel='noopener']", text: "Photo Album"
+    assert_select ".trip-summary-header .trips-faq-callout", text: /camping trip/
     assert_select ".trip-summary-header .trips-faq-callout a[href='#{what_to_expect_trips_path}']", text: "here."
     assert_select ".trip-summary-header .site-feedback-callout a[href='#{new_help_request_path}']", text: "let us know."
-    assert_select "h2", "Campsite coordinator"
+    assert_select "h2", "Trip Coordinator"
     assert_select ".details-list", text: /Alex Rivera/
     assert_select ".details-list", text: /alex@example.com/
     assert_select ".details-list", text: /555-0100/, count: 0
@@ -225,7 +680,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     get trip_url(trips(:yosemite))
 
     assert_response :success
-    assert_select "h2", "Campsite coordinator"
+    assert_select "h2", "Trip Coordinator"
     assert_select "section.panel", text: /Not yet set/
     assert_select ".details-list", text: /Alex Rivera/, count: 0
     assert_select ".details-list", text: /555-0100/, count: 0

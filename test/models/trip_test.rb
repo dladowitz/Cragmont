@@ -82,6 +82,23 @@ class TripTest < ActiveSupport::TestCase
     assert_equal 9, trip.available_participant_capacity
   end
 
+  test "maps day trip climbing types to climbing helpers" do
+    trip = Trip.new(climbing_types: [ "sport" ])
+    assert trip.sport_climbing?
+    assert_not trip.trad_climbing?
+    assert_not trip.bouldering?
+
+    trip.climbing_types = [ "trad" ]
+    assert_not trip.sport_climbing?
+    assert trip.trad_climbing?
+    assert_not trip.bouldering?
+
+    trip.climbing_types = [ "sport", "trad", "bouldering" ]
+    assert trip.sport_climbing?
+    assert trip.trad_climbing?
+    assert trip.bouldering?
+  end
+
   test "capacity count includes minors at the age limit and excludes younger minors" do
     trip = trips(:yosemite)
     signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))

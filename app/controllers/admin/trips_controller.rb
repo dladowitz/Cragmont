@@ -15,17 +15,30 @@ class Admin::TripsController < Admin::BaseController
 
   def show
     authorize @trip
-    @campsites = @trip.campsites
-      .includes(
-        :campground,
-        :registered_by,
-        :registration_reimbursed_by,
-        :registration_reimbursement_recorded_by,
-        campsite_signups: [ { payments: { refunds: :refunded_by } }, :user, :campsite_signup_minors, { guest_of_signup: :user } ]
-      )
-      .order(:arrival_date, :site_number)
-    @waitlisted_signups = @trip.waitlisted_signups
-    @trip_participant_user_ids = @trip.campsite_signups.active.distinct.pluck(:user_id)
+    if @trip.day_trip?
+      @campsites = []
+      @waitlisted_signups = []
+      @day_trip_signups = @trip.day_trip_signups.confirmed.primary.includes(:user, :day_trip_signup_minors, guest_signups: :user).order(:created_at)
+      @day_trip_waitlisted_signups = @trip.day_trip_signups.waitlisted.primary.includes(:user, :day_trip_signup_minors, guest_signups: :user).order(:created_at)
+    else
+      @campsites = @trip.campsites
+        .includes(
+          :campground,
+          :registered_by,
+          :registration_reimbursed_by,
+          :registration_reimbursement_recorded_by,
+          campsite_signups: [ { payments: { refunds: :refunded_by } }, :user, :campsite_signup_minors, { guest_of_signup: :user } ]
+        )
+        .order(:arrival_date, :site_number)
+      @waitlisted_signups = @trip.waitlisted_signups
+      @day_trip_signups = []
+      @day_trip_waitlisted_signups = []
+    end
+    @trip_participant_user_ids = if @trip.day_trip?
+      @trip.day_trip_signups.active.distinct.pluck(:user_id)
+    else
+      @trip.campsite_signups.active.distinct.pluck(:user_id)
+    end
     @participant_link_signup = participant_link_signup
     @trip_payment_requests = @trip.trip_payment_requests.order(created_at: :desc)
     @trip_payment_request = trip_payment_request
@@ -43,7 +56,18 @@ class Admin::TripsController < Admin::BaseController
   end
 
   def new
-    @trip = Trip.new
+    if params[:trip_type].blank?
+      @trip_type_choice_required = true
+      @trip = Trip.new
+      authorize @trip
+      return
+    end
+
+    @trip = Trip.new(
+      trip_type: selected_new_trip_type,
+      late_arrival_instructions: Trip::DEFAULT_LATE_ARRIVAL_INSTRUCTIONS,
+      cost_cents: 0
+    )
     authorize @trip
   end
 
@@ -123,6 +147,10 @@ class Admin::TripsController < Admin::BaseController
 
   def trip_params
     params.require(:trip).permit(policy(@trip || Trip).permitted_attributes)
+  end
+
+  def selected_new_trip_type
+    params[:trip_type].presence_in(Trip::TRIP_TYPES) || "camping"
   end
 
   def set_users

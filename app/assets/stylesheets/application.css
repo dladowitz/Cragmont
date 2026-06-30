@@ -429,6 +429,24 @@ body.trip-show-page .trip-summary-notices {
   margin-top: 0;
 }
 
+.trip-summary-description,
+.trip-summary-callouts {
+  grid-column: 1 / -1;
+}
+
+.trip-summary-description.description {
+  max-width: none;
+  margin-top: 8px;
+}
+
+.trip-summary-callouts {
+  display: grid;
+  grid-template-columns: minmax(0, max-content) minmax(280px, 620px);
+  gap: 16px;
+  align-items: start;
+  justify-content: space-between;
+}
+
 .trip-resource-links {
   display: grid;
   gap: 6px;
@@ -441,6 +459,12 @@ body.trip-show-page .trip-summary-notices {
   font-size: 1.15rem;
   font-weight: 800;
   line-height: 1.2;
+}
+
+.trip-title-resource-link {
+  align-self: center;
+  justify-self: start;
+  font-size: 0.86rem;
 }
 
 .trip-mobile-resource-link {
@@ -1995,6 +2019,10 @@ body.trip-show-page .trip-summary-header {
   font-size: 1.8rem;
 }
 
+.day-trip-admin-details {
+  margin-top: 18px;
+}
+
 .stats .parking-stat {
   display: grid;
   align-content: start;
@@ -2579,6 +2607,205 @@ body.trip-show-page .panel {
   background: rgb(255 255 255 / 90%);
   box-shadow: 0 20px 60px rgb(0 0 0 / 22%);
   backdrop-filter: blur(6px);
+}
+
+.day-trip-plan-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 280px);
+  gap: 18px 28px;
+  align-items: start;
+}
+
+.day-trip-plan-main {
+  display: grid;
+  gap: 16px;
+}
+
+.day-trip-plan-main h2 {
+  margin: 0;
+}
+
+.day-trip-details-panel .details-list > div {
+  grid-template-columns: 190px 1fr;
+}
+
+.day-trip-details-panel .details-list dd p {
+  margin: 0;
+}
+
+.day-trip-location-image {
+  margin-top: 18px;
+  width: min(100%, 428px);
+}
+
+.day-trip-location-image-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f7f4ed;
+  cursor: zoom-in;
+}
+
+.day-trip-location-image-button img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.location-image-modal {
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  max-width: 84vw;
+  max-height: 84vh;
+}
+
+.location-image-modal::backdrop {
+  background: rgb(0 0 0 / 62%);
+}
+
+.location-image-modal-content {
+  position: relative;
+  display: grid;
+  place-items: center;
+  max-width: 84vw;
+  max-height: 84vh;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #111;
+}
+
+.location-image-modal-content img {
+  display: block;
+  max-width: 84vw;
+  max-height: 84vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.modal-close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 72%);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 58%);
+  color: #fff;
+  cursor: pointer;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.gear-needed-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+}
+
+.gear-needed-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gear-needed-check {
+  display: inline-grid;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 3px solid var(--muted);
+  border-radius: 7px;
+  color: var(--accent-dark);
+  font-size: 1.25rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.gear-needed-item.is-needed .gear-needed-check {
+  border-color: var(--accent-dark);
+}
+
+.day-trip-signup-action {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+  min-width: min(320px, 100%);
+}
+
+.day-trip-signup-action p {
+  margin: 0;
+  text-align: right;
+}
+
+.day-trip-signup-button {
+  justify-content: center;
+  min-width: 180px;
+}
+
+.day-trip-signup-button.is-waitlist {
+  border-color: #f6c453;
+  background: #ffd76a;
+  color: #3f2f00;
+}
+
+.day-trip-signup-modal .signup-modal-content {
+  width: min(920px, 100%);
+}
+
+.day-trip-resources-panel .panel-header {
+  margin-bottom: 10px;
+}
+
+.additional-resources-list {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.additional-resources-list .trip-resource-link {
+  justify-self: start;
+  font-size: 1rem;
+}
+
+.additional-resource-detail {
+  margin: 0;
+}
+
+.additional-resource-detail strong {
+  color: var(--muted);
+}
+
+.day-trip-participants-panel .panel-header {
+  margin-bottom: 0;
+}
+
+.day-trip-participants-panel .confirmed-participants-table {
+  margin-top: 0;
+}
+
+.day-trip-participants-panel .confirmed-participants-table th,
+.day-trip-participants-panel .confirmed-participants-table td {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.day-trip-safety-panel .panel-header {
+  margin-bottom: 6px;
+}
+
+.day-trip-safety-panel .content-page-markdown p:last-child {
+  margin-bottom: 0;
 }
 
 body.profile-show-page .panel,
@@ -3470,6 +3697,132 @@ dialog.signup-modal.refund-modal .form-actions {
   line-height: 1.2;
 }
 
+.signup-kind-options .gear-with-number {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.gear-number-field {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto;
+}
+
+.gear-number-field label {
+  display: inline;
+  width: auto;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: default;
+  font-size: 0.95rem;
+  font-weight: 750;
+}
+
+.gear-number-field input {
+  width: 82px;
+  min-height: 42px;
+  padding: 8px 10px;
+}
+
+.signup-field-subtext {
+  margin: -4px 0 4px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.climbing-ability-options {
+  gap: 16px;
+}
+
+.climbing-ability-choice {
+  display: block;
+}
+
+.signup-kind-options .climbing-ability-card {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  min-height: 0;
+  align-items: start;
+}
+
+.climbing-ability-card input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.climbing-ability-card-heading {
+  display: inline-flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.climbing-ability-check {
+  display: inline-grid;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 3px solid var(--muted);
+  border-radius: 7px;
+  color: #fff;
+  line-height: 1;
+}
+
+.climbing-ability-check::after {
+  content: "✓";
+  opacity: 0;
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+
+.climbing-ability-card:has(input:checked) {
+  border-color: var(--accent);
+  background: #eaf6f1;
+  box-shadow: inset 0 0 0 1px rgb(47 111 94 / 18%);
+}
+
+.climbing-ability-card:has(input:checked) .climbing-ability-check {
+  border-color: var(--accent-dark);
+  background: var(--accent-dark);
+}
+
+.climbing-ability-card:has(input:checked) .climbing-ability-check::after {
+  opacity: 1;
+}
+
+.climbing-ability-card:has(input:focus-visible) {
+  outline: 3px solid rgb(47 111 94 / 22%);
+  outline-offset: 3px;
+}
+
+.climbing-ability-definition {
+  display: grid;
+  gap: 6px;
+}
+
+.climbing-ability-definition p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.42;
+}
+
+.guest-climbing-ability-options {
+  padding: 0;
+  border: 0;
+}
+
+.guest-climbing-ability-cards {
+  display: grid;
+  gap: 10px;
+}
+
 .minor-fields,
 .guest-fields {
   display: grid;
@@ -3525,6 +3878,10 @@ dialog.signup-modal.refund-modal .form-actions {
 
 .guest-field-row {
   grid-template-columns: 32px repeat(4, minmax(0, 1fr));
+}
+
+.day-trip-minor-field-row {
+  grid-template-columns: minmax(180px, 1.4fr) minmax(180px, 1.4fr) minmax(90px, 0.7fr) minmax(180px, 1.2fr);
 }
 
 .remove-person-button {
@@ -4287,6 +4644,15 @@ th {
   justify-self: start;
 }
 
+.trip-readiness-category-header > .trip-readiness-header-actions {
+  grid-column: 3;
+  justify-self: start;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .trip-readiness-category-title-row.has-trip-heading {
   grid-template-columns: max-content minmax(0, 1fr) max-content;
 }
@@ -4591,14 +4957,153 @@ th {
   gap: 18px;
 }
 
-.settings-content-actions {
-  align-items: flex-start;
+.admin-form-top-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-self: start;
+}
+
+.admin-form-top-actions input[type="submit"] {
+  width: auto;
+}
+
+.climbing-type-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.climbing-type-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 48px;
+  padding: 10px 15px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 800;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.climbing-type-option:hover {
+  border-color: var(--accent);
+  background: #f5fbf8;
+}
+
+.climbing-type-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.climbing-type-option-mark {
+  display: inline-grid;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 3px solid var(--muted);
+  border-radius: 7px;
+  color: #fff;
+  line-height: 1;
+}
+
+.climbing-type-option-mark::after {
+  content: "✓";
+  opacity: 0;
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.climbing-type-option:has(input:checked) {
+  border-color: var(--accent-dark);
+  background: #e9f7f1;
+  color: var(--accent-dark);
+  box-shadow: 0 0 0 3px rgb(47 111 94 / 12%);
+}
+
+.climbing-type-option:has(input:checked) .climbing-type-option-mark {
+  border-color: var(--accent-dark);
+  background: var(--accent-dark);
+}
+
+.climbing-type-option:has(input:checked) .climbing-type-option-mark::after {
+  opacity: 1;
+}
+
+.climbing-type-option:has(input:focus-visible) {
+  outline: 3px solid rgb(47 111 94 / 22%);
+  outline-offset: 2px;
+}
+
+.content-action-list {
+  display: grid;
+  max-width: 520px;
+  gap: 12px;
+}
+
+.content-action-list .button {
+  justify-content: flex-start;
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
+}
+
+.admin-day-trip-top-grid {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-areas:
+    "name name name name name name participants participants participants actions actions actions"
+    "date date date date date date coordinator coordinator coordinator coordinator coordinator coordinator"
+    "location location location location location location image image image image image image"
+    "status status status status status status . . . . . ."
+    "description description description description description description description description description description description description";
+  align-items: start;
+}
+
+.admin-day-trip-top-grid .admin-trip-name-field {
+  grid-area: name;
+}
+
+.admin-day-trip-top-grid .admin-trip-participant-capacity-field {
+  grid-area: participants;
+}
+
+.admin-day-trip-top-grid .admin-form-top-actions {
+  grid-area: actions;
+}
+
+.admin-day-trip-top-grid .admin-trip-date-field {
+  grid-area: date;
+}
+
+.admin-day-trip-top-grid .admin-trip-coordinator-field {
+  grid-area: coordinator;
+}
+
+.admin-day-trip-top-grid .admin-trip-location-field {
+  grid-area: location;
+}
+
+.admin-day-trip-top-grid .admin-trip-location-image-field {
+  grid-area: image;
+}
+
+.admin-day-trip-top-grid .admin-trip-status-field {
+  grid-area: status;
+}
+
+.admin-day-trip-top-grid .admin-trip-description-field {
+  grid-area: description;
 }
 
 .form-grid-full {
@@ -5653,6 +6158,10 @@ textarea {
     color: #fff;
   }
 
+  body.day-trip-show-page .trip-show-mobile-hero {
+    margin-bottom: 0;
+  }
+
   body.trip-show-page:has(.flash-messages) .trip-show-mobile-hero {
     min-height: clamp(300px, 76vw, 390px);
   }
@@ -5840,6 +6349,136 @@ textarea {
     gap: 10px;
     grid-template-columns: 1fr;
     margin-bottom: 22px;
+  }
+
+  body.day-trip-show-page .trip-summary-header {
+    gap: 0;
+    margin-bottom: 0;
+  }
+
+  body.day-trip-show-page .trip-overview {
+    margin-bottom: 14px;
+  }
+
+  .trip-summary-callouts {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .day-trip-plan-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .day-trip-plan-main {
+    gap: 6px;
+  }
+
+  .day-trip-details-panel .details-list > div {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .day-trip-details-panel .details-list dt {
+    white-space: normal;
+  }
+
+  .day-trip-details-panel .details-list dd {
+    margin-bottom: 14px;
+  }
+
+  .day-trip-details-panel .details-list > div:last-child dd {
+    margin-bottom: 0;
+  }
+
+  body.day-trip-show-page .day-trip-resources-panel,
+  body.day-trip-show-page .day-trip-participants-panel,
+  body.day-trip-show-page .day-trip-safety-panel {
+    margin-bottom: 4px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
+  body.day-trip-show-page .day-trip-resources-panel .panel-header,
+  body.day-trip-show-page .day-trip-participants-panel .panel-header,
+  body.day-trip-show-page .day-trip-safety-panel .panel-header {
+    margin-bottom: 2px;
+  }
+
+  body.day-trip-show-page .day-trip-participants-panel .panel-header {
+    margin-bottom: -8px;
+  }
+
+  body.day-trip-show-page .day-trip-resources-panel h2,
+  body.day-trip-show-page .day-trip-participants-panel h2,
+  body.day-trip-show-page .day-trip-safety-panel h2 {
+    margin-bottom: 0;
+  }
+
+  body.day-trip-show-page .additional-resources-list {
+    gap: 2px;
+  }
+
+  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table th,
+  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table td {
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+
+  body.day-trip-show-page .day-trip-participants-panel .public-card-table {
+    gap: 6px;
+  }
+
+  body.day-trip-show-page .day-trip-participants-panel .public-card-table tbody {
+    gap: 6px;
+  }
+
+  body.day-trip-show-page .day-trip-participants-panel .public-card-table tr {
+    padding: 6px 0;
+    border: 0;
+    background: transparent;
+  }
+
+  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table td {
+    grid-template-columns: minmax(118px, 0.38fr) minmax(0, 1fr);
+    gap: 12px;
+    align-items: baseline;
+    padding-top: 3px;
+    padding-bottom: 3px;
+  }
+
+  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table td:first-child,
+  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table td:nth-child(2) {
+    grid-template-columns: minmax(118px, 0.38fr) minmax(0, 1fr);
+  }
+
+  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table td:first-child::before,
+  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table td:nth-child(2)::before {
+    content: attr(data-label);
+  }
+
+  .day-trip-location-image {
+    width: 100%;
+  }
+
+  .location-image-modal,
+  .location-image-modal-content,
+  .location-image-modal-content img {
+    max-width: 92vw;
+    max-height: 84vh;
+  }
+
+  .day-trip-signup-action {
+    justify-items: stretch;
+    min-width: 0;
+  }
+
+  .day-trip-signup-action p {
+    text-align: left;
+  }
+
+  .day-trip-signup-button {
+    width: 100%;
   }
 
   .trip-summary-notices .trip-resource-link {
@@ -6137,6 +6776,15 @@ textarea {
   .trip-card,
   .archived-trip-row {
     grid-template-columns: 1fr;
+  }
+
+  .admin-day-trip-top-grid {
+    grid-template-areas: none;
+  }
+
+  .admin-day-trip-top-grid .field,
+  .admin-day-trip-top-grid .admin-form-top-actions {
+    grid-area: auto;
   }
 
   body:not(.admin-body) .stats {

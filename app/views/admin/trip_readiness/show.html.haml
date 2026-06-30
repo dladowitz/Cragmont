@@ -1,36 +1,50 @@
 = render "admin/shared/header", title: @trip.name
 - editable_readiness = policy(@trip).update? && !@trip.deleted?
-%section.panel.trip-readiness-overview
-  .panel-header.trip-readiness-header
-    .trip-readiness-category-title-row
-      %h2 Trip Readiness
-      %span.status{class: (@completed_count == @total_count ? "success-status" : "warning-status"), data: { readiness_count_key: "overall" }}
-        = "#{@completed_count} of #{@total_count}"
-    .trip-readiness-summary
-      = link_to "Back to trip", admin_trip_path(@trip), class: "button secondary"
-  - if @trip.deleted?
-    .deleted-trip-banner
-      %strong This trip has been deleted.
-      %p Restore the trip before changing manual readiness tasks.
+- compact_trip_readiness = @categories.one? && @categories.first.key == "trip"
+- unless compact_trip_readiness
+  %section.panel.trip-readiness-overview
+    .panel-header.trip-readiness-header
+      .trip-readiness-category-title-row
+        %h2 Trip Readiness
+        %span.status{class: (@completed_count == @total_count ? "success-status" : "warning-status"), data: { readiness_count_key: "overall" }}
+          = "#{@completed_count} of #{@total_count}"
+      .trip-readiness-summary
+        = link_to "Back to trip", admin_trip_path(@trip), class: "button secondary"
+    - if @trip.deleted?
+      .deleted-trip-banner
+        %strong This trip has been deleted.
+        %p Restore the trip before changing manual readiness tasks.
 
 - @categories.each do |category|
   %section.panel.trip-readiness-category{id: "readiness-#{category.key}"}
     .panel-header.trip-readiness-category-header
       .trip-readiness-category-title-row{class: ("has-trip-heading" if category.key == "trip")}
-        %h2= category.name
+        %h2= compact_trip_readiness ? "Trip Readiness" : category.name
         - if category.key == "trip"
           %span.trip-readiness-trip-heading
             = @trip.name
             %span.muted.trip-readiness-trip-date
               = @trip.start_date.strftime("%-m/%-d/%Y")
-              to #{@trip.end_date.strftime("%-m/%-d/%Y")}
+              - unless @trip.day_trip?
+                to #{@trip.end_date.strftime("%-m/%-d/%Y")}
         %span.status{class: (category.completed_count == category.total_count ? "success-status" : "warning-status"), data: { readiness_count_key: category.key }}
           = "#{category.completed_count} of #{category.total_count}"
-      - if category.key == "trip"
+      - if compact_trip_readiness
+        .actions.trip-readiness-header-actions
+          - if editable_readiness
+            = link_to "Update Trip", edit_admin_trip_path(@trip), class: "button secondary"
+          - else
+            %span.muted Read only
+          = link_to "Back to trip", admin_trip_path(@trip), class: "button secondary"
+      - elsif category.key == "trip"
         - if editable_readiness
           = link_to "Update Trip", edit_admin_trip_path(@trip), class: "button secondary"
         - else
           %span.muted Read only
+    - if compact_trip_readiness && @trip.deleted?
+      .deleted-trip-banner
+        %strong This trip has been deleted.
+        %p Restore the trip before changing manual readiness tasks.
     .trip-readiness-task-list
       - if category.key == "trip"
         %section.trip-readiness-trip-group
@@ -49,6 +63,15 @@
                     %h4= task.name
                     - if task.automatic? && task.source_complete?
                       %span.trip-readiness-auto-badge auto calc
+                  - if task.detail.present?
+                    %p.trip-readiness-task-subtext
+                      - if task.detail_link_url.present? && task.detail == task.detail_link_url
+                        = link_to task.detail, task.detail_link_url, target: "_blank", rel: "noopener"
+                      - else
+                        = task.detail
+                      - if task.detail_link_url.present? && task.detail != task.detail_link_url
+                        = " "
+                        = link_to "Link", task.detail_link_url, target: "_blank", rel: "noopener"
                 - if editable_readiness && (task.manual? || (task.overrideable? && !task.source_complete?))
                   .trip-readiness-task-actions
                     = form_with url: readiness_task_admin_trip_path(@trip, task.key), method: :patch, class: "trip-readiness-toggle-form", data: { controller: "readiness-toggle", action: "submit->readiness-toggle#submit", turbo: false } do

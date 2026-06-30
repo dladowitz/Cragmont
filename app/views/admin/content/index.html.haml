@@ -1,0 +1,15 @@
+= render "admin/shared/header", title: "Content"
+
+%section.panel
+  .panel-header
+    %div
+      %h2 Content for FAQs, Safety, Liability and Emails
+      %p.muted Pick the content you want to update.
+
+  .content-action-list
+    = link_to "Edit What to Expect on a Camping Trip", edit_admin_content_page_path("what_to_expect"), class: "button secondary"
+    = link_to "Edit What to Expect on a Day Trip", edit_admin_content_page_path("day_trip_what_to_expect"), class: "button secondary"
+    = link_to "Edit How to Think About Safety page", edit_admin_content_page_path("how_to_think_about_safety"), class: "button secondary"
+    = link_to "Edit Trip Details Email Templates", admin_trip_details_email_templates_path, class: "button secondary"
+    = link_to "Edit Liability Warning", edit_admin_site_content_path("liability_warning"), class: "button secondary"
+    = link_to "Edit Day Trip Safety Reminder", edit_admin_site_content_path("day_trip_safety_reminder"), class: "button secondary"

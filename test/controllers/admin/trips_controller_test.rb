@@ -12,6 +12,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", "Admin Dashboard"
     assert_select ".admin-public-link", "Public View"
     assert_select ".admin-nav a", text: "Trips"
+    assert_select ".admin-nav a[href='#{admin_content_path}']", text: "Content"
     assert_select ".admin-nav a", text: "Public View", count: 0
     assert_select ".admin-nav form[action='#{session_path}'][method='post']" do
       assert_select "input[name='_method'][value='delete']"
@@ -52,6 +53,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select "td", text: /Yosemite Valley Spring/, count: 0
     assert_select ".admin-nav a", text: "Campgrounds", count: 0
     assert_select ".admin-nav a", text: "Users", count: 0
+    assert_select ".admin-nav a", text: "Content", count: 0
     assert_select ".admin-nav a", text: "Settings", count: 0
 
     get edit_admin_trip_url(trips(:jtree))
@@ -258,6 +260,9 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     create_waitlisted_signup!(trip: trips(:yosemite), user: waitlisted_guest, guest_of_signup: waitlisted_signup, guest_position: 1)
     allowed_user = User.create!(first_name: "Zora", last_name: "Allowed", email: "zora-admin@example.com", password: "password")
     allowed_signup = create_waitlisted_signup!(trip: trips(:yosemite), user: allowed_user, waitlist_eligible_at: Time.current)
+    trips(:yosemite).update!(
+      description: "**Yosemite** camping notes.\n\n## Parking\n\nArrive early and bring snacks."
+    )
 
     get admin_trip_url(trips(:yosemite))
 
@@ -276,6 +281,10 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".coordinator-summary", text: /alex@example.com/, count: 0
     assert_select ".coordinator-summary", text: /555-0100/, count: 0
     assert_select ".description", text: /Notes:/
+    assert_select ".description .content-page-markdown strong", text: "Yosemite"
+    assert_select ".description .content-page-markdown h2", text: "Parking"
+    assert_no_match(/\*\*Yosemite\*\*/, response.body)
+    assert_no_match(/## Parking/, response.body)
     assert_select ".stats", text: /Signed up/
     assert_select ".split-signup-stat section:first-child", text: /1/
     assert_select ".split-signup-stat section:last-child", text: /Under #{SiteSetting.current.uncounted_minor_age_limit}/
@@ -320,7 +329,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select ".trip-readiness-summary-button-count.warning-status",
         text: "#{post_trip_category.completed_count} of #{post_trip_category.total_count}"
     end
-    assert_select ".trip-management-panel .trip-management-actions a.button.secondary[href='#{admin_trip_trip_details_email_path(trips(:yosemite))}']", text: "Trip Details Email"
+    assert_select ".trip-management-panel .trip-management-actions a.button.secondary[href='#{admin_trip_trip_details_email_path(trips(:yosemite))}']", text: "Trip Details Email", count: 0
     assert_select ".trip-management-panel .trip-management-actions a.button.secondary[href='#{admin_trip_transactions_path(trips(:yosemite))}']", text: "Transactions"
     assert_select ".trip-management-panel .trip-management-actions .button.danger", text: "Delete trip", count: 0
     assert_select ".campground-group", count: 0
@@ -1175,13 +1184,95 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "https://photos.app.goo.gl/smith-rock", trip.photo_album_url
   end
 
-  test "can render new trip form" do
+  test "can create day trip without an end date parameter" do
+    assert_difference "Trip.count", 1 do
+      post admin_trips_url, params: {
+        trip: {
+          trip_type: "day_trip",
+          name: "Castle Rock Day",
+          location: "Castle Rock, CA",
+          start_date: "2026-09-12",
+          description: "Single day cragging.",
+          status: "draft",
+          meeting_time: "08:30",
+          meeting_location: "Castle Rock parking lot",
+          meeting_location_url: "https://maps.google.com/?q=Castle+Rock",
+          late_arrival_instructions: "If you are running late, hike toward the main wall.",
+          cost_dollars: "$0.00",
+          participant_capacity: "12",
+          sun_exposure: "Morning shade, afternoon sun",
+          climbing_types: [ "sport", "bouldering" ]
+        }
+      }
+    end
+
+    trip = Trip.order(:created_at).last
+    assert_redirected_to admin_trip_url(trip)
+    assert trip.day_trip?
+    assert_equal Date.new(2026, 9, 12), trip.start_date
+    assert_equal trip.start_date, trip.end_date
+    assert_equal 12, trip.participant_capacity
+    assert_equal "Morning shade, afternoon sun", trip.sun_exposure
+    assert_equal [ "sport", "bouldering" ], trip.climbing_types
+  end
+
+  test "day trip climbing type validation is clear for admins" do
+    assert_no_difference "Trip.count" do
+      post admin_trips_url, params: {
+        trip: {
+          trip_type: "day_trip",
+          name: "Castle Rock Day",
+          location: "Castle Rock, CA",
+          start_date: "2026-09-12",
+          description: "Single day cragging.",
+          status: "draft",
+          meeting_time: "08:30",
+          meeting_location: "Castle Rock parking lot",
+          meeting_location_url: "https://maps.google.com/?q=Castle+Rock",
+          late_arrival_instructions: "If you are running late, hike toward the main wall.",
+          cost_dollars: "$0.00",
+          participant_capacity: "12",
+          climbing_types: [ "" ]
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select ".form-errors h2", text: "Almost there - please fix the item below"
+    assert_select ".form-errors h2", text: /prevented this from being saved/, count: 0
+    assert_select ".form-errors", text: /Choose at least one type of climbing for this day trip\./
+    assert_select ".form-errors", text: /Climbing types can't be blank/, count: 0
+  end
+
+  test "new trip first asks admins to choose a trip type" do
+    get new_admin_trip_url
+
+    camping_trip_path = new_admin_trip_path(trip_type: "camping")
+    day_trip_path = new_admin_trip_path(trip_type: "day_trip")
+
+    assert_response :success
+    assert_select "[data-controller='modal'][data-modal-open-value='true']"
+    assert_select "dialog.admin-trip-type-modal" do
+      assert_select "h2", "What kind of trip is this?"
+      assert_select "a", "Camping trip"
+      assert_select "a", "Day trip"
+    end
+    assert_includes response.body, "href=\"#{camping_trip_path}\""
+    assert_includes response.body, "href=\"#{day_trip_path}\""
+    assert_select "form.admin-form", count: 0
+  end
+
+  test "can render new camping trip form" do
     aaron = User.create!(first_name: "Aaron", last_name: "Zephyr", email: "aaron-trip-picker@example.com", password: "password")
     zoe = User.create!(first_name: "Zoe", last_name: "Able", email: "zoe-trip-picker@example.com", password: "password")
 
-    get new_admin_trip_url
+    get new_admin_trip_url(trip_type: "camping")
 
     assert_response :success
+    assert_select "h1", "Admin Dashboard"
+    assert_select "h2", "New camping trip"
+    assert_select "input[type='hidden'][name='trip[trip_type]'][value='camping']"
+    assert_select "select[name='trip[trip_type]']", count: 0
     assert_select "select[name='trip[campsite_coordinator_id]']", count: 0
     assert_select ".coordinator-picker[data-controller='participant-picker']"
     assert_select "input[type='hidden'][name='trip[campsite_coordinator_id]'][data-participant-picker-target='input'][value='']"
@@ -1192,6 +1283,68 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_operator response.body.index("data-value=\"#{aaron.id}\""), :<, response.body.index("data-value=\"#{zoe.id}\"")
     assert_select "input[name='trip[start_date]'][type='date'][data-controller='date-picker'][data-action*='click->date-picker#show'][data-action*='focus->date-picker#show']"
     assert_select "input[name='trip[end_date]'][type='date'][data-controller='date-picker'][data-action*='click->date-picker#show'][data-action*='focus->date-picker#show']"
+    assert_select ".day-trip-admin-fields", count: 0
+  end
+
+  test "can render new day trip form without an end date" do
+    get new_admin_trip_url(trip_type: "day_trip")
+
+    assert_response :success
+    assert_select "h2", "New day trip"
+    assert_select "input[type='hidden'][name='trip[trip_type]'][value='day_trip']"
+    assert_select "select[name='trip[trip_type]']", count: 0
+    assert_select "label[for='trip_start_date']", text: /Trip date/
+    assert_select "input[name='trip[start_date]'][type='date']"
+    assert_select "input[name='trip[end_date]']", count: 0
+    assert_select ".day-trip-admin-fields"
+    assert_select "fieldset.day-trip-admin-fields", count: 0
+    assert_select "label[for='trip_name']", text: /Climbing Area Name/
+    assert_select "label[for='trip_meeting_time'] .required-marker", text: "*"
+    assert_select "label[for='trip_meeting_location_url']", text: /Meeting Location Map Link/
+    assert_select "label[for='trip_campsite_coordinator_id']", text: "Event Coordinator"
+    assert_select "label[for='trip_description']", text: "Description"
+    assert_operator response.body.index("for=\"trip_participant_capacity\""), :<, response.body.index("for=\"trip_start_date\"")
+    assert_operator response.body.index("for=\"trip_location\""), :<, response.body.index("for=\"trip_day_trip_image\"")
+    assert_operator response.body.index("for=\"trip_day_trip_image\""), :<, response.body.index("for=\"trip_start_date\"")
+    assert_operator response.body.index("for=\"trip_description\""), :<, response.body.index("for=\"trip_meeting_time\"")
+    assert_operator response.body.index("for=\"trip_whatsapp_group\""), :>, response.body.index("for=\"trip_carpool_meeting_spot\"")
+    assert_select "input[name='trip[cost_dollars]'][value='$0.00']"
+    assert_select "input[name='trip[sun_exposure]'][placeholder='Sun in the morning. Shade in the afternoon']"
+    assert_operator response.body.index("for=\"trip_sun_exposure\""), :>, response.body.index("for=\"trip_photo_album_url\"")
+    assert_select "input[name='trip[reserved_lead_spots]']", count: 0
+    assert_select "textarea[name='trip[safety_reminder]']", count: 0
+    assert_select "label", text: /Types of Climbing/
+    assert_select ".climbing-type-options" do
+      assert_select "input[type='checkbox'][name='trip[climbing_types][]'][value='sport']"
+      assert_select "input[type='checkbox'][name='trip[climbing_types][]'][value='trad']"
+      assert_select "input[type='checkbox'][name='trip[climbing_types][]'][value='bouldering']"
+      assert_select "input[value='both']", count: 0
+    end
+    assert_select "select[name='trip[climbing_gear_type]']", count: 0
+  end
+
+  test "day trip edit form shows current location image filename" do
+    trip = Trip.create!(
+      trip_type: "day_trip",
+      name: "Vent 5 Image",
+      location: "Marin Coast",
+      start_date: Date.new(2026, 9, 12),
+      description: "Single day cragging.",
+      status: "published",
+      meeting_time: "08:30",
+      meeting_location: "Vent 5 Parking Trailhead",
+      meeting_location_url: "https://maps.google.com/?q=Vent+5",
+      late_arrival_instructions: "If you are running late, hike toward the main wall.",
+      participant_capacity: 8,
+      climbing_types: [ "sport" ]
+    )
+    location_image = WaiverSignatureData.new(SIGNATURE_DATA_URL)
+    trip.day_trip_image.attach(io: StringIO.new(location_image.bytes), filename: "vent-5-map.png", content_type: "image/png")
+
+    get edit_admin_trip_url(trip)
+
+    assert_response :success
+    assert_select ".admin-trip-location-image-field", text: /Current file:\s*vent-5-map\.png/
   end
 
   test "can update trip" do
@@ -1223,6 +1376,211 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_equal users(:sam), trips(:jtree).campsite_coordinator
   end
 
+  test "can update day trip climbing types" do
+    trip = Trip.create!(
+      trip_type: "day_trip",
+      name: "Castle Rock Day",
+      location: "Castle Rock, CA",
+      start_date: Date.new(2026, 9, 12),
+      description: "Single day cragging.",
+      status: "draft",
+      meeting_time: "08:30",
+      meeting_location: "Castle Rock parking lot",
+      meeting_location_url: "https://maps.google.com/?q=Castle+Rock",
+      late_arrival_instructions: "If you are running late, hike toward the main wall.",
+      cost_dollars: "0",
+      participant_capacity: 12,
+      sun_exposure: "Morning shade",
+      climbing_types: [ "sport" ]
+    )
+
+    patch admin_trip_url(trip), params: {
+      trip: {
+        name: trip.name,
+        location: trip.location,
+        start_date: trip.start_date,
+        description: trip.description,
+        status: trip.status,
+        meeting_time: trip.meeting_time,
+        meeting_location: trip.meeting_location,
+        meeting_location_url: trip.meeting_location_url,
+        late_arrival_instructions: trip.late_arrival_instructions,
+        cost_dollars: "$0.00",
+        participant_capacity: trip.participant_capacity,
+        sun_exposure: "Full sun",
+        climbing_types: [ "", "trad", "bouldering" ]
+      }
+    }
+
+    assert_redirected_to admin_trip_url(trip)
+    assert_equal [ "trad", "bouldering" ], trip.reload.climbing_types
+    assert_equal "Full sun", trip.sun_exposure
+  end
+
+  test "admin day trip page lets admins remove participants or move them to the waitlist" do
+    trip = Trip.create!(
+      trip_type: "day_trip",
+      name: "Vent 5 Admin",
+      location: "Marin Coast",
+      start_date: Date.new(2026, 9, 12),
+      description: "Single day cragging.",
+      status: "published",
+      meeting_time: "08:30",
+      meeting_location: "Vent 5 Parking Trailhead",
+      meeting_location_url: "https://maps.google.com/?q=Vent+5",
+      late_arrival_instructions: "If you are running late, hike toward the main wall.",
+      whatsapp_group: "https://chat.whatsapp.com/vent5-admin",
+      weather_url: "https://forecast.weather.gov/vent5-admin",
+      mountain_project_url: "https://www.mountainproject.com/area/vent5-admin",
+      guide_book_url: "https://example.com/vent-5-guide",
+      photo_album_url: "https://photos.app.goo.gl/vent5-admin",
+      sun_exposure: "Morning sun, afternoon shade",
+      participant_capacity: 2,
+      climbing_types: [ "sport" ]
+    )
+    location_image = WaiverSignatureData.new(SIGNATURE_DATA_URL)
+    trip.day_trip_image.attach(io: StringIO.new(location_image.bytes), filename: "vent-5.png", content_type: "image/png")
+    signup = DayTripSignup.create!(trip: trip, user: users(:sam), climbing_abilities: [ "top_rope" ])
+
+    get admin_trip_url(trip)
+
+    assert_response :success
+    assert_operator response.body.index("class=\"stats\""), :<, response.body.index("trip-management-panel")
+    assert_operator response.body.index("trip-management-panel"), :<, response.body.index("day-trip-admin-details")
+    assert_select ".day-trip-admin-details", text: /End time\s*None/
+    assert_select ".day-trip-admin-details a[href='https://maps.google.com/?q=Vent+5'][target='_blank'][rel='noopener']", text: "Vent 5 Parking Trailhead"
+    assert_select ".day-trip-admin-details .day-trip-location-image[data-controller='modal']" do
+      assert_select "button.day-trip-location-image-button[aria-label='Expand Vent 5 Admin location image']"
+      assert_select "button.day-trip-location-image-button img[alt='Vent 5 Admin location image']"
+      assert_select "dialog.location-image-modal[aria-label='Vent 5 Admin location image'] img[alt='Vent 5 Admin location image']"
+    end
+    assert_select ".admin-trip-resources-panel" do
+      assert_select "h2", "Additional Resources"
+      assert_select ".details-list", text: /Sun Exposure\s*Morning sun, afternoon shade/
+      assert_select "a[href='https://chat.whatsapp.com/vent5-admin'][target='_blank'][rel='noopener']", text: "https://chat.whatsapp.com/vent5-admin"
+      assert_select "a[href='https://forecast.weather.gov/vent5-admin'][target='_blank'][rel='noopener']", text: "https://forecast.weather.gov/vent5-admin"
+      assert_select "a[href='https://www.mountainproject.com/area/vent5-admin'][target='_blank'][rel='noopener']", text: "https://www.mountainproject.com/area/vent5-admin"
+      assert_select "a[href='https://example.com/vent-5-guide'][target='_blank'][rel='noopener']", text: "https://example.com/vent-5-guide"
+      assert_select "a[href='https://photos.app.goo.gl/vent5-admin'][target='_blank'][rel='noopener']", text: "https://photos.app.goo.gl/vent5-admin"
+    end
+    assert_select ".day-trip-participants-panel" do
+      assert_select "th", text: "Climbing Skills"
+      assert_select "th", text: "Bringing Gear"
+      assert_select "button.admin-table-action-button", text: "Move to Waitlist"
+      assert_select "form[action='#{move_to_waitlist_admin_trip_day_trip_signup_path(trip, signup)}'][method='post']" do
+        assert_select "input[name='_method'][value='patch']"
+      end
+      assert_select "button.admin-table-action-button", text: "Remove"
+      assert_select "form[action='#{remove_admin_trip_day_trip_signup_path(trip, signup)}'][method='post']" do
+        assert_select "input[name='_method'][value='delete']"
+      end
+    end
+  end
+
+  test "admin can move a day trip participant to the waitlist" do
+    trip = Trip.create!(
+      trip_type: "day_trip",
+      name: "Vent 5 Waitlist",
+      location: "Marin Coast",
+      start_date: Date.new(2026, 9, 12),
+      description: "Single day cragging.",
+      status: "published",
+      meeting_time: "08:30",
+      meeting_location: "Vent 5 Parking Trailhead",
+      meeting_location_url: "https://maps.google.com/?q=Vent+5",
+      late_arrival_instructions: "If you are running late, hike toward the main wall.",
+      participant_capacity: 1,
+      climbing_types: [ "sport" ]
+    )
+    signup = DayTripSignup.create!(trip: trip, user: users(:sam), climbing_abilities: [ "top_rope" ])
+    assert trip.reload.capacity_full?
+
+    patch move_to_waitlist_admin_trip_day_trip_signup_url(trip, signup)
+
+    assert_redirected_to admin_trip_url(trip)
+    assert signup.reload.waitlisted?
+    assert_equal 1, trip.reload.available_participant_capacity
+    assert_equal "Sam Lee was moved to the waitlist.", flash[:notice]
+
+    get admin_trip_url(trip)
+
+    assert_response :success
+    assert_select ".day-trip-participants-panel", text: /No participants have signed up yet\./
+    assert_select ".day-trip-waitlist-panel" do
+      assert_select "h2", "Trip waitlist"
+      assert_select "td", text: "Sam Lee"
+      assert_select "button.admin-table-action-button", text: "Move onto Trip"
+      assert_select "form[action='#{move_onto_trip_admin_trip_day_trip_signup_path(trip, signup)}']" do
+        assert_select "input[name='_method'][value='patch']"
+      end
+      assert_select "form[action='#{remove_admin_trip_day_trip_signup_path(trip, signup)}']"
+    end
+  end
+
+  test "admin can move a waitlisted day trip participant onto a full trip" do
+    trip = Trip.create!(
+      trip_type: "day_trip",
+      name: "Vent 5 Full Override",
+      location: "Marin Coast",
+      start_date: Date.new(2026, 9, 12),
+      description: "Single day cragging.",
+      status: "published",
+      meeting_time: "08:30",
+      meeting_location: "Vent 5 Parking Trailhead",
+      meeting_location_url: "https://maps.google.com/?q=Vent+5",
+      late_arrival_instructions: "If you are running late, hike toward the main wall.",
+      participant_capacity: 1,
+      climbing_types: [ "sport" ]
+    )
+    confirmed_user = User.create!(first_name: "Fiona", last_name: "Full", email: "fiona-admin-full@example.com", password: "password")
+    waitlisted_user = User.create!(first_name: "Willa", last_name: "Wait", email: "willa-admin-day-trip@example.com", password: "password")
+    DayTripSignup.create!(trip: trip, user: confirmed_user, climbing_abilities: [ "top_rope" ])
+    signup = DayTripSignup.create!(trip: trip, user: waitlisted_user, climbing_abilities: [ "lead" ], status: "waitlisted")
+    assert trip.reload.capacity_full?
+
+    patch move_onto_trip_admin_trip_day_trip_signup_url(trip, signup)
+
+    assert_redirected_to admin_trip_url(trip)
+    assert signup.reload.confirmed?
+    assert_equal 2, trip.reload.confirmed_signup_count
+    assert_equal 0, trip.available_participant_capacity
+    assert_equal "On belay! Willa Wait was moved onto the trip.", flash[:notice]
+
+    get admin_trip_url(trip)
+
+    assert_response :success
+    assert_select ".day-trip-participants-panel" do
+      assert_select "td", text: "Fiona Full"
+      assert_select "td", text: "Willa Wait"
+    end
+    assert_select ".day-trip-waitlist-panel", count: 0
+  end
+
+  test "admin can remove a day trip participant" do
+    trip = Trip.create!(
+      trip_type: "day_trip",
+      name: "Vent 5 Remove",
+      location: "Marin Coast",
+      start_date: Date.new(2026, 9, 12),
+      description: "Single day cragging.",
+      status: "published",
+      meeting_time: "08:30",
+      meeting_location: "Vent 5 Parking Trailhead",
+      meeting_location_url: "https://maps.google.com/?q=Vent+5",
+      late_arrival_instructions: "If you are running late, hike toward the main wall.",
+      participant_capacity: 1,
+      climbing_types: [ "sport" ]
+    )
+    signup = DayTripSignup.create!(trip: trip, user: users(:sam), climbing_abilities: [ "top_rope" ])
+
+    assert_difference "DayTripSignup.count", -1 do
+      delete remove_admin_trip_day_trip_signup_url(trip, signup)
+    end
+
+    assert_redirected_to admin_trip_url(trip)
+    assert_equal "Off belay! Sam Lee was removed from this day trip.", flash[:notice]
+  end
+
   test "can publish trip before campsite coordinator is known" do
     patch admin_trip_url(trips(:jtree)), params: {
       trip: {
@@ -1247,6 +1605,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     get edit_admin_trip_url(trip)
 
     assert_response :success
+    assert_select ".admin-form-top-actions input[type='submit'][value='Update Trip']"
     assert_select ".coordinator-picker[data-controller='participant-picker']"
     assert_select "input[type='hidden'][name='trip[campsite_coordinator_id]'][value='']"
     assert_select "button.participant-picker-button[role='combobox']", text: "Unassigned"

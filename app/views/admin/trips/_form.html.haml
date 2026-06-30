@@ -7,25 +7,42 @@
   - group_campfire_options = [["No Group Campfire", ""]] + group_campfire_campsites.map { |campsite| ["#{campsite.campground.name} site #{campsite.site_number}", campsite.id] }
   - group_fire_night_options = [["None", Trip::GROUP_FIRE_NIGHT_NONE]] + Trip::GROUP_FIRE_NIGHT_DAYS.map { |night| [night.titleize, night] }
   = render "admin/shared/errors", record: trip
-  .form-grid
-    .field
-      = required_label form, :name
+  = form.hidden_field :trip_type
+  .form-grid{class: ("admin-day-trip-top-grid" if trip.day_trip?)}
+    .field.admin-trip-name-field
+      = required_label form, :name, "Climbing Area Name"
       = form.text_field :name, required: true
-    .field
+    - if trip.day_trip?
+      .field.admin-trip-participant-capacity-field
+        = required_label form, :participant_capacity, "Number of participants"
+        = form.number_field :participant_capacity, min: 0
+    - if trip.persisted?
+      .admin-form-top-actions
+        = form.submit "Update Trip"
+    .field.admin-trip-location-field
       = required_label form, :location
       = form.text_field :location, required: true
-    .field
-      = required_label form, :start_date
+    - if trip.day_trip?
+      .field.admin-trip-location-image-field
+        = form.label :day_trip_image, "Location image"
+        = form.file_field :day_trip_image, accept: "image/*"
+        - if trip.day_trip_image.attached?
+          %p.muted
+            Current file:
+            = trip.day_trip_image.filename.to_s
+    .field.admin-trip-date-field
+      = required_label form, :start_date, (trip.day_trip? ? "Trip date" : "Start date")
       = form.date_field :start_date, required: true, data: { controller: "date-picker", action: "click->date-picker#show focus->date-picker#show" }
-    .field
-      = required_label form, :end_date
-      = form.date_field :end_date, required: true, data: { controller: "date-picker", action: "click->date-picker#show focus->date-picker#show" }
-    .field
+    - unless trip.day_trip?
+      .field
+        = required_label form, :end_date
+        = form.date_field :end_date, required: true, data: { controller: "date-picker", action: "click->date-picker#show focus->date-picker#show" }
+    .field.admin-trip-status-field
       = required_label form, :status
       = form.select :status, Trip.statuses.keys.map { |status| [status.titleize, status] }, {}, required: true
     - if policy(trip).assign_coordinator?
-      .field
-        = form.label :campsite_coordinator_id, "Campsite coordinator"
+      .field.admin-trip-coordinator-field
+        = form.label :campsite_coordinator_id, "Event Coordinator"
         .participant-picker.coordinator-picker{"data-controller" => "participant-picker", "data-participant-picker-placeholder-value" => "Unassigned", "data-action" => "keydown->participant-picker#keydown"}
           = hidden_field_tag "trip[campsite_coordinator_id]", selected_coordinator_value, id: coordinator_field_id, data: { participant_picker_target: "input" }
           %button.participant-picker-button{type: "button", role: "combobox", aria: { expanded: "false", controls: "#{coordinator_field_id}-list", haspopup: "listbox" }, data: { participant_picker_target: "button", action: "participant-picker#toggle" }}
@@ -40,25 +57,69 @@
                   %button.participant-picker-option{type: "button", role: "option", aria: { selected: selected_option.to_s }, data: { participant_picker_target: "option", action: "participant-picker#choose", value: option[:value], label: option[:label], search_text: option[:search_text] }}
                     %span= option[:label]
               %li.participant-picker-empty{hidden: true, data: { participant_picker_target: "empty" }} No coordinators found.
-    .field
-      = form.label :whatsapp_group, "WhatsApp group"
-      = form.url_field :whatsapp_group
-    .field
-      = form.label :weather_url, "Weather"
-      = form.url_field :weather_url
-    - if trip.persisted?
+    - if trip.persisted? && !trip.day_trip?
       .field
         = form.label :group_campfire_campsite_id, "Group Campfire Site"
         = form.select :group_campfire_campsite_id, group_campfire_options
       .field
         = form.label :group_fire_night, "Group Campfire Night"
         = form.select :group_fire_night, group_fire_night_options
+    .field.form-grid-full.admin-trip-description-field
+      = form.label :description
+      = form.text_area :description, rows: 5
+  - if trip.day_trip?
+    .form-grid.day-trip-admin-fields
+      .field
+        = required_label form, :meeting_time, "Meeting time"
+        = form.time_field :meeting_time
+      .field
+        = form.label :end_time, "End time"
+        = form.time_field :end_time
+      .field
+        = required_label form, :meeting_location
+        = form.text_field :meeting_location
+      .field
+        = required_label form, :meeting_location_url, "Meeting Location Map Link"
+        = form.url_field :meeting_location_url
+      .field
+        = form.label :cost_dollars, "Cost"
+        = form.text_field :cost_dollars, value: format_cents(trip.cost_cents), inputmode: "decimal"
+      .field.form-grid-full
+        = required_label form, :climbing_types, "Types of Climbing"
+        .climbing-type-options
+          = hidden_field_tag "trip[climbing_types][]", ""
+          - Trip::CLIMBING_TYPES.each do |climbing_type|
+            - checkbox_id = "trip_climbing_types_#{climbing_type}"
+            %label.climbing-type-option{for: checkbox_id}
+              = check_box_tag "trip[climbing_types][]", climbing_type, trip.climbing_type_enabled?(climbing_type), id: checkbox_id
+              %span.climbing-type-option-mark{"aria-hidden" => "true"}
+              %span= Trip::CLIMBING_TYPE_LABELS.fetch(climbing_type)
+      .field
+        = form.label :mountain_project_url, "Mountain Project link"
+        = form.url_field :mountain_project_url
+      .field
+        = form.label :guide_book_url, "Guide book link"
+        = form.url_field :guide_book_url
+      .field.form-grid-full
+        = required_label form, :late_arrival_instructions, "How to find us if running late"
+        = form.text_area :late_arrival_instructions, rows: 3
+      .field.form-grid-full
+        = form.label :carpool_meeting_spot, "Possible carpool meeting spot"
+        = form.text_area :carpool_meeting_spot, rows: 3
+  .form-grid.admin-trip-resource-fields
+    .field
+      = form.label :whatsapp_group, "WhatsApp group"
+      = form.url_field :whatsapp_group
+    .field
+      = form.label :weather_url, "Weather"
+      = form.url_field :weather_url
     .field
       = form.label :photo_album_url, "Google Photo Album"
       = form.url_field :photo_album_url
-  .field
-    = form.label :description
-    = form.text_area :description, rows: 5
+    - if trip.day_trip?
+      .field
+        = form.label :sun_exposure, "Sun Exposure"
+        = form.text_field :sun_exposure, placeholder: "Sun in the morning. Shade in the afternoon"
   .form-actions
     = form.submit
     = link_to "Cancel", trip.persisted? ? admin_trip_path(trip) : admin_trips_path, class: "button secondary"

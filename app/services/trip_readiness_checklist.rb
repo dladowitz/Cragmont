@@ -37,7 +37,9 @@ class TripReadinessChecklist
     campsite_coordinator_assigned: "Add Coordinator",
     whatsapp_group_created: "Add Group",
     weather_link_added: "Add Weather",
-    create_google_photo_album: "Add Album",
+    mountain_project_link_added: "Add Mountain Project",
+    guide_book_link_added: "Add Guide Book",
+    sun_exposure_added: "Add Sun Exposure",
     group_campfire_planned: "Add Campfire",
     all_confirmed_participants_signed_waiver: nil,
     all_confirmed_primary_participants_paid_or_waived: nil,
@@ -48,10 +50,20 @@ class TripReadinessChecklist
 
   MANUAL_TASKS = {
     add_photo_album_to_older_website: "Add photo album to older website",
+    verify_enough_lead_climbers: "Verify there are enough lead climbers present",
     send_redacted_photo_ids: "Send out redacted photo ids",
     send_collected_money_to_treasurer: "Send collected money to Treasurer",
     send_photo_upload_reminder: "Send reminder to participants to upload photos to album"
   }.freeze
+  DAY_TRIP_EXCLUDED_TASKS = %w[
+    group_campfire_planned
+    all_confirmed_participants_signed_waiver
+    all_confirmed_primary_participants_paid_or_waived
+    all_confirmed_participants_assigned_parking
+    send_redacted_photo_ids
+    all_campsites_reimbursed
+    send_collected_money_to_treasurer
+  ].freeze
 
   def self.manual_task_keys
     MANUAL_TASKS.keys.map(&:to_s)
@@ -71,6 +83,8 @@ class TripReadinessChecklist
 
   def self.completable_task_key?(task_key, trip: nil)
     task_key = task_key.to_s
+    return false if trip&.day_trip? && DAY_TRIP_EXCLUDED_TASKS.include?(task_key)
+    return false if task_key == "verify_enough_lead_climbers" && !trip_has_rope_climbing?(trip)
     return true if completable_task_keys.include?(task_key)
     return true if trip.present? && campsite_task_key_for_trip?(task_key, trip)
 
@@ -90,18 +104,25 @@ class TripReadinessChecklist
     campsite_id.present? && trip.campsites.exists?(id: campsite_id)
   end
 
+  def self.trip_has_rope_climbing?(trip)
+    trip.present? && (trip.sport_climbing? || trip.trad_climbing?)
+  end
+
   def initialize(trip)
     @trip = trip
     @completions_by_key = trip.trip_readiness_completions.index_by(&:task_key)
   end
 
   def categories
-    @categories ||= [
-      Category.new(key: "trip", name: "Trip", tasks: trip_tasks),
-      Category.new(key: "campsites", name: "Campsites", tasks: campsite_tasks),
-      Category.new(key: "participant", name: "Participants", tasks: participant_tasks),
-      Category.new(key: "post_trip", name: "Post Trip", tasks: post_trip_tasks)
-    ]
+    @categories ||= begin
+      categories = [ Category.new(key: "trip", name: "Trip", tasks: trip_tasks) ]
+      unless trip.day_trip?
+        categories << Category.new(key: "campsites", name: "Campsites", tasks: campsite_tasks)
+        categories << Category.new(key: "participant", name: "Participants", tasks: participant_tasks)
+      end
+      categories << Category.new(key: "post_trip", name: "Post Trip", tasks: post_trip_tasks)
+      categories
+    end
   end
 
   def readiness_categories
@@ -135,17 +156,20 @@ class TripReadinessChecklist
   def trip_tasks
     whatsapp_group_url = safe_http_url(trip.whatsapp_group)
     weather_url = safe_http_url(trip.weather_url)
+    mountain_project_url = safe_http_url(trip.mountain_project_url)
+    guide_book_url = safe_http_url(trip.guide_book_url)
     photo_album_url = safe_http_url(trip.photo_album_url)
 
-    [
+    tasks = [
       automatic_task(
         :campsite_coordinator_assigned,
-        "Campsite Coordinator assigned",
+        "Trip Coordinator assigned",
         trip.campsite_coordinator.present?,
         update_label: OVERRIDABLE_AUTOMATIC_TASKS.fetch(:campsite_coordinator_assigned),
         complete_detail: coordinator_detail,
-        incomplete_detail: "Assign a campsite coordinator before heading out."
+        incomplete_detail: "Assign a trip coordinator before heading out."
       ),
+      *lead_climber_readiness_tasks,
       automatic_task(
         :whatsapp_group_created,
         "WhatsApp Group created and added to trip",
@@ -165,10 +189,35 @@ class TripReadinessChecklist
         detail_link_url: weather_url
       ),
       automatic_task(
+        :mountain_project_link_added,
+        "Mountain Project link added",
+        mountain_project_url.present?,
+        update_label: OVERRIDABLE_AUTOMATIC_TASKS.fetch(:mountain_project_link_added),
+        complete_detail: "Mountain Project link is ready.",
+        incomplete_detail: "Add a Mountain Project URL on the trip edit page.",
+        detail_link_url: mountain_project_url
+      ),
+      automatic_task(
+        :guide_book_link_added,
+        "Guide Book link added",
+        guide_book_url.present?,
+        update_label: OVERRIDABLE_AUTOMATIC_TASKS.fetch(:guide_book_link_added),
+        complete_detail: "Guide Book link is ready.",
+        incomplete_detail: "Add a guide book URL on the trip edit page.",
+        detail_link_url: guide_book_url
+      ),
+      automatic_task(
+        :sun_exposure_added,
+        "Sun Exposure added",
+        trip.sun_exposure.present?,
+        update_label: OVERRIDABLE_AUTOMATIC_TASKS.fetch(:sun_exposure_added),
+        complete_detail: trip.sun_exposure.to_s,
+        incomplete_detail: "Add sun exposure notes on the trip edit page."
+      ),
+      automatic_task(
         :create_google_photo_album,
         "Create Google Photo Album",
         photo_album_url.present?,
-        update_label: OVERRIDABLE_AUTOMATIC_TASKS.fetch(:create_google_photo_album),
         complete_detail: "Photo album link is ready.",
         incomplete_detail: "Add a Google Photo Album URL on the trip edit page.",
         detail_link_url: photo_album_url
@@ -181,7 +230,26 @@ class TripReadinessChecklist
         complete_detail: group_campfire_detail,
         incomplete_detail: "Choose a group campfire site and night, or set the fire night to None if there will be no group campfire."
       ),
-      manual_task(:add_photo_album_to_older_website, MANUAL_TASKS.fetch(:add_photo_album_to_older_website))
+      manual_task(
+        :add_photo_album_to_older_website,
+        MANUAL_TASKS.fetch(:add_photo_album_to_older_website),
+        "https://www.cragmontclimbingclub.org/past-trips",
+        detail_link_url: "https://www.cragmontclimbingclub.org/past-trips"
+      )
+    ]
+
+    tasks.reject { |task| trip.day_trip? && DAY_TRIP_EXCLUDED_TASKS.include?(task.key) }
+  end
+
+  def lead_climber_readiness_tasks
+    return [] unless self.class.trip_has_rope_climbing?(trip)
+
+    [
+      manual_task(
+        :verify_enough_lead_climbers,
+        MANUAL_TASKS.fetch(:verify_enough_lead_climbers),
+        "Generally want at least a 1:5 ratio to get ropes up"
+      )
     ]
   end
 
@@ -256,7 +324,7 @@ class TripReadinessChecklist
   end
 
   def post_trip_tasks
-    [
+    tasks = [
       automatic_task(
         :all_campsites_reimbursed,
         "All campsites reimbursed",
@@ -267,6 +335,8 @@ class TripReadinessChecklist
       manual_task(:send_collected_money_to_treasurer, MANUAL_TASKS.fetch(:send_collected_money_to_treasurer)),
       manual_task(:send_photo_upload_reminder, MANUAL_TASKS.fetch(:send_photo_upload_reminder))
     ]
+
+    tasks.reject { |task| trip.day_trip? && DAY_TRIP_EXCLUDED_TASKS.include?(task.key) }
   end
 
   def automatic_task(key, name, source_complete, update_label: nil, update_campsite: nil, complete_detail:, incomplete_detail:, detail_link_url: nil)
@@ -275,7 +345,7 @@ class TripReadinessChecklist
       key: key.to_s,
       name: name,
       kind: :automatic,
-      complete: source_complete || completion.present?,
+      complete: source_complete || (self.class.overridable_task_key?(key) && completion.present?),
       source_complete: source_complete,
       detail: source_complete ? complete_detail : incomplete_detail,
       detail_link_url: (detail_link_url if source_complete),
@@ -307,7 +377,7 @@ class TripReadinessChecklist
     )
   end
 
-  def manual_task(key, name, detail = nil)
+  def manual_task(key, name, detail = nil, detail_link_url: nil)
     completion = completions_by_key[key.to_s]
     Task.new(
       key: key.to_s,
@@ -316,7 +386,7 @@ class TripReadinessChecklist
       complete: completion.present?,
       source_complete: false,
       detail: detail,
-      detail_link_url: nil,
+      detail_link_url: detail_link_url,
       completion: completion,
       update_label: nil,
       update_campsite: nil
@@ -391,9 +461,9 @@ class TripReadinessChecklist
   end
 
   def coordinator_detail
-    return "Campsite coordinator is #{trip.campsite_coordinator.full_name}." if trip.campsite_coordinator.present?
+    return "Trip coordinator is #{trip.campsite_coordinator.full_name}." if trip.campsite_coordinator.present?
 
-    "Assign a campsite coordinator before heading out."
+    "Assign a trip coordinator before heading out."
   end
 
   def group_campfire_detail

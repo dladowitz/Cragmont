@@ -18,6 +18,7 @@ class User < ApplicationRecord
     dependent: :nullify,
     inverse_of: :registered_by
   has_many :campsite_signups, dependent: :restrict_with_error
+  has_many :day_trip_signups, dependent: :restrict_with_error
   has_many :waivers, dependent: :destroy
   has_many :help_requests, dependent: :nullify
   has_many :help_request_replies, dependent: :restrict_with_error
@@ -49,6 +50,7 @@ class User < ApplicationRecord
   has_many :user_roles, dependent: :destroy
   has_many :roles, through: :user_roles
   has_many :signed_up_trips, -> { distinct }, through: :campsite_signups, source: :trip
+  has_many :signed_up_day_trips, -> { distinct }, through: :day_trip_signups, source: :trip
 
   normalizes :email, with: ->(email) { email.to_s.strip.downcase.presence }
 
@@ -143,6 +145,7 @@ class User < ApplicationRecord
       coordinated_trips.update_all(campsite_coordinator_id: nil, updated_at: Time.current)
       registered_campsites.update_all(registered_by_id: nil, updated_at: Time.current)
       campsite_signups.destroy_all
+      day_trip_signups.destroy_all
       destroy!
     end
   end

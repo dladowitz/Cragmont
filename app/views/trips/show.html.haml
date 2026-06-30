@@ -45,7 +45,7 @@
             = simple_format(@trip.description)
         .public-beta-notice.trips-faq-callout
           %span
-            Want to know what to expect on a Cragmont trip? Read 
+            Want to know what to expect on a camping trip? Read
             = link_to "here.", what_to_expect_trips_path
       .trips-index-notices.trip-summary-notices
         - if whatsapp_group_url.present? || weather_url.present? || photo_album_url.present?
@@ -331,7 +331,7 @@
     - else
       %p.muted No campsite reservations have been added yet.
   %section.panel
-    %h2 Campsite coordinator
+    %h2 Trip Coordinator
     - if @trip.campsite_coordinator.present?
       %dl.details-list
         %div

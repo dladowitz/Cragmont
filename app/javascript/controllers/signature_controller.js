@@ -68,6 +68,7 @@ export default class extends Controller {
     this.togglePartyFields()
     this.updateCapacityWarning()
     this.updatePaymentSummary()
+    this.updateSignupStepAvailability()
     this.checkWaiverScroll()
     window.addEventListener("resize", this.boundResize)
   }
@@ -153,6 +154,8 @@ export default class extends Controller {
   }
 
   continueSignup() {
+    if (this.noneClimbingAbilitySelected()) return
+
     this.updateCapacityWarning()
     if (this.waitlistFallbackActive()) {
       this.prepareWaitlistFallback()
@@ -161,6 +164,39 @@ export default class extends Controller {
     }
 
     this.showAcknowledgement()
+  }
+
+  toggleExclusiveClimbingAbility(event) {
+    const checkbox = event.currentTarget
+    const group = checkbox.closest("[data-climbing-ability-group]")
+    if (!group) {
+      this.updateSignupStepAvailability()
+      return
+    }
+
+    if (checkbox.checked) {
+      const checkboxes = Array.from(group.querySelectorAll("input[type='checkbox']"))
+      if (checkbox.value === "none") {
+        checkboxes.forEach((input) => {
+          if (input !== checkbox) input.checked = false
+        })
+      } else {
+        const noneCheckbox = checkboxes.find((input) => input.value === "none")
+        if (noneCheckbox) noneCheckbox.checked = false
+      }
+    }
+    this.updateSignupStepAvailability()
+  }
+
+  updateSignupStepAvailability() {
+    if (!this.hasSignupStepSubmitTarget) return
+
+    this.signupStepSubmitTarget.disabled = this.noneClimbingAbilitySelected()
+  }
+
+  noneClimbingAbilitySelected() {
+    const noneCheckbox = this.element.querySelector("[data-climbing-ability-group] input[type='checkbox'][value='none']")
+    return Boolean(noneCheckbox?.checked)
   }
 
   showAcknowledgement() {
@@ -273,7 +309,7 @@ export default class extends Controller {
       row.querySelectorAll("input").forEach((input) => {
         input.disabled = !rowActive
         input.required = rowActive && input.dataset[requiredDatasetKey] === "true"
-        if (!rowActive) input.value = ""
+        if (!rowActive && input.type !== "checkbox" && input.type !== "radio") input.value = ""
       })
     })
 

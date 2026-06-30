@@ -1,0 +1,51 @@
+= render "admin/shared/header", title: "Content"
+
+%section.panel
+  .panel-header
+    %div
+      %h2= "Edit #{@content_config.fetch(:title)}"
+      %p.muted= @content_config.fetch(:description)
+    .actions
+      = link_to "Back to Content", admin_content_path, class: "button secondary"
+
+  - form_data = @content_config.fetch(:markdown) ? { controller: "markdown-preview", markdown_preview_url_value: preview_admin_content_pages_path } : {}
+  = form_with model: @site_setting, url: admin_site_content_path(@content_key), method: :patch, class: "admin-form", data: form_data do |form|
+    = render "admin/shared/errors", record: @site_setting
+    .form-grid
+      .form-grid-full
+        = required_label form, @content_attribute, @content_config.fetch(:title)
+        - if @content_config.fetch(:markdown)
+          .content-page-editor
+            .content-page-editor-field
+              = form.text_area @content_attribute, rows: 18, required: true, data: { markdown_preview_target: "source", action: "input->markdown-preview#queuePreview" }
+              %aside.markdown-formatting-guide{"aria-label" => "Markdown formatting reference"}
+                .markdown-formatting-heading
+                  %h3 Markdown quick reference
+                  = link_to "Full Markdown Reference", "https://www.markdownguide.org/extended-syntax/", target: "_blank", rel: "noopener"
+                %ul
+                  %li
+                    %code ## Heading
+                    %span creates a section heading
+                  %li
+                    %code **bold text**
+                    %span creates bold text
+                  %li
+                    %code *italic text*
+                    %span creates italic text
+                  %li
+                    %code - List item
+                    %span creates a bulleted list
+                  %li
+                    %code [Link text](https://example.com)
+                    %span creates a link
+            .content-page-preview-panel
+              .content-page-preview-header
+                %h3 Preview
+                %p.muted Updates as you type.
+              .content-page-markdown.content-page-preview{data: { markdown_preview_target: "preview" }}
+                = render_content_page_markdown(@site_setting.public_send(@content_attribute))
+        - else
+          = form.text_area @content_attribute, rows: 10, required: true
+    .form-actions
+      = form.submit "Save content", class: "button"
+      = link_to "Cancel", admin_content_path, class: "button secondary"

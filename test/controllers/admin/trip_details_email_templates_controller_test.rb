@@ -17,6 +17,7 @@ class Admin::TripDetailsEmailTemplatesControllerTest < ActionDispatch::Integrati
     assert_select "td", text: "yosemite"
     assert_select ".status.success-status", text: "Active"
     assert_select "a[href='#{edit_admin_trip_details_email_template_path(@template)}']", text: "Edit"
+    assert_select "a[href='#{admin_content_path}']", text: "Back to Content"
   end
 
   test "super admin can edit trip details email template" do

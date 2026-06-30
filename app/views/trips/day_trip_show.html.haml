@@ -1,0 +1,205 @@
+- content_for :body_class, "trip-show-page day-trip-show-page"
+- whatsapp_group_url = safe_external_url(@trip.whatsapp_group)
+- weather_url = safe_external_url(@trip.weather_url)
+- photo_album_url = safe_external_url(@trip.photo_album_url)
+- meeting_location_url = safe_external_url(@trip.meeting_location_url)
+- mountain_project_url = safe_external_url(@trip.mountain_project_url)
+- guide_book_url = safe_external_url(@trip.guide_book_url)
+- current_annual_waiver_available = current_user&.current_waiver_for_year(@trip.start_date.year).present?
+- day_trip_signup_button_text = @trip.capacity_full? ? "Sign up for waitlist" : "Sign Up"
+= render "shared/public_header"
+.trip-show-mobile-hero
+  .trip-show-mobile-hero-copy
+    .trip-title-line
+      %h1= @trip.name
+      - if @trip.capacity_full?
+        %span.status.danger-status Trip Full
+      - elsif @trip.almost_full?
+        %span.status.warning-status Almost Full
+    %p.trip-show-mobile-location= @trip.location
+    %p.trip-show-mobile-dates
+      = @trip.start_date.to_fs(:long)
+      - if @trip.meeting_time.present?
+        at #{@trip.meeting_time.strftime("%-l:%M%P")}
+  %span.trip-show-mobile-hero-caption IRS Wall, Joshua Tree
+%main.public-main
+  %section.panel.trip-overview.day-trip-overview
+    .panel-header.trip-summary-header
+      .trip-summary-copy
+        .trip-title-line
+          %h1= @trip.name
+          - if @trip.capacity_full?
+            %span.status.danger-status Trip Full
+          - elsif @trip.almost_full?
+            %span.status.warning-status Almost Full
+        %h2= @trip.location
+        %p
+          = @trip.start_date.to_fs(:long)
+          - if @trip.meeting_time.present?
+            at #{@trip.meeting_time.strftime("%-l:%M%P")}
+      - if @trip.description.present?
+        .description.content-page-markdown.trip-summary-description
+          = render_content_page_markdown(@trip.description)
+      .trip-summary-callouts
+        .public-beta-notice.trips-faq-callout
+          %span
+            Want to know what to expect on a day trip? Read
+            = link_to "here.", day_trip_what_to_expect_trips_path
+        .public-beta-notice.site-feedback-callout
+          %span
+            This site is still getting dialed in. If you find issues
+            = link_to "let us know.", new_help_request_path
+    .stats
+      %div
+        %span Signed up
+        %strong= @trip.confirmed_signup_count
+      %div{:class => "availability-stat #{@trip.capacity_full? ? "danger-stat" : (@trip.almost_full? ? "warning-stat" : "success-stat")}"}
+        %span Open Spaces
+        %strong= @trip.available_participant_capacity
+      %div
+        %span Total Capacity
+        %strong= @trip.total_participant_capacity
+
+  %section.panel.day-trip-details-panel
+    .day-trip-plan-layout
+      .day-trip-plan-main
+        %h2 Crag Plan
+        %dl.details-list
+          %div
+            %dt Meeting spot
+            %dd
+              - if meeting_location_url.present?
+                = link_to @trip.meeting_location, meeting_location_url, target: "_blank", rel: "noopener"
+              - else
+                = @trip.meeting_location
+          %div
+            %dt Meeting time
+            %dd= @trip.meeting_time&.strftime("%-l:%M%P")
+          - if @trip.end_time.present?
+            %div
+              %dt End time
+              %dd= @trip.end_time.strftime("%-l:%M%P")
+          %div
+            %dt Types of climbing
+            %dd.gear-needed-list
+              - [["Sport", @trip.sport_climbing?], ["Trad", @trip.trad_climbing?], ["Bouldering", @trip.bouldering?]].each do |label, needed|
+                %span.gear-needed-item{class: ("is-needed" if needed), "aria-label" => "#{label} #{needed ? "needed" : "not needed"}"}
+                  %span.gear-needed-check{"aria-hidden" => "true"}= needed ? "✓" : ""
+                  %span= label
+          %div
+            %dt Cost
+            %dd= format_trip_cost(@trip.cost_cents)
+          - if @trip.sun_exposure.present?
+            %div
+              %dt Sun Exposure
+              %dd= @trip.sun_exposure
+          - if @trip.carpool_meeting_spot.present?
+            %div
+              %dt Carpooling info
+              %dd= linkified_simple_format(@trip.carpool_meeting_spot)
+          %div
+            %dt If you are running late
+            %dd= linkified_simple_format(@trip.late_arrival_instructions)
+      .day-trip-signup-action
+        - if @trip.archived?
+          %p.muted Archived trip. New participant signups are closed.
+        - elsif @current_day_trip_signup.present?
+          %p
+            %strong You are #{@current_day_trip_signup.status} for this day trip.
+          - unless @current_day_trip_signup.guest?
+            %div{"data-controller" => "modal"}
+              %button.button.danger{"data-action" => "modal#open", type: "button"} Remove me from this day trip
+              %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                .signup-modal-content
+                  %div
+                    %h2 Remove yourself from this day trip?
+                  .form-actions
+                    %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
+                    = button_to "Remove Me", trip_day_trip_signup_path(@trip), method: :delete, class: "button danger"
+        - elsif user_signed_in?
+          %div{"data-controller" => "modal"}
+            %button.button.day-trip-signup-button{class: ("is-waitlist" if @trip.capacity_full?), "data-action" => "modal#open", type: "button"}= day_trip_signup_button_text
+            %dialog.signup-modal.day-trip-signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+              .signup-modal-content
+                .signup-modal-title-line
+                  %h2 Sign Up
+                  %p= @trip.name
+                = render "day_trip_signup_form", trip: @trip, current_annual_waiver_available: current_annual_waiver_available
+        - else
+          = link_to "Log in to sign up", new_session_path, class: "button day-trip-signup-button"
+    - if @trip.day_trip_image.attached?
+      .day-trip-location-image{"data-controller" => "modal", "data-modal-disable-autofocus-value" => "true"}
+        %button.day-trip-location-image-button{"aria-label" => "Expand #{@trip.name} location image", "data-action" => "modal#open", type: "button"}
+          = image_tag @trip.day_trip_image, alt: "#{@trip.name} location image"
+        %dialog.signup-modal.location-image-modal{"aria-label" => "#{@trip.name} location image", "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+          .location-image-modal-content
+            %button.modal-close-button{"aria-label" => "Close image", "data-action" => "modal#close", type: "button"} ×
+            = image_tag @trip.day_trip_image, alt: "#{@trip.name} location image"
+
+  - if whatsapp_group_url.present? || weather_url.present? || mountain_project_url.present? || guide_book_url.present? || photo_album_url.present? || @trip.sun_exposure.present?
+    %section.panel.day-trip-resources-panel
+      .panel-header
+        %div
+          %h2 Additional Resources
+      .additional-resources-list
+        - if @trip.sun_exposure.present?
+          %p.additional-resource-detail
+            %strong Sun Exposure:
+            %span= @trip.sun_exposure
+        - if whatsapp_group_url.present?
+          = link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link", target: "_blank", rel: "noopener"
+        - if weather_url.present?
+          = link_to "Weather", weather_url, class: "trip-resource-link", target: "_blank", rel: "noopener"
+        - if mountain_project_url.present?
+          = link_to "Mountain Project", mountain_project_url, class: "trip-resource-link", target: "_blank", rel: "noopener"
+        - if guide_book_url.present?
+          = link_to "Guide Book", guide_book_url, class: "trip-resource-link", target: "_blank", rel: "noopener"
+        - if photo_album_url.present?
+          = link_to "Photo Album", photo_album_url, class: "trip-resource-link", target: "_blank", rel: "noopener"
+
+  %section.panel.day-trip-participants-panel
+    .panel-header
+      %div
+        %h2 Participants
+    - if @day_trip_signups.any?
+      %table.confirmed-participants-table.public-card-table
+        %thead
+          %tr
+            %th Participant
+            %th Climbing Skills
+            %th Bringing Gear
+        %tbody
+          - @day_trip_signups.each do |signup|
+            %tr
+              %td{"data-label" => "Participant"}= signup.public_participant_name
+              %td{"data-label" => "Climbing Skills"}= signup.skill_level_label
+              %td{"data-label" => "Bringing Gear"}= signup.shared_gear_summary
+    - else
+      %p.muted No participants yet.
+
+  - if @day_trip_waitlisted_signups.any?
+    %section.panel.day-trip-participants-panel.day-trip-waitlist-panel
+      .panel-header
+        %div
+          %h2 Trip waitlist
+      %table.confirmed-participants-table.public-card-table
+        %thead
+          %tr
+            %th Participant
+            %th Climbing Skills
+            %th Bringing Gear
+        %tbody
+          - @day_trip_waitlisted_signups.each do |signup|
+            %tr
+              %td{"data-label" => "Participant"}= signup.public_participant_name
+              %td{"data-label" => "Climbing Skills"}= signup.skill_level_label
+              %td{"data-label" => "Bringing Gear"}= signup.shared_gear_summary
+
+  %section.panel.day-trip-safety-panel
+    .panel-header
+      %div
+        %h2 Safety Reminder
+    .content-page-markdown
+      = render_content_page_markdown(@trip.safety_reminder)
+  = render "shared/liability_warning"
+%p.background-image-caption IRS Wall, Joshua Tree

@@ -54,6 +54,39 @@ module ApplicationHelper
     sanitize_trip_details_email_html(html)
   end
 
+  def linkified_simple_format(text)
+    simple_format(linkify_urls(text), {}, sanitize: false)
+  end
+
+  def linkify_urls(text)
+    source = text.to_s
+    parts = []
+    cursor = 0
+    url_pattern = %r{https?://[^\s<]+}
+
+    source.to_enum(:scan, url_pattern).each do
+      match = Regexp.last_match
+      parts << ERB::Util.html_escape(source[cursor...match.begin(0)])
+
+      url_text = match[0]
+      trailing_punctuation = url_text[/[.,!?;:)\]]+\z/].to_s
+      link_text = trailing_punctuation.present? ? url_text.delete_suffix(trailing_punctuation) : url_text
+      safe_url = safe_external_url(link_text)
+
+      if safe_url.present?
+        parts << link_to(link_text, safe_url, target: "_blank", rel: "noopener")
+        parts << ERB::Util.html_escape(trailing_punctuation)
+      else
+        parts << ERB::Util.html_escape(url_text)
+      end
+
+      cursor = match.end(0)
+    end
+
+    parts << ERB::Util.html_escape(source[cursor..])
+    safe_join(parts)
+  end
+
   def sanitize_trip_details_email_html(html)
     sanitized_html = sanitize(
       html.to_s,
@@ -84,6 +117,12 @@ module ApplicationHelper
 
   def format_cents(cents)
     number_to_currency(BigDecimal(cents.to_i.to_s) / 100)
+  end
+
+  def format_trip_cost(cents)
+    return "Free" if cents.to_i.zero?
+
+    format_cents(cents)
   end
 
   def stripe_dashboard_payment_url(payment_intent_id)

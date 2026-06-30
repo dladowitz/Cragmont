@@ -9,6 +9,9 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
     trips(:yosemite).update!(
       whatsapp_group: "https://chat.whatsapp.com/yosemite-readiness",
       weather_url: "https://forecast.weather.gov/yosemite-readiness",
+      mountain_project_url: "https://www.mountainproject.com/area/yosemite-readiness",
+      guide_book_url: "https://example.com/yosemite-guide",
+      sun_exposure: "Morning shade",
       photo_album_url: "https://photos.app.goo.gl/yosemite-readiness"
     )
 
@@ -21,9 +24,14 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
       assert_select "[data-readiness-count-key='overall']", text: /\A\d+ of \d+\z/
     end
     assert_select ".trip-readiness-category", count: 3
-    assert_select "#readiness-trip", text: /Campsite Coordinator assigned/
+    assert_select "#readiness-trip", text: /Trip Coordinator assigned/
+    assert_select "#readiness-trip", text: /Mountain Project link added/
+    assert_select "#readiness-trip", text: /Guide Book link added/
+    assert_select "#readiness-trip", text: /Sun Exposure added/
     assert_select "#readiness-trip", text: /Create Google Photo Album/
     assert_select "#readiness-trip", text: /Group campfire site and night set/
+    assert_select "#readiness-trip [data-readiness-task-key='add_photo_album_to_older_website'] .trip-readiness-task-subtext a[href='https://www.cragmontclimbingclub.org/past-trips'][target='_blank'][rel='noopener']",
+      text: "https://www.cragmontclimbingclub.org/past-trips"
     assert_select "#readiness-trip .trip-readiness-trip-group", count: 1
     assert_select "#readiness-trip .trip-readiness-campsite-title-row h3", text: "Yosemite Valley Spring", count: 0
     assert_select "#readiness-trip .trip-readiness-category-title-row.has-trip-heading" do
@@ -43,10 +51,17 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
     assert_select "#readiness-trip [data-readiness-task-key='campsite_coordinator_assigned'] .trip-readiness-auto-badge", text: "auto calc"
     assert_select "#readiness-trip [data-readiness-task-key='whatsapp_group_created'] .trip-readiness-auto-badge", text: "auto calc"
     assert_select "#readiness-trip [data-readiness-task-key='weather_link_added'] .trip-readiness-auto-badge", text: "auto calc"
+    assert_select "#readiness-trip [data-readiness-task-key='mountain_project_link_added'] .trip-readiness-auto-badge", text: "auto calc"
+    assert_select "#readiness-trip [data-readiness-task-key='guide_book_link_added'] .trip-readiness-auto-badge", text: "auto calc"
+    assert_select "#readiness-trip [data-readiness-task-key='sun_exposure_added'] .trip-readiness-auto-badge", text: "auto calc"
+    assert_select "#readiness-trip [data-readiness-task-key='sun_exposure_added'] .trip-readiness-task-subtext",
+      text: "Morning shade"
     assert_select "#readiness-trip [data-readiness-task-key='add_photo_album_to_older_website'] .trip-readiness-auto-badge", count: 0
-    assert_select "#readiness-trip a[href='https://chat.whatsapp.com/yosemite-readiness']", count: 0
-    assert_select "#readiness-trip a[href='https://forecast.weather.gov/yosemite-readiness']", count: 0
-    assert_select "#readiness-trip a[href='https://photos.app.goo.gl/yosemite-readiness']", count: 0
+    assert_select "#readiness-trip [data-readiness-task-key='whatsapp_group_created'] .trip-readiness-task-subtext a[href='https://chat.whatsapp.com/yosemite-readiness'][target='_blank'][rel='noopener']", text: "Link"
+    assert_select "#readiness-trip [data-readiness-task-key='weather_link_added'] .trip-readiness-task-subtext a[href='https://forecast.weather.gov/yosemite-readiness'][target='_blank'][rel='noopener']", text: "Link"
+    assert_select "#readiness-trip [data-readiness-task-key='mountain_project_link_added'] .trip-readiness-task-subtext a[href='https://www.mountainproject.com/area/yosemite-readiness'][target='_blank'][rel='noopener']", text: "Link"
+    assert_select "#readiness-trip [data-readiness-task-key='guide_book_link_added'] .trip-readiness-task-subtext a[href='https://example.com/yosemite-guide'][target='_blank'][rel='noopener']", text: "Link"
+    assert_select "#readiness-trip [data-readiness-task-key='create_google_photo_album'] .trip-readiness-task-subtext a[href='https://photos.app.goo.gl/yosemite-readiness'][target='_blank'][rel='noopener']", text: "Link"
     assert_select "#readiness-campsites", text: /Registered By/
     assert_select "#readiness-campsites", text: /Registration Number/
     assert_select "#readiness-campsites", text: /Registration Cost/
@@ -89,6 +104,76 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
     assert_select ".trip-readiness-category", text: /Send collected money to Treasurer/, count: 0
   end
 
+  test "admin day trip readiness checklist hides campfire campsites and participants" do
+    trip = create_day_trip!
+
+    get readiness_admin_trip_url(trip)
+
+    assert_response :success
+    assert_select "h2", "Trip Readiness"
+    assert_select ".trip-readiness-overview", count: 0
+    assert_select ".trip-readiness-category", count: 1
+    assert_select "#readiness-trip > .trip-readiness-category-header" do
+      assert_select "h2", "Trip Readiness"
+      assert_select "[data-readiness-count-key='trip']", text: /\A\d+ of \d+\z/
+      assert_select ".trip-readiness-trip-heading", text: /#{trip.name}/
+      assert_select ".trip-readiness-trip-date", text: /#{trip.start_date.strftime("%-m\/%-d\/%Y")}/
+      assert_select "a[href='#{edit_admin_trip_path(trip)}']", text: "Update Trip"
+      assert_select "a[href='#{admin_trip_path(trip)}']", text: "Back to trip"
+    end
+    assert_select "#readiness-trip", text: /Trip Coordinator assigned/
+    assert_select "#readiness-trip", text: /WhatsApp Group created and added to trip/
+    assert_select "#readiness-trip", text: /Mountain Project link added/
+    assert_select "#readiness-trip", text: /Guide Book link added/
+    assert_select "#readiness-trip", text: /Sun Exposure added/
+    assert_select "#readiness-trip", text: /Create Google Photo Album/
+    assert_select "#readiness-trip", text: /Verify there are enough lead climbers present/
+    assert_select "#readiness-trip [data-readiness-task-key='verify_enough_lead_climbers'] .trip-readiness-task-subtext",
+      text: "Generally want at least a 1:5 ratio to get ropes up"
+    assert_select "form[action='#{readiness_task_admin_trip_path(trip, "verify_enough_lead_climbers")}']"
+    assert_select "#readiness-trip", text: /Group campfire site and night set/, count: 0
+    assert_select "#readiness-campsites", count: 0
+    assert_select "#readiness-participant", count: 0
+    assert_select ".trip-readiness-category", text: /All waivers signed/, count: 0
+    assert_select ".trip-readiness-category", text: /All fees paid or waived/, count: 0
+    assert_select ".trip-readiness-category", text: /Send out redacted photo ids/, count: 0
+    assert_select "form[action='#{readiness_task_admin_trip_path(trip, "group_campfire_planned")}']", count: 0
+  end
+
+  test "admin day trip readiness hides lead climber check for bouldering only trips" do
+    trip = create_day_trip!
+    trip.update!(climbing_types: [ "bouldering" ])
+
+    get readiness_admin_trip_url(trip)
+
+    assert_response :success
+    assert_select "#readiness-trip", text: /Verify there are enough lead climbers present/, count: 0
+    assert_select "form[action='#{readiness_task_admin_trip_path(trip, "verify_enough_lead_climbers")}']", count: 0
+  end
+
+  test "admin cannot complete hidden day trip readiness tasks" do
+    trip = create_day_trip!
+
+    assert_no_difference "TripReadinessCompletion.count" do
+      patch readiness_task_admin_trip_url(trip, "group_campfire_planned"), params: { completed: "1" }
+    end
+
+    assert_redirected_to readiness_admin_trip_url(trip)
+    assert_equal "Wow, that was a whipper. That readiness task cannot be changed.", flash[:alert]
+  end
+
+  test "admin cannot complete hidden lead climber task for bouldering only trips" do
+    trip = create_day_trip!
+    trip.update!(climbing_types: [ "bouldering" ])
+
+    assert_no_difference "TripReadinessCompletion.count" do
+      patch readiness_task_admin_trip_url(trip, "verify_enough_lead_climbers"), params: { completed: "1" }
+    end
+
+    assert_redirected_to readiness_admin_trip_url(trip)
+    assert_equal "Wow, that was a whipper. That readiness task cannot be changed.", flash[:alert]
+  end
+
   test "manual tasks can be checked and unchecked" do
     assert_difference "TripReadinessCompletion.count", 1 do
       patch readiness_task_admin_trip_url(trips(:yosemite), "add_photo_album_to_older_website"), params: { completed: "1" }
@@ -107,23 +192,22 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
     assert_equal "On belay! Readiness task moved back onto the rack.", flash[:notice]
   end
 
-  test "selected automatic trip tasks can be manually overridden" do
+  test "photo album readiness cannot be manually overridden" do
     trips(:yosemite).update!(photo_album_url: nil)
 
-    assert_difference "TripReadinessCompletion.count", 1 do
+    assert_no_difference "TripReadinessCompletion.count" do
       patch readiness_task_admin_trip_url(trips(:yosemite), "create_google_photo_album"), params: { completed: "1" }
     end
 
     assert_redirected_to readiness_admin_trip_url(trips(:yosemite))
-    assert_equal "On belay! Readiness task marked complete.", flash[:notice]
+    assert_equal "Wow, that was a whipper. That readiness task cannot be changed.", flash[:alert]
 
     get readiness_admin_trip_url(trips(:yosemite))
 
     assert_response :success
     assert_select "#readiness-trip", text: /Create Google Photo Album/
     assert_select "#readiness-trip", text: /Completed by Alex Rivera/, count: 0
-    assert_select "#readiness-trip form[action='#{readiness_task_admin_trip_path(trips(:yosemite), "create_google_photo_album")}'] input[name='completed'][value='0']"
-    assert_select "#readiness-trip input.trip-readiness-small-button[type='submit'][value='Mark incomplete']"
+    assert_select "#readiness-trip form[action='#{readiness_task_admin_trip_path(trips(:yosemite), "create_google_photo_album")}']", count: 0
     assert_select "#readiness-trip [data-readiness-task-key='create_google_photo_album'] .trip-readiness-auto-badge", count: 0
   end
 
@@ -239,5 +323,24 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
     assert_difference "TripReadinessCompletion.count", 1 do
       patch readiness_task_admin_trip_url(trips(:jtree), "send_photo_upload_reminder"), params: { completed: "1" }
     end
+  end
+
+  private
+
+  def create_day_trip!
+    Trip.create!(
+      trip_type: "day_trip",
+      name: "Vent 5 Readiness",
+      location: "Marin Coast",
+      start_date: Date.new(2026, 9, 12),
+      description: "Single day cragging.",
+      status: "published",
+      meeting_time: "08:30",
+      meeting_location: "Vent 5 Parking Trailhead",
+      meeting_location_url: "https://maps.google.com/?q=Vent+5",
+      late_arrival_instructions: "If you are running late, hike toward the main wall.",
+      participant_capacity: 8,
+      climbing_types: [ "sport" ]
+    )
   end
 end
