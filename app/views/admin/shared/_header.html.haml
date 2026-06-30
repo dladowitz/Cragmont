@@ -7,6 +7,8 @@
   %nav.admin-nav{"aria-label" => "Admin navigation"}
     = link_to "Trips", admin_trips_path
     = link_to "Help", admin_help_requests_path
+    - if policy(ContentPage).edit?
+      = link_to "Content", admin_content_path
     - if policy(Campground).index?
       = link_to "Campgrounds", admin_campgrounds_path
     - if policy(User).index?

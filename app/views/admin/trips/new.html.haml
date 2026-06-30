@@ -1,3 +1,23 @@
-= render "admin/shared/header", title: "New trip"
+- new_trip_title = @trip_type_choice_required ? "New trip" : "New #{@trip.day_trip? ? 'day trip' : 'camping trip'}"
+= render "admin/shared/header", title: new_trip_title
 %section.panel
-  = render "form", trip: @trip
+  .panel-header
+    %div
+      %h2= new_trip_title
+  - if @trip_type_choice_required
+    .empty-state
+      %p Choose the kind of trip you want to build.
+      %div{"data-controller" => "modal", "data-modal-open-value" => "true"}
+        %button.button{"data-action" => "modal#open", type: "button"} Choose trip type
+        %dialog.signup-modal.admin-trip-type-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+          .signup-modal-content
+            %div
+              %h2 What kind of trip is this?
+              %p Pick the right topo and we'll open the matching setup page.
+            .trip-type-choice-actions
+              = link_to "Camping trip", new_admin_trip_path(trip_type: "camping"), class: "button"
+              = link_to "Day trip", new_admin_trip_path(trip_type: "day_trip"), class: "button secondary"
+            .form-actions
+              = link_to "Cancel", admin_trips_path, class: "button secondary"
+  - else
+    = render "form", trip: @trip

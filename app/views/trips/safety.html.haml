@@ -1,0 +1,12 @@
+- content_for :body_class, "trip-safety-page"
+= render "shared/public_header"
+%main.public-main
+  %section.panel.trip-what-to-expect-panel
+    .panel-header
+      %div
+        %h1= @content_page.title
+        - if @content_page.subtitle.present?
+          %p.muted= @content_page.subtitle
+    %section.trip-expectation-copy.content-page-markdown
+      = render_content_page_markdown(@content_page.body)
+%p.background-image-caption Fairview Dome, Yosemite National Park

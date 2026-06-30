@@ -1,11 +1,12 @@
 class SiteSetting < ApplicationRecord
   DEFAULT_LIABILITY_WARNING = "Cragmont is not a teaching organization. It's a social base camp. We create shared spaces to connect with other climbers. We hope you'll exchange knowledge and learn from one another. However, Cragmont does not test or vet members. It's up to you to decide what knowledge is correct and what might lead to danger. If you are new to climbing, the best way to help with these decisions is to take classes from professional guides."
+  DEFAULT_DAY_TRIP_SAFETY_REMINDER = "Climbing is dangerous. Everyone is responsible for checking their own knots, belay setup, anchors, gear, and decisions at the crag."
 
   validates :uncounted_minor_age_limit,
     numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 17 }
   validates :first_two_nights_fee_cents, :extra_night_fee_cents, :minor_fee_cents, :minor_extra_night_fee_cents,
     numericality: { only_integer: true, greater_than_or_equal_to: 0 }
-  validates :liability_warning, presence: true
+  validates :liability_warning, :day_trip_safety_reminder, presence: true
 
   def self.current
     first_or_create!

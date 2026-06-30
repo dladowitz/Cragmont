@@ -1,0 +1,131 @@
+- signature_id = "day-trip-signup-signature-#{trip.id}"
+- roped_climbing = trip.sport_climbing? || trip.trad_climbing?
+- bouldering_climbing = trip.bouldering?
+- none_ability_copy = roped_climbing ? "We ask that at a minimum you feel competent Top Rope climbing. If you don't yet have these skills there are many local gyms that will teach you in just a few days of practice in a safer environment." : "We ask that at a minimum you feel competent assessing falls and protecting landing areas. If you don't yet have these skills there are many local gyms that will teach you in just a few days of practice in a safer environment."
+= form_with url: trip_day_trip_signup_path(trip), method: :post, class: "waiver-form day-trip-signup-form", data: { turbo: false, controller: "signature", signature_available_participant_capacity_value: trip.available_participant_capacity, signature_uncounted_minor_age_limit_value: trip.uncounted_minor_age_limit, signature_show_capacity_warning_value: true, signature_direct_signup_intent_value: "direct_signup", signature_waitlist_intent_value: "direct_signup", signature_next_submit_text_value: "Next", signature_waitlist_submit_text_value: "Sign Up", signature_first_two_nights_fee_cents_value: 0, signature_extra_night_fee_cents_value: 0, signature_minor_fee_cents_value: 0, signature_minor_extra_night_fee_cents_value: 0, signature_existing_adult_guest_count_value: 0, signature_existing_adult_names_value: [].to_json, signature_existing_counted_minor_count_value: 0, signature_existing_counted_minor_names_value: [].to_json, signature_existing_minor_line_items_value: [].to_json, signature_primary_participant_name_value: current_user.full_name, signature_current_waiver_available_value: current_annual_waiver_available, signature_pay_submit_text_value: "Sign Up", signature_free_submit_text_value: "Sign Up" } do
+  %section.signup-kind-step{"data-signature-target" => "signupStep"}
+    %p.capacity-warning{"data-signature-target" => "capacityWarning", hidden: true}
+      This trip is currently full. You can sign up for the waitlist
+    %fieldset.signup-kind-options.climbing-ability-options{"data-climbing-ability-group" => "true"}
+      %legend
+        Climbing ability
+        = required_marker
+      %p.signup-field-subtext Select the type of climbing you are competent at
+      - if roped_climbing
+        .climbing-ability-choice
+          %label.climbing-ability-card
+            = check_box_tag "day_trip_signup[climbing_abilities][]", "top_rope", true, data: { action: "signature#toggleExclusiveClimbingAbility" }
+            .climbing-ability-card-heading
+              %span.climbing-ability-check{"aria-hidden" => "true"}
+              %span Top Rope Climbing
+            .climbing-ability-definition
+              %p I feel competent to put on my harness, tie a figure 8 follow through knot and then climbing a route with a top rope anchor already in place. I know the commands for beginning to climb, asking for more or less slack and to be lowered to the ground.
+              %p I can competently belay another person using a belay device.
+              %p I feel comfortable double checking whether my climbing partner is doing all the the above correctly as well.
+        .climbing-ability-choice
+          %label.climbing-ability-card
+            = check_box_tag "day_trip_signup[climbing_abilities][]", "lead", false, data: { action: "signature#toggleExclusiveClimbingAbility" }
+            .climbing-ability-card-heading
+              %span.climbing-ability-check{"aria-hidden" => "true"}
+              %span Lead Climbing
+            .climbing-ability-definition
+              %p I feel competent to lead a route placing protection. I can build a top rope anchor. I can clean the anchor and get to the ground safely. This is independent of the grade of a climb. These skills are the same on a 5.6 route or a 5.12a route. It's up to you to know what grade you can safely apply these skills. Additionally It's also up to you to know if you can do this in a trad or sport setting as the skills are very different.
+      - if bouldering_climbing
+        .climbing-ability-choice
+          %label.climbing-ability-card
+            = check_box_tag "day_trip_signup[climbing_abilities][]", "bouldering", !roped_climbing, data: { action: "signature#toggleExclusiveClimbingAbility" }
+            .climbing-ability-card-heading
+              %span.climbing-ability-check{"aria-hidden" => "true"}
+              %span Bouldering
+            .climbing-ability-definition
+              %p I feel competent assessing the risk of falls and protecting with crash pads.
+      - if roped_climbing || bouldering_climbing
+        .climbing-ability-choice
+          %label.climbing-ability-card
+            = check_box_tag "day_trip_signup[climbing_abilities][]", "none", false, data: { action: "signature#toggleExclusiveClimbingAbility" }
+            .climbing-ability-card-heading
+              %span.climbing-ability-check{"aria-hidden" => "true"}
+              %span None
+            .climbing-ability-definition
+              %p= none_ability_copy
+    %fieldset.signup-kind-options
+      %legend Additional participants
+      %label
+        = check_box_tag "day_trip_signup[with_minor]", "1", false, id: "day-trip-signup-minor-toggle-#{trip.id}", data: { signature_target: "minorToggle", action: "signature#togglePartyFields" }
+        %span Add one minor
+    %section.minor-fields{"data-party-fields" => "minor", "data-required-dataset-key" => "requiredForMinor", "data-signature-target" => "minorFields", hidden: true}
+      %h3 Minor information
+      .minor-field-row.day-trip-minor-field-row{"data-party-row" => "", "data-party-row-visible" => "true"}
+        %div
+          = required_label_tag "day_trip_signup_minor_first_name", "First name"
+          = text_field_tag "day_trip_signup[day_trip_signup_minors_attributes][0][first_name]", "", id: "day_trip_signup_minor_first_name", data: { required_for_minor: "true" }
+        %div
+          = required_label_tag "day_trip_signup_minor_last_name", "Last name"
+          = text_field_tag "day_trip_signup[day_trip_signup_minors_attributes][0][last_name]", "", id: "day_trip_signup_minor_last_name", data: { required_for_minor: "true" }
+        %div
+          = required_label_tag "day_trip_signup_minor_age", "Age"
+          = number_field_tag "day_trip_signup[day_trip_signup_minors_attributes][0][age]", "", id: "day_trip_signup_minor_age", min: 0, max: 17, data: { required_for_minor: "true", action: "input->signature#updateCapacityWarning" }
+        %div
+          = required_label_tag "day_trip_signup_minor_relationship", "Relationship"
+          = text_field_tag "day_trip_signup[day_trip_signup_minors_attributes][0][relationship]", "", id: "day_trip_signup_minor_relationship", data: { required_for_minor: "true" }
+    %fieldset.signup-kind-options
+      %legend Gear I can bring
+      - if roped_climbing
+        %label
+          = check_box_tag "day_trip_signup[rope_60m]", "1"
+          %span Rope (60m)
+        %label
+          = check_box_tag "day_trip_signup[rope_70m]", "1"
+          %span Rope (70m)
+      - if trip.sport_climbing?
+        %label
+          = check_box_tag "day_trip_signup[quickdraws_and_sport_anchor]", "1"
+          %span Quickdraws and sport anchor
+        %label
+          = check_box_tag "day_trip_signup[clip_stick]", "1"
+          %span Clip stick
+      - if trip.trad_climbing?
+        %label
+          = check_box_tag "day_trip_signup[cams_nuts_and_trad_anchor]", "1"
+          %span Cams and trad anchor
+      - if bouldering_climbing
+        %label.gear-with-number
+          = check_box_tag "day_trip_signup[crash_pad_selected]", "1"
+          %span Crash Pad
+          %span.gear-number-field
+            = label_tag "day_trip_signup_crash_pad_count", "How many"
+            = number_field_tag "day_trip_signup[crash_pad_count]", "", id: "day_trip_signup_crash_pad_count", min: 0, max: 99, inputmode: "numeric"
+    .form-actions
+      %button.button{"data-action" => "signature#continueSignup", "data-signature-target" => "signupStepSubmit", type: "button"} Next
+  %section.waiver-intro{"data-signature-target" => "intro", hidden: true}
+    .waiver-intro-copy
+      - TripSignupWaiver.acknowledgement_blocks.each do |block|
+        %p= block
+    .form-actions
+      %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
+      %button.button{"data-action" => "signature#showWaiver", type: "button"} Agree and Sign Waiver
+  %div{"data-signature-target" => "waiverStep", hidden: true}
+    %section.waiver-text{"data-action" => "scroll->signature#checkWaiverScroll", "data-signature-target" => "waiver"}
+      .waiver-document
+        - TripSignupWaiver.blocks.each_with_index do |block, index|
+          - if TripSignupWaiver.title_block?(index)
+            %h3.waiver-title= block
+          - elsif TripSignupWaiver.warning_block?(index)
+            %p.waiver-warning= block
+          - elsif TripSignupWaiver.summary_heading_block?(index)
+            %h4.waiver-summary-heading= block
+          - else
+            %p= block
+    .signature-field
+      .signature-label-row
+        %label{for: signature_id}
+          Signature
+          = required_marker
+        %span You must view all the text to sign
+      %canvas.signature-pad{id: signature_id, "data-signature-target" => "canvas", height: "120", width: "560"}
+      = hidden_field_tag "day_trip_signup[waiver_signature_data]", "", data: { signature_target: "input" }
+      = hidden_field_tag "day_trip_signup[waiver_acknowledged_at]", "", data: { signature_target: "acknowledgementInput" }
+    .form-actions.waiver-signature-actions
+      %button.button.secondary{"data-action" => "signature#clear", type: "button"} Clear signature
+      .waiver-signature-submit-actions
+        = button_tag "Sign Up", type: :submit, class: "button", data: { signature_target: "submit" }, disabled: true

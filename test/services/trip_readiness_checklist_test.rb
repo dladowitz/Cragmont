@@ -6,6 +6,9 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
     trip.update!(
       whatsapp_group: "https://chat.whatsapp.com/yosemite-readiness",
       weather_url: "https://forecast.weather.gov/yosemite-readiness",
+      mountain_project_url: "https://www.mountainproject.com/area/yosemite-readiness",
+      guide_book_url: "https://example.com/yosemite-guide",
+      sun_exposure: "Morning shade",
       photo_album_url: "https://photos.app.goo.gl/yosemite-readiness",
       group_campfire_campsite: campsites(:yosemite_a),
       group_fire_night: "saturday"
@@ -16,8 +19,13 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
     assert tasks.fetch("campsite_coordinator_assigned").complete?
     assert tasks.fetch("whatsapp_group_created").complete?
     assert tasks.fetch("weather_link_added").complete?
+    assert tasks.fetch("mountain_project_link_added").complete?
+    assert tasks.fetch("guide_book_link_added").complete?
+    assert tasks.fetch("sun_exposure_added").complete?
+    assert_equal "Morning shade", tasks.fetch("sun_exposure_added").detail
     assert tasks.fetch("create_google_photo_album").complete?
     assert tasks.fetch("group_campfire_planned").complete?
+    assert_equal "https://www.cragmontclimbingclub.org/past-trips", tasks.fetch("add_photo_album_to_older_website").detail
     assert_equal "Group campfire is planned at Upper Pines site A12 on Saturday.", tasks.fetch("group_campfire_planned").detail
   end
 
@@ -49,6 +57,8 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
     trip.update!(
       whatsapp_group: "javascript:alert(1)",
       weather_url: "not a url",
+      mountain_project_url: "javascript:alert(1)",
+      guide_book_url: "ftp://example.com/guide",
       photo_album_url: "ftp://example.com/album"
     )
 
@@ -56,26 +66,23 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
 
     assert_not tasks.fetch("whatsapp_group_created").complete?
     assert_not tasks.fetch("weather_link_added").complete?
+    assert_not tasks.fetch("mountain_project_link_added").complete?
+    assert_not tasks.fetch("guide_book_link_added").complete?
     assert_not tasks.fetch("create_google_photo_album").complete?
   end
 
-  test "manual overrides can complete selected automatic trip tasks" do
+  test "photo album readiness only completes from the trip photo album url" do
     trip = trips(:yosemite)
     trip.update!(photo_album_url: nil)
-    TripReadinessCompletion.create!(
-      trip: trip,
-      task_key: "create_google_photo_album",
-      completed_at: Time.current,
-      completed_by: users(:alex)
-    )
 
     task = tasks_by_key(trip).fetch("create_google_photo_album")
 
     assert task.automatic?
-    assert task.overrideable?
-    assert task.complete?
+    assert_not task.overrideable?
+    assert_not task.complete?
     assert_not task.source_complete?
-    assert_equal "Add Album", task.update_label
+    assert_nil task.update_label
+    assert_not TripReadinessChecklist.completable_task_key?("create_google_photo_album", trip: trip)
   end
 
   test "campsite checks are created for each campsite and required value" do
@@ -146,6 +153,56 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
     category_names = TripReadinessChecklist.new(trips(:yosemite)).categories.map(&:name)
 
     assert_equal [ "Trip", "Campsites", "Participants", "Post Trip" ], category_names
+  end
+
+  test "day trip readiness categories exclude campfire campsites and participant sections" do
+    trip = create_day_trip!
+    checklist = TripReadinessChecklist.new(trip)
+    readiness_category_names = checklist.readiness_categories.map(&:name)
+    task_keys = checklist.readiness_categories.flat_map(&:tasks).map(&:key)
+
+    assert_equal [ "Trip" ], readiness_category_names
+    assert_not_includes task_keys, "group_campfire_planned"
+    assert_not_includes task_keys, "all_confirmed_participants_signed_waiver"
+    assert_not_includes task_keys, "all_confirmed_primary_participants_paid_or_waived"
+    assert_not_includes task_keys, "all_confirmed_participants_assigned_parking"
+    assert_not_includes task_keys, "send_redacted_photo_ids"
+    assert_includes task_keys, "mountain_project_link_added"
+    assert_includes task_keys, "guide_book_link_added"
+    assert_includes task_keys, "sun_exposure_added"
+    assert_includes task_keys, "verify_enough_lead_climbers"
+    assert_equal "verify_enough_lead_climbers", task_keys.second
+    assert_equal "Generally want at least a 1:5 ratio to get ropes up", checklist.readiness_categories.flat_map(&:tasks).find { |task| task.key == "verify_enough_lead_climbers" }.detail
+    assert_not TripReadinessChecklist.completable_task_key?("group_campfire_planned", trip: trip)
+    assert_not TripReadinessChecklist.completable_task_key?("send_redacted_photo_ids", trip: trip)
+    assert TripReadinessChecklist.completable_task_key?("mountain_project_link_added", trip: trip)
+    assert TripReadinessChecklist.completable_task_key?("guide_book_link_added", trip: trip)
+    assert TripReadinessChecklist.completable_task_key?("sun_exposure_added", trip: trip)
+    assert TripReadinessChecklist.completable_task_key?("verify_enough_lead_climbers", trip: trip)
+  end
+
+  test "day trip lead climber readiness task only appears for sport or trad climbing" do
+    trip = create_day_trip!
+    trip.update!(climbing_types: ["bouldering"])
+    checklist = TripReadinessChecklist.new(trip)
+    task_keys = checklist.readiness_categories.flat_map(&:tasks).map(&:key)
+
+    assert_not_includes task_keys, "verify_enough_lead_climbers"
+    assert_not TripReadinessChecklist.completable_task_key?("verify_enough_lead_climbers", trip: trip)
+  end
+
+  test "day trip post trip tasks exclude camping reimbursement and treasurer money tasks" do
+    trip = create_day_trip!
+    category = TripReadinessChecklist.new(trip).post_trip_category
+    task_names = category.tasks.map(&:name)
+    task_keys = category.tasks.map(&:key)
+
+    assert_equal [ "Send reminder to participants to upload photos to album" ], task_names
+    assert_not_includes task_keys, "all_campsites_reimbursed"
+    assert_not_includes task_keys, "send_collected_money_to_treasurer"
+    assert_not TripReadinessChecklist.completable_task_key?("all_campsites_reimbursed", trip: trip)
+    assert_not TripReadinessChecklist.completable_task_key?("send_collected_money_to_treasurer", trip: trip)
+    assert TripReadinessChecklist.completable_task_key?("send_photo_upload_reminder", trip: trip)
   end
 
   test "participant checks use short labels and can be manually overridden" do
@@ -317,5 +374,22 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
 
   def tasks_by_key(trip)
     TripReadinessChecklist.new(trip).categories.flat_map(&:tasks).index_by(&:key)
+  end
+
+  def create_day_trip!
+    Trip.create!(
+      trip_type: "day_trip",
+      name: "Vent 5 Readiness",
+      location: "Marin Coast",
+      start_date: Date.new(2026, 9, 12),
+      description: "Single day cragging.",
+      status: "published",
+      meeting_time: "08:30",
+      meeting_location: "Vent 5 Parking Trailhead",
+      meeting_location_url: "https://maps.google.com/?q=Vent+5",
+      late_arrival_instructions: "If you are running late, hike toward the main wall.",
+      participant_capacity: 8,
+      climbing_types: ["sport"]
+    )
   end
 end

@@ -48,7 +48,13 @@ class TripPolicy < ApplicationPolicy
   end
 
   def permitted_attributes
-    attributes = %i[name location start_date end_date description status whatsapp_group weather_url photo_album_url group_campfire_campsite_id group_fire_night]
+    attributes = %i[
+      name location start_date end_date description status trip_type whatsapp_group weather_url photo_album_url
+      group_campfire_campsite_id group_fire_night meeting_time meeting_location meeting_location_url
+      late_arrival_instructions carpool_meeting_spot end_time cost_cents cost_dollars participant_capacity
+      sun_exposure mountain_project_url guide_book_url day_trip_image
+    ]
+    attributes << { climbing_types: [] }
     attributes << :campsite_coordinator_id if global_trip_admin?
     attributes
   end

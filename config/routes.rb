@@ -29,6 +29,9 @@ Rails.application.routes.draw do
 
   resources :trips, only: %i[index show] do
     get "what-to-expect", on: :collection
+    get "day-trip-what-to-expect", to: "trips#day_trip_what_to_expect", as: :day_trip_what_to_expect, on: :collection
+    get "how-to-think-about-safety", to: "trips#safety", as: :safety, on: :collection
+    resource :day_trip_signup, only: %i[create destroy]
     post "guest_waiver_emails/:id", to: "guest_waiver_emails#create", as: :guest_waiver_email
     resources :campsites, only: [] do
       resource :campsite_signup, only: %i[create destroy] do
@@ -40,7 +43,9 @@ Rails.application.routes.draw do
 
   namespace :admin do
     root to: redirect("/admin/trips")
+    get "content", to: "content#index", as: :content
     resource :settings, only: %i[show update]
+    resources :site_content, path: "content/settings", param: :key, only: %i[edit update]
     resources :content_pages, param: :slug, only: %i[edit update] do
       post :preview, on: :collection
     end
@@ -83,6 +88,11 @@ Rails.application.routes.draw do
         post :email_participant_link, on: :member
         delete :remove_from_campsite, on: :member
         delete :remove_from_waitlist, on: :member
+      end
+      resources :day_trip_signups, only: [] do
+        patch :move_to_waitlist, on: :member
+        patch :move_onto_trip, on: :member
+        delete :remove, on: :member
       end
       resources :trip_payment_requests, only: %i[create] do
         post :email, on: :member

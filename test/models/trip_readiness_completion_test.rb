@@ -35,12 +35,24 @@ class TripReadinessCompletionTest < ActiveSupport::TestCase
   test "allows manual overrides for selected automatic readiness tasks" do
     completion = TripReadinessCompletion.new(
       trip: trips(:yosemite),
-      task_key: "create_google_photo_album",
+      task_key: "weather_link_added",
       completed_at: Time.current,
       completed_by: users(:alex)
     )
 
     assert completion.valid?
+  end
+
+  test "rejects photo album readiness manual overrides" do
+    completion = TripReadinessCompletion.new(
+      trip: trips(:yosemite),
+      task_key: "create_google_photo_album",
+      completed_at: Time.current,
+      completed_by: users(:alex)
+    )
+
+    assert_not completion.valid?
+    assert_includes completion.errors[:task_key], "is not included in the list"
   end
 
   test "allows manual overrides for campsite readiness tasks on the same trip" do

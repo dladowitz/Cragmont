@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_24_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_29_121200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -201,6 +201,51 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_24_110000) do
     t.index ["slug"], name: "index_content_pages_on_slug", unique: true
   end
 
+  create_table "day_trip_signup_minors", force: :cascade do |t|
+    t.integer "age", null: false
+    t.datetime "created_at", null: false
+    t.bigint "day_trip_signup_id", null: false
+    t.string "first_name", null: false
+    t.string "last_name", null: false
+    t.string "relationship", null: false
+    t.datetime "updated_at", null: false
+    t.index ["age"], name: "index_day_trip_signup_minors_on_age"
+    t.index ["day_trip_signup_id"], name: "index_day_trip_signup_minors_on_day_trip_signup_id"
+  end
+
+  create_table "day_trip_signups", force: :cascade do |t|
+    t.boolean "cams_nuts_and_trad_anchor", default: false, null: false
+    t.text "climbing_abilities"
+    t.boolean "clip_stick", default: false, null: false
+    t.integer "crash_pad_count", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.bigint "guest_of_day_trip_signup_id"
+    t.integer "guest_position"
+    t.boolean "quickdraws_and_sport_anchor", default: false, null: false
+    t.boolean "rope_60m", default: false, null: false
+    t.boolean "rope_70m", default: false, null: false
+    t.string "status", default: "confirmed", null: false
+    t.bigint "trip_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.datetime "waiver_acknowledged_at"
+    t.text "waiver_acknowledgement_text"
+    t.string "waiver_acknowledgement_text_digest"
+    t.string "waiver_ip_address"
+    t.string "waiver_signature_digest"
+    t.datetime "waiver_signed_at"
+    t.string "waiver_signer_name"
+    t.text "waiver_text"
+    t.string "waiver_text_digest"
+    t.string "waiver_user_agent"
+    t.index ["guest_of_day_trip_signup_id", "guest_position"], name: "index_day_trip_signups_on_guest_signup_position", where: "(guest_of_day_trip_signup_id IS NOT NULL)"
+    t.index ["guest_of_day_trip_signup_id"], name: "index_day_trip_signups_on_guest_of_day_trip_signup_id"
+    t.index ["status"], name: "index_day_trip_signups_on_status"
+    t.index ["trip_id", "user_id"], name: "index_day_trip_signups_on_active_trip_user", unique: true, where: "((status)::text <> 'canceled'::text)"
+    t.index ["trip_id"], name: "index_day_trip_signups_on_trip_id"
+    t.index ["user_id"], name: "index_day_trip_signups_on_user_id"
+  end
+
   create_table "help_notification_subscribers", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
@@ -245,6 +290,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_24_110000) do
 
   create_table "site_settings", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.text "day_trip_safety_reminder", default: "Climbing is dangerous. Everyone is responsible for checking their own knots, belay setup, anchors, gear, and decisions at the crag.", null: false
     t.integer "extra_night_fee_cents", default: 0, null: false
     t.integer "first_two_nights_fee_cents", default: 0, null: false
     t.text "liability_warning", default: "Cragmont is not a teaching organization. It's a social base camp. We create shared spaces to connect with other climbers. We hope you'll exchange knowledge and learn from one another. However, Cragmont does not test or vet members. It's up to you to decide what knowledge is correct and what might lead to danger. If you are new to climbing, the best way to help with these decisions is to take classes from professional guides.", null: false
@@ -466,58 +512,32 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_24_110000) do
     t.index ["trip_id"], name: "index_trip_readiness_completions_on_trip_id"
   end
 
-  create_table "trip_signup_minors", force: :cascade do |t|
-    t.integer "age", null: false
-    t.datetime "created_at", null: false
-    t.string "first_name", null: false
-    t.string "last_name", null: false
-    t.string "relationship", null: false
-    t.bigint "trip_signup_id", null: false
-    t.datetime "updated_at", null: false
-    t.index ["age"], name: "index_trip_signup_minors_on_age"
-    t.index ["trip_signup_id"], name: "index_trip_signup_minors_on_trip_signup_id"
-  end
-
-  create_table "trip_signups", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.string "status", default: "confirmed", null: false
-    t.bigint "trip_id", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "user_id", null: false
-    t.datetime "waiver_acknowledged_at"
-    t.text "waiver_acknowledgement_text"
-    t.string "waiver_acknowledgement_text_digest"
-    t.string "waiver_ip_address"
-    t.string "waiver_signature_digest"
-    t.datetime "waiver_signed_at"
-    t.string "waiver_signer_name"
-    t.text "waiver_text"
-    t.string "waiver_text_digest"
-    t.string "waiver_user_agent"
-    t.index ["status"], name: "index_trip_signups_on_status"
-    t.index ["trip_id", "user_id"], name: "index_trip_signups_on_trip_id_and_user_id", unique: true
-    t.index ["trip_id"], name: "index_trip_signups_on_trip_id"
-    t.index ["user_id"], name: "index_trip_signups_on_user_id"
-    t.index ["waiver_acknowledged_at"], name: "index_trip_signups_on_waiver_acknowledged_at"
-    t.index ["waiver_acknowledgement_text_digest"], name: "index_trip_signups_on_waiver_acknowledgement_text_digest"
-    t.index ["waiver_signature_digest"], name: "index_trip_signups_on_waiver_signature_digest"
-    t.index ["waiver_signed_at"], name: "index_trip_signups_on_waiver_signed_at"
-    t.index ["waiver_text_digest"], name: "index_trip_signups_on_waiver_text_digest"
-  end
-
   create_table "trips", force: :cascade do |t|
     t.bigint "campsite_coordinator_id"
+    t.text "carpool_meeting_spot"
+    t.text "climbing_types"
+    t.integer "cost_cents", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
     t.text "description"
     t.date "end_date", null: false
+    t.time "end_time"
     t.bigint "group_campfire_campsite_id"
     t.string "group_fire_night"
+    t.text "guide_book_url"
+    t.text "late_arrival_instructions", default: "If you are running late here is the general area we'll be climbing at ...", null: false
     t.string "location", null: false
+    t.string "meeting_location"
+    t.text "meeting_location_url"
+    t.time "meeting_time"
+    t.text "mountain_project_url"
     t.string "name", null: false
+    t.integer "participant_capacity", default: 0, null: false
     t.text "photo_album_url"
     t.date "start_date", null: false
     t.string "status", default: "draft", null: false
+    t.string "sun_exposure"
+    t.string "trip_type", default: "camping", null: false
     t.datetime "updated_at", null: false
     t.text "weather_url"
     t.text "whatsapp_group"
@@ -526,6 +546,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_24_110000) do
     t.index ["group_campfire_campsite_id"], name: "index_trips_on_group_campfire_campsite_id"
     t.index ["start_date"], name: "index_trips_on_start_date"
     t.index ["status"], name: "index_trips_on_status"
+    t.index ["trip_type"], name: "index_trips_on_trip_type"
   end
 
   create_table "user_roles", force: :cascade do |t|
@@ -611,6 +632,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_24_110000) do
   add_foreign_key "campsites", "users", column: "registered_by_id"
   add_foreign_key "campsites", "users", column: "registration_reimbursed_by_id"
   add_foreign_key "campsites", "users", column: "registration_reimbursement_recorded_by_id"
+  add_foreign_key "day_trip_signup_minors", "day_trip_signups"
+  add_foreign_key "day_trip_signups", "day_trip_signups", column: "guest_of_day_trip_signup_id"
+  add_foreign_key "day_trip_signups", "trips"
+  add_foreign_key "day_trip_signups", "users"
   add_foreign_key "help_request_replies", "help_requests"
   add_foreign_key "help_request_replies", "users"
   add_foreign_key "help_requests", "users"
@@ -631,7 +656,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_24_110000) do
   add_foreign_key "trip_payment_requests", "users", column: "created_by_id"
   add_foreign_key "trip_readiness_completions", "trips"
   add_foreign_key "trip_readiness_completions", "users", column: "completed_by_id"
-  add_foreign_key "trip_signup_minors", "trip_signups"
   add_foreign_key "trips", "campsites", column: "group_campfire_campsite_id"
   add_foreign_key "trips", "users", column: "campsite_coordinator_id"
   add_foreign_key "user_roles", "roles"
