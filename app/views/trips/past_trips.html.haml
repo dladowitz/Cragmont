@@ -1,0 +1,43 @@
+- content_for :body_class, "trips-index-page"
+= render "shared/public_header"
+.trips-mobile-hero{aria: {hidden: "true"}}
+  %h1.trips-mobile-hero-title Past Trips
+  %span.trips-mobile-hero-caption Regular Northwest Face, Half Dome
+%main.public-main
+  %section#archived-trips.panel.archived-trips-panel
+    .panel-header
+      .trips-index-copy
+        .trips-index-title-row
+          %h1 Past Trips
+          = link_to "Current Trips", trips_path
+    - if @archived_trips.any?
+      .archived-trip-list
+        - @archived_trips.each do |trip|
+          = link_to trip_path(trip), class: "archived-trip-row", aria: { label: "View #{trip.name}" } do
+            %div
+              %h3= trip.name
+              %p= trip.location
+            %dl.archived-trip-meta
+              %div
+                %dt Dates
+                %dd
+                  %span.date-range-desktop
+                    = trip.start_date.to_fs(:long)
+                    to #{trip.end_date.to_fs(:long)}
+                  %span.date-range-mobile
+                    = trip.start_date.strftime("%m/%d/%y")
+                    to #{trip.end_date.strftime("%m/%d/%y")}
+              %div
+                %dt Sites
+                %dd= trip.campsite_count
+      - if @archived_total_pages > 1
+        %nav.pagination{aria: {label: "Past trip pages"}}
+          - if @archived_current_page > 1
+            = link_to "Previous", past_trips_trips_path(archived_page: @archived_current_page - 1, anchor: "archived-trips"), class: "button secondary"
+          %span.pagination-summary Page #{@archived_current_page} of #{@archived_total_pages}
+          - if @archived_current_page < @archived_total_pages
+            = link_to "Next", past_trips_trips_path(archived_page: @archived_current_page + 1, anchor: "archived-trips"), class: "button secondary"
+    - else
+      %p.muted No past trips are available right now.
+  = render "shared/liability_warning"
+%p.background-image-caption Regular Northwest Face, Half Dome

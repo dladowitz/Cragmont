@@ -397,6 +397,24 @@ body.trip-show-page .trip-summary-header .site-feedback-callout {
   min-width: 0;
 }
 
+.trips-index-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: baseline;
+  margin-block: 0 10px;
+}
+
+.trips-index-title-row h1 {
+  margin: 0;
+}
+
+.trips-index-title-row a {
+  color: var(--accent);
+  font-size: 1.1rem;
+  font-weight: 850;
+}
+
 .trips-faq-callout {
   align-self: start;
   box-sizing: border-box;
@@ -2472,7 +2490,8 @@ body.trips-index-page .trips-index-panel .panel-header {
   margin-bottom: 14px;
 }
 
-body.trips-index-page .trips-index-panel h1 {
+body.trips-index-page .trips-index-panel h1,
+body.trips-index-page .archived-trips-panel h1 {
   margin-block: 0 10px;
 }
 

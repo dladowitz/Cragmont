@@ -1,6 +1,6 @@
 class Admin::TripsController < Admin::BaseController
   TRIP_FILTER_STATUSES = (Trip::STATUSES + [ "deleted" ]).freeze
-  DEFAULT_TRIP_FILTER_STATUSES = Trip::STATUSES.freeze
+  DEFAULT_TRIP_FILTER_STATUSES = %w[draft published].freeze
 
   before_action :set_trip, only: %i[show edit update destroy restore]
   before_action :ensure_trip_not_deleted, only: %i[edit update destroy]
