@@ -21,6 +21,7 @@ export default class extends Controller {
     showCapacityWarning: Boolean,
     uncountedMinorAgeLimit: Number,
     waitlistIntent: String,
+    waitlistSkipsWaiver: { type: Boolean, default: true },
     waitlistSubmitText: String
   }
 
@@ -157,7 +158,7 @@ export default class extends Controller {
     if (this.noneClimbingAbilitySelected()) return
 
     this.updateCapacityWarning()
-    if (this.waitlistFallbackActive()) {
+    if (this.waitlistFallbackActive() && this.waitlistSkipsWaiverValue) {
       this.prepareWaitlistFallback()
       this.element.requestSubmit()
       return
@@ -200,7 +201,11 @@ export default class extends Controller {
   }
 
   showAcknowledgement() {
-    this.prepareDirectSignup()
+    if (this.waitlistFallbackActive()) {
+      this.prepareWaitlistFallback()
+    } else {
+      this.prepareDirectSignup()
+    }
     this.checkAttendanceDates()
     if (!this.element.reportValidity()) return
 
@@ -424,6 +429,7 @@ export default class extends Controller {
   prepareWaitlistFallback() {
     if (this.hasFeeFieldsTarget) this.feeFieldsTarget.hidden = true
     if (this.hasSignupStepSubmitTarget) this.signupStepSubmitTarget.textContent = this.waitlistSubmitTextValue
+    if (this.hasSubmitTarget) this.submitTarget.textContent = this.waitlistSubmitTextValue
     if (this.hasIntentTarget) this.intentTarget.value = this.waitlistIntentValue
     this.toggleAttendanceDateRequirements(false)
   }

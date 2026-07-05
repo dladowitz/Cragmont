@@ -21,6 +21,12 @@
       = @trip.start_date.to_fs(:long)
       - if @trip.meeting_time.present?
         at #{@trip.meeting_time.strftime("%-l:%M%P")}
+    - if whatsapp_group_url.present?
+      = link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link trip-mobile-resource-link trip-whatsapp-mobile-link", target: "_blank", rel: "noopener"
+    - if weather_url.present?
+      = link_to "Weather", weather_url, class: "trip-resource-link trip-mobile-resource-link trip-weather-mobile-link", target: "_blank", rel: "noopener"
+    - if photo_album_url.present?
+      = link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-mobile-resource-link trip-photo-album-mobile-link", target: "_blank", rel: "noopener"
   %span.trip-show-mobile-hero-caption IRS Wall, Joshua Tree
 %main.public-main
   %section.panel.trip-overview.day-trip-overview
@@ -37,14 +43,23 @@
           = @trip.start_date.to_fs(:long)
           - if @trip.meeting_time.present?
             at #{@trip.meeting_time.strftime("%-l:%M%P")}
-      - if @trip.description.present?
-        .description.content-page-markdown.trip-summary-description
-          = render_content_page_markdown(@trip.description)
-      .trip-summary-callouts
         .public-beta-notice.trips-faq-callout
           %span
             Want to know what to expect on a day trip? Read
             = link_to "here.", day_trip_what_to_expect_trips_path
+      .trips-index-notices.trip-summary-notices
+        - if whatsapp_group_url.present? || weather_url.present? || mountain_project_url.present? || guide_book_url.present? || photo_album_url.present?
+          .trip-resource-links
+            - if whatsapp_group_url.present?
+              = link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link trip-whatsapp-link", target: "_blank", rel: "noopener"
+            - if weather_url.present?
+              = link_to "Weather", weather_url, class: "trip-resource-link trip-weather-link", target: "_blank", rel: "noopener"
+            - if mountain_project_url.present?
+              = link_to "Mountain Project", mountain_project_url, class: "trip-resource-link trip-mountain-project-link", target: "_blank", rel: "noopener"
+            - if guide_book_url.present?
+              = link_to "Guide Book", guide_book_url, class: "trip-resource-link trip-guide-book-link", target: "_blank", rel: "noopener"
+            - if photo_album_url.present?
+              = link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-photo-album-link", target: "_blank", rel: "noopener"
         .public-beta-notice.site-feedback-callout
           %span
             This site is still getting dialed in. If you find issues
@@ -59,6 +74,14 @@
       %div
         %span Total Capacity
         %strong= @trip.total_participant_capacity
+
+  - if @trip.description.present?
+    %section.panel.day-trip-description-panel
+      .panel-header
+        %div
+          %h2 Description
+      .content-page-markdown
+        = render_content_page_markdown(@trip.description)
 
   %section.panel.day-trip-details-panel
     .day-trip-plan-layout
@@ -135,27 +158,6 @@
           .location-image-modal-content
             %button.modal-close-button{"aria-label" => "Close image", "data-action" => "modal#close", type: "button"} ×
             = image_tag @trip.day_trip_image, alt: "#{@trip.name} location image"
-
-  - if whatsapp_group_url.present? || weather_url.present? || mountain_project_url.present? || guide_book_url.present? || photo_album_url.present? || @trip.sun_exposure.present?
-    %section.panel.day-trip-resources-panel
-      .panel-header
-        %div
-          %h2 Additional Resources
-      .additional-resources-list
-        - if @trip.sun_exposure.present?
-          %p.additional-resource-detail
-            %strong Sun Exposure:
-            %span= @trip.sun_exposure
-        - if whatsapp_group_url.present?
-          = link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link", target: "_blank", rel: "noopener"
-        - if weather_url.present?
-          = link_to "Weather", weather_url, class: "trip-resource-link", target: "_blank", rel: "noopener"
-        - if mountain_project_url.present?
-          = link_to "Mountain Project", mountain_project_url, class: "trip-resource-link", target: "_blank", rel: "noopener"
-        - if guide_book_url.present?
-          = link_to "Guide Book", guide_book_url, class: "trip-resource-link", target: "_blank", rel: "noopener"
-        - if photo_album_url.present?
-          = link_to "Photo Album", photo_album_url, class: "trip-resource-link", target: "_blank", rel: "noopener"
 
   %section.panel.day-trip-participants-panel
     .panel-header

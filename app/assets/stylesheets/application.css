@@ -2633,6 +2633,10 @@ body.trip-show-page .panel {
   margin: 0;
 }
 
+.day-trip-description-panel .panel-header {
+  margin-bottom: 8px;
+}
+
 .day-trip-location-image {
   margin-top: 18px;
   width: min(100%, 428px);
@@ -6351,20 +6355,6 @@ textarea {
     margin-bottom: 22px;
   }
 
-  body.day-trip-show-page .trip-summary-header {
-    gap: 0;
-    margin-bottom: 0;
-  }
-
-  body.day-trip-show-page .trip-overview {
-    margin-bottom: 14px;
-  }
-
-  .trip-summary-callouts {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-
   .day-trip-plan-layout {
     grid-template-columns: 1fr;
     gap: 16px;
@@ -6391,7 +6381,7 @@ textarea {
     margin-bottom: 0;
   }
 
-  body.day-trip-show-page .day-trip-resources-panel,
+  body.day-trip-show-page .day-trip-description-panel,
   body.day-trip-show-page .day-trip-participants-panel,
   body.day-trip-show-page .day-trip-safety-panel {
     margin-bottom: 4px;
@@ -6399,7 +6389,7 @@ textarea {
     padding-bottom: 4px;
   }
 
-  body.day-trip-show-page .day-trip-resources-panel .panel-header,
+  body.day-trip-show-page .day-trip-description-panel .panel-header,
   body.day-trip-show-page .day-trip-participants-panel .panel-header,
   body.day-trip-show-page .day-trip-safety-panel .panel-header {
     margin-bottom: 2px;
@@ -6409,7 +6399,7 @@ textarea {
     margin-bottom: -8px;
   }
 
-  body.day-trip-show-page .day-trip-resources-panel h2,
+  body.day-trip-show-page .day-trip-description-panel h2,
   body.day-trip-show-page .day-trip-participants-panel h2,
   body.day-trip-show-page .day-trip-safety-panel h2 {
     margin-bottom: 0;
