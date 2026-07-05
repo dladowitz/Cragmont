@@ -5,6 +5,9 @@ class TripsController < ApplicationController
 
   def index
     @trips = Trip.published_for_public.includes(:campsite_coordinator, :campsites)
+  end
+
+  def past_trips
     archived_trips_scope = Trip.archived_for_public.includes(:campsite_coordinator, :campsites)
 
     @archived_current_page = [ params[:archived_page].to_i, 1 ].max

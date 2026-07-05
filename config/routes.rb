@@ -28,6 +28,7 @@ Rails.application.routes.draw do
   get "payment_requests/:token", to: "trip_payment_requests#show", as: :trip_payment_request
 
   resources :trips, only: %i[index show] do
+    get "past-trips", to: "trips#past_trips", as: :past_trips, on: :collection
     get "what-to-expect", on: :collection
     get "day-trip-what-to-expect", to: "trips#day_trip_what_to_expect", as: :day_trip_what_to_expect, on: :collection
     get "how-to-think-about-safety", to: "trips#safety", as: :safety, on: :collection

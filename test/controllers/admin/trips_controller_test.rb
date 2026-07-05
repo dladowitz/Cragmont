@@ -34,7 +34,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='filters'][value='1']"
     assert_select "input#trip_status_draft[checked]"
     assert_select "input#trip_status_published[checked]"
-    assert_select "input#trip_status_archived[checked]"
+    assert_select "input#trip_status_archived[checked]", count: 0
     assert_select "input#trip_status_deleted[checked]", count: 0
     assert_select ".trip-status-filter", text: "Draft"
     assert_select ".trip-status-filter", text: "Published"
@@ -233,7 +233,10 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "td", text: /Joshua Tree Winter/, count: 0
-    assert_select "td", text: /Yosemite Valley Spring/
+    assert_select "td", text: /Yosemite Valley Spring/, count: 0
+    assert_select "input#trip_status_draft[checked]"
+    assert_select "input#trip_status_published[checked]"
+    assert_select "input#trip_status_archived[checked]", count: 0
 
     get admin_trips_url, params: { filters: "1", status: [ "deleted" ] }
 
