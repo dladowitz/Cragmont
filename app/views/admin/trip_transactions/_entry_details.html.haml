@@ -1,0 +1,151 @@
+- show_source = local_assigns.fetch(:show_source, true)
+- show_remaining_refundable = local_assigns.fetch(:show_remaining_refundable, true)
+- show_waived_reason = local_assigns.fetch(:show_waived_reason, true)
+- show_trip = local_assigns.fetch(:show_trip, false)
+- show_refund_action = local_assigns.fetch(:show_refund_action, false)
+- payment = entry.payment
+- status_label = entry.status_label
+- status_class = entry.status_class
+- trip = payment.campsite_signup.trip
+
+%div{"data-controller" => "modal"}
+  %button.button.secondary.admin-table-action-button{"data-action" => "modal#open", type: "button"} View
+  %dialog.signup-modal.transaction-details-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+    .signup-modal-content
+      %div
+        %h2 Payment details
+      .transaction-details-sections
+        %dl.details-list.transaction-details-list
+          - if show_trip
+            %div
+              %dt Trip
+              %dd= link_to trip.name, trip_path(trip)
+          %div
+            %dt Participant
+            %dd= entry.participant_name
+          %div
+            %dt Status
+            %dd
+              %span.status.transaction-status{class: status_class}= status_label
+          %div
+            %dt Paid at
+            %dd= payment.paid_at&.strftime("%-m/%-d/%y %l:%M %p") || "None"
+          %div
+            %dt Admin created
+            %dd= payment.created_by.present? ? "Yes" : "No"
+          - if payment.waived?
+            %div
+              %dt Waived By
+              %dd= payment.created_by&.full_name || "None"
+          - if show_waived_reason
+            %div
+              %dt Waived reason
+              %dd= payment.waived_reason.presence || "None"
+          %div
+            %dt Created at
+            %dd= payment.created_at.strftime("%-m/%-d/%y %l:%M %p")
+          %div
+            %dt Updated at
+            %dd= payment.updated_at.strftime("%-m/%-d/%y %l:%M %p")
+          %div
+            %dt Note
+            %dd= payment.note.presence || "None"
+        %dl.details-list.transaction-details-list
+          %div
+            %dt Amount
+            %dd= format_cents(payment.amount_cents)
+          %div
+            %dt Amount Refunded
+            %dd= format_cents(payment.refunded_amount_cents)
+          - if show_remaining_refundable
+            %div
+              %dt Remaining refundable
+              %dd= format_cents(payment.remaining_refundable_amount_cents)
+          - if show_source
+            %div
+              %dt Source
+              %dd
+                - stripe_payment_url = stripe_dashboard_payment_url(payment.stripe_payment_intent_id)
+                - if payment.stripe_source? && stripe_payment_url.present?
+                  = link_to payment.source.titleize, stripe_payment_url, target: "_blank", rel: "noopener"
+                - else
+                  = payment.source.titleize
+          - if show_refund_action
+            %div.transaction-refund-action-row
+              %dt
+              %dd
+                %div{"data-controller" => "modal", "data-modal-disable-autofocus-value" => "true"}
+                  - refund_disabled = payment.remaining_refundable_amount_cents.zero? || !payment.stripe_source?
+                  - refund_title = payment.remaining_refundable_amount_cents.zero? ? "There is nothing left to refund." : ("Only Stripe transactions can be refunded here." unless payment.stripe_source?)
+                  %button.button.danger.secondary.admin-table-action-button{"data-action" => ("modal#open" unless refund_disabled), disabled: refund_disabled, title: refund_title, type: "button"} Issue Refund
+                  - unless refund_disabled
+                    %dialog.signup-modal.refund-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                      .signup-modal-content
+                        %div
+                          %h2 Refund payment
+                          %p= entry.participant_name
+                        %dl.details-list.transaction-details-list
+                          %div
+                            %dt Participant
+                            %dd= entry.participant_name
+                          %div
+                            %dt Remaining refundable
+                            %dd= format_cents(payment.remaining_refundable_amount_cents)
+                        = form_with url: refund_admin_trip_transaction_path(trip, payment), method: :post, class: "admin-form" do
+                          .form-field.refund-amount-field
+                            = required_label_tag "refund_#{payment.id}_amount", "Refund amount"
+                            .currency-field
+                              %span $
+                              = number_field_tag "refund[amount]", "0.00", id: "refund_#{payment.id}_amount", min: 0.01, max: number_with_precision(BigDecimal(payment.remaining_refundable_amount_cents.to_s) / 100, precision: 2), step: 0.01, required: true
+                          .form-field
+                            = required_label_tag "refund_#{payment.id}_reason", "Reason for refund"
+                            = text_area_tag "refund[reason]", "", id: "refund_#{payment.id}_reason", required: true, rows: 3
+                          %label.checkbox-field.refund-trip-expense-field{for: "refund_#{payment.id}_trip_expense"}
+                            = check_box_tag "refund[trip_expense]", "1", false, id: "refund_#{payment.id}_trip_expense"
+                            %span This was for a trip expense (ex: firewood)
+                          .form-actions
+                            %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
+                            = submit_tag "Issue Refund", class: "button danger"
+      %fieldset.transaction-fee-details
+        %legend Fee details
+        %table.transaction-fee-table
+          %thead
+            %tr
+              %th Participant
+              %th First 2 nights
+              %th Additional nights
+              %th Total
+          %tbody
+            - payment_fee_table_rows(payment).each do |row|
+              %tr
+                %td= row[:label]
+                %td= row[:first_two_nights]
+                %td= row[:additional_nights]
+                %td= format_cents(row[:total_cents])
+          %tfoot
+            %tr
+              %td{:colspan => 3}
+              %td.transaction-fee-total= format_cents(payment.amount_cents)
+      .transaction-refund-details
+        %h3 Refunds
+        - if entry.refunds.any?
+          %table.transaction-refunds-table
+            %thead
+              %tr
+                %th Amount
+                %th Refunded At
+                %th Refunded By
+                %th Type
+                %th Reason
+            %tbody
+              - entry.refunds.each do |refund|
+                %tr
+                  %td= format_cents(refund.amount_cents)
+                  %td= refund.refunded_at&.strftime("%-m/%-d/%y %l:%M %p") || "None"
+                  %td= refund.refunded_by&.full_name || "None"
+                  %td= refund.refund_type_label
+                  %td= refund.reason.presence || "None"
+        - else
+          %p.muted No refunds recorded for this payment.
+      .form-actions
+        %button.button.secondary{"data-action" => "modal#close", type: "button"} Close

@@ -6,6 +6,16 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "can view trips index" do
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    warning_trip = create_day_trip!(name: "Nearly Full Crag", participant_capacity: 4)
+    3.times do |index|
+      participant = User.create!(first_name: "Almost", last_name: "Full #{index}", email: "almost-full-#{index}@example.com", password: "password")
+      DayTripSignup.create!(trip: warning_trip, user: participant, climbing_abilities: [ "top_rope" ])
+    end
+    full_trip = create_day_trip!(name: "Packed Crag", participant_capacity: 1)
+    full_participant = User.create!(first_name: "Packed", last_name: "Participant", email: "packed-participant@example.com", password: "password")
+    DayTripSignup.create!(trip: full_trip, user: full_participant, climbing_abilities: [ "top_rope" ])
+
     get admin_trips_url
 
     assert_response :success
@@ -30,10 +40,29 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".trip-status-filter", text: "Published"
     assert_select ".trip-status-filter", text: "Archived"
     assert_select ".trip-status-filter", text: "Deleted"
-    assert_select "th", text: "Participant Capacity"
-    assert_select "th", text: "Signed Up"
-    assert_select "th", text: "Actions"
+    assert_equal [
+      "Trip",
+      "Coordinator",
+      "Status",
+      "Dates",
+      "Signed Up",
+      "Open Spaces",
+      "Capacity",
+      "Actions"
+    ], css_select("table thead th").map { |header| header.text.squish }
+    assert_select "th", text: "Campsites", count: 0
     assert_select "td", text: /Yosemite Valley Spring/
+    rows = css_select("tbody tr")
+    yosemite_row = rows.find { |row| row.text.include?("Yosemite Valley Spring") }
+    yosemite_cells = yosemite_row.css("td").map { |cell| cell.text.squish }
+    assert_equal "1", yosemite_cells[4]
+    assert_equal "9", yosemite_cells[5]
+    assert_equal "10", yosemite_cells[6]
+    assert_includes yosemite_row.css("td")[5]["class"], "success-stat"
+    warning_row = rows.find { |row| row.text.include?("Nearly Full Crag") }
+    assert_includes warning_row.css("td")[5]["class"], "warning-stat"
+    full_row = rows.find { |row| row.text.include?("Packed Crag") }
+    assert_includes full_row.css("td")[5]["class"], "danger-stat"
     assert_select "td", text: "Alex Rivera"
     assert_select "td", text: /Not set yet/
     assert_select "td a[href='#{edit_admin_trip_path(trips(:jtree))}']", text: "Update"
@@ -1447,12 +1476,20 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_operator response.body.index("class=\"stats\""), :<, response.body.index("trip-management-panel")
     assert_operator response.body.index("trip-management-panel"), :<, response.body.index("day-trip-admin-details")
+    assert_operator response.body.index("day-trip-admin-details"), :<, response.body.index("admin-day-trip-description-panel")
+    assert_operator response.body.index("admin-day-trip-description-panel"), :<, response.body.index("admin-trip-resources-panel")
+    assert_select ".trip-overview .description", count: 0
+    assert_select ".day-trip-admin-details h2", "Crag Plan"
     assert_select ".day-trip-admin-details", text: /End time\s*None/
     assert_select ".day-trip-admin-details a[href='https://maps.google.com/?q=Vent+5'][target='_blank'][rel='noopener']", text: "Vent 5 Parking Trailhead"
     assert_select ".day-trip-admin-details .day-trip-location-image[data-controller='modal']" do
       assert_select "button.day-trip-location-image-button[aria-label='Expand Vent 5 Admin location image']"
       assert_select "button.day-trip-location-image-button img[alt='Vent 5 Admin location image']"
       assert_select "dialog.location-image-modal[aria-label='Vent 5 Admin location image'] img[alt='Vent 5 Admin location image']"
+    end
+    assert_select ".admin-day-trip-description-panel" do
+      assert_select "h2", "Description"
+      assert_select ".content-page-markdown", text: /Single day cragging/
     end
     assert_select ".admin-trip-resources-panel" do
       assert_select "h2", "Additional Resources"
@@ -1754,5 +1791,24 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to edit_admin_trip_url(trip)
     assert_equal "Cannot delete a trip with participants signed up", flash[:alert]
+  end
+
+  private
+
+  def create_day_trip!(name:, participant_capacity:)
+    Trip.create!(
+      trip_type: "day_trip",
+      name: name,
+      location: "Marin Coast",
+      start_date: Date.new(2026, 8, 1),
+      description: "Single day cragging.",
+      status: "published",
+      meeting_time: "08:30",
+      meeting_location: "Vent 5 Parking Trailhead",
+      meeting_location_url: "https://maps.google.com/?q=Vent+5",
+      late_arrival_instructions: "If you are running late, hike toward the main wall.",
+      participant_capacity: participant_capacity,
+      climbing_types: [ "sport" ]
+    )
   end
 end

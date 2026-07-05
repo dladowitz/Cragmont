@@ -80,6 +80,58 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_select "a", text: "Yosemite Valley Spring"
   end
 
+  test "user details show signed up trips with transactions" do
+    user = users(:sam)
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: user)
+    signup.payments.create!(
+      source: "stripe",
+      status: "paid",
+      amount_cents: 5500,
+      paid_at: Time.zone.local(2026, 6, 2, 12, 0),
+      stripe_payment_intent_id: "pi_admin_user_sam"
+    )
+    day_trip = create_day_trip!(name: "Vent 5 Admin Profile", start_date: Date.new(2026, 9, 12))
+    DayTripSignup.create!(
+      trip: day_trip,
+      user: user,
+      status: "waitlisted",
+      climbing_abilities: [ "top_rope" ]
+    )
+
+    get admin_user_url(user)
+
+    assert_response :success
+    assert_select "h2", "Trips and Transactions"
+    assert_select "table.user-trip-history-table" do
+      trip_rows = css_select("tbody").first.children.select { |child| child.element? && child.name == "tr" }
+
+      assert_equal [
+        "Trip",
+        "Signup",
+        "Dates",
+        "Transactions"
+      ], css_select("thead").first.css("th").map { |header| header.text.strip }
+      assert_equal 2, trip_rows.size
+      assert_select "a[href='#{admin_trip_path(trips(:yosemite))}']", text: "Yosemite Valley Spring"
+      assert_select "a[href='#{admin_trip_path(day_trip)}']", text: "Vent 5 Admin Profile"
+      assert_select ".status", text: "Confirmed"
+      assert_select ".status", text: "Waitlisted"
+      assert_select "td", text: "$55.00"
+      assert_select ".transaction-status", text: "Paid"
+      assert_select "button", text: "View"
+      assert_select "td", text: /No transactions yet/
+    end
+    assert_select "dialog.transaction-details-modal" do
+      assert_select "dt", text: "Participant"
+      assert_select "dd", text: "Sam Lee"
+      assert_select "dt", text: "Source"
+      assert_select "dd", text: "Stripe"
+      assert_select "dt", text: "Remaining refundable"
+      assert_select "dt", text: "Waived reason"
+      assert_select "dt", text: "Trip", count: 0
+    end
+  end
+
   test "can email standalone waiver signing request" do
     assert_difference "ActionMailer::Base.deliveries.size", 1 do
       post email_waiver_request_admin_user_url(users(:sam)), as: :json
@@ -284,5 +336,24 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to admin_user_url(users(:alex))
+  end
+
+  private
+
+  def create_day_trip!(name:, start_date:)
+    Trip.create!(
+      trip_type: "day_trip",
+      name: name,
+      location: "Marin Coast",
+      start_date: start_date,
+      description: "Single day cragging.",
+      status: "published",
+      meeting_time: "08:30",
+      meeting_location: "Vent 5 Parking Trailhead",
+      meeting_location_url: "https://maps.google.com/?q=Vent+5",
+      late_arrival_instructions: "If you are running late, hike toward the main wall.",
+      participant_capacity: 8,
+      climbing_types: [ "sport" ]
+    )
   end
 end

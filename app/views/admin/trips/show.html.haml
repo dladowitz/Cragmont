@@ -48,7 +48,7 @@
               %span.muted Not set yet
               - if policy(@trip).assign_coordinator?
                 = link_to "Update", edit_admin_trip_path(@trip)
-      - if @trip.description.present?
+      - if @trip.description.present? && !@trip.day_trip?
         .description
           %strong Notes:
           .content-page-markdown
@@ -106,6 +106,9 @@
         %span.status{class: reimbursement_status_class}= "#{@reimbursed_campsites_count} of #{reimbursable_campsites_count}"
 - if @trip.day_trip?
   %section.panel.day-trip-admin-details
+    .panel-header
+      %div
+        %h2 Crag Plan
     %dl.details-list
       %div
         %dt Meeting time
@@ -135,6 +138,14 @@
           .location-image-modal-content
             %button.modal-close-button{"aria-label" => "Close image", "data-action" => "modal#close", type: "button"} ×
             = image_tag @trip.day_trip_image, alt: "#{@trip.name} location image"
+  - if @trip.description.present?
+    %section.panel.admin-day-trip-description-panel
+      .panel-header
+        %div
+          %h2 Description
+      .description
+        .content-page-markdown
+          = render_content_page_markdown(@trip.description)
 - if @trip.whatsapp_group.present? || @trip.weather_url.present? || @trip.mountain_project_url.present? || @trip.guide_book_url.present? || @trip.photo_album_url.present? || @trip.sun_exposure.present?
   %section.panel.admin-trip-resources-panel
     .panel-header

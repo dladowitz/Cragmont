@@ -6,9 +6,9 @@
         %th Coordinator
         %th Status
         %th Dates
-        %th Campsites
-        %th Participant Capacity
         %th Signed Up
+        %th Open Spaces
+        %th Capacity
         %th Actions
     %tbody
       - trips.each do |trip|
@@ -36,9 +36,10 @@
               %div
                 %dt Checkout
                 %dd= trip.end_date.strftime("%b %d, %Y")
-          %td= trip.campsite_count
-          %td= trip.total_participant_capacity
           %td= trip.confirmed_signup_count
+          - open_spaces_class = trip.capacity_full? ? "danger-stat" : (trip.almost_full? ? "warning-stat" : "success-stat")
+          %td.admin-open-spaces-cell{class: open_spaces_class}= trip.available_participant_capacity
+          %td= trip.total_participant_capacity
           %td.table-actions
             - if policy(trip).manage_payments?
               = link_to "Transactions", admin_trip_transactions_path(trip), class: "button secondary admin-table-action-button"

@@ -32,6 +32,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] h2", text: "Yosemite Valley Spring"
     assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] .date-range-desktop", text: /June 12, 2026\s*to June 15, 2026/
     assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] .date-range-mobile", text: /06\/12\/26\s*to 06\/15\/26/
+    assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] .trip-card-meta", text: /Open Spaces\s*10 spaces/
+    assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] .trip-card-meta", text: /Capacity/, count: 0
     assert_select ".trip-card[href='#{trip_path(trips(:jtree))}']", count: 0
     assert_select "a", text: "View trip", count: 0
     assert_select ".trips-faq-callout a[href='#{what_to_expect_trips_path}']", text: "camping trips"
@@ -81,6 +83,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       meeting_location_url: "https://maps.google.com/?q=Vent+5",
       description: "**Vent 5** is a sport climbing area on the Marin Coast.\n\n## Parking\n\nIt fills up quick here.",
       late_arrival_instructions: "If you are running late, head toward the crag.",
+      campsite_coordinator: users(:alex),
       participant_capacity: 8,
       sun_exposure: "Afternoon sun",
       climbing_types: [ "sport" ],
@@ -111,7 +114,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_select ".content-page-markdown h2", "Parking"
       assert_select ".content-page-markdown", text: /It fills up quick here/
     end
-    assert_operator response.body.index("Description"), :<, response.body.index("Crag Plan")
+    assert_operator response.body.index("Crag Plan"), :<, response.body.index("Description")
     assert_select ".trip-show-mobile-hero" do
       assert_select "h1", "Vent 5 Day"
       assert_select ".trip-show-mobile-location", "Mount Tam, CA"
@@ -122,6 +125,13 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_select ".trip-show-mobile-hero-caption", "IRS Wall, Joshua Tree"
     end
     assert_select ".day-trip-resources-panel", count: 0
+    assert_select ".day-trip-coordinator-panel" do
+      assert_select "h2", "Trip Coordinator"
+      assert_select ".details-list", text: /Alex Rivera/
+      assert_select ".details-list a[href='mailto:alex@example.com']", text: "alex@example.com"
+      assert_select ".details-list", text: /555-0100/, count: 0
+    end
+    assert_operator response.body.index("Trip Coordinator"), :<, response.body.index("Safety Reminder")
   end
 
   test "public day trip stats show simple capacity counts" do

@@ -83,7 +83,7 @@ class TripTransactionLedger
   def payments
     scope = CampsiteSignupPayment.completed_for_transactions
       .joins(:campsite_signup)
-      .includes(:created_by, refunds: :refunded_by, campsite_signup: [ :user, :campsite ])
+      .includes(:created_by, refunds: :refunded_by, campsite_signup: [ :user, :campsite, :trip ])
 
     scope = scope.where(campsite_signups: { trip_id: trip.id }) if trip.present?
     scope = scope.where(campsite_signups: { user_id: user.id }) if user.present?
