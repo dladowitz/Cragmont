@@ -25,14 +25,10 @@
       .actions
         = link_to "Edit profile", edit_profile_path, class: "button secondary"
   %section.panel
-    %h2 Transactions
-    = render "admin/trip_transactions/table",
-      ledger_entries: @ledger_entries,
-      empty_message: "No completed payments yet.",
-      show_trip: true,
-      show_source: false,
-      show_remaining_refundable: false,
-      show_waived_reason: false,
+    %h2 Trips and Transactions
+    = render "shared/user_trip_history",
+      rows: @trip_history_rows,
+      empty_message: "No trip signups yet.",
       public_table: true
   %section.panel
     .panel-header

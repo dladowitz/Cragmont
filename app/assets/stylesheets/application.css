@@ -813,6 +813,40 @@ body.trip-show-page .public-liability-warning {
   width: fit-content;
 }
 
+.user-trip-history-table {
+  font-size: 0.95rem;
+}
+
+.user-trip-history-table td {
+  vertical-align: top;
+}
+
+.user-trip-transactions-cell {
+  min-width: 260px;
+}
+
+.user-trip-transaction-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.user-trip-transaction-item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.user-trip-transaction-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
 .transaction-details-modal {
   width: min(1120px, calc(100% - 32px));
 }
@@ -2112,6 +2146,26 @@ body.trip-show-page .trip-summary-header {
 
 .stats .danger-stat {
   border-color: #f4b6ae;
+  background: #fff1f0;
+  color: var(--danger);
+}
+
+.admin-open-spaces-cell {
+  box-shadow: inset 4px 0 0 currentColor;
+  font-weight: 850;
+}
+
+.admin-open-spaces-cell.success-stat {
+  background: #ecf8f2;
+  color: var(--accent);
+}
+
+.admin-open-spaces-cell.warning-stat {
+  background: #fff8db;
+  color: #936100;
+}
+
+.admin-open-spaces-cell.danger-stat {
   background: #fff1f0;
   color: var(--danger);
 }
@@ -6383,6 +6437,7 @@ textarea {
 
   body.day-trip-show-page .day-trip-description-panel,
   body.day-trip-show-page .day-trip-participants-panel,
+  body.day-trip-show-page .day-trip-coordinator-panel,
   body.day-trip-show-page .day-trip-safety-panel {
     margin-bottom: 4px;
     padding-top: 4px;
@@ -6391,6 +6446,7 @@ textarea {
 
   body.day-trip-show-page .day-trip-description-panel .panel-header,
   body.day-trip-show-page .day-trip-participants-panel .panel-header,
+  body.day-trip-show-page .day-trip-coordinator-panel .panel-header,
   body.day-trip-show-page .day-trip-safety-panel .panel-header {
     margin-bottom: 2px;
   }
@@ -6401,6 +6457,7 @@ textarea {
 
   body.day-trip-show-page .day-trip-description-panel h2,
   body.day-trip-show-page .day-trip-participants-panel h2,
+  body.day-trip-show-page .day-trip-coordinator-panel h2,
   body.day-trip-show-page .day-trip-safety-panel h2 {
     margin-bottom: 0;
   }

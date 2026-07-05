@@ -75,14 +75,6 @@
         %span Total Capacity
         %strong= @trip.total_participant_capacity
 
-  - if @trip.description.present?
-    %section.panel.day-trip-description-panel
-      .panel-header
-        %div
-          %h2 Description
-      .content-page-markdown
-        = render_content_page_markdown(@trip.description)
-
   %section.panel.day-trip-details-panel
     .day-trip-plan-layout
       .day-trip-plan-main
@@ -159,6 +151,14 @@
             %button.modal-close-button{"aria-label" => "Close image", "data-action" => "modal#close", type: "button"} ×
             = image_tag @trip.day_trip_image, alt: "#{@trip.name} location image"
 
+  - if @trip.description.present?
+    %section.panel.day-trip-description-panel
+      .panel-header
+        %div
+          %h2 Description
+      .content-page-markdown
+        = render_content_page_markdown(@trip.description)
+
   %section.panel.day-trip-participants-panel
     .panel-header
       %div
@@ -196,6 +196,21 @@
               %td{"data-label" => "Participant"}= signup.public_participant_name
               %td{"data-label" => "Climbing Skills"}= signup.skill_level_label
               %td{"data-label" => "Bringing Gear"}= signup.shared_gear_summary
+
+  %section.panel.day-trip-coordinator-panel
+    .panel-header
+      %div
+        %h2 Trip Coordinator
+    - if @trip.campsite_coordinator.present?
+      %dl.details-list
+        %div
+          %dt Name
+          %dd= @trip.campsite_coordinator.full_name
+        %div
+          %dt Email
+          %dd= mail_to @trip.campsite_coordinator.email if @trip.campsite_coordinator.email.present?
+    - else
+      %p.muted Not yet set
 
   %section.panel.day-trip-safety-panel
     .panel-header

@@ -1,0 +1,54 @@
+- public_table = local_assigns.fetch(:public_table, false)
+- admin_view = local_assigns.fetch(:admin_view, false)
+- empty_message = local_assigns.fetch(:empty_message, "No trip signups yet.")
+
+- if rows.any?
+  %table.user-trip-history-table{class: ("public-card-table" if public_table)}
+    %thead
+      %tr
+        %th Trip
+        %th Signup
+        %th Dates
+        %th Transactions
+    %tbody
+      - rows.each do |row|
+        - trip = row.trip
+        %tr
+          %td{"data-label" => "Trip"}
+            - trip_link = admin_view ? admin_trip_path(trip) : trip_path(trip)
+            = link_to trip.name, trip_link
+            %span= trip.location
+          %td{"data-label" => "Signup"}
+            %span.status{class: row.status_class}= row.status_label
+          %td{"data-label" => "Dates"}
+            - if trip.start_date == trip.end_date
+              = trip.start_date.strftime("%B %d, %Y")
+            - else
+              %dl.date-pair
+                %div
+                  %dt Arrival
+                  %dd= trip.start_date.strftime("%b %d, %Y")
+                %div
+                  %dt Checkout
+                  %dd= trip.end_date.strftime("%b %d, %Y")
+          %td.user-trip-transactions-cell{"data-label" => "Transactions"}
+            - if row.ledger_entries.any?
+              %ul.user-trip-transaction-list
+                - row.ledger_entries.each do |entry|
+                  - payment = entry.payment
+                  %li.user-trip-transaction-item
+                    .user-trip-transaction-summary
+                      %strong= format_cents(entry.amount_cents)
+                      %span.status.transaction-status{class: entry.status_class}= entry.status_label
+                      %span.muted= entry.occurred_at&.strftime("%-m/%-d/%y %l:%M %p") || "No date"
+                    = render "admin/trip_transactions/entry_details",
+                      entry: entry,
+                      show_trip: false,
+                      show_source: admin_view,
+                      show_remaining_refundable: admin_view,
+                      show_waived_reason: admin_view,
+                      show_refund_action: false
+            - else
+              %span.muted No transactions yet.
+- else
+  %p.muted= empty_message

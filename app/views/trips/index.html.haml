@@ -37,10 +37,9 @@
                     = trip.start_date.strftime("%m/%d/%y")
                     to #{trip.end_date.strftime("%m/%d/%y")}
               %div
-                %dt Capacity
+                %dt Open Spaces
                 %dd
-                  = trip.total_participant_capacity
-                  participants
+                  = pluralize(trip.available_participant_capacity, "space")
     - else
       %p.muted No published trips are available right now.
   - if @archived_trips.any?

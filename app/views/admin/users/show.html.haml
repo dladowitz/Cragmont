@@ -54,6 +54,12 @@
   - else
     %p.muted No waivers signed yet.
 %section.panel
+  %h2 Trips and Transactions
+  = render "shared/user_trip_history",
+    rows: @trip_history_rows,
+    empty_message: "No trip signups yet.",
+    admin_view: true
+%section.panel
   %h2 Coordinated trips
   - if @coordinated_trips.any?
     = render "admin/trips/table", trips: @coordinated_trips

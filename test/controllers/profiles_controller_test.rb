@@ -29,9 +29,9 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='#{new_profile_waiver_path}']", text: "Missing"
     assert_select "a[href='#{edit_profile_path}']", text: "Edit profile"
     assert_select "button", text: "Delete account", count: 0
-    assert_select "h2", text: "Transactions"
-    assert_select ".transactions-table", count: 0
-    assert_select "p.muted", text: "No completed payments yet."
+    assert_select "h2", text: "Trips and Transactions"
+    assert_select ".user-trip-history-table", count: 0
+    assert_select "p.muted", text: "No trip signups yet."
     assert_select "h2", text: "Inbox"
     assert_select "a[href='#{help_requests_path}']", text: "All Help Requests"
     assert_select "p.muted", text: "No help requests yet."
@@ -122,7 +122,7 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_select "p.muted", text: "This user is not assigned as a campsite coordinator yet.", count: 0
   end
 
-  test "profile transactions show only completed payments for signed in user" do
+  test "profile trips and transactions show confirmed and waitlisted signups for signed in user" do
     user = users(:sam)
     user_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: user)
     user_signup.payments.create!(
@@ -150,6 +150,13 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
       amount_cents: 7000,
       paid_at: Time.zone.local(2026, 6, 1, 10, 0)
     )
+    day_trip = create_day_trip!(name: "Vent 5 Profile", start_date: Date.new(2026, 9, 12))
+    DayTripSignup.create!(
+      trip: day_trip,
+      user: user,
+      status: "waitlisted",
+      climbing_abilities: [ "top_rope" ]
+    )
     log_in_as(user)
 
     with_env("STRIPE_ACCOUNT_ID" => "acct_profile_123") do
@@ -157,32 +164,32 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :success
-    assert_select "h2", text: "Transactions"
-    assert_select "table.transactions-table" do
-      transaction_rows = css_select("tbody").first.children.select { |child| child.element? && child.name == "tr" }
+    assert_select "h2", text: "Trips and Transactions"
+    assert_select "table.user-trip-history-table" do
+      trip_rows = css_select("tbody").first.children.select { |child| child.element? && child.name == "tr" }
 
       assert_equal [
         "Trip",
-        "Participant",
-        "Amount Paid",
-        "Status",
-        "Paid At",
-        "Details"
+        "Signup",
+        "Dates",
+        "Transactions"
       ], css_select("thead").first.css("th").map { |header| header.text.strip }
-      assert_equal 1, transaction_rows.size
+      assert_equal 2, trip_rows.size
       assert_select "a[href='#{trip_path(trips(:yosemite))}']", text: "Yosemite Valley Spring"
-      assert_select "td", text: "Sam Lee"
+      assert_select "a[href='#{trip_path(day_trip)}']", text: "Vent 5 Profile"
+      assert_select ".status", text: "Confirmed"
+      assert_select ".status", text: "Waitlisted"
       assert_select "td", text: "$40.00"
       assert_select ".transaction-status", text: "Paid"
       assert_select "button", text: "View"
+      assert_select "td", text: /No transactions yet/
       assert_select "td", text: "$90.00", count: 0
       assert_select "td", text: "$70.00", count: 0
       assert_select "td", text: "Other Participant", count: 0
     end
     assert_select "dialog.transaction-details-modal", text: /Payment details/
     assert_select "dialog.transaction-details-modal" do
-      assert_select "dt", text: "Trip"
-      assert_select "a[href='#{trip_path(trips(:yosemite))}']", text: "Yosemite Valley Spring"
+      assert_select "dt", text: "Trip", count: 0
       assert_select "dt", text: "Participant"
       assert_select "dt", text: "Status"
       assert_select "dt", text: "Amount"
@@ -298,5 +305,22 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     originals.each do |key, value|
       value.nil? ? ENV.delete(key) : ENV[key] = value
     end
+  end
+
+  def create_day_trip!(name:, start_date:)
+    Trip.create!(
+      trip_type: "day_trip",
+      name: name,
+      location: "Marin Coast",
+      start_date: start_date,
+      description: "Single day cragging.",
+      status: "published",
+      meeting_time: "08:30",
+      meeting_location: "Vent 5 Parking Trailhead",
+      meeting_location_url: "https://maps.google.com/?q=Vent+5",
+      late_arrival_instructions: "If you are running late, hike toward the main wall.",
+      participant_capacity: 8,
+      climbing_types: [ "sport" ]
+    )
   end
 end
