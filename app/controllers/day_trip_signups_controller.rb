@@ -13,10 +13,11 @@ class DayTripSignupsController < ApplicationController
     elsif signing_up_with_minors? && minor_attributes.empty?
       redirect_to trip_path(@trip), alert: "Add your minor's details before tying in."
     else
+      waitlist_requested = waitlist_required_for_day_trip_party?(minor_attributes)
       return unless ensure_waiver_ready(minor_attributes: minor_attributes)
 
-      if create_day_trip_signup(signup, minor_attributes)
-        redirect_to trip_path(@trip), notice: "On belay! You've successfully signed up for this day trip."
+      if create_day_trip_signup(signup, minor_attributes, waitlist_requested: waitlist_requested)
+        redirect_to trip_path(@trip), notice: day_trip_signup_notice(signup)
       else
         redirect_to trip_path(@trip), alert: signup.errors.full_messages.to_sentence
       end
@@ -72,17 +73,18 @@ class DayTripSignupsController < ApplicationController
     end.first(DayTripSignup::MAX_MINORS_PER_SIGNUP)
   end
 
-  def create_day_trip_signup(signup, minor_attributes)
+  def create_day_trip_signup(signup, minor_attributes, waitlist_requested:)
     participant_count = 1 + minor_attributes.size
 
     DayTripSignup.transaction do
       @trip.lock!
-      unless @trip.available_for_day_trip_party?(lead_count: 0, top_rope_count: participant_count)
-        signup.errors.add(:base, "Wow, that was a whipper. Those spots are full.")
-        raise ActiveRecord::RecordInvalid.new(signup)
+      status = if waitlist_requested || !@trip.available_for_day_trip_party?(lead_count: 0, top_rope_count: participant_count)
+        "waitlisted"
+      else
+        "confirmed"
       end
 
-      signup.assign_attributes(day_trip_signup_attributes)
+      signup.assign_attributes(day_trip_signup_attributes(status: status))
       minor_attributes.each { |attributes| signup.day_trip_signup_minors.build(attributes) }
       signup.save!
       satisfy_waiver!(signup, minor_attributes)
@@ -92,7 +94,7 @@ class DayTripSignupsController < ApplicationController
     false
   end
 
-  def day_trip_signup_attributes
+  def day_trip_signup_attributes(status:)
     {
       climbing_abilities: signup_climbing_abilities,
       rope_60m: roped_climbing? && truthy_param?(:rope_60m),
@@ -101,8 +103,22 @@ class DayTripSignupsController < ApplicationController
       clip_stick: @trip.sport_climbing? && truthy_param?(:clip_stick),
       cams_nuts_and_trad_anchor: @trip.trad_climbing? && truthy_param?(:cams_nuts_and_trad_anchor),
       crash_pad_count: @trip.bouldering? ? signup_params[:crash_pad_count].to_i.clamp(0, 99) : 0,
-      status: "confirmed"
+      status: status
     }
+  end
+
+  def waitlist_required_for_day_trip_party?(minor_attributes)
+    participant_count = 1 + minor_attributes.size
+
+    !@trip.available_for_day_trip_party?(lead_count: 0, top_rope_count: participant_count)
+  end
+
+  def day_trip_signup_notice(signup)
+    if signup.waitlisted?
+      "On belay! You're on the waitlist for this day trip."
+    else
+      "On belay! You've successfully signed up for this day trip."
+    end
   end
 
   def signup_climbing_abilities

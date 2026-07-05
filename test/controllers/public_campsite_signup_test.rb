@@ -79,6 +79,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       meeting_time: "19:00",
       meeting_location: "Vent 5 Parking Trailhead",
       meeting_location_url: "https://maps.google.com/?q=Vent+5",
+      description: "**Vent 5** is a sport climbing area on the Marin Coast.\n\n## Parking\n\nIt fills up quick here.",
       late_arrival_instructions: "If you are running late, head toward the crag.",
       participant_capacity: 8,
       sun_exposure: "Afternoon sun",
@@ -98,26 +99,29 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".trip-summary-copy .trip-title-line" do
       assert_select ".trip-title-resource-link", count: 0
     end
-    assert_select ".trip-summary-notices .trip-resource-link", count: 0
-    assert_select ".trip-summary-notices .trip-resource-link", text: "Guide Book", count: 0
-    assert_select ".trip-summary-notices .trip-resource-link", text: "Weather", count: 0
+    assert_select ".trip-summary-notices .trip-resource-link", count: 5
+    assert_select ".trip-summary-notices a.trip-whatsapp-link[href='https://chat.whatsapp.com/vent5'][target='_blank'][rel='noopener']", text: "Join the WhatsApp Group"
+    assert_select ".trip-summary-notices a.trip-weather-link[href='https://forecast.weather.gov/vent5'][target='_blank'][rel='noopener']", text: "Weather"
+    assert_select ".trip-summary-notices a.trip-mountain-project-link[href='https://www.mountainproject.com/area/vent5'][target='_blank'][rel='noopener']", text: "Mountain Project"
+    assert_select ".trip-summary-notices a.trip-guide-book-link[href='https://example.com/guide-book'][target='_blank'][rel='noopener']", text: "Guide Book"
+    assert_select ".trip-summary-notices a.trip-photo-album-link[href='https://photos.app.goo.gl/vent5'][target='_blank'][rel='noopener']", text: "Photo Album"
+    assert_select ".trip-overview .content-page-markdown", count: 0
+    assert_select ".day-trip-description-panel" do
+      assert_select ".content-page-markdown strong", "Vent 5"
+      assert_select ".content-page-markdown h2", "Parking"
+      assert_select ".content-page-markdown", text: /It fills up quick here/
+    end
+    assert_operator response.body.index("Description"), :<, response.body.index("Crag Plan")
     assert_select ".trip-show-mobile-hero" do
       assert_select "h1", "Vent 5 Day"
       assert_select ".trip-show-mobile-location", "Mount Tam, CA"
       assert_select ".trip-show-mobile-dates", text: /September 12, 2026 at 7:00pm/
-      assert_select ".trip-mobile-resource-link", count: 0
+      assert_select ".trip-whatsapp-mobile-link[href='https://chat.whatsapp.com/vent5'][target='_blank'][rel='noopener']", text: "Join the WhatsApp Group"
+      assert_select ".trip-weather-mobile-link[href='https://forecast.weather.gov/vent5'][target='_blank'][rel='noopener']", text: "Weather"
+      assert_select ".trip-photo-album-mobile-link[href='https://photos.app.goo.gl/vent5'][target='_blank'][rel='noopener']", text: "Photo Album"
       assert_select ".trip-show-mobile-hero-caption", "IRS Wall, Joshua Tree"
     end
-    assert_operator response.body.index("Additional Resources"), :<, response.body.index("Participants")
-    assert_select ".day-trip-resources-panel" do
-      assert_select "h2", "Additional Resources"
-      assert_select ".additional-resource-detail", text: /Sun Exposure:\s*Afternoon sun/
-      assert_select "a[href='https://chat.whatsapp.com/vent5'][target='_blank'][rel='noopener']", text: "Join the WhatsApp Group"
-      assert_select "a[href='https://forecast.weather.gov/vent5'][target='_blank'][rel='noopener']", text: "Weather"
-      assert_select "a[href='https://www.mountainproject.com/area/vent5'][target='_blank'][rel='noopener']", text: "Mountain Project"
-      assert_select "a[href='https://example.com/guide-book'][target='_blank'][rel='noopener']", text: "Guide Book"
-      assert_select "a[href='https://photos.app.goo.gl/vent5'][target='_blank'][rel='noopener']", text: "Photo Album"
-    end
+    assert_select ".day-trip-resources-panel", count: 0
   end
 
   test "public day trip stats show simple capacity counts" do
@@ -254,6 +258,123 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".day-trip-signup-button.is-waitlist", text: "Sign up for waitlist"
+    assert_select "form.day-trip-signup-form[data-signature-waitlist-skips-waiver-value='false']"
+  end
+
+  test "public day trip waitlist signup requires waiver when no annual waiver exists" do
+    trip = Trip.create!(
+      trip_type: "day_trip",
+      name: "Waitlist Vent 5",
+      location: "Marin Coast",
+      start_date: Date.new(2026, 9, 13),
+      status: "published",
+      meeting_time: "07:00",
+      meeting_location: "Vent 5 Parking Trailhead",
+      meeting_location_url: "https://maps.google.com/?q=Vent+5",
+      late_arrival_instructions: "If you are running late, head toward the crag.",
+      participant_capacity: 1,
+      climbing_types: [ "sport" ]
+    )
+    signed_up_user = User.create!(first_name: "Fiona", last_name: "Full", email: "fiona-full-waitlist@example.com", password: "password")
+    DayTripSignup.create!(trip: trip, user: signed_up_user, climbing_abilities: [ "top_rope" ])
+    log_in_as(users(:sam))
+
+    assert_no_difference "DayTripSignup.count" do
+      post trip_day_trip_signup_path(trip), params: {
+        day_trip_signup: {
+          climbing_abilities: [ "lead" ],
+          rope_60m: "1",
+          quickdraws_and_sport_anchor: "1"
+        }
+      }
+    end
+
+    assert_redirected_to trip_url(trip)
+    assert_equal "Please agree to the waiver acknowledgement before tying in.", flash[:alert]
+  end
+
+  test "public day trip signup joins waitlist with signed waiver when trip is full" do
+    trip = Trip.create!(
+      trip_type: "day_trip",
+      name: "Waitlist Vent 5 Signed",
+      location: "Marin Coast",
+      start_date: Date.new(2026, 9, 13),
+      status: "published",
+      meeting_time: "07:00",
+      meeting_location: "Vent 5 Parking Trailhead",
+      meeting_location_url: "https://maps.google.com/?q=Vent+5",
+      late_arrival_instructions: "If you are running late, head toward the crag.",
+      participant_capacity: 1,
+      climbing_types: [ "sport" ]
+    )
+    signed_up_user = User.create!(first_name: "Fiona", last_name: "Full", email: "fiona-full-waitlist-signed@example.com", password: "password")
+    DayTripSignup.create!(trip: trip, user: signed_up_user, climbing_abilities: [ "top_rope" ])
+    log_in_as(users(:sam))
+
+    assert_difference [ "DayTripSignup.count", "Waiver.count" ], 1 do
+      post trip_day_trip_signup_path(trip), params: {
+        day_trip_signup: {
+          climbing_abilities: [ "lead" ],
+          rope_60m: "1",
+          quickdraws_and_sport_anchor: "1",
+          waiver_signature_data: SIGNATURE_DATA_URL,
+          waiver_acknowledged_at: Time.current.iso8601
+        }
+      }
+    end
+
+    assert_redirected_to trip_url(trip)
+    assert_equal "On belay! You're on the waitlist for this day trip.", flash[:notice]
+    signup = DayTripSignup.find_by!(trip: trip, user: users(:sam))
+    assert signup.waitlisted?
+    assert_equal [ "lead" ], signup.climbing_abilities
+    assert signup.rope_60m?
+    assert signup.quickdraws_and_sport_anchor?
+    assert signup.waiver_signed?
+    assert signup.waiver_signed_at.present?
+    assert users(:sam).current_waiver_for_year(2026).present?
+  end
+
+  test "public day trip waitlist signup accepts existing annual waiver" do
+    trip = Trip.create!(
+      trip_type: "day_trip",
+      name: "Waitlist Vent 5 Annual Waiver",
+      location: "Marin Coast",
+      start_date: Date.new(2026, 9, 13),
+      status: "published",
+      meeting_time: "07:00",
+      meeting_location: "Vent 5 Parking Trailhead",
+      meeting_location_url: "https://maps.google.com/?q=Vent+5",
+      late_arrival_instructions: "If you are running late, head toward the crag.",
+      participant_capacity: 1,
+      climbing_types: [ "sport" ]
+    )
+    signed_up_user = User.create!(first_name: "Fiona", last_name: "Full", email: "fiona-full-waitlist-annual@example.com", password: "password")
+    DayTripSignup.create!(trip: trip, user: signed_up_user, climbing_abilities: [ "top_rope" ])
+    WaiverCreator.new(
+      user: users(:sam),
+      signature: WaiverSignatureData.new(SIGNATURE_DATA_URL),
+      acknowledged_at: Time.current,
+      request: ActionDispatch::TestRequest.create,
+      waiver_year: trip.start_date.year
+    ).create!
+    log_in_as(users(:sam))
+
+    assert_difference "DayTripSignup.count", 1 do
+      assert_no_difference "Waiver.count" do
+        post trip_day_trip_signup_path(trip), params: {
+          day_trip_signup: {
+            climbing_abilities: [ "lead" ],
+            rope_60m: "1"
+          }
+        }
+      end
+    end
+
+    assert_redirected_to trip_url(trip)
+    signup = DayTripSignup.find_by!(trip: trip, user: users(:sam))
+    assert signup.waitlisted?
+    assert signup.waiver_signed?
   end
 
   test "public day trip detail shows waitlisted participants separately" do
