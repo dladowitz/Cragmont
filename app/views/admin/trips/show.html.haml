@@ -16,6 +16,8 @@
 - readiness_completed_count = @trip_readiness_checklist.completed_count_for(@trip_readiness_categories)
 - readiness_total_count = @trip_readiness_checklist.total_count_for(@trip_readiness_categories)
 - post_trip_category = @trip_readiness_checklist.post_trip_category
+- can_access_trip_details_email = @trip_details_email&.sent? ? policy(@trip).view_trip_details_email? : (!@trip.deleted? && policy(@trip).manage_trip_details_email?)
+- show_trip_details_email_button = !@trip.day_trip? && can_access_trip_details_email
 - if @participant_link_signup.present?
   = render "participant_link_modal", trip: @trip, signup: @participant_link_signup
 %section.panel.trip-overview
@@ -98,6 +100,9 @@
         %span Post Trip
         %span.status.trip-readiness-summary-button-count{class: (post_trip_category.completed_count == post_trip_category.total_count ? "success-status" : "warning-status")}
           = "#{post_trip_category.completed_count} of #{post_trip_category.total_count}"
+      = link_to "Participant Emails", participant_emails_admin_trip_path(@trip), class: "button secondary"
+      - if show_trip_details_email_button
+        = link_to "Trip Details Email", admin_trip_trip_details_email_path(@trip), class: "button secondary"
       - if !@trip.day_trip? && policy(@trip).manage_payments?
         = link_to "Transactions", admin_trip_transactions_path(@trip), class: "button secondary"
     - unless @trip.day_trip?

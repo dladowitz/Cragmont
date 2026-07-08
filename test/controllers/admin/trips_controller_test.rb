@@ -361,7 +361,8 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select ".trip-readiness-summary-button-count.warning-status",
         text: "#{post_trip_category.completed_count} of #{post_trip_category.total_count}"
     end
-    assert_select ".trip-management-panel .trip-management-actions a.button.secondary[href='#{admin_trip_trip_details_email_path(trips(:yosemite))}']", text: "Trip Details Email", count: 0
+    assert_select ".trip-management-panel .trip-management-actions a.button.secondary[href='#{participant_emails_admin_trip_path(trips(:yosemite))}']", text: "Participant Emails"
+    assert_select ".trip-management-panel .trip-management-actions a.button.secondary[href='#{admin_trip_trip_details_email_path(trips(:yosemite))}']", text: "Trip Details Email"
     assert_select ".trip-management-panel .trip-management-actions a.button.secondary[href='#{admin_trip_transactions_path(trips(:yosemite))}']", text: "Transactions"
     assert_select ".trip-management-panel .trip-management-actions .button.danger", text: "Delete trip", count: 0
     assert_select ".campground-group", count: 0
@@ -1316,6 +1317,8 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='trip[start_date]'][type='date'][data-controller='date-picker'][data-action*='click->date-picker#show'][data-action*='focus->date-picker#show']"
     assert_select "input[name='trip[end_date]'][type='date'][data-controller='date-picker'][data-action*='click->date-picker#show'][data-action*='focus->date-picker#show']"
     assert_select ".day-trip-admin-fields", count: 0
+    assert_select "input[name='trip[mountain_project_url]']", count: 0
+    assert_select "input[name='trip[sun_exposure]']", count: 0
   end
 
   test "can render new day trip form without an end date" do
@@ -1483,6 +1486,11 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_operator response.body.index("admin-day-trip-description-panel"), :<, response.body.index("admin-trip-resources-panel")
     assert_select ".trip-overview .description", count: 0
     assert_select ".day-trip-admin-details h2", "Crag Plan"
+    assert_select ".trip-management-panel .trip-management-actions a.button.secondary[href='#{participant_emails_admin_trip_path(trip)}']",
+      text: "Participant Emails"
+    assert_select ".trip-management-panel .trip-management-actions a.button.secondary[href='#{admin_trip_trip_details_email_path(trip)}']",
+      text: "Trip Details Email",
+      count: 0
     assert_select ".day-trip-admin-details", text: /End time\s*None/
     assert_select ".day-trip-admin-details a[href='https://maps.google.com/?q=Vent+5'][target='_blank'][rel='noopener']", text: "Vent 5 Parking Trailhead"
     assert_select ".day-trip-admin-details .day-trip-location-image[data-controller='modal']" do

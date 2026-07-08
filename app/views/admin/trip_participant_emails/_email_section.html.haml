@@ -1,0 +1,42 @@
+- email_address_text = email_addresses.join(", ")
+- section_id = title.parameterize
+
+%section.panel.participant-email-section{data: { controller: "copy-text" }}
+  .panel-header.participant-email-section-header
+    %div
+      %h2= title
+      %p.muted
+        = pluralize(participants.size, "participant")
+        |
+        = pluralize(email_addresses.size, "email address")
+    .actions
+      %button.button.secondary.copy-link-button.participant-email-copy-button{"data-action" => "copy-text#copy", disabled: email_addresses.empty?, type: "button"}
+        %span.copy-link-icon.copy-icon{aria: { hidden: "true" }}
+          %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
+            %rect{height: "12", rx: "2", stroke: "currentColor", "stroke-width" => "2", width: "12", x: "8", y: "8"}
+            %path{d: "M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2", stroke: "currentColor", "stroke-linecap" => "round", "stroke-width" => "2"}
+        %span.copy-link-icon.check-icon{aria: { hidden: "true" }}
+          %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
+            %path{d: "M20 6 9 17l-5-5", stroke: "currentColor", "stroke-linecap" => "round", "stroke-linejoin" => "round", "stroke-width" => "2.5"}
+        %span Copy Email Addresses
+
+  .participant-email-copy-area
+    %label{for: "#{section_id}-email-addresses"} Gmail-ready addresses
+    %textarea.participant-email-address-list{id: "#{section_id}-email-addresses", readonly: true, rows: 3, data: { copy_text_target: "source" }, aria: { label: "#{title} email addresses" }}= email_address_text
+
+  - if participants.any?
+    %table.participant-email-table
+      %thead
+        %tr
+          %th Participant
+      %tbody
+        - participants.each do |participant|
+          %tr
+            %td.participant-email-contact
+              %span.participant-email-name= participant.name
+              - if participant.email.present?
+                = mail_to participant.email, participant.email, class: "participant-email-address"
+              - else
+                %span.participant-email-address.is-missing Missing email
+  - else
+    %p.muted= empty_message

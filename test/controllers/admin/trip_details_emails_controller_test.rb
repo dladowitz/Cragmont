@@ -162,9 +162,45 @@ class Admin::TripDetailsEmailsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Restore this trip before changing the trip details email.", flash[:alert]
   end
 
+  test "day trips cannot access trip details email flow" do
+    trip = day_trip!
+
+    get admin_trip_trip_details_email_url(trip)
+
+    assert_redirected_to admin_trip_url(trip)
+    assert_equal "Trip details email is only available for camping trips.", flash[:alert]
+
+    assert_no_difference "TripDetailsEmail.count" do
+      post admin_trip_trip_details_email_url(trip), params: {
+        trip_details_email_template_id: @template.id
+      }
+    end
+
+    assert_redirected_to admin_trip_url(trip)
+    assert_equal "Trip details email is only available for camping trips.", flash[:alert]
+  end
+
   private
 
   def create_draft!
     @template.build_trip_details_email(@trip).tap(&:save!)
+  end
+
+  def day_trip!
+    Trip.create!(
+      trip_type: "day_trip",
+      name: "Castle Rock Day",
+      location: "Castle Rock, CA",
+      start_date: Date.new(2026, 8, 1),
+      end_date: Date.new(2026, 8, 1),
+      description: "Single day cragging.",
+      status: "published",
+      meeting_time: "08:30",
+      meeting_location: "Castle Rock Parking",
+      meeting_location_url: "https://maps.google.com/?q=Castle+Rock",
+      late_arrival_instructions: "If you are running late, hike toward the main wall.",
+      participant_capacity: 6,
+      climbing_types: [ "sport" ]
+    )
   end
 end
