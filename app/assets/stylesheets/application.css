@@ -5438,6 +5438,74 @@ th {
   background: #fbfaf7;
 }
 
+.participant-emails-panel,
+.participant-email-section {
+  margin-bottom: 20px;
+}
+
+.participant-email-section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.participant-email-section-header {
+  align-items: flex-start;
+}
+
+.participant-email-copy-button {
+  min-height: 40px;
+  padding: 8px 12px;
+  font-size: 0.95rem;
+}
+
+.participant-email-copy-area {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.participant-email-copy-area label {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.participant-email-address-list {
+  min-height: 92px;
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.participant-email-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.participant-email-contact {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.participant-email-name {
+  font-weight: 750;
+}
+
+.participant-email-address {
+  color: var(--green);
+  font-size: 0.94em;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.participant-email-address.is-missing {
+  color: var(--danger);
+}
+
 .field {
   display: grid;
   gap: 6px;

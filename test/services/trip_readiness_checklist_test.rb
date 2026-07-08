@@ -19,12 +19,11 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
     assert tasks.fetch("campsite_coordinator_assigned").complete?
     assert tasks.fetch("whatsapp_group_created").complete?
     assert tasks.fetch("weather_link_added").complete?
-    assert tasks.fetch("mountain_project_link_added").complete?
     assert tasks.fetch("guide_book_link_added").complete?
-    assert tasks.fetch("sun_exposure_added").complete?
-    assert_equal "Morning shade", tasks.fetch("sun_exposure_added").detail
     assert tasks.fetch("create_google_photo_album").complete?
     assert tasks.fetch("group_campfire_planned").complete?
+    assert_not_includes tasks.keys, "mountain_project_link_added"
+    assert_not_includes tasks.keys, "sun_exposure_added"
     assert_equal "https://www.cragmontclimbingclub.org/past-trips", tasks.fetch("add_photo_album_to_older_website").detail
     assert_equal "Group campfire is planned at Upper Pines site A12 on Saturday.", tasks.fetch("group_campfire_planned").detail
   end
@@ -66,9 +65,9 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
 
     assert_not tasks.fetch("whatsapp_group_created").complete?
     assert_not tasks.fetch("weather_link_added").complete?
-    assert_not tasks.fetch("mountain_project_link_added").complete?
     assert_not tasks.fetch("guide_book_link_added").complete?
     assert_not tasks.fetch("create_google_photo_album").complete?
+    assert_not_includes tasks.keys, "mountain_project_link_added"
   end
 
   test "photo album readiness only completes from the trip photo album url" do
@@ -178,6 +177,8 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
     assert TripReadinessChecklist.completable_task_key?("mountain_project_link_added", trip: trip)
     assert TripReadinessChecklist.completable_task_key?("guide_book_link_added", trip: trip)
     assert TripReadinessChecklist.completable_task_key?("sun_exposure_added", trip: trip)
+    assert_not TripReadinessChecklist.completable_task_key?("mountain_project_link_added", trip: trips(:yosemite))
+    assert_not TripReadinessChecklist.completable_task_key?("sun_exposure_added", trip: trips(:yosemite))
     assert TripReadinessChecklist.completable_task_key?("verify_enough_lead_climbers", trip: trip)
   end
 

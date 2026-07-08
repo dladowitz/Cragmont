@@ -1,5 +1,6 @@
 class Admin::TripDetailsEmailsController < Admin::BaseController
   before_action :set_trip
+  before_action :ensure_camping_trip
   before_action :set_trip_details_email, except: %i[new create]
   before_action :ensure_trip_not_deleted, except: :show
 
@@ -143,6 +144,14 @@ class Admin::TripDetailsEmailsController < Admin::BaseController
 
   def set_trip
     @trip = Trip.find(params[:trip_id])
+  end
+
+  def ensure_camping_trip
+    return unless @trip.day_trip?
+
+    redirect_to admin_trip_path(@trip),
+      alert: "Trip details email is only available for camping trips.",
+      status: :see_other
   end
 
   def set_trip_details_email

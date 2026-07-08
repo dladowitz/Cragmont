@@ -64,6 +64,10 @@ class TripReadinessChecklist
     all_campsites_reimbursed
     send_collected_money_to_treasurer
   ].freeze
+  CAMPING_TRIP_EXCLUDED_TASKS = %w[
+    mountain_project_link_added
+    sun_exposure_added
+  ].freeze
 
   def self.manual_task_keys
     MANUAL_TASKS.keys.map(&:to_s)
@@ -84,6 +88,7 @@ class TripReadinessChecklist
   def self.completable_task_key?(task_key, trip: nil)
     task_key = task_key.to_s
     return false if trip&.day_trip? && DAY_TRIP_EXCLUDED_TASKS.include?(task_key)
+    return false if trip&.camping? && CAMPING_TRIP_EXCLUDED_TASKS.include?(task_key)
     return false if task_key == "verify_enough_lead_climbers" && !trip_has_rope_climbing?(trip)
     return true if completable_task_keys.include?(task_key)
     return true if trip.present? && campsite_task_key_for_trip?(task_key, trip)
@@ -238,7 +243,10 @@ class TripReadinessChecklist
       )
     ]
 
-    tasks.reject { |task| trip.day_trip? && DAY_TRIP_EXCLUDED_TASKS.include?(task.key) }
+    tasks.reject do |task|
+      (trip.day_trip? && DAY_TRIP_EXCLUDED_TASKS.include?(task.key)) ||
+        (trip.camping? && CAMPING_TRIP_EXCLUDED_TASKS.include?(task.key))
+    end
   end
 
   def lead_climber_readiness_tasks

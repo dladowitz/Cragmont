@@ -66,6 +66,7 @@ Rails.application.routes.draw do
       patch :restore, on: :member
       get "readiness", to: "trip_readiness#show", as: :readiness, on: :member
       get "post_trip", to: "trip_post_trip#show", as: :post_trip, on: :member
+      get "participant_emails", to: "trip_participant_emails#show", as: :participant_emails, on: :member
       patch "readiness/:task_key", to: "trip_readiness#update", as: :readiness_task, on: :member
       resource :trip_details_email, only: %i[show new create edit update], controller: "trip_details_emails" do
         post :markdown_preview

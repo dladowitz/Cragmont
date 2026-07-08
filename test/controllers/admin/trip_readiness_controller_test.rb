@@ -25,11 +25,11 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
     end
     assert_select ".trip-readiness-category", count: 3
     assert_select "#readiness-trip", text: /Trip Coordinator assigned/
-    assert_select "#readiness-trip", text: /Mountain Project link added/
     assert_select "#readiness-trip", text: /Guide Book link added/
-    assert_select "#readiness-trip", text: /Sun Exposure added/
     assert_select "#readiness-trip", text: /Create Google Photo Album/
     assert_select "#readiness-trip", text: /Group campfire site and night set/
+    assert_select "#readiness-trip", text: /Mountain Project link added/, count: 0
+    assert_select "#readiness-trip", text: /Sun Exposure added/, count: 0
     assert_select "#readiness-trip [data-readiness-task-key='add_photo_album_to_older_website'] .trip-readiness-task-subtext a[href='https://www.cragmontclimbingclub.org/past-trips'][target='_blank'][rel='noopener']",
       text: "https://www.cragmontclimbingclub.org/past-trips"
     assert_select "#readiness-trip .trip-readiness-trip-group", count: 1
@@ -51,15 +51,12 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
     assert_select "#readiness-trip [data-readiness-task-key='campsite_coordinator_assigned'] .trip-readiness-auto-badge", text: "auto calc"
     assert_select "#readiness-trip [data-readiness-task-key='whatsapp_group_created'] .trip-readiness-auto-badge", text: "auto calc"
     assert_select "#readiness-trip [data-readiness-task-key='weather_link_added'] .trip-readiness-auto-badge", text: "auto calc"
-    assert_select "#readiness-trip [data-readiness-task-key='mountain_project_link_added'] .trip-readiness-auto-badge", text: "auto calc"
     assert_select "#readiness-trip [data-readiness-task-key='guide_book_link_added'] .trip-readiness-auto-badge", text: "auto calc"
-    assert_select "#readiness-trip [data-readiness-task-key='sun_exposure_added'] .trip-readiness-auto-badge", text: "auto calc"
-    assert_select "#readiness-trip [data-readiness-task-key='sun_exposure_added'] .trip-readiness-task-subtext",
-      text: "Morning shade"
+    assert_select "#readiness-trip [data-readiness-task-key='mountain_project_link_added']", count: 0
+    assert_select "#readiness-trip [data-readiness-task-key='sun_exposure_added']", count: 0
     assert_select "#readiness-trip [data-readiness-task-key='add_photo_album_to_older_website'] .trip-readiness-auto-badge", count: 0
     assert_select "#readiness-trip [data-readiness-task-key='whatsapp_group_created'] .trip-readiness-task-subtext a[href='https://chat.whatsapp.com/yosemite-readiness'][target='_blank'][rel='noopener']", text: "Link"
     assert_select "#readiness-trip [data-readiness-task-key='weather_link_added'] .trip-readiness-task-subtext a[href='https://forecast.weather.gov/yosemite-readiness'][target='_blank'][rel='noopener']", text: "Link"
-    assert_select "#readiness-trip [data-readiness-task-key='mountain_project_link_added'] .trip-readiness-task-subtext a[href='https://www.mountainproject.com/area/yosemite-readiness'][target='_blank'][rel='noopener']", text: "Link"
     assert_select "#readiness-trip [data-readiness-task-key='guide_book_link_added'] .trip-readiness-task-subtext a[href='https://example.com/yosemite-guide'][target='_blank'][rel='noopener']", text: "Link"
     assert_select "#readiness-trip [data-readiness-task-key='create_google_photo_album'] .trip-readiness-task-subtext a[href='https://photos.app.goo.gl/yosemite-readiness'][target='_blank'][rel='noopener']", text: "Link"
     assert_select "#readiness-campsites", text: /Registered By/

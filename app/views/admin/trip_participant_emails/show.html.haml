@@ -1,0 +1,21 @@
+= render "admin/shared/header", title: "#{@trip.name} participant emails"
+
+%section.panel.participant-emails-panel
+  .panel-header
+    %div
+      %h2 Participant Emails
+      %p.muted Copy email lists for #{@trip.name}.
+    .actions
+      = link_to "Back to trip", admin_trip_path(@trip), class: "button secondary"
+
+.participant-email-section-grid
+  = render "email_section",
+    title: "Confirmed Participants",
+    participants: @confirmed_participants,
+    email_addresses: @confirmed_email_addresses,
+    empty_message: "No confirmed participants yet."
+  = render "email_section",
+    title: "Waitlist",
+    participants: @waitlisted_participants,
+    email_addresses: @waitlisted_email_addresses,
+    empty_message: "No one is on the waitlist yet."
