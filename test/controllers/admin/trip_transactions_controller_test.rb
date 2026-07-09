@@ -39,6 +39,7 @@ class Admin::TripTransactionsControllerTest < ActionDispatch::IntegrationTest
       status: "partially_refunded",
       amount_cents: 10000,
       refunded_amount_cents: 1000,
+      stripe_processing_fee_cents: 117,
       paid_at: Time.zone.local(2026, 6, 1, 9, 0),
       stripe_payment_intent_id: "pi_ledger_123",
       pricing_snapshot: {
@@ -167,6 +168,10 @@ class Admin::TripTransactionsControllerTest < ActionDispatch::IntegrationTest
       assert_select "dt", text: "Stripe payment intent", count: 0
       assert_select "dt", text: "Source"
       assert_select "a[href='https://dashboard.stripe.com/acct_test_123/test/payments/pi_ledger_123']", text: "Stripe"
+      assert_select "dt", text: "Stripe processing fee"
+      assert_select "dd", text: "-$1.17"
+      assert_select "dt", text: "Net amount"
+      assert_select "dd", text: "$98.83"
       assert_select "dt", text: "Amount Refunded"
       assert_select "dd", text: "$10.00"
       assert_select ".transaction-refund-action-row dt", text: ""
@@ -175,6 +180,18 @@ class Admin::TripTransactionsControllerTest < ActionDispatch::IntegrationTest
       stripe_modal = css_select("dialog.transaction-details-modal").find do |dialog|
         dialog.at_css("a[href='https://dashboard.stripe.com/acct_test_123/test/payments/pi_ledger_123']")
       end
+      stripe_detail_sections = stripe_modal.at_css(".transaction-details-sections").children.select do |node|
+        node.element? && node["class"].to_s.split.include?("transaction-details-list")
+      end
+      assert_equal [
+        "Amount",
+        "Amount Refunded",
+        "Remaining refundable",
+        "Source",
+        "Stripe processing fee",
+        "Net amount",
+        ""
+      ], stripe_detail_sections.last.children.select(&:element?).map { |row| row.children.find { |child| child.element? && child.name == "dt" }&.text&.strip }
       fee_table = stripe_modal.at_css(".transaction-fee-table")
       assert_equal [
         "Participant",

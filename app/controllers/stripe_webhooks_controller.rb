@@ -50,6 +50,7 @@ class StripeWebhooksController < ApplicationController
       payment: payment,
       stripe_payment_intent_id: session.payment_intent
     )
+    StripeProcessingFeeSyncJob.perform_later(payment.id)
   end
 
   def handle_checkout_expired(session)

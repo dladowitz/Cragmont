@@ -70,6 +70,13 @@
                     = link_to payment.source.titleize, stripe_payment_url, target: "_blank", rel: "noopener"
                   - else
                     = payment.source.titleize
+              - if payment.stripe_source?
+                %div
+                  %dt Stripe processing fee
+                  %dd= payment.stripe_processing_fee_cents.nil? ? "Not available yet" : format_cents(-payment.stripe_processing_fee_cents)
+                %div
+                  %dt Net amount
+                  %dd= payment.stripe_net_amount_cents.nil? ? "Not available yet" : format_cents(payment.stripe_net_amount_cents)
               - unless read_only
                 %div.transaction-refund-action-row
                   %dt

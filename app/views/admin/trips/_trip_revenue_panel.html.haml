@@ -34,16 +34,49 @@
         %td= format_cents(summary.total_revenue_cents)
       - summary.trip_expense_lines.each do |line|
         %tr.trip-revenue-expense
-          %td= link_to "Trip Expense", admin_trip_transactions_path(summary.trip, anchor: line.transaction_anchor)
+          %td= link_to "Trip Expense", admin_trip_transactions_path(summary.trip, anchor: line.transaction_anchor), class: "trip-revenue-line-label"
           %td= line.participant_name
           %td= line.reason
           %td= "-#{format_cents(line.amount_cents)}"
+      - if summary.stripe_processing_fee_cents.positive?
+        %tr.trip-revenue-expense
+          %td
+            %span.registration-fee-modal-trigger{"data-controller" => "modal"}
+              %button.reimbursement-status-link.trip-revenue-line-label{"data-action" => "modal#open", type: "button"} Stripe processing fees
+              %dialog.signup-modal.stripe-processing-fees-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                .signup-modal-content
+                  %div
+                    %h2 Stripe processing fees
+                  %table.transaction-fee-table
+                    %thead
+                      %tr
+                        %th Person who paid
+                        %th Amount paid
+                        %th Stripe processing fee
+                        %th Net
+                    %tbody
+                      - summary.stripe_processing_fee_lines.each do |line|
+                        %tr
+                          %td= line.participant_name
+                          %td= format_cents(line.amount_cents)
+                          %td= "-#{format_cents(line.fee_cents)}"
+                          %td= format_cents(line.net_cents)
+                    %tfoot
+                      %tr
+                        %td{colspan: 2}
+                        %td Stripe processing fees
+                        %td= "-#{format_cents(summary.stripe_processing_fee_cents)}"
+                  .form-actions
+                    %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+          %td
+          %td
+          %td= "-#{format_cents(summary.stripe_processing_fee_cents)}"
       - summary.campsite_registration_fee_lines.each do |line|
         %tr.trip-revenue-expense
           %td
-            = line.campsite_label
+            %span.trip-revenue-line-label= line.campsite_label
             %span.registration-fee-modal-trigger{"data-controller" => "modal"}
-              %button.reimbursement-status-link{"data-action" => "modal#open", type: "button"} Registration Fee
+              %button.reimbursement-status-link.trip-revenue-line-label{"data-action" => "modal#open", type: "button"} Registration Fee
               %dialog.signup-modal.campsite-registration-reimbursement-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                 .signup-modal-content
                   %div

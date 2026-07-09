@@ -34,6 +34,23 @@ class TripRevenueSummary
       "transaction-payment-#{payment.id}"
     end
   end
+  StripeProcessingFeeLine = Struct.new(:payment, keyword_init: true) do
+    def participant_name
+      payment.campsite_signup.user.full_name
+    end
+
+    def amount_cents
+      payment.amount_cents
+    end
+
+    def fee_cents
+      payment.stripe_processing_fee_cents.to_i
+    end
+
+    def net_cents
+      amount_cents - fee_cents
+    end
+  end
 
   attr_reader :trip
 
@@ -99,8 +116,23 @@ class TripRevenueSummary
     campsite_registration_fee_lines.sum(&:fee_cents)
   end
 
+  def stripe_processing_fee_cents
+    @stripe_processing_fee_cents ||= stripe_processing_fee_lines.sum(&:fee_cents)
+  end
+
+  def stripe_processing_fee_lines
+    @stripe_processing_fee_lines ||= CampsiteSignupPayment
+      .joins(:campsite_signup)
+      .where(campsite_signups: { trip_id: trip.id })
+      .where(source: "stripe", status: %w[paid refunded partially_refunded])
+      .where.not(stripe_processing_fee_cents: nil)
+      .includes(campsite_signup: :user)
+      .order(:paid_at, :created_at, :id)
+      .map { |payment| StripeProcessingFeeLine.new(payment: payment) }
+  end
+
   def total_expense_cents
-    trip_expense_refund_cents + campsite_registration_fee_cents
+    trip_expense_refund_cents + campsite_registration_fee_cents + stripe_processing_fee_cents
   end
 
   def final_total_cents

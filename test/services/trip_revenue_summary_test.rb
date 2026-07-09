@@ -10,6 +10,7 @@ class TripRevenueSummaryTest < ActiveSupport::TestCase
       status: "partially_refunded",
       amount_cents: 10_000,
       refunded_amount_cents: 3_000,
+      stripe_processing_fee_cents: 117,
       paid_at: Time.current
     )
     campsite_a_payment.refunds.create!(
@@ -38,6 +39,14 @@ class TripRevenueSummaryTest < ActiveSupport::TestCase
       manual_paid_at: Time.current,
       paid_at: Time.current
     )
+    stripe_fee_user = User.create!(first_name: "Avery", last_name: "Rope", email: "avery-rope@example.com", password: "password")
+    create_campsite_signup!(campsite: campsites(:yosemite_b), user: stripe_fee_user).payments.create!(
+      source: "stripe",
+      status: "paid",
+      amount_cents: 5_000,
+      stripe_processing_fee_cents: 175,
+      paid_at: 1.hour.from_now
+    )
     trip.trip_payment_requests.create!(
       first_name: "Riley",
       last_name: "Stone",
@@ -54,19 +63,24 @@ class TripRevenueSummaryTest < ActiveSupport::TestCase
     assert_equal 10_000, summary.campsite_lines.first.paid_cents
     assert_equal 2_000, summary.campsite_lines.first.refund_cents
     assert_equal 8_000, summary.campsite_lines.first.net_cents
-    assert_equal 4_000, summary.campsite_lines.second.net_cents
+    assert_equal 9_000, summary.campsite_lines.second.net_cents
     assert_equal [ "Upper Pines site A12 registration fee", "Upper Pines site A13 registration fee" ], summary.campsite_registration_fee_lines.map(&:label)
     assert_equal [ 8_425, 9_250 ], summary.campsite_registration_fee_lines.map(&:fee_cents)
-    assert_equal 12_000, summary.campsite_revenue_cents
+    assert_equal 17_000, summary.campsite_revenue_cents
     assert_equal 2_500, summary.one_time_payment_requests_cents
-    assert_equal 14_500, summary.total_revenue_cents
+    assert_equal 19_500, summary.total_revenue_cents
     assert_equal 1_000, summary.trip_expense_refund_cents
     assert_equal [ "Sam Lee" ], summary.trip_expense_lines.map(&:participant_name)
     assert_equal [ "Firewood" ], summary.trip_expense_lines.map(&:reason)
     assert_equal [ 1_000 ], summary.trip_expense_lines.map(&:amount_cents)
     assert_equal [ "transaction-payment-#{campsite_a_payment.id}" ], summary.trip_expense_lines.map(&:transaction_anchor)
     assert_equal 17_675, summary.campsite_registration_fee_cents
-    assert_equal 18_675, summary.total_expense_cents
-    assert_equal(-4_175, summary.final_total_cents)
+    assert_equal [ "Sam Lee", "Avery Rope" ], summary.stripe_processing_fee_lines.map(&:participant_name)
+    assert_equal [ 10_000, 5_000 ], summary.stripe_processing_fee_lines.map(&:amount_cents)
+    assert_equal [ 117, 175 ], summary.stripe_processing_fee_lines.map(&:fee_cents)
+    assert_equal [ 9_883, 4_825 ], summary.stripe_processing_fee_lines.map(&:net_cents)
+    assert_equal 292, summary.stripe_processing_fee_cents
+    assert_equal 18_967, summary.total_expense_cents
+    assert_equal 533, summary.final_total_cents
   end
 end

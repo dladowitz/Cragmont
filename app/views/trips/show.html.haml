@@ -42,7 +42,8 @@
         - if @trip.description.present?
           .description
             %strong Notes:
-            = simple_format(@trip.description)
+            .content-page-markdown
+              = render_content_page_markdown(@trip.description)
         .public-beta-notice.trips-faq-callout
           %span
             Want to know what to expect on a camping trip? Read
