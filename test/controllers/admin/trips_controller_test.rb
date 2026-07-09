@@ -975,6 +975,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       status: "partially_refunded",
       amount_cents: 10000,
       refunded_amount_cents: 3000,
+      stripe_processing_fee_cents: 117,
       stripe_payment_intent_id: "pi_trip_details_refund",
       stripe_checkout_session_id: "cs_trip_details_refund",
       paid_at: Time.current,
@@ -1015,6 +1016,10 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
         assert_select "dd", text: "$30.00"
         assert_select "dt", text: "Remaining refundable"
         assert_select "dd", text: "$70.00"
+        assert_select "dt", text: "Stripe processing fee"
+        assert_select "dd", text: "-$1.17"
+        assert_select "dt", text: "Net amount"
+        assert_select "dd", text: "$98.83"
         fee_rows = css_select(".transaction-fee-table tbody tr").map { |row| row.text.squish }
         assert_includes fee_rows, "Sam Lee $30.00 $10.00 $40.00"
         assert_includes fee_rows, "Jordan Guest $30.00 $10.00 $40.00"
@@ -1121,6 +1126,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       status: "partially_refunded",
       amount_cents: 10_000,
       refunded_amount_cents: 3_000,
+      stripe_processing_fee_cents: 117,
       paid_at: Time.current
     )
     payment.refunds.create!(
@@ -1163,8 +1169,21 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select "tr.trip-revenue-expense", text: /Trip Expense\s+Sam Lee\s+Firewood\s+-\$10\.00/ do
         assert_select "a[href='#{admin_trip_transactions_path(trip, anchor: "transaction-payment-#{payment.id}")}']", text: "Trip Expense"
       end
+      assert_select "tr.trip-revenue-expense", text: /Stripe processing fees\s+-\$1\.17/ do
+        assert_select "button.reimbursement-status-link.trip-revenue-line-label", text: "Stripe processing fees"
+        assert_select "dialog.stripe-processing-fees-modal" do
+          assert_select "h2", "Stripe processing fees"
+          assert_select "th", text: "Person who paid"
+          assert_select "th", text: "Amount paid"
+          assert_select "th", text: "Stripe processing fee"
+          assert_select "th", text: "Net"
+          assert_select "tbody tr", text: /Sam Lee\s+\$100\.00\s+-\$1\.17\s+\$98\.83/
+          assert_select "tfoot tr", text: /Stripe processing fees\s+-\$1\.17/
+        end
+      end
       assert_select "tr.trip-revenue-expense" do
         assert_select "td:first-child", text: /Upper Pines site A12\s+Registration Fee/ do
+          assert_select ".trip-revenue-line-label", text: "Upper Pines site A12"
           assert_select "button.reimbursement-status-link", text: "Registration Fee"
           assert_select "dialog.campsite-registration-reimbursement-modal", text: /Site Name\s+Upper Pines/
           assert_select "dialog.campsite-registration-reimbursement-modal", text: /Fees Paid\s+\$84\.25/
@@ -1172,8 +1191,8 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
         assert_select "td:last-child", text: "-$84.25"
       end
       assert_select "tr.trip-revenue-expense td:first-child", text: /Upper Pines site A13\s+Registration Fee/
-      assert_select "tr.trip-expense-total", text: /Total expenses\s+-\$186\.75/
-      assert_select "tr.trip-revenue-final", text: /Trip profit\s+-\$81\.75/
+      assert_select "tr.trip-expense-total", text: /Total expenses\s+-\$187\.92/
+      assert_select "tr.trip-revenue-final", text: /Trip profit\s+-\$82\.92/
       assert_select "tr.trip-revenue-final td[colspan='3']", text: "Trip profit"
     end
   end

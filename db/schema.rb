@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_29_121200) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_09_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -109,6 +109,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_121200) do
     t.string "status", default: "pending", null: false
     t.string "stripe_checkout_session_id"
     t.string "stripe_payment_intent_id"
+    t.integer "stripe_processing_fee_cents"
     t.datetime "updated_at", null: false
     t.text "waived_reason"
     t.index ["campsite_signup_id"], name: "index_campsite_signup_payments_on_campsite_signup_id"

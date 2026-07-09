@@ -16,6 +16,9 @@ class CampsiteSignupPayment < ApplicationRecord
   validates :status, presence: true, inclusion: { in: STATUSES }
   validates :amount_cents, :refunded_amount_cents,
     numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :stripe_processing_fee_cents,
+    numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+    allow_nil: true
   validates :currency, presence: true
   validates :waived_reason, presence: true, if: :waived?
   validates :manual_payment_method, presence: true, if: :manual_source?
@@ -26,6 +29,12 @@ class CampsiteSignupPayment < ApplicationRecord
 
   def remaining_refundable_amount_cents
     [ amount_cents - refunded_amount_cents, 0 ].max
+  end
+
+  def stripe_net_amount_cents
+    return if stripe_processing_fee_cents.nil?
+
+    amount_cents - stripe_processing_fee_cents
   end
 
   def refundable?

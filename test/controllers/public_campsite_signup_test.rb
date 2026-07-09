@@ -759,6 +759,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
   test "public trip detail shows trip campsite and coordinator info" do
     trips(:yosemite).update!(
+      description: "**Yosemite** camping notes.\n\n## Parking\n\nArrive early and bring snacks.",
       whatsapp_group: "https://chat.whatsapp.com/yosemite-spring",
       weather_url: "https://forecast.weather.gov/yosemite-spring",
       photo_album_url: "https://photos.app.goo.gl/yosemite-spring"
@@ -779,6 +780,11 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".trip-summary-header .trips-faq-callout", text: /camping trip/
     assert_select ".trip-summary-header .trips-faq-callout a[href='#{what_to_expect_trips_path}']", text: "here."
     assert_select ".trip-summary-header .site-feedback-callout a[href='#{new_help_request_path}']", text: "let us know."
+    assert_select ".trip-overview .description", text: /Notes:/
+    assert_select ".trip-overview .description .content-page-markdown strong", text: "Yosemite"
+    assert_select ".trip-overview .description .content-page-markdown h2", text: "Parking"
+    assert_no_match(/\*\*Yosemite\*\*/, response.body)
+    assert_no_match(/## Parking/, response.body)
     assert_select "h2", "Trip Coordinator"
     assert_select ".details-list", text: /Alex Rivera/
     assert_select ".details-list", text: /alex@example.com/
