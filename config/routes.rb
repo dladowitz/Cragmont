@@ -33,6 +33,7 @@ Rails.application.routes.draw do
     get "day-trip-what-to-expect", to: "trips#day_trip_what_to_expect", as: :day_trip_what_to_expect, on: :collection
     get "how-to-think-about-safety", to: "trips#safety", as: :safety, on: :collection
     resource :day_trip_signup, only: %i[create destroy]
+    resource :class_signup, only: %i[create destroy]
     post "guest_waiver_emails/:id", to: "guest_waiver_emails#create", as: :guest_waiver_email
     resources :campsites, only: [] do
       resource :campsite_signup, only: %i[create destroy] do
@@ -62,6 +63,7 @@ Rails.application.routes.draw do
       post :email_waiver_request, on: :member
     end
     resources :campgrounds
+    resources :partner_companies
     resources :trips do
       patch :restore, on: :member
       get "readiness", to: "trip_readiness#show", as: :readiness, on: :member
@@ -94,6 +96,9 @@ Rails.application.routes.draw do
       resources :day_trip_signups, only: [] do
         patch :move_to_waitlist, on: :member
         patch :move_onto_trip, on: :member
+        delete :remove, on: :member
+      end
+      resources :class_signups, only: [] do
         delete :remove, on: :member
       end
       resources :trip_payment_requests, only: %i[create] do

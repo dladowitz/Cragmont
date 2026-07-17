@@ -26,6 +26,8 @@ class TripParticipantEmailList
   attr_reader :trip
 
   def participants_for_status(status)
+    return [] if trip.class_trip? && status == "waitlisted"
+
     signup_scope(status).map do |signup|
       Participant.new(
         signup: signup,
@@ -39,6 +41,8 @@ class TripParticipantEmailList
   def signup_scope(status)
     if trip.day_trip?
       trip.day_trip_signups.public_send(status).includes(:user).order(:created_at, :id)
+    elsif trip.class_trip?
+      trip.class_signups.public_send(status).includes(:user).order(:created_at, :id)
     else
       trip.campsite_signups.public_send(status).includes(:user).order(:created_at, :id)
     end

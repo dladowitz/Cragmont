@@ -1,0 +1,27 @@
+= render "admin/shared/header", title: "Partners"
+%section.panel
+  .panel-header
+    %div
+      %h2 Partner companies
+      %p Manage guiding companies used for instructional classes.
+    = link_to "New partner", new_admin_partner_company_path, class: "button"
+  - if @partner_companies.any?
+    %table
+      %thead
+        %tr
+          %th Name
+          %th Website
+      %tbody
+        - @partner_companies.each do |partner_company|
+          %tr
+            %td= link_to partner_company.name, admin_partner_company_path(partner_company)
+            %td
+              - website_url = safe_external_url(partner_company.website_url)
+              - if website_url.present?
+                = link_to partner_company.website_url, website_url, target: "_blank", rel: "noopener"
+              - else
+                = partner_company.website_url
+  - else
+    .empty-state
+      %p No partner companies have been added yet.
+      = link_to "New partner", new_admin_partner_company_path, class: "button"

@@ -1,4 +1,4 @@
-- new_trip_title = @trip_type_choice_required ? "New trip" : "New #{@trip.day_trip? ? 'day trip' : 'camping trip'}"
+- new_trip_title = @trip_type_choice_required ? "New trip" : "New #{@trip.trip_type_label.downcase}"
 = render "admin/shared/header", title: new_trip_title
 %section.panel
   .panel-header
@@ -17,6 +17,7 @@
             .trip-type-choice-actions
               = link_to "Camping trip", new_admin_trip_path(trip_type: "camping"), class: "button"
               = link_to "Day trip", new_admin_trip_path(trip_type: "day_trip"), class: "button secondary"
+              = link_to "Class", new_admin_trip_path(trip_type: "class_trip"), class: "button secondary"
             .form-actions
               = link_to "Cancel", admin_trips_path, class: "button secondary"
   - else
