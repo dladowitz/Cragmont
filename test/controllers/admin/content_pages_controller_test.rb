@@ -72,18 +72,18 @@ class Admin::ContentPagesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h2", "Edit Class Reminder"
-    assert_select "textarea[name='content_page[body]'][required][data-markdown-preview-target='source']", text: /Class Details/
+    assert_select "textarea[name='content_page[body]'][required][data-markdown-preview-target='source']", text: /certified guiding companies/
 
     patch admin_content_page_url("class_reminder"), params: {
       content_page: {
         title: "Class Reminder",
         subtitle: "Updated subtitle.",
-        body: "## Class Details\n\nUpdated class reminder."
+        body: "Updated class reminder."
       }
     }
 
     assert_redirected_to edit_admin_content_page_url("class_reminder")
-    assert_equal "## Class Details\n\nUpdated class reminder.", ContentPage.current!("class_reminder").reload.body
+    assert_equal "Updated class reminder.", ContentPage.current!("class_reminder").reload.body
   end
 
   test "trip admin cannot edit other content pages" do

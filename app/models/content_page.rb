@@ -38,9 +38,7 @@ class ContentPage < ApplicationRecord
   MARKDOWN
 
   CLASS_REMINDER_BODY = <<~MARKDOWN.strip
-    ## Class Details
-
-Cragmont does not teach classes. Classes are run by certified guiding companies. Any instruction and safety is provided solely by these companies.
+    Cragmont does not teach classes. Classes are run by certified guiding companies. Any instruction and safety is provided solely by these companies.
 
     Cragmont attempts to only list companies we have first hand knowledge of. However it is solely up to participants to decide on the safety and quality of outside classes.
 
