@@ -42,6 +42,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".trip-status-filter", text: "Deleted"
     assert_equal [
       "Trip",
+      "Type",
       "Coordinator",
       "Status",
       "Dates",
@@ -55,14 +56,14 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     rows = css_select("tbody tr")
     yosemite_row = rows.find { |row| row.text.include?("Yosemite Valley Spring") }
     yosemite_cells = yosemite_row.css("td").map { |cell| cell.text.squish }
-    assert_equal "1", yosemite_cells[4]
-    assert_equal "9", yosemite_cells[5]
-    assert_equal "10", yosemite_cells[6]
-    assert_includes yosemite_row.css("td")[5]["class"], "success-stat"
+    assert_equal "1", yosemite_cells[5]
+    assert_equal "9", yosemite_cells[6]
+    assert_equal "10", yosemite_cells[7]
+    assert_includes yosemite_row.css("td")[6]["class"], "success-stat"
     warning_row = rows.find { |row| row.text.include?("Nearly Full Crag") }
-    assert_includes warning_row.css("td")[5]["class"], "warning-stat"
+    assert_includes warning_row.css("td")[6]["class"], "warning-stat"
     full_row = rows.find { |row| row.text.include?("Packed Crag") }
-    assert_includes full_row.css("td")[5]["class"], "danger-stat"
+    assert_includes full_row.css("td")[6]["class"], "danger-stat"
     assert_select "td", text: "Alex Rivera"
     assert_select "td", text: /Not set yet/
     assert_select "td a[href='#{edit_admin_trip_path(trips(:jtree))}']", text: "Update"
@@ -1648,6 +1649,113 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Off belay! Sam Lee was removed from this day trip.", flash[:notice]
   end
 
+  test "admin can create and manage a class trip" do
+    get new_admin_trip_url(trip_type: "class_trip")
+
+    assert_response :success
+    assert_select "h2", "New class"
+    assert_select "input[type='hidden'][name='trip[trip_type]'][value='class_trip']"
+    assert_select ".admin-class-form-sections fieldset", count: 3
+    assert_select ".admin-class-overview-section legend", text: "Class Information"
+    assert_select ".admin-class-cost-section legend", text: "Cost Details"
+    assert_select ".admin-class-resources-section legend", text: "Resources"
+    assert_select "label[for='trip_partner_company_id']", text: /Guiding company/
+    assert_select "label[for='trip_class_signup_url']", text: /Class signup link/
+    assert_select "label[for='trip_class_original_price']", text: /Original price/
+    assert_select "label.checkbox-field", text: /Offers discount/
+    assert_select ".admin-class-discount-fields[hidden]"
+    assert_select "label[for='trip_weather_url'] .required-marker", text: "*"
+    assert_select "label", text: /Meeting time/, count: 0
+    assert_select "label", text: /Group Campfire/, count: 0
+
+    assert_difference "Trip.class_trip.count", 1 do
+      post admin_trips_url, params: {
+        trip: {
+          trip_type: "class_trip",
+          name: "Intro to Anchors",
+          location: "Castle Rock, CA",
+          start_date: Date.new(2026, 10, 12),
+          status: "published",
+          participant_capacity: 10,
+          partner_company_id: partner_companies(:vertical_world).id,
+          class_signup_url: "https://example.com/classes/anchors",
+          class_original_price: "250",
+          class_offers_discount: "1",
+          class_discount_code: "CRAG10",
+          class_discount_amount: "$25 off",
+          class_discounted_price: "225",
+          weather_url: "https://forecast.weather.gov/castle-rock",
+          whatsapp_group: "https://chat.whatsapp.com/class-admin",
+          photo_album_url: "https://photos.app.goo.gl/class-admin",
+          description: "Learn **anchors** from certified guides."
+        }
+      }
+    end
+
+    trip = Trip.class_trip.order(:created_at).last
+    assert_redirected_to admin_trip_url(trip)
+    assert_equal trip.start_date, trip.end_date
+    assert trip.class_offers_discount?
+
+    signup = ClassSignup.create!(trip: trip, user: users(:sam))
+    get admin_trip_url(trip)
+
+    assert_response :success
+    assert_select ".trip-title-meta", text: /Class/
+    assert_select ".class-trip-admin-details", text: /Cost Details/
+    assert_select ".class-trip-admin-details", text: /CRAG10/
+    assert_select ".admin-day-trip-description-panel .content-page-markdown strong", "anchors"
+    assert_select ".trip-management-panel a", text: "Participant Emails"
+    assert_select ".trip-management-panel a", text: "Transactions", count: 0
+    assert_select ".trip-management-panel a", text: /Trip Readiness/, count: 0
+    assert_select ".class-trip-participants-panel" do
+      assert_select "td", text: "Sam Lee"
+      assert_select "form[action='#{remove_admin_trip_class_signup_path(trip, signup)}'][method='post']" do
+        assert_select "input[name='_method'][value='delete']"
+      end
+    end
+
+    delete remove_admin_trip_class_signup_url(trip, signup)
+
+    assert_redirected_to admin_trip_url(trip)
+    assert signup.reload.canceled?
+    assert_equal "Off belay! Sam Lee was removed from this class.", flash[:notice]
+  end
+
+  test "admin class pages hide discount fields when discount is not offered" do
+    trip = Trip.create!(
+      trip_type: "class_trip",
+      name: "Intro to Trad",
+      location: "Donner Summit",
+      start_date: Date.new(2026, 8, 1),
+      end_date: Date.new(2026, 8, 1),
+      status: "published",
+      participant_capacity: 4,
+      partner_company: partner_companies(:vertical_world),
+      class_signup_url: "https://example.com/classes/trad",
+      class_original_price: "250",
+      class_offers_discount: false,
+      class_discount_code: "CRAG10",
+      class_discount_amount: "$25 off",
+      class_discounted_price: "225",
+      weather_url: "https://forecast.weather.gov/donner"
+    )
+
+    get admin_trip_url(trip)
+
+    assert_response :success
+    assert_select ".class-trip-admin-details", text: /Original price\s*\$250/
+    assert_select ".class-trip-admin-details", text: /Discount code/, count: 0
+    assert_select ".class-trip-admin-details", text: /Discount amount/, count: 0
+    assert_select ".class-trip-admin-details", text: /Discounted price/, count: 0
+
+    get edit_admin_trip_url(trip)
+
+    assert_response :success
+    assert_select "input[type='checkbox'][name='trip[class_offers_discount]'][value='1']", count: 1
+    assert_select ".admin-class-discount-fields[hidden]"
+  end
+
   test "can publish trip before campsite coordinator is known" do
     patch admin_trip_url(trips(:jtree)), params: {
       trip: {
@@ -1672,7 +1780,9 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     get edit_admin_trip_url(trip)
 
     assert_response :success
-    assert_select ".admin-form-top-actions input[type='submit'][value='Update Trip']"
+    assert_select ".panel-header .actions button.button[form='admin-trip-form'][type='submit']", text: "Update Trip"
+    assert_select ".admin-form-top-actions", count: 0
+    assert_select "form#admin-trip-form"
     assert_select ".coordinator-picker[data-controller='participant-picker']"
     assert_select "input[type='hidden'][name='trip[campsite_coordinator_id]'][value='']"
     assert_select "button.participant-picker-button[role='combobox']", text: "Unassigned"

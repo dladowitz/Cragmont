@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_09_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_17_120500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -192,6 +192,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_090000) do
     t.index ["trip_id"], name: "index_campsites_on_trip_id"
   end
 
+  create_table "class_signups", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "status", default: "confirmed", null: false
+    t.bigint "trip_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["status"], name: "index_class_signups_on_status"
+    t.index ["trip_id", "user_id"], name: "index_class_signups_on_active_trip_user", unique: true, where: "((status)::text <> 'canceled'::text)"
+    t.index ["trip_id"], name: "index_class_signups_on_trip_id"
+    t.index ["user_id"], name: "index_class_signups_on_user_id"
+  end
+
   create_table "content_pages", force: :cascade do |t|
     t.text "body", null: false
     t.datetime "created_at", null: false
@@ -279,6 +291,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_090000) do
     t.index ["reason"], name: "index_help_requests_on_reason"
     t.index ["status"], name: "index_help_requests_on_status"
     t.index ["user_id"], name: "index_help_requests_on_user_id"
+  end
+
+  create_table "partner_companies", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "name", null: false
+    t.string "primary_contact_email", null: false
+    t.string "primary_contact_name", null: false
+    t.string "primary_contact_phone", null: false
+    t.string "secondary_contact_email"
+    t.string "secondary_contact_name"
+    t.string "secondary_contact_phone"
+    t.datetime "updated_at", null: false
+    t.text "website_url", null: false
+    t.index ["name"], name: "index_partner_companies_on_name"
   end
 
   create_table "roles", force: :cascade do |t|
@@ -516,6 +543,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_090000) do
   create_table "trips", force: :cascade do |t|
     t.bigint "campsite_coordinator_id"
     t.text "carpool_meeting_spot"
+    t.string "class_discount_amount"
+    t.string "class_discount_code"
+    t.string "class_discounted_price"
+    t.boolean "class_offers_discount", default: false, null: false
+    t.string "class_original_price"
+    t.text "class_signup_url"
     t.text "climbing_types"
     t.integer "cost_cents", default: 0, null: false
     t.datetime "created_at", null: false
@@ -534,6 +567,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_090000) do
     t.text "mountain_project_url"
     t.string "name", null: false
     t.integer "participant_capacity", default: 0, null: false
+    t.bigint "partner_company_id"
     t.text "photo_album_url"
     t.date "start_date", null: false
     t.string "status", default: "draft", null: false
@@ -545,6 +579,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_090000) do
     t.index ["campsite_coordinator_id"], name: "index_trips_on_campsite_coordinator_id"
     t.index ["deleted_at"], name: "index_trips_on_deleted_at"
     t.index ["group_campfire_campsite_id"], name: "index_trips_on_group_campfire_campsite_id"
+    t.index ["partner_company_id"], name: "index_trips_on_partner_company_id"
     t.index ["start_date"], name: "index_trips_on_start_date"
     t.index ["status"], name: "index_trips_on_status"
     t.index ["trip_type"], name: "index_trips_on_trip_type"
@@ -633,6 +668,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_090000) do
   add_foreign_key "campsites", "users", column: "registered_by_id"
   add_foreign_key "campsites", "users", column: "registration_reimbursed_by_id"
   add_foreign_key "campsites", "users", column: "registration_reimbursement_recorded_by_id"
+  add_foreign_key "class_signups", "trips"
+  add_foreign_key "class_signups", "users"
   add_foreign_key "day_trip_signup_minors", "day_trip_signups"
   add_foreign_key "day_trip_signups", "day_trip_signups", column: "guest_of_day_trip_signup_id"
   add_foreign_key "day_trip_signups", "trips"
@@ -658,6 +695,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_090000) do
   add_foreign_key "trip_readiness_completions", "trips"
   add_foreign_key "trip_readiness_completions", "users", column: "completed_by_id"
   add_foreign_key "trips", "campsites", column: "group_campfire_campsite_id"
+  add_foreign_key "trips", "partner_companies"
   add_foreign_key "trips", "users", column: "campsite_coordinator_id"
   add_foreign_key "user_roles", "roles"
   add_foreign_key "user_roles", "users"

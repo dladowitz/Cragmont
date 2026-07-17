@@ -37,6 +37,16 @@ class ContentPage < ApplicationRecord
     That said, if you are reading this and have additional thoughts or disagree with parts, send us feedback.
   MARKDOWN
 
+  CLASS_REMINDER_BODY = <<~MARKDOWN.strip
+    ## Class Details
+
+Cragmont does not teach classes. Classes are run by certified guiding companies. Any instruction and safety is provided solely by these companies.
+
+    Cragmont attempts to only list companies we have first hand knowledge of. However it is solely up to participants to decide on the safety and quality of outside classes.
+
+    Cragmont does not receive money or financial incentives for listing classes. Our goal is to help people grow their skills with the help of certified instructors.
+  MARKDOWN
+
   DEFAULT_PAGES = {
     "what_to_expect" => {
       title: "What to Expect on a Camping Trip",
@@ -52,6 +62,11 @@ class ContentPage < ApplicationRecord
       title: "How to think about safety on trips",
       subtitle: "A safety topo for making your own calls outside.",
       body: SAFETY_BODY
+    },
+    "class_reminder" => {
+      title: "Class Reminder",
+      subtitle: "Shared reminder for externally run instructional classes.",
+      body: CLASS_REMINDER_BODY
     }
   }.freeze
 

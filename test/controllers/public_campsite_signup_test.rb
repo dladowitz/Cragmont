@@ -26,6 +26,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "trips index shows published trips and hides unpublished trips" do
+    class_trip = create_class_trip!(name: "Intro to Anchors")
+
     get trips_url
 
     assert_response :success
@@ -34,6 +36,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] .date-range-mobile", text: /06\/12\/26\s*to 06\/15\/26/
     assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] .trip-card-meta", text: /Open Spaces\s*10 spaces/
     assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] .trip-card-meta", text: /Capacity/, count: 0
+    assert_select ".trip-card[href='#{trip_path(class_trip)}'] .trip-card-meta", text: /Open Spaces/, count: 0
     assert_select ".trip-card[href='#{trip_path(trips(:jtree))}']", count: 0
     assert_select "a", text: "View trip", count: 0
     assert_select "a[href='#{past_trips_trips_path}']", text: "Past Trips"
@@ -134,6 +137,122 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_select ".details-list", text: /555-0100/, count: 0
     end
     assert_operator response.body.index("Trip Coordinator"), :<, response.body.index("Safety Reminder")
+  end
+
+  test "public class detail renders external event information" do
+    ContentPage.current!("class_reminder").update!(
+      title: "Class Reminder",
+      body: "## Class Details\n\nRegister with the guide company."
+    )
+    trip = create_class_trip!(
+      name: "Intro to Anchors",
+      description: "Learn **anchors** from certified guides.",
+      class_discount_code: "CRAG10",
+      class_discount_amount: "$25 off",
+      class_original_price: "250",
+      class_offers_discount: true,
+      class_discounted_price: "225",
+      whatsapp_group: "https://chat.whatsapp.com/class-public",
+      photo_album_url: "https://photos.app.goo.gl/class-public"
+    )
+    ClassSignup.create!(trip: trip, user: users(:sam))
+
+    get trip_url(trip)
+
+    assert_response :success
+    assert_select ".trip-type-badge", text: "Class"
+    assert_select ".trip-summary-header", text: /Taught by/
+    assert_select "a[href='https://example.com/vertical-world'][target='_blank'][rel='noopener']", text: "Vertical World Guides"
+    assert_select "a.button[href='https://example.com/classes/anchors'][target='_blank'][rel='noopener']", text: "Register with Vertical World Guides", count: 1
+    assert_select ".class-trip-description-panel a.button[href='https://example.com/classes/anchors'][target='_blank'][rel='noopener']", text: "Register with Vertical World Guides", count: 1
+    assert_select ".class-trip-description-panel .class-registration-card .day-trip-signup-action"
+    assert_select ".trip-resource-links a[href='https://example.com/classes/anchors']", count: 0
+    assert_select ".trip-mobile-resource-link[href='https://example.com/classes/anchors']", count: 0
+    assert_select ".class-trip-description-panel .class-registration-note", text: "You must register and pay on the guiding company's website to be officially signed up."
+    assert_select ".class-trip-details-panel .class-registration-note", count: 0
+    assert_select ".class-trip-details-panel h2", "Cost Details"
+    assert_select ".class-trip-details-panel", text: /Max class size/, count: 0
+    assert_select ".class-trip-details-panel", text: /Original price\s*\$250/
+    assert_select ".class-trip-details-panel", text: /Discount code\s*CRAG10/
+    assert_select ".class-trip-details-panel", text: /Discount amount\s*\$25 off/
+    assert_select ".class-trip-details-panel", text: /Discounted price\s*\$225/
+    assert_select ".class-trip-description-panel .content-page-markdown strong", "anchors"
+    assert_operator response.body.index("class-trip-description-panel"), :<, response.body.index("class-trip-details-panel")
+    assert_select ".class-trip-participants-panel td", text: "Sam L."
+    assert_select ".class-trip-overview .stats", text: /Open Spaces/, count: 0
+    assert_select ".class-trip-overview .danger-status", text: /Class Full/, count: 0
+    assert_select ".class-trip-participants-panel", text: /This indicates to other Cragmont participants you have signed up/
+    assert_select ".class-trip-participants-panel", text: /You must signup on Vertical World Guides' website to be enrolled\. This does not automatically sync with their signups\./
+    assert_select ".class-reminder-panel .content-page-markdown h2", "Class Details"
+    assert_select ".class-reminder-panel .content-page-markdown", text: /Register with the guide company/
+    assert_select ".trips-faq-callout", count: 0
+    assert_select ".day-trip-safety-panel .content-page-markdown", text: /Climbing is dangerous/, count: 0
+    assert_select ".waiver-form", count: 0
+  end
+
+  test "public class detail hides discount fields when class does not offer a discount" do
+    trip = create_class_trip!(
+      class_original_price: "250",
+      class_discount_code: "CRAG10",
+      class_discount_amount: "$25 off",
+      class_discounted_price: "225"
+    )
+
+    get trip_url(trip)
+
+    assert_response :success
+    assert_select ".class-trip-details-panel", text: /Price\s*\$250/
+    assert_select ".class-trip-details-panel", text: /Original price/, count: 0
+    assert_select ".class-trip-details-panel", text: /Discount code/, count: 0
+    assert_select ".class-trip-details-panel", text: /Discount amount/, count: 0
+    assert_select ".class-trip-details-panel", text: /Discounted price/, count: 0
+  end
+
+  test "public class signup marks intent without waiver or payment" do
+    trip = create_class_trip!(participant_capacity: 2)
+    log_in_as(users(:sam))
+
+    get trip_url(trip)
+    assert_response :success
+    assert_select ".class-trip-participants-panel form[action='#{trip_class_signup_path(trip)}'][method='post'] button", text: "I've Signed Up"
+    assert_select ".class-trip-participants-panel", text: /This indicates to other Cragmont participants you have signed up/
+    assert_select ".class-trip-participants-panel", text: /You must signup on Vertical World Guides' website to be enrolled\. This does not automatically sync with their signups\./
+    assert_select "button", text: "I plan to register", count: 0
+
+    assert_difference "ClassSignup.count", 1 do
+      assert_no_difference "Waiver.count" do
+        assert_no_difference "CampsiteSignupPayment.count" do
+          post trip_class_signup_path(trip)
+        end
+      end
+    end
+
+    assert_redirected_to trip_url(trip)
+    assert_equal "On belay! You're marked as planning to register for this class.", flash[:notice]
+    signup = ClassSignup.find_by!(trip: trip, user: users(:sam))
+    assert signup.confirmed?
+
+    assert_no_difference "ClassSignup.count" do
+      post trip_class_signup_path(trip)
+    end
+    assert_equal "Wow, that was a whipper. You're already marked as interested in this class.", flash[:alert]
+
+    delete trip_class_signup_path(trip)
+    assert_redirected_to trip_url(trip)
+    assert signup.reload.canceled?
+  end
+
+  test "public class signup blocks full class" do
+    trip = create_class_trip!(participant_capacity: 1)
+    ClassSignup.create!(trip: trip, user: users(:alex))
+    log_in_as(users(:sam))
+
+    assert_no_difference "ClassSignup.count" do
+      post trip_class_signup_path(trip)
+    end
+
+    assert_redirected_to trip_url(trip)
+    assert_equal "Wow, that was a whipper. This class is full.", flash[:alert]
   end
 
   test "public day trip stats show simple capacity counts" do
@@ -771,6 +890,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "h1", "Yosemite Valley Spring"
     assert_select "h2", "Yosemite Valley, CA"
     assert_select ".background-image-caption", "IRS Wall, Joshua Tree"
+    assert_select ".trip-show-mobile-hero .trip-type-badge", text: "Camping Trip"
     assert_select ".trip-show-mobile-hero .trip-whatsapp-mobile-link[href='https://chat.whatsapp.com/yosemite-spring'][target='_blank'][rel='noopener']", text: "Join the WhatsApp Group"
     assert_select ".trip-show-mobile-hero .trip-weather-mobile-link[href='https://forecast.weather.gov/yosemite-spring'][target='_blank'][rel='noopener']", text: "Weather"
     assert_select ".trip-show-mobile-hero .trip-photo-album-mobile-link[href='https://photos.app.goo.gl/yosemite-spring'][target='_blank'][rel='noopener']", text: "Photo Album"
@@ -2922,6 +3042,24 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
         signup_kind: "self"
       }
     }
+  end
+
+  def create_class_trip!(attributes = {})
+    defaults = {
+      trip_type: "class_trip",
+      name: "Intro to Anchors",
+      location: "Castle Rock, CA",
+      start_date: Date.new(2026, 10, 12),
+      status: "published",
+      participant_capacity: 10,
+      partner_company: partner_companies(:vertical_world),
+      class_signup_url: "https://example.com/classes/anchors",
+      class_original_price: "250",
+      weather_url: "https://forecast.weather.gov/castle-rock",
+      description: "Learn anchors."
+    }
+
+    Trip.create!(defaults.merge(attributes))
   end
 
   def stripe_checkout_event(type, payment, payment_intent: nil)

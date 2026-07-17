@@ -4,11 +4,11 @@ class TripsController < ApplicationController
   before_action :set_trip, only: :show
 
   def index
-    @trips = Trip.published_for_public.includes(:campsite_coordinator, :campsites)
+    @trips = Trip.published_for_public.includes(:campsite_coordinator, :partner_company, :class_signups, :campsites)
   end
 
   def past_trips
-    archived_trips_scope = Trip.archived_for_public.includes(:campsite_coordinator, :campsites)
+    archived_trips_scope = Trip.archived_for_public.includes(:campsite_coordinator, :partner_company, :class_signups, :campsites)
 
     @archived_current_page = [ params[:archived_page].to_i, 1 ].max
     @total_archived_trips = archived_trips_scope.count
@@ -40,6 +40,11 @@ class TripsController < ApplicationController
       @day_trip_waitlisted_signups = @trip.day_trip_signups.waitlisted.primary.includes(:user, :day_trip_signup_minors, guest_signups: :user).order(:created_at)
       @current_day_trip_signup = @trip.day_trip_signups.active.includes(:day_trip_signup_minors, guest_signups: :user).find_by(user: current_user) if user_signed_in?
       render :day_trip_show
+    elsif @trip.class_trip?
+      @class_signups = @trip.class_signups.confirmed.includes(:user).order(:created_at)
+      @current_class_signup = @trip.class_signups.active.find_by(user: current_user) if user_signed_in?
+      @class_reminder = ContentPage.current!("class_reminder")
+      render :class_show
     else
       @campsites = @trip.campsites.includes(:campground, campsite_signups: [ :user, :campsite_signup_minors, { guest_of_signup: :user } ]).order(:arrival_date, :site_number)
       @current_signup = @trip.campsite_signups.active.includes(:campsite, :payments, { guest_of_signup: :user }, guest_signups: [ :user, :campsite ]).find_by(user: current_user) if user_signed_in?

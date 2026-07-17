@@ -25,6 +25,10 @@ class UserTripHistory
     def day_trip?
       signup_type == :day_trip
     end
+
+    def class_trip?
+      signup_type == :class_trip
+    end
   end
 
   def self.for_user(user)
@@ -36,7 +40,7 @@ class UserTripHistory
   end
 
   def rows
-    (camping_rows + day_trip_rows).sort_by { |row| [ row.trip.start_date, row.trip.name.to_s ] }.reverse
+    (camping_rows + day_trip_rows + class_rows).sort_by { |row| [ row.trip.start_date, row.trip.name.to_s ] }.reverse
   end
 
   private
@@ -59,6 +63,12 @@ class UserTripHistory
     end
   end
 
+  def class_rows
+    class_signups.map do |signup|
+      Row.new(signup: signup, signup_type: :class_trip, ledger_entries: [])
+    end
+  end
+
   def campsite_signups
     @campsite_signups ||= user.campsite_signups
       .where(status: SIGNUP_STATUSES)
@@ -67,6 +77,12 @@ class UserTripHistory
 
   def day_trip_signups
     @day_trip_signups ||= user.day_trip_signups
+      .where(status: SIGNUP_STATUSES)
+      .includes(:trip)
+  end
+
+  def class_signups
+    @class_signups ||= user.class_signups
       .where(status: SIGNUP_STATUSES)
       .includes(:trip)
   end

@@ -57,6 +57,19 @@ class TripParticipantEmailListTest < ActiveSupport::TestCase
     assert_equal [ "willow-wait@example.com", "nina-guest@example.com" ], email_list.waitlisted_email_addresses
   end
 
+  test "lists class participant emails without a waitlist" do
+    trip = class_trip!
+    ClassSignup.create!(trip: trip, user: user!("Clara", "Class", "clara-class@example.com"))
+    ClassSignup.create!(trip: trip, user: user!("Casey", "Canceled", "casey-canceled-class@example.com"), status: "canceled")
+
+    email_list = TripParticipantEmailList.new(trip)
+
+    assert_equal [ "Clara Class" ], email_list.confirmed_participants.map(&:name)
+    assert_equal [ "clara-class@example.com" ], email_list.confirmed_email_addresses
+    assert_empty email_list.waitlisted_participants
+    assert_empty email_list.waitlisted_email_addresses
+  end
+
   private
 
   def user!(first_name, last_name, email)
@@ -78,6 +91,21 @@ class TripParticipantEmailListTest < ActiveSupport::TestCase
       late_arrival_instructions: "If you are running late, hike toward the main wall.",
       participant_capacity: 6,
       climbing_types: [ "sport" ]
+    )
+  end
+
+  def class_trip!
+    Trip.create!(
+      trip_type: "class_trip",
+      name: "Intro to Anchors",
+      location: "Castle Rock, CA",
+      start_date: Date.new(2026, 10, 12),
+      status: "published",
+      participant_capacity: 8,
+      partner_company: partner_companies(:vertical_world),
+      class_signup_url: "https://example.com/classes/anchors",
+      class_original_price: "$250",
+      weather_url: "https://forecast.weather.gov/castle-rock"
     )
   end
 end

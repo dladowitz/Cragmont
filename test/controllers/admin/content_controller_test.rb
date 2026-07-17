@@ -18,6 +18,7 @@ class Admin::ContentControllerTest < ActionDispatch::IntegrationTest
     assert_select ".content-action-list a[href='#{admin_trip_details_email_templates_path}']", text: "Edit Trip Details Email Templates"
     assert_select ".content-action-list a[href='#{edit_admin_site_content_path("liability_warning")}']", text: "Edit Liability Warning"
     assert_select ".content-action-list a[href='#{edit_admin_site_content_path("day_trip_safety_reminder")}']", text: "Edit Day Trip Safety Reminder"
+    assert_select ".content-action-list a[href='#{edit_admin_content_page_path("class_reminder")}']", text: "Edit Class Reminder"
   end
 
   test "non super admin cannot view content hub" do
@@ -28,5 +29,20 @@ class Admin::ContentControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to root_url
     assert_equal "Wow, that was a whipper. You do not have permission to access that page.", flash[:alert]
+  end
+
+  test "trip admin only sees class reminder on content hub" do
+    trip_admin = users(:sam)
+    assign_role(trip_admin, :trip_admin)
+    delete session_url
+    log_in_as(trip_admin)
+
+    get admin_content_url
+
+    assert_response :success
+    assert_select ".admin-nav a[href='#{admin_content_path}']", text: "Content"
+    assert_select ".content-action-list a[href='#{edit_admin_content_page_path("class_reminder")}']", text: "Edit Class Reminder"
+    assert_select ".content-action-list a[href='#{edit_admin_content_page_path("what_to_expect")}']", count: 0
+    assert_select ".content-action-list a[href='#{admin_trip_details_email_templates_path}']", count: 0
   end
 end

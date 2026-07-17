@@ -147,7 +147,7 @@ class Admin::TripDetailsEmailsController < Admin::BaseController
   end
 
   def ensure_camping_trip
-    return unless @trip.day_trip?
+    return if @trip.camping?
 
     redirect_to admin_trip_path(@trip),
       alert: "Trip details email is only available for camping trips.",

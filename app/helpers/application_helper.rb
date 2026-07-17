@@ -125,6 +125,14 @@ module ApplicationHelper
     format_cents(cents)
   end
 
+  def format_class_price(price)
+    value = price.to_s.strip
+    return if value.blank?
+    return value if value.start_with?("$")
+
+    "$#{value}"
+  end
+
   def stripe_dashboard_payment_url(payment_intent_id)
     return if payment_intent_id.blank? || ENV["STRIPE_ACCOUNT_ID"].blank?
 

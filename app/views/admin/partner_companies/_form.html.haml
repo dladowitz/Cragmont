@@ -1,0 +1,33 @@
+= form_with model: [:admin, partner_company], class: "admin-form" do |form|
+  = render "admin/shared/errors", record: partner_company
+  .form-grid
+    .field
+      = required_label form, :name, "Partner Name"
+      = form.text_field :name, required: true
+    .field
+      = required_label form, :website_url, "Website link"
+      = form.url_field :website_url, required: true
+    .field
+      = required_label form, :primary_contact_name, "Primary Contact Name"
+      = form.text_field :primary_contact_name, required: true
+    .field
+      = required_label form, :primary_contact_phone, "Primary Contact Phone"
+      = form.telephone_field :primary_contact_phone, required: true
+    .field
+      = required_label form, :primary_contact_email, "Primary Contact Email"
+      = form.email_field :primary_contact_email, required: true
+    .field
+      = form.label :secondary_contact_name, "Secondary Contact Name"
+      = form.text_field :secondary_contact_name
+    .field
+      = form.label :secondary_contact_phone, "Secondary Contact Phone"
+      = form.telephone_field :secondary_contact_phone
+    .field
+      = form.label :secondary_contact_email, "Secondary Contact Email"
+      = form.email_field :secondary_contact_email
+  .field
+    = form.label :description
+    = form.text_area :description, rows: 5
+  .form-actions
+    = form.submit
+    = link_to "Cancel", partner_company.persisted? ? admin_partner_company_path(partner_company) : admin_partner_companies_path, class: "button secondary"

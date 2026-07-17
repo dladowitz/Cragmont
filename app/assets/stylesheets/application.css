@@ -2716,6 +2716,64 @@ body.trip-show-page .panel {
   margin-bottom: 8px;
 }
 
+.class-trip-description-panel {
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+
+.class-trip-description-panel .panel-header {
+  margin-bottom: 4px;
+}
+
+.class-trip-description-panel .content-page-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.class-description-copy > h2 {
+  margin: 0 0 8px;
+}
+
+.class-description-body.has-registration-action {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+  gap: 16px 28px;
+  align-items: start;
+}
+
+.class-description-body .class-registration-card {
+  justify-self: end;
+}
+
+.class-registration-card {
+  display: grid;
+  min-height: 100%;
+  align-items: start;
+  justify-items: center;
+  padding: 20px;
+  border: 1px solid rgb(0 0 0 / 7%);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.class-registration-card .day-trip-signup-action {
+  width: min(100%, 360px);
+  min-width: 0;
+  justify-items: stretch;
+}
+
+.day-trip-signup-action .class-registration-note {
+  line-height: 1.2;
+  text-align: left;
+}
+
+.class-trip-details-panel > h2 {
+  margin-bottom: 8px;
+}
+
+.class-trip-details-panel .details-list {
+  gap: 4px;
+}
+
 .day-trip-location-image {
   margin-top: 18px;
   width: min(100%, 428px);
@@ -2831,6 +2889,10 @@ body.trip-show-page .panel {
   text-align: right;
 }
 
+.class-registration-note {
+  text-align: left;
+}
+
 .day-trip-signup-button {
   justify-content: center;
   min-width: 180px;
@@ -2883,12 +2945,46 @@ body.trip-show-page .panel {
   padding-bottom: 8px;
 }
 
+.class-trip-participants-panel > h2,
+.class-reminder-panel > h2 {
+  margin: 0 0 4px;
+  line-height: 1;
+}
+
+.class-participant-signup-action {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.class-participant-signup-action p {
+  margin: 0;
+}
+
 .day-trip-safety-panel .panel-header {
   margin-bottom: 6px;
 }
 
 .day-trip-safety-panel .content-page-markdown p:last-child {
   margin-bottom: 0;
+}
+
+.class-reminder-panel {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.class-reminder-panel .panel-header {
+  margin-bottom: 0;
+}
+
+.class-reminder-panel .content-page-markdown h2 {
+  margin: 0 0 6px;
+}
+
+.class-reminder-panel .content-page-markdown p {
+  margin-bottom: 8px;
+  line-height: 1.35;
 }
 
 body.profile-show-page .panel,
@@ -2919,6 +3015,18 @@ body.trips-index-page .trip-card {
 .trip-card h2,
 .trip-card p,
 .trip-card dl {
+  margin: 0;
+}
+
+.trip-card-title-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.trip-card-title-line h2,
+.trip-card-title-line h3 {
   margin: 0;
 }
 
@@ -5228,6 +5336,38 @@ th {
   width: 100%;
 }
 
+.admin-class-form-sections {
+  display: grid;
+  gap: 22px;
+}
+
+.admin-trip-form-section {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+  margin: 0;
+  padding: 18px;
+  border: 1px solid #cfd8d3;
+  border-radius: 8px;
+  background: #fbfdfc;
+}
+
+.admin-trip-form-section > legend {
+  padding: 0 8px;
+  color: var(--accent-dark);
+  font-size: 1.05rem;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.admin-class-discount-toggle-field {
+  align-self: end;
+}
+
+.admin-class-discount-fields {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .campsite-date-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -6528,6 +6668,38 @@ textarea {
     margin-bottom: 0;
   }
 
+  .class-trip-details-panel > h2,
+  body.day-trip-show-page .class-trip-participants-panel h2,
+  body.day-trip-show-page .class-reminder-panel h2 {
+    margin-bottom: 4px;
+  }
+
+  .class-trip-details-panel .details-list {
+    gap: 6px;
+  }
+
+  .class-trip-details-panel .details-list dd {
+    margin-bottom: 4px;
+  }
+
+  .class-trip-participants-panel > .muted {
+    margin-bottom: 8px;
+  }
+
+  .class-participant-signup-action {
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .class-reminder-panel .content-page-markdown h2 {
+    margin-bottom: 4px;
+  }
+
+  .class-reminder-panel .content-page-markdown p {
+    margin-bottom: 6px;
+    line-height: 1.25;
+  }
+
   body.day-trip-show-page .day-trip-description-panel,
   body.day-trip-show-page .day-trip-participants-panel,
   body.day-trip-show-page .day-trip-coordinator-panel,
@@ -6557,6 +6729,20 @@ textarea {
 
   body.day-trip-show-page .additional-resources-list {
     gap: 2px;
+  }
+
+  .class-description-body.has-registration-action {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .class-description-body .class-registration-card {
+    order: -1;
+    justify-self: stretch;
+  }
+
+  .class-registration-card {
+    padding: 12px;
   }
 
   body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table th,
@@ -6617,6 +6803,10 @@ textarea {
     text-align: left;
   }
 
+  .class-registration-note {
+    text-align: left;
+  }
+
   .day-trip-signup-button {
     width: 100%;
   }
@@ -6628,6 +6818,12 @@ textarea {
   body.trip-show-page .campsites-panel > h2,
   body.trip-show-page .public-main > .panel > h2 {
     margin-bottom: 10px;
+  }
+
+  body.trip-show-page .public-main > .class-trip-participants-panel > h2,
+  body.trip-show-page .public-main > .class-reminder-panel > h2 {
+    margin-bottom: 2px;
+    line-height: 1;
   }
 
   body.trip-show-page .campsite-card-list {

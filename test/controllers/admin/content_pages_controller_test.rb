@@ -62,6 +62,42 @@ class Admin::ContentPagesControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "<script"
   end
 
+  test "trip admin can edit class reminder" do
+    trip_admin = users(:sam)
+    assign_role(trip_admin, :trip_admin)
+    delete session_url
+    log_in_as(trip_admin)
+
+    get edit_admin_content_page_url("class_reminder")
+
+    assert_response :success
+    assert_select "h2", "Edit Class Reminder"
+    assert_select "textarea[name='content_page[body]'][required][data-markdown-preview-target='source']", text: /Class Details/
+
+    patch admin_content_page_url("class_reminder"), params: {
+      content_page: {
+        title: "Class Reminder",
+        subtitle: "Updated subtitle.",
+        body: "## Class Details\n\nUpdated class reminder."
+      }
+    }
+
+    assert_redirected_to edit_admin_content_page_url("class_reminder")
+    assert_equal "## Class Details\n\nUpdated class reminder.", ContentPage.current!("class_reminder").reload.body
+  end
+
+  test "trip admin cannot edit other content pages" do
+    trip_admin = users(:sam)
+    assign_role(trip_admin, :trip_admin)
+    delete session_url
+    log_in_as(trip_admin)
+
+    get edit_admin_content_page_url("what_to_expect")
+
+    assert_redirected_to root_url
+    assert_equal "Wow, that was a whipper. You do not have permission to access that page.", flash[:alert]
+  end
+
   test "super admin can update camping trip what to expect page" do
     patch admin_content_page_url("what_to_expect"), params: {
       content_page: {
