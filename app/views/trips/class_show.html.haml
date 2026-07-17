@@ -129,6 +129,7 @@
   %section.panel.day-trip-safety-panel.class-reminder-panel
     %h2= @class_reminder.title
     .content-page-markdown
-      = render_content_page_markdown(@class_reminder.body)
+      - class_reminder_body = @class_reminder.body.to_s.sub(/\A## Class Details[ \t]*\r?\n\r?\n?/, "")
+      = render_content_page_markdown(class_reminder_body)
   = render "shared/liability_warning"
 %p.background-image-caption IRS Wall, Joshua Tree

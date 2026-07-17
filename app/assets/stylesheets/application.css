@@ -6678,17 +6678,35 @@ textarea {
     gap: 6px;
   }
 
+  .class-trip-details-panel .details-list > div {
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0 6px;
+    align-items: baseline;
+  }
+
+  .class-trip-details-panel .details-list dt {
+    white-space: nowrap;
+  }
+
+  .class-trip-details-panel .details-list dt::after {
+    content: ":";
+  }
+
   .class-trip-details-panel .details-list dd {
-    margin-bottom: 4px;
+    margin-bottom: 0;
   }
 
   .class-trip-participants-panel > .muted {
-    margin-bottom: 8px;
+    margin-bottom: 18px;
   }
 
   .class-participant-signup-action {
     gap: 6px;
-    margin-top: 8px;
+    margin-top: 12px;
+  }
+
+  body.day-trip-show-page .class-reminder-panel {
+    margin-top: 22px;
   }
 
   .class-reminder-panel .content-page-markdown h2 {

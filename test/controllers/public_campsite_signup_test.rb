@@ -183,7 +183,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".class-trip-overview .danger-status", text: /Class Full/, count: 0
     assert_select ".class-trip-participants-panel", text: /This indicates to other Cragmont participants you have signed up/
     assert_select ".class-trip-participants-panel", text: /You must signup on Vertical World Guides' website to be enrolled\. This does not automatically sync with their signups\./
-    assert_select ".class-reminder-panel .content-page-markdown h2", "Class Details"
+    assert_select ".class-reminder-panel .content-page-markdown h2", count: 0
+    assert_select ".class-reminder-panel .content-page-markdown", text: /Class Details/, count: 0
     assert_select ".class-reminder-panel .content-page-markdown", text: /Register with the guide company/
     assert_select ".trips-faq-callout", count: 0
     assert_select ".day-trip-safety-panel .content-page-markdown", text: /Climbing is dangerous/, count: 0
