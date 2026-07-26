@@ -1153,7 +1153,9 @@ body.trip-show-page .public-liability-warning {
   font-size: 1.05rem;
 }
 
-.confirmed-signups-section {
+.confirmed-signups-section,
+.admin-campsite-parking-section,
+.public-campsite-parking-section {
   padding: 16px;
   border: 1px solid;
   border-radius: 8px;
@@ -1170,12 +1172,16 @@ body.trip-show-page .public-liability-warning {
 }
 
 .confirmed-signups-section h4,
+.admin-campsite-parking-section h4,
+.public-campsite-parking-section h4,
 .waitlisted-signups-section h4,
 .trip-waitlist-section h3 {
   margin: 0 0 10px;
 }
 
-.confirmed-signups-section h4 {
+.confirmed-signups-section h4,
+.admin-campsite-parking-section h4,
+.public-campsite-parking-section h4 {
   color: #006b12;
 }
 
@@ -2046,6 +2052,46 @@ body.trip-show-page .trip-summary-header {
   display: grid;
   gap: 12px;
   padding-top: 2px;
+}
+
+.campsite-parking-section {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-campsite-parking-section,
+.public-campsite-parking-section {
+  gap: 0;
+}
+
+.campsite-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.campsite-section-heading h4 {
+  margin: 0 0 10px;
+}
+
+.admin-campsite-parking-section .campsite-section-heading h4,
+.public-campsite-parking-section .campsite-section-heading h4 {
+  margin: 0;
+}
+
+.campsite-parking-table {
+  margin-top: 0;
+  table-layout: fixed;
+}
+
+.campsite-parking-table th:first-child,
+.campsite-parking-table td:first-child {
+  width: 28%;
+}
+
+.campsite-parking-table th:last-child,
+.campsite-parking-table td:last-child {
+  width: 72%;
 }
 
 .campground-group {
@@ -4329,16 +4375,30 @@ dialog.signup-modal.refund-modal .form-actions {
   font-size: inherit;
 }
 
-.admin-parking-status-form {
+.public-participant-mobile-status-line {
+  display: none;
+}
+
+.admin-parking-spot-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
   margin: 0;
 }
 
-.admin-parking-status-form select {
+.admin-parking-spot-form select {
   width: auto;
   min-width: 0;
   max-width: 100%;
   padding: 5px 8px;
   font-size: 0.86rem;
+}
+
+.admin-parking-spot-save-status {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 750;
 }
 
 .public-added-by {
@@ -6031,6 +6091,19 @@ textarea {
   margin: 0;
 }
 
+.admin-trip-resources-panel .details-list > div {
+  grid-template-columns: 180px minmax(0, 1fr);
+  column-gap: 24px;
+}
+
+.admin-trip-resources-panel .details-list dd {
+  min-width: 0;
+}
+
+.admin-trip-resources-panel .details-list a {
+  overflow-wrap: anywhere;
+}
+
 .campsite-notes-row td {
   padding-top: 0;
   color: var(--muted);
@@ -6928,7 +7001,7 @@ textarea {
   }
 
   .campsite-card {
-    gap: 14px;
+    gap: 10px;
     padding: 14px;
   }
 
@@ -6938,7 +7011,24 @@ textarea {
   }
 
   .campsite-card-summary .date-pair {
-    margin-top: 10px;
+    margin-top: 8px;
+  }
+
+  body.trip-show-page .campsite-card-header {
+    gap: 8px;
+  }
+
+  body.trip-show-page .campsite-signup-action {
+    gap: 4px;
+  }
+
+  body.trip-show-page .campsite-signup-action .already-signed-up-note {
+    line-height: 1.24;
+  }
+
+  body.trip-show-page .campsite-card-details {
+    gap: 10px;
+    padding-top: 0;
   }
 
   .campsite-signup-action > [data-controller~="modal"],
@@ -7251,6 +7341,56 @@ textarea {
     grid-template-columns: minmax(104px, 0.4fr) minmax(0, 1fr);
   }
 
+  body.trip-show-page .public-campsite-parking-section .campsite-parking-table.public-card-table {
+    display: grid;
+    gap: 0;
+    overflow: visible;
+  }
+
+  body.trip-show-page .public-campsite-parking-section {
+    padding: 10px 12px;
+  }
+
+  body.trip-show-page .public-campsite-parking-section .campsite-section-heading {
+    margin-bottom: 0;
+  }
+
+  body.trip-show-page .public-campsite-parking-section .campsite-parking-table.public-card-table tbody {
+    display: grid;
+    gap: 0;
+  }
+
+  body.trip-show-page .public-campsite-parking-section .campsite-parking-table.public-card-table tr {
+    display: grid;
+    grid-template-columns: minmax(72px, 0.34fr) minmax(0, 1fr);
+    gap: 10px;
+    padding: 4px 0;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--line) 82%, transparent);
+    border-radius: 0;
+    background: transparent;
+  }
+
+  body.trip-show-page .public-campsite-parking-section .campsite-parking-table.public-card-table tr:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  body.trip-show-page .public-campsite-parking-section .campsite-parking-table.public-card-table td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border-bottom: 0;
+    color: var(--text);
+    font-size: 0.95rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  body.trip-show-page .public-campsite-parking-section .campsite-parking-table.public-card-table td::before {
+    content: none;
+  }
+
   body:not(.admin-body) .public-party-guest-row > td:first-child {
     padding-left: 0;
   }
@@ -7270,6 +7410,10 @@ textarea {
   }
 
   body.trip-show-page .confirmed-participants-table.public-card-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0 12px;
+    align-items: start;
     padding: 0;
     border: 0;
     border-bottom: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
@@ -7292,13 +7436,41 @@ textarea {
   }
 
   body.trip-show-page .confirmed-participants-table.public-card-table td:first-child {
+    grid-column: 1;
     grid-template-columns: 1fr;
     padding-top: 10px;
     padding-bottom: 2px;
   }
 
   body.trip-show-page .confirmed-participants-table.public-card-table td:nth-child(2) {
+    grid-column: 2;
     grid-template-columns: 1fr;
+    justify-self: end;
+    padding-top: 11px;
+    padding-bottom: 2px;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table .public-participant-mobile-status-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    justify-content: flex-start;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: inherit;
+    line-height: 1.2;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table td:nth-child(n + 3) {
+    grid-column: 1 / -1;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table td:nth-child(3),
+  body.trip-show-page .confirmed-participants-table.public-card-table td:nth-child(4) {
+    display: none;
   }
 
   body.trip-show-page .confirmed-participants-table.public-card-table td:last-child {

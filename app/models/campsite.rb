@@ -11,6 +11,10 @@ class Campsite < ApplicationRecord
     inverse_of: :group_campfire_campsite
   has_many :campsite_signups
   has_many :participants, through: :campsite_signups, source: :user
+  has_many :parking_spots,
+    -> { ordered },
+    class_name: "CampsiteParkingSpot",
+    inverse_of: :campsite
 
   REIMBURSEMENT_METHODS = {
     "venmo" => "Venmo",
@@ -31,8 +35,12 @@ class Campsite < ApplicationRecord
   validates :registration_fee_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :registration_reimbursement_method, inclusion: { in: REIMBURSEMENT_METHODS.keys }, allow_blank: true
   validate :reimbursement_details_complete
+  validate :car_capacity_can_cover_assigned_parking_spots
   validate :checkout_date_after_arrival_date
   validate :reservation_dates_within_trip_dates
+
+  after_create :sync_parking_spots!
+  after_update :sync_parking_spots!, if: :saved_change_to_car_capacity?
 
   def registration_fee
     BigDecimal(registration_fee_cents.to_i.to_s) / 100
@@ -111,16 +119,31 @@ class Campsite < ApplicationRecord
     campsite_signups.pending_payment.includes(:user, :campsite_signup_minors).order(created_at: :asc)
   end
 
-  def parking_status_signups(status)
-    confirmed_signups.select { |signup| signup.parking_status == status }
-  end
-
-  def reserved_parking_count
-    parking_status_signups("reserved_spot").size
+  def assigned_parking_spot_count
+    parking_spots.select(&:assigned?).size
   end
 
   def first_come_first_serve_parking_spot_count
-    [ car_capacity - reserved_parking_count, 0 ].max
+    parking_spots.select(&:first_come_first_serve?).size
+  end
+
+  def configured_parking_spot_count
+    parking_spots.reject(&:unassigned?).size
+  end
+
+  def sync_parking_spots!
+    return if car_capacity.blank?
+
+    current_count = parking_spots.reload.size
+    target_count = car_capacity.to_i
+
+    if current_count < target_count
+      ((current_count + 1)..target_count).each do |position|
+        parking_spots.create!(position: position)
+      end
+    elsif current_count > target_count
+      parking_spots.where("position > ?", target_count).where.not(status: "assigned").destroy_all
+    end
   end
 
   def delete_blocked_by_participants?
@@ -188,5 +211,14 @@ class Campsite < ApplicationRecord
       registration_reimbursement_method.present? ||
       registration_reimbursement_recorded_by.present? ||
       registration_reimbursement_notes.present?
+  end
+
+  def car_capacity_can_cover_assigned_parking_spots
+    return if car_capacity.blank? || new_record?
+
+    assigned_position = parking_spots.where(status: "assigned").maximum(:position)
+    return if assigned_position.blank? || assigned_position <= car_capacity
+
+    errors.add(:car_capacity, "cannot be below assigned parking spots")
   end
 end

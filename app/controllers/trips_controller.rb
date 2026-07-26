@@ -46,7 +46,7 @@ class TripsController < ApplicationController
       @class_reminder = ContentPage.current!("class_reminder")
       render :class_show
     else
-      @campsites = @trip.campsites.includes(:campground, campsite_signups: [ :user, :campsite_signup_minors, { guest_of_signup: :user } ]).order(:arrival_date, :site_number)
+      @campsites = @trip.campsites.includes(:campground, { parking_spots: { assigned_campsite_signup: :user } }, campsite_signups: [ :user, :campsite_signup_minors, { guest_of_signup: :user } ]).order(:arrival_date, :site_number)
       @current_signup = @trip.campsite_signups.active.includes(:campsite, :payments, { guest_of_signup: :user }, guest_signups: [ :user, :campsite ]).find_by(user: current_user) if user_signed_in?
       @waitlisted_signups = @trip.waitlisted_signups
       @waitlist_confirmation_campsites = @current_signup&.waitlisted? ? @trip.waitlist_confirmation_campsites_for(@current_signup) : []

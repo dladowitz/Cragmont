@@ -280,9 +280,9 @@ class TripReadinessChecklist
       automatic_task(
         :all_confirmed_participants_assigned_parking,
         "Parking assigned",
-        confirmed_participants_ready? { |signup| !signup.unassigned? },
-        complete_detail: "Every confirmed participant has a parking status.",
-        incomplete_detail: missing_confirmed_participants_detail(->(signup) { !signup.unassigned? }, "parking")
+        parking_spots_configured?,
+        complete_detail: "Every campsite parking spot is assigned or first come first serve.",
+        incomplete_detail: missing_parking_spots_detail
       ),
       automatic_task(
         :send_trip_details_email,
@@ -422,7 +422,26 @@ class TripReadinessChecklist
   end
 
   def campsites
-    @campsites ||= trip.campsites.includes(:campground, :registered_by).order(:arrival_date, :site_number).to_a
+    @campsites ||= trip.campsites.includes(:campground, :registered_by, :parking_spots).order(:arrival_date, :site_number).to_a
+  end
+
+  def parking_spots
+    @parking_spots ||= campsites.flat_map(&:parking_spots)
+  end
+
+  def parking_spots_configured?
+    parking_spots.any? && parking_spots.all? { |spot| !spot.unassigned? }
+  end
+
+  def missing_parking_spots_detail
+    return "No campsite parking spots yet." if parking_spots.empty?
+
+    missing_labels = campsites.flat_map do |campsite|
+      campsite.parking_spots.select(&:unassigned?).map { |spot| "#{campsite_name(campsite)} #{spot.spot_label}" }
+    end
+    return "Every campsite parking spot is assigned or first come first serve." if missing_labels.empty?
+
+    "Still needs parking: #{missing_labels.to_sentence}."
   end
 
   def reimbursable_campsites

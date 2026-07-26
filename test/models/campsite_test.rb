@@ -104,16 +104,53 @@ class CampsiteTest < ActiveSupport::TestCase
     assert_equal 5, campsite.available_participant_capacity
   end
 
-  test "groups confirmed participants by parking status" do
-    campsite = campsites(:yosemite_a)
-    reserved_signup = create_campsite_signup!(campsite: campsite, user: users(:sam), parking_status: "reserved_spot")
-    overflow_user = User.create!(first_name: "Omar", last_name: "Overflow", email: "omar-overflow@example.com", password: "password")
-    overflow_signup = create_campsite_signup!(campsite: campsite, user: overflow_user, parking_status: "overflow_parking")
+  test "creates parking spots from car capacity" do
+    campsite = trips(:yosemite).campsites.create!(
+      campground: campgrounds(:upper_pines),
+      site_number: "A14",
+      arrival_date: trips(:yosemite).start_date,
+      checkout_date: trips(:yosemite).end_date,
+      participant_capacity: 4,
+      car_capacity: 3
+    )
 
-    assert_equal [ reserved_signup ], campsite.parking_status_signups("reserved_spot")
-    assert_equal [ overflow_signup ], campsite.parking_status_signups("overflow_parking")
-    assert_equal 1, campsite.reserved_parking_count
+    assert_equal [ 1, 2, 3 ], campsite.parking_spots.pluck(:position)
+    assert_equal [ "unassigned", "unassigned", "unassigned" ], campsite.parking_spots.pluck(:status)
+  end
+
+  test "syncs parking spots when car capacity changes" do
+    campsite = campsites(:yosemite_a)
+
+    campsite.update!(car_capacity: 3)
+    assert_equal [ 1, 2, 3 ], campsite.parking_spots.pluck(:position)
+
+    campsite.parking_spots.find_by!(position: 3).update!(status: "first_come_first_serve")
+    campsite.update!(car_capacity: 2)
+
+    assert_equal [ 1, 2 ], campsite.parking_spots.reload.pluck(:position)
+  end
+
+  test "does not reduce car capacity below assigned parking spots" do
+    campsite = campsites(:yosemite_a)
+    signup = create_campsite_signup!(campsite: campsite, user: users(:sam))
+    campsite.parking_spots.find_by!(position: 2).update!(status: "assigned", assigned_campsite_signup: signup)
+
+    campsite.car_capacity = 1
+
+    assert_not campsite.valid?
+    assert_includes campsite.errors[:car_capacity], "cannot be below assigned parking spots"
+  end
+
+  test "counts assigned and first come first serve parking spots" do
+    campsite = campsites(:yosemite_a)
+    signup = create_campsite_signup!(campsite: campsite, user: users(:sam))
+
+    campsite.parking_spots.find_by!(position: 1).update!(status: "assigned", assigned_campsite_signup: signup)
+    campsite.parking_spots.find_by!(position: 2).update!(status: "first_come_first_serve")
+
+    assert_equal 1, campsite.assigned_parking_spot_count
     assert_equal 1, campsite.first_come_first_serve_parking_spot_count
+    assert_equal 2, campsite.configured_parking_spot_count
   end
 
   test "campsite full status uses campsite signups" do

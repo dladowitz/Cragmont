@@ -333,7 +333,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#admin-campsite-#{campsites(:yosemite_a).id} .parking-stat" do
       assert_select "> span", text: "Parking"
       assert_select "> .parking-tooltip", count: 0
-      assert_select ".parking-breakdown-item", text: /Reserved/
+      assert_select ".parking-breakdown-item", text: /Assigned/
       assert_select ".parking-breakdown-item", text: /Open/
     end
     assert_select "#admin-campsite-#{campsites(:yosemite_a).id} .campsite-stats .split-signup-stat" do
@@ -431,28 +431,33 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select "form[action='#{admin_trip_campsite_path(trips(:yosemite), campsites(:yosemite_b))}']", count: 0
     end
     assert_select ".campsite-notes", text: /Close to bathrooms/
+    assert_select "#admin-campsite-#{campsites(:yosemite_a).id} .admin-campsite-parking-section" do
+      assert_select "h4", "Parking Spots: 2"
+      assert_select ".campsite-parking-table tbody tr", count: 2
+      assert_select "td", text: "Spot 1"
+      parking_form_selector = "form[action='#{admin_trip_campsite_parking_spot_path(trips(:yosemite), campsite_parking_spots(:yosemite_a_1))}'][method='post'][data-controller='parking-spot'][data-turbo='false']"
+      parking_form = css_select(parking_form_selector).first
+      assert_equal "submit->parking-spot#submit", parking_form["data-action"]
+      assert_select parking_form_selector do
+        assert_select "input[name='_method'][value='patch']"
+        assert_select "select[name='campsite_parking_spot[assignment]'][data-parking-spot-target='select']" do
+          assert_select "option[value='unassigned'][selected]", text: "Unassigned"
+          assert_select "option[value='first_come_first_serve']", text: "First Come First Serve"
+          assert_select "option[value='signup_#{signup.id}']", text: "Sam Lee"
+        end
+        assert_select ".admin-parking-spot-save-status[data-parking-spot-target='status'][hidden]"
+      end
+    end
+    campsite_group_children = css_select("#admin-campsite-#{campsites(:yosemite_a).id} .campsite-participant-groups > *")
+    assert_equal [ "confirmed-signups-section", "campsite-parking-section admin-campsite-parking-section" ], campsite_group_children.map { |element| element["class"] }
     assert_select ".confirmed-signups-section" do
       assert_select "h4", "Confirmed participants"
-      assert_equal [ "Participant", "Dates", "Parking", "Payment", "Waiver", "Info", "Minors", "Reservation" ], css_select(".confirmed-signups-section > table > thead > tr > th").map { |header| header.at_css(".tooltip-heading > span:first-child")&.text&.strip || header.text.strip }
+      assert_equal [ "Participant", "Dates", "Payment", "Waiver", "Info", "Minors", "Reservation" ], css_select(".confirmed-signups-section > table > thead > tr > th").map { |header| header.at_css(".tooltip-heading > span:first-child")&.text&.strip || header.text.strip }
       assert_select "td", text: "Sam Lee"
       assert_select "th", text: "Dates"
-      assert_select "th .parking-tooltip" do
-        assert_select ".info-tooltip-icon", text: "i"
-        assert_select ".info-tooltip-box", text: /Reserved Spots are assigned to the person who registered the site/
-        assert_select ".info-tooltip-box", text: /Other spots are set to Open and are first come, first serve/
-      end
       assert_select "th", text: "Attendance", count: 0
       assert_select "td", text: "6/13-6/15"
-      assert_select "form[action='#{update_parking_status_admin_trip_campsite_signup_path(trips(:yosemite), signup)}'][method='post']" do
-        assert_select "input[name='_method'][value='patch']"
-        assert_select "select[name='campsite_signup[parking_status]']" do
-          assert_select "option[value='unassigned'][selected]", text: "Unassigned"
-          assert_select "option[value='reserved_spot']", text: "Reserved Spot"
-          assert_select "option[value='first_come_first_serve']", text: "Open Spot"
-          assert_select "option[value='overflow_parking']", text: "Overflow Lot"
-          assert_select "option[value='day_use']", text: "Day Use"
-        end
-      end
+      assert_select ".admin-parking-status-form", count: 0
       assert_select "td", text: "Jun 13-Jun 15", count: 0
       assert_select ".missing-value", text: "Missing", count: 0
       assert_select "td", text: "Willa Wait", count: 0

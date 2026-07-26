@@ -30,7 +30,11 @@ class ApplicationController < ActionController::Base
   end
 
   def user_not_authorized
-    redirect_back fallback_location: root_path,
-      alert: "Wow, that was a whipper. You do not have permission to access that page."
+    message = "Wow, that was a whipper. You do not have permission to access that page."
+
+    respond_to do |format|
+      format.html { redirect_back fallback_location: root_path, alert: message }
+      format.json { render json: { message: message }, status: :forbidden }
+    end
   end
 end
