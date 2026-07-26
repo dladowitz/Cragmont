@@ -27,6 +27,19 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
   test "trips index shows published trips and hides unpublished trips" do
     class_trip = create_class_trip!(name: "Intro to Anchors")
+    day_trip = Trip.create!(
+      trip_type: "day_trip",
+      name: "Castle Rock Day",
+      location: "Castle Rock, CA",
+      start_date: Date.new(2026, 9, 19),
+      status: "published",
+      meeting_time: "08:30",
+      meeting_location: "Castle Rock parking lot",
+      meeting_location_url: "https://maps.google.com/?q=Castle+Rock",
+      late_arrival_instructions: "If you are running late, meet us at the main wall.",
+      participant_capacity: 8,
+      climbing_types: [ "sport" ]
+    )
 
     get trips_url
 
@@ -37,6 +50,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] .trip-card-meta", text: /Open Spaces\s*10 spaces/
     assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] .trip-card-meta", text: /Capacity/, count: 0
     assert_select ".trip-card[href='#{trip_path(class_trip)}'] .trip-card-meta", text: /Open Spaces/, count: 0
+    assert_select ".trip-card[href='#{trip_path(class_trip)}'] .trip-type-badge.external-class-badge", text: "External Class"
+    assert_select ".trip-card[href='#{trip_path(day_trip)}'] .trip-type-badge.day-trip-badge", text: "Day Trip"
     assert_select ".trip-card[href='#{trip_path(trips(:jtree))}']", count: 0
     assert_select "a", text: "View trip", count: 0
     assert_select "a[href='#{past_trips_trips_path}']", text: "Past Trips"
@@ -102,6 +117,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     get trip_url(trip)
 
     assert_response :success
+    assert_select ".trip-type-badge.day-trip-badge", text: "Day Trip"
     assert_select ".trip-summary-header .trips-faq-callout", text: /day trip/
     assert_select ".trip-summary-header .trips-faq-callout a[href='#{day_trip_what_to_expect_trips_path}']", text: "here."
     assert_select ".trip-summary-copy .trip-title-line" do
@@ -160,7 +176,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     get trip_url(trip)
 
     assert_response :success
-    assert_select ".trip-type-badge", text: "Class"
+    assert_select ".trip-type-badge.external-class-badge", text: "External Class"
     assert_select ".trip-summary-header", text: /Taught by/
     assert_select "a[href='https://example.com/vertical-world'][target='_blank'][rel='noopener']", text: "Vertical World Guides"
     assert_select "a.button[href='https://example.com/classes/anchors'][target='_blank'][rel='noopener']", text: "Register with Vertical World Guides", count: 1
@@ -178,6 +194,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".class-trip-details-panel", text: /Discounted price\s*\$225/
     assert_select ".class-trip-description-panel .content-page-markdown strong", "anchors"
     assert_operator response.body.index("class-trip-description-panel"), :<, response.body.index("class-trip-details-panel")
+    assert_operator response.body.index("class-trip-description-panel"), :<, response.body.index("class-reminder-panel")
+    assert_operator response.body.index("class-reminder-panel"), :<, response.body.index("class-trip-details-panel")
     assert_select ".class-trip-participants-panel td", text: "Sam L."
     assert_select ".class-trip-overview .stats", text: /Open Spaces/, count: 0
     assert_select ".class-trip-overview .danger-status", text: /Class Full/, count: 0

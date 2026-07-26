@@ -29,7 +29,7 @@
               %h2= trip.name
               .trip-card-title-line
                 %p= trip.location
-                %span.status.trip-type-badge= trip.trip_type_label
+                %span.status.trip-type-badge{class: public_trip_type_badge_class(trip)}= public_trip_type_label(trip)
             %dl.trip-card-meta
               %div
                 %dt Dates

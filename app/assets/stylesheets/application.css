@@ -4625,6 +4625,16 @@ th {
   font-weight: 750;
 }
 
+.trip-type-badge.external-class-badge {
+  background: #fff3bf;
+  color: #7c4a03;
+}
+
+.trip-type-badge.day-trip-badge {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
 .missing-value {
   color: var(--danger);
   font-weight: 750;

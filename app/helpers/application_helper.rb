@@ -133,6 +133,18 @@ module ApplicationHelper
     "$#{value}"
   end
 
+  def public_trip_type_label(trip)
+    trip.class_trip? ? "External Class" : trip.trip_type_label
+  end
+
+  def public_trip_type_badge_class(trip)
+    if trip.class_trip?
+      "external-class-badge"
+    elsif trip.day_trip?
+      "day-trip-badge"
+    end
+  end
+
   def stripe_dashboard_payment_url(payment_intent_id)
     return if payment_intent_id.blank? || ENV["STRIPE_ACCOUNT_ID"].blank?
 
