@@ -938,7 +938,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "#campsite-#{campsites(:yosemite_a).id} .parking-stat" do
       assert_select "> span", text: "Parking"
       assert_select "> .parking-tooltip", count: 0
-      assert_select ".parking-breakdown-item", text: /Reserved/
+      assert_select ".parking-breakdown-item", text: /Assigned/
       assert_select ".parking-breakdown-item", text: /Open/
     end
     assert_select "#campsite-#{campsites(:yosemite_a).id} .campsite-stats", text: /Cars/, count: 0
@@ -2714,20 +2714,28 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "#campsite-#{campsites(:yosemite_a).id}" do
       assert_select ".participant-list", count: 0
       assert_select "table.confirmed-participants-table"
-      assert_equal [ "Participant", "Dates", "Parking", "Waiver", "Member", "Minors" ], css_select(".confirmed-participants-table th").map { |header| header.at_css(".tooltip-heading > span:first-child")&.text&.strip || header.text.strip }
-      assert_select ".confirmed-participants-table th .parking-tooltip" do
+      assert_equal [ "Participant", "Dates", "Waiver", "Member", "Minors" ], css_select(".confirmed-participants-table th").map { |header| header.at_css(".tooltip-heading > span:first-child")&.text&.strip || header.text.strip }
+      participant_groups = css_select(".campsite-participant-groups").first.to_html
+      assert_operator participant_groups.index("Confirmed participants"), :<, participant_groups.index("Parking Spots: 2")
+      assert_select ".public-campsite-parking-section" do
+        assert_select "h4", "Parking Spots: 2"
         assert_select ".info-tooltip-icon", text: "i"
-        assert_select ".info-tooltip-box", text: /Reserved Spots are assigned to the person who registered the site/
-        assert_select ".info-tooltip-box", text: /Other spots are set to Open and are first come, first serve/
+        assert_select ".info-tooltip-box", text: /Parking is assigned prior to the trip in this order:/
+        assert_select ".info-tooltip-box", text: /1\. The person who reserved the campsite/
+        assert_select ".info-tooltip-box", text: /Please don't park in an assigned spot\./
+        assert_select ".campsite-parking-table tbody tr", count: 2
+        assert_select "td", text: "Spot 1"
+        assert_select "td", text: "TBD"
       end
       assert_select ".confirmed-participants-table tbody tr", count: 1
       assert_select ".confirmed-participants-table tbody tr" do
-        assert_select "td", text: "Sam L."
+        assert_select ".public-party-participant-name", text: "Sam L."
         assert_select "td", text: "No"
-        assert_select "td", text: "Jun 13-Jun 15"
+        assert_select "td[data-label='Dates'] > span:first-child", text: "Jun 13-Jun 15"
+        assert_select "td[data-label='Participant'] .public-participant-mobile-status-line", text: /Non-Member/
+        assert_select "td[data-label='Participant'] .public-participant-mobile-status-line", text: /Waiver Missing/
         assert_select "td", text: "Missing"
         assert_select "td", text: "None", count: 0
-        assert_select "td", text: "Unassigned"
         assert_select "td .parking-status-with-tooltip", count: 0
       end
       assert_select ".parking-status-groups", count: 0
@@ -2738,34 +2746,33 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "public confirmed participants table shows parking statuses without separate parking section" do
-    primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:alex), parking_status: "reserved_spot")
+  test "public parking section shows campsite spot assignments" do
+    primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:alex))
     open_spot_user = User.create!(first_name: "Opal", last_name: "Open", email: "public-open-parking@example.com", password: "password")
-    create_campsite_signup!(campsite: campsites(:yosemite_a), user: open_spot_user, parking_status: "first_come_first_serve")
-    overflow_user = User.create!(first_name: "Omar", last_name: "Overflow", email: "public-overflow@example.com", password: "password")
-    create_campsite_signup!(campsite: campsites(:yosemite_a), user: overflow_user, parking_status: "overflow_parking")
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: open_spot_user)
     guest_user = User.create!(first_name: "Gina", last_name: "Guest", email: "public-parking-guest@example.com", password: "password")
     create_campsite_signup!(
       campsite: campsites(:yosemite_a),
       user: guest_user,
       guest_of_signup: primary_signup,
-      guest_position: 1,
-      parking_status: "day_use"
+      guest_position: 1
     )
+    campsite_parking_spots(:yosemite_a_1).update!(status: "assigned", assigned_campsite_signup: primary_signup)
+    campsite_parking_spots(:yosemite_a_2).update!(status: "first_come_first_serve")
 
     get trip_url(trips(:yosemite))
 
     assert_response :success
-    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table", text: /Reserved Spot/
-    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table", text: /Open Spot/
-    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table .parking-status-with-tooltip" do
+    assert_select "#campsite-#{campsites(:yosemite_a).id} .public-campsite-parking-section" do
+      assert_select "td", text: "Spot 1"
+      assert_select "td", text: "Alex R."
+      assert_select "td", text: "Spot 2"
+      assert_select "td", text: "First Come First Serve"
       assert_select ".info-tooltip-icon", text: "i"
-      assert_select ".info-tooltip-box", text: /Open Spots are first come, first serve/
-      assert_select ".info-tooltip-box", text: /Whoever arrives at the campsite first can claim for the weekend/
+      assert_select ".info-tooltip-box", text: /After that parking spots are First Come First Serve\./
     end
-    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table", text: /Overflow Lot/
-    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table", text: /Day Use/
-    assert_select "#campsite-#{campsites(:yosemite_a).id} .parking-status-groups", count: 0
+    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table", text: /Reserved Spot/, count: 0
+    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table", text: /Open Spot/, count: 0
   end
 
   test "public confirmed participants table links missing waiver only for the signed in participant" do
@@ -2879,8 +2886,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table tbody tr" do
-      assert_select "td", text: "Sam L."
-      assert_select "td", text: "Jun 12-Jun 15"
+      assert_select ".public-party-participant-name", text: "Sam L."
+      assert_select "td[data-label='Dates'] > span:first-child", text: "Jun 12-Jun 15"
       assert_select "td", text: "1 under 10yrs"
     end
     assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table", text: /Mika/, count: 0
@@ -2930,7 +2937,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_includes rows.last["class"], "public-party-guest-row"
       assert_includes rows.last["class"], "public-party-last-row"
       assert_select ".confirmed-participants-table tbody tr:first-child" do
-        assert_select "td", text: "Alex R."
+        assert_select ".public-party-participant-name", text: "Alex R."
         assert_select "td", text: "Yes"
         assert_select ".public-added-by", count: 0
       end

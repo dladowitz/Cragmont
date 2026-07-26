@@ -35,9 +35,11 @@ class Admin::TripsController < Admin::BaseController
           :registered_by,
           :registration_reimbursed_by,
           :registration_reimbursement_recorded_by,
+          { parking_spots: { assigned_campsite_signup: [ :user, { campsite: :campground } ] } },
           campsite_signups: [ { payments: { refunds: :refunded_by } }, :user, :campsite_signup_minors, { guest_of_signup: :user } ]
         )
         .order(:arrival_date, :site_number)
+      @parking_assignment_signups = @trip.campsite_signups.confirmed.includes(:user, campsite: :campground).order(:created_at)
       @waitlisted_signups = @trip.waitlisted_signups
       @day_trip_signups = []
       @day_trip_waitlisted_signups = []
@@ -51,6 +53,7 @@ class Admin::TripsController < Admin::BaseController
       @trip.campsite_signups.active.distinct.pluck(:user_id)
     end
     @participant_link_signup = participant_link_signup
+    @parking_assignment_signups ||= []
     unless @trip.class_trip?
       @trip_readiness_checklist = TripReadinessChecklist.new(@trip)
       @trip_readiness_categories = @trip_readiness_checklist.readiness_categories

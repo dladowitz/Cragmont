@@ -239,9 +239,9 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
     trip = trips(:yosemite)
     signup = create_campsite_signup!(
       campsite: campsites(:yosemite_a),
-      user: users(:sam),
-      parking_status: "reserved_spot"
+      user: users(:sam)
     )
+    configure_trip_parking!(trip, assigned_signup: signup)
     attach_test_waiver_to(signup)
     signup.payments.create!(
       source: "manual",
@@ -261,12 +261,11 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
     assert tasks.fetch("all_confirmed_participants_assigned_parking").complete?
   end
 
-  test "waiver and parking checks include confirmed guests while payment ignores guests" do
+  test "waiver checks include confirmed guests while payment ignores guests" do
     trip = trips(:yosemite)
     primary_signup = create_campsite_signup!(
       campsite: campsites(:yosemite_a),
-      user: users(:sam),
-      parking_status: "reserved_spot"
+      user: users(:sam)
     )
     attach_test_waiver_to(primary_signup)
     primary_signup.payments.create!(
@@ -282,8 +281,7 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
       campsite: campsites(:yosemite_a),
       user: guest_user,
       guest_of_signup: primary_signup,
-      guest_position: 1,
-      parking_status: "unassigned"
+      guest_position: 1
     )
 
     tasks = tasks_by_key(trip)
@@ -293,7 +291,7 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
     assert_not tasks.fetch("all_confirmed_participants_assigned_parking").complete?
 
     attach_test_waiver_to(guest_signup)
-    guest_signup.update!(parking_status: "first_come_first_serve")
+    configure_trip_parking!(trip, assigned_signup: primary_signup)
 
     tasks = tasks_by_key(trip.reload)
 
@@ -375,6 +373,20 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
 
   def tasks_by_key(trip)
     TripReadinessChecklist.new(trip).categories.flat_map(&:tasks).index_by(&:key)
+  end
+
+  def configure_trip_parking!(trip, assigned_signup:)
+    first_spot = true
+    trip.campsites.includes(:parking_spots).find_each do |campsite|
+      campsite.parking_spots.each do |spot|
+        if first_spot
+          spot.update!(status: "assigned", assigned_campsite_signup: assigned_signup)
+          first_spot = false
+        else
+          spot.update!(status: "first_come_first_serve")
+        end
+      end
+    end
   end
 
   def create_day_trip!

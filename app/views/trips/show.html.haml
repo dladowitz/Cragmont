@@ -1,6 +1,4 @@
 - content_for :body_class, "trip-show-page"
-- parking_policy_tooltip = "Reserved Spots are assigned to the person who registered the site. Then to the Campsite Coordinator. Then to club members.\n\nOther spots are set to Open and are first come, first serve."
-- open_spot_tooltip = "Open Spots are first come, first serve.\nWhoever arrives at the campsite first can claim for the weekend"
 - uncounted_minor_tooltip = "Children under 10 don't count against Total Capacity"
 = render "shared/public_header"
 .trip-show-mobile-hero
@@ -212,8 +210,8 @@
                   %span Parking
                   .parking-breakdown
                     .parking-breakdown-item
-                      %strong= campsite.reserved_parking_count
-                      %span Reserved
+                      %strong= campsite.assigned_parking_spot_count
+                      %span Assigned
                     .parking-breakdown-item
                       %strong= campsite.first_come_first_serve_parking_spot_count
                       %span Open
@@ -230,11 +228,6 @@
                       %tr
                         %th Participant
                         %th Dates
-                        %th
-                          %span.tooltip-heading.info-tooltip.parking-tooltip{aria: { label: parking_policy_tooltip }, tabindex: "0"}
-                            %span Parking
-                            %span.info-tooltip-icon{aria: { hidden: "true" }} i
-                            %span.info-tooltip-box{role: "tooltip"}= parking_policy_tooltip
                         %th Waiver
                         %th Member
                         %th Minors
@@ -249,16 +242,11 @@
                         %tr{class: [("public-party-primary-row" if party_primary), ("public-party-guest-row" if party_guest), ("public-party-last-row" if party_last)].compact}
                           %td{"data-label" => "Participant"}
                             %span.public-party-participant-name= signup.user.public_name
-                          %td{"data-label" => "Dates"}= signup.attendance_date_range
-                          %td{"data-label" => "Parking"}
-                            - if signup.first_come_first_serve?
-                              %span.parking-status-with-tooltip
-                                %span.parking-status-label= signup.parking_status_label
-                                %span.info-tooltip.parking-tooltip{aria: { label: open_spot_tooltip }, tabindex: "0"}
-                                  %span.info-tooltip-icon{aria: { hidden: "true" }} i
-                                  %span.info-tooltip-box{role: "tooltip"}= open_spot_tooltip
-                            - else
-                              = signup.parking_status_label
+                            %span.public-participant-mobile-status-line
+                              %span= signup.user.member? ? "Member" : "Non-Member"
+                              %span= signup.waiver_signed? ? "Waiver Signed" : "Waiver Missing"
+                          %td{"data-label" => "Dates"}
+                            %span= signup.attendance_date_range
                           %td{"data-label" => "Waiver"}
                             - waiver_missing = !signup.waiver_signed?
                             - if waiver_missing
@@ -293,6 +281,7 @@
                               = minor_age_summary
                 - else
                   %p.muted No confirmed participants yet.
+              = render "parking_spots", campsite: campsite
       - if @waitlisted_signups.any?
         .waitlisted-signups-section.trip-waitlist-section
           .trip-waitlist-heading

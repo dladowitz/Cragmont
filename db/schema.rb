@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_17_120600) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_26_091000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -50,6 +50,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_17_120600) do
     t.datetime "updated_at", null: false
     t.string "website"
     t.index ["name"], name: "index_campgrounds_on_name"
+  end
+
+  create_table "campsite_parking_spots", force: :cascade do |t|
+    t.bigint "assigned_campsite_signup_id"
+    t.bigint "campsite_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "position", null: false
+    t.string "status", default: "unassigned", null: false
+    t.datetime "updated_at", null: false
+    t.index ["assigned_campsite_signup_id"], name: "index_parking_spots_on_assigned_signup", unique: true, where: "(assigned_campsite_signup_id IS NOT NULL)"
+    t.index ["campsite_id", "position"], name: "index_campsite_parking_spots_on_campsite_id_and_position", unique: true
+    t.index ["campsite_id"], name: "index_campsite_parking_spots_on_campsite_id"
   end
 
   create_table "campsite_signup_minors", force: :cascade do |t|
@@ -127,7 +139,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_17_120600) do
     t.datetime "created_at", null: false
     t.bigint "guest_of_signup_id"
     t.integer "guest_position"
-    t.string "parking_status", default: "unassigned", null: false
     t.string "status", default: "confirmed", null: false
     t.bigint "trip_id", null: false
     t.datetime "updated_at", null: false
@@ -145,7 +156,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_17_120600) do
     t.string "waiver_text_digest"
     t.string "waiver_user_agent"
     t.index ["arrival_date"], name: "index_campsite_signups_on_arrival_date"
-    t.index ["campsite_id", "parking_status"], name: "index_campsite_signups_on_campsite_parking_status"
     t.index ["campsite_id"], name: "index_campsite_signups_on_campsite_id"
     t.index ["checkout_date"], name: "index_campsite_signups_on_checkout_date"
     t.index ["guest_of_signup_id", "guest_position"], name: "index_campsite_signups_on_guest_signup_position", where: "(guest_of_signup_id IS NOT NULL)"
@@ -653,6 +663,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_17_120600) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "campsite_parking_spots", "campsite_signups", column: "assigned_campsite_signup_id"
+  add_foreign_key "campsite_parking_spots", "campsites", on_delete: :cascade
   add_foreign_key "campsite_signup_minors", "campsite_signups"
   add_foreign_key "campsite_signup_payment_refunds", "campsite_signup_payments"
   add_foreign_key "campsite_signup_payment_refunds", "users", column: "refunded_by_id"

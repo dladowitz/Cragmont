@@ -1,5 +1,4 @@
 = render "admin/shared/header", title: @trip.name
-- parking_policy_tooltip = "Reserved Spots are assigned to the person who registered the site. Then to the Campsite Coordinator. Then to club members.\n\nOther spots are set to Open and are first come, first serve."
 - uncounted_minor_tooltip = "Children under 10 don't count against Total Capacity"
 - whatsapp_group_url = safe_external_url(@trip.whatsapp_group)
 - weather_url = safe_external_url(@trip.weather_url)
@@ -381,7 +380,7 @@
     - if @campsites.any?
       .admin-campsite-list
         - @campsites.each do |campsite|
-          %section.admin-campsite-card{id: "admin-campsite-#{campsite.id}"}
+          %section.admin-campsite-card{id: "admin-campsite-#{campsite.id}", data: { parking_campsite_id: campsite.id }}
             .admin-campsite-card-header
               .campsite-card-summary
                 .campsite-heading-line
@@ -453,10 +452,10 @@
                 %span Parking
                 .parking-breakdown
                   .parking-breakdown-item
-                    %strong= campsite.reserved_parking_count
-                    %span Reserved
+                    %strong{"data-parking-assigned-count" => true}= campsite.assigned_parking_spot_count
+                    %span Assigned
                   .parking-breakdown-item
-                    %strong= campsite.first_come_first_serve_parking_spot_count
+                    %strong{"data-parking-fcfs-count" => true}= campsite.first_come_first_serve_parking_spot_count
                     %span Open
             - if campsite.notes.present?
               %p.campsite-notes
@@ -466,9 +465,10 @@
               .confirmed-signups-section
                 %h4 Confirmed participants
                 - if campsite.confirmed_signups.any?
-                  = render "signup_table", signups: campsite.confirmed_signups, trip: @trip, campsites: @campsites, read_only: @trip.deleted? || !policy(@trip).manage_participants?, payment_read_only: @trip.deleted? || !policy(@trip).manage_payments?, parking_tooltip: parking_policy_tooltip
+                  = render "signup_table", signups: campsite.confirmed_signups, trip: @trip, campsites: @campsites, read_only: @trip.deleted? || !policy(@trip).manage_participants?, payment_read_only: @trip.deleted? || !policy(@trip).manage_payments?
                 - else
                   %p.muted No confirmed participants yet.
+              = render "parking_spots", trip: @trip, campsite: campsite, assignment_signups: @parking_assignment_signups, read_only: @trip.deleted? || !policy(@trip).manage_participants?
     - else
       .empty-state
         %p No campsites have been added to this trip yet.

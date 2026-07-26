@@ -679,9 +679,10 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
       user: users(:sam),
       arrival_date: Date.new(2026, 6, 13),
       checkout_date: Date.new(2026, 6, 14),
-      waitlist_eligible_at: Time.current,
-      parking_status: "reserved_spot"
+      waitlist_eligible_at: Time.current
     )
+    parking_spot = campsite_parking_spots(:yosemite_a_1)
+    parking_spot.update!(status: "assigned", assigned_campsite_signup: signup)
     attach_test_waiver_to(signup)
     payment = signup.payments.create!(
       source: "manual",
@@ -711,7 +712,7 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     assert_equal waiver_document_id, signup.waiver_document.id
     assert_equal payment, signup.current_payment
     assert signup.waitlist_eligible?
-    assert_equal "reserved_spot", signup.parking_status
+    assert_equal signup, parking_spot.reload.assigned_campsite_signup
   end
 
   test "moving confirmed primary participant to another campsite moves linked guests without changing details" do
@@ -1060,47 +1061,16 @@ class Admin::CampsiteSignupsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "re_admin_waitlist", refund.stripe_refund_id
   end
 
-  test "admin can update participant parking status" do
+  test "moving participant to waitlist clears assigned parking spot" do
     signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
-
-    CampsiteSignup::PARKING_STATUSES.each do |parking_status|
-      patch update_parking_status_admin_trip_campsite_signup_url(trips(:yosemite), signup), params: {
-        campsite_signup: {
-          parking_status: parking_status
-        }
-      }
-
-      assert_redirected_to admin_trip_url(trips(:yosemite), anchor: "admin-campsite-#{campsites(:yosemite_a).id}")
-      assert_equal "On belay! Parking was updated for Sam Lee.", flash[:notice]
-      assert_equal parking_status, signup.reload.parking_status
-    end
-  end
-
-  test "admin cannot reserve more parking spots than campsite allows" do
-    campsite = campsites(:yosemite_b)
-    reserved_signup = create_campsite_signup!(campsite: campsite, user: users(:sam), parking_status: "reserved_spot")
-    second_user = User.create!(first_name: "Riley", last_name: "Driver", email: "admin-riley-driver@example.com", password: "password")
-    second_signup = create_campsite_signup!(campsite: campsite, user: second_user)
-
-    patch update_parking_status_admin_trip_campsite_signup_url(trips(:yosemite), second_signup), params: {
-      campsite_signup: {
-        parking_status: "reserved_spot"
-      }
-    }
-
-    assert reserved_signup.reload.reserved_spot?
-    assert_redirected_to admin_trip_url(trips(:yosemite), anchor: "admin-campsite-#{campsite.id}")
-    assert_match "Wow, that was a whipper.", flash[:alert]
-    assert_equal "unassigned", second_signup.reload.parking_status
-  end
-
-  test "moving participant to waitlist resets parking status" do
-    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam), parking_status: "day_use")
+    parking_spot = campsite_parking_spots(:yosemite_a_1)
+    parking_spot.update!(status: "assigned", assigned_campsite_signup: signup)
 
     patch move_to_waitlist_admin_trip_campsite_signup_url(trips(:yosemite), signup)
 
     assert signup.reload.waitlisted?
-    assert_equal "unassigned", signup.parking_status
+    assert parking_spot.reload.unassigned?
+    assert_nil parking_spot.assigned_campsite_signup
   end
 
   test "admin can override refund cutoff when removing paid participant" do

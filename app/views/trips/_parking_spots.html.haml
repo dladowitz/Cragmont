@@ -1,0 +1,20 @@
+- parking_info_tooltip = "Parking is assigned prior to the trip in this order:\n\n1. The person who reserved the campsite\n2. The Campsite Coordinator\n3. Club members\n\nAfter that parking spots are First Come First Serve.\n\nPlease don't park in an assigned spot."
+%section.campsite-parking-section.public-campsite-parking-section
+  .campsite-section-heading
+    %h4= "Parking Spots: #{campsite.parking_spots.size}"
+    %span.info-tooltip.parking-tooltip{aria: { label: parking_info_tooltip }, tabindex: "0"}
+      %span.info-tooltip-icon{aria: { hidden: "true" }} i
+      %span.info-tooltip-box{role: "tooltip"}= parking_info_tooltip
+  - if campsite.parking_spots.any?
+    %table.campsite-parking-table.public-card-table
+      %thead
+        %tr
+          %th Spot
+          %th Assignment
+      %tbody
+        - campsite.parking_spots.each do |spot|
+          %tr
+            %td{"data-label" => "Spot"}= spot.spot_label
+            %td{"data-label" => "Assignment"}= spot.public_assignment_label
+  - else
+    %p.muted No parking spots for this campsite.

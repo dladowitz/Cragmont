@@ -83,12 +83,12 @@ Rails.application.routes.draw do
       resources :campsites, except: %i[index show] do
         patch :record_registration_reimbursement, on: :member
       end
+      resources :campsite_parking_spots, only: :update
       resources :campsite_signups, only: %i[create] do
         patch :make_waitlist_eligible, on: :member
         patch :revoke_waitlist_eligibility, on: :member
         patch :move_to_campsite, on: :member
         patch :move_to_waitlist, on: :member
-        patch :update_parking_status, on: :member
         post :email_participant_link, on: :member
         delete :remove_from_campsite, on: :member
         delete :remove_from_waitlist, on: :member
