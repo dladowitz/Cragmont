@@ -9,7 +9,7 @@
   .trip-show-mobile-hero-copy
     .trip-title-line
       %h1= @trip.name
-      %span.status.trip-type-badge= @trip.trip_type_label
+      %span.status.trip-type-badge.external-class-badge= public_trip_type_label(@trip)
     %p.trip-show-mobile-location= @trip.location
     %p.trip-show-mobile-dates= @trip.start_date.to_fs(:long)
     - if whatsapp_group_url.present?
@@ -25,7 +25,7 @@
       .trip-summary-copy
         .trip-title-line
           %h1= @trip.name
-          %span.status.trip-type-badge= @trip.trip_type_label
+          %span.status.trip-type-badge.external-class-badge= public_trip_type_label(@trip)
         %h2= @trip.location
         %p= @trip.start_date.to_fs(:long)
         - if @trip.partner_company.present?
@@ -64,6 +64,12 @@
             .day-trip-signup-action
               = link_to "Register with #{@trip.partner_company&.name || 'guiding company'}", class_signup_url, class: "button day-trip-signup-button", target: "_blank", rel: "noopener"
               %p.muted.class-registration-note You must register and pay on the guiding company's website to be officially signed up.
+
+  %section.panel.day-trip-safety-panel.class-reminder-panel
+    %h2= @class_reminder.title
+    .content-page-markdown
+      - class_reminder_body = @class_reminder.body.to_s.sub(/\A## Class Details[ \t]*\r?\n\r?\n?/, "")
+      = render_content_page_markdown(class_reminder_body)
 
   %section.panel.day-trip-details-panel.class-trip-details-panel
     %h2 Cost Details
@@ -126,10 +132,5 @@
         %p.muted This indicates to other Cragmont participants you have signed up.
         %p.muted You must signup on #{company_website_owner} website to be enrolled. This does not automatically sync with their signups.
 
-  %section.panel.day-trip-safety-panel.class-reminder-panel
-    %h2= @class_reminder.title
-    .content-page-markdown
-      - class_reminder_body = @class_reminder.body.to_s.sub(/\A## Class Details[ \t]*\r?\n\r?\n?/, "")
-      = render_content_page_markdown(class_reminder_body)
   = render "shared/liability_warning"
 %p.background-image-caption IRS Wall, Joshua Tree

@@ -7,7 +7,7 @@
   .trip-show-mobile-hero-copy
     .trip-title-line
       %h1= @trip.name
-      %span.status.trip-type-badge= @trip.trip_type_label
+      %span.status.trip-type-badge{class: public_trip_type_badge_class(@trip)}= public_trip_type_label(@trip)
       - if @trip.capacity_full?
         %span.status.danger-status Trip Full
       - elsif @trip.almost_full?
@@ -32,7 +32,7 @@
       .trip-summary-copy
         .trip-title-line
           %h1= @trip.name
-          %span.status.trip-type-badge= @trip.trip_type_label
+          %span.status.trip-type-badge{class: public_trip_type_badge_class(@trip)}= public_trip_type_label(@trip)
           - if @trip.capacity_full?
             %span.status.danger-status Trip Full
           - elsif @trip.almost_full?
