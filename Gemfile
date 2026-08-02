@@ -58,7 +58,7 @@ gem "pundit", "~> 2.5"
 gem "prawn", "~> 2.5"
 
 # Collect card payments for trip signups.
-gem "stripe", "~> 19.2"
+gem "stripe", "~> 19.4"
 
 # Capture emails in non-production delivery environments.
 gem "letter_opener_web", "~> 3.0"
