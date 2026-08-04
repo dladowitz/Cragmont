@@ -50,7 +50,7 @@ gem "aws-sdk-s3", "~> 1.225"
 gem "haml-rails", "~> 3.0"
 
 # Render admin-managed Markdown content pages.
-gem "commonmarker", "~> 2.0"
+gem "commonmarker", "~> 2.9"
 
 # Authorize admin actions with small, explicit policy classes.
 gem "pundit", "~> 2.5"
