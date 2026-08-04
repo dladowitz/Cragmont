@@ -6860,13 +6860,15 @@ textarea {
     gap: 6px;
   }
 
-  body.day-trip-show-page .day-trip-participants-panel .public-card-table tr {
+  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table tr {
+    grid-template-columns: 1fr;
     padding: 6px 0;
     border: 0;
     background: transparent;
   }
 
   body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table td {
+    grid-column: 1 / -1;
     grid-template-columns: minmax(118px, 0.38fr) minmax(0, 1fr);
     gap: 12px;
     align-items: baseline;
@@ -6876,7 +6878,15 @@ textarea {
 
   body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table td:first-child,
   body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table td:nth-child(2) {
+    grid-column: 1 / -1;
     grid-template-columns: minmax(118px, 0.38fr) minmax(0, 1fr);
+    justify-self: stretch;
+    text-align: left;
+    white-space: normal;
+  }
+
+  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table td:nth-child(3) {
+    display: grid;
   }
 
   body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table td:first-child::before,
