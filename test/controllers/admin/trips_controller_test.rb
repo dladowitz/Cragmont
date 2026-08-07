@@ -1171,10 +1171,6 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_select "tr", text: /Upper Pines site A13\s+\$0\.00\s+\$0\.00\s+\$0\.00/
       assert_select "tr.trip-revenue-subtotal", text: /Campsite revenue\s+\$80\.00/
       assert_select "tr", text: /Extra payments\s+\$25\.00/
-      assert_select "tr.trip-revenue-total", text: /Total revenue\s+\$105\.00/
-      assert_select "tr.trip-revenue-expense", text: /Trip Expense\s+Sam Lee\s+Firewood\s+-\$10\.00/ do
-        assert_select "a[href='#{admin_trip_transactions_path(trip, anchor: "transaction-payment-#{payment.id}")}']", text: "Trip Expense"
-      end
       assert_select "tr.trip-revenue-expense", text: /Stripe processing fees\s+-\$1\.17/ do
         assert_select "button.reimbursement-status-link.trip-revenue-line-label", text: "Stripe processing fees"
         assert_select "dialog.stripe-processing-fees-modal" do
@@ -1187,6 +1183,10 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
           assert_select "tfoot tr", text: /Stripe processing fees\s+-\$1\.17/
         end
       end
+      assert_select "tr.trip-revenue-total", text: /Total revenue\s+\$103\.83/
+      assert_select "tr.trip-revenue-expense", text: /Trip Expense\s+Sam Lee\s+Firewood\s+-\$10\.00/ do
+        assert_select "a[href='#{admin_trip_transactions_path(trip, anchor: "transaction-payment-#{payment.id}")}']", text: "Trip Expense"
+      end
       assert_select "tr.trip-revenue-expense" do
         assert_select "td:first-child", text: /Upper Pines site A12\s+Registration Fee/ do
           assert_select ".trip-revenue-line-label", text: "Upper Pines site A12"
@@ -1197,9 +1197,19 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
         assert_select "td:last-child", text: "-$84.25"
       end
       assert_select "tr.trip-revenue-expense td:first-child", text: /Upper Pines site A13\s+Registration Fee/
-      assert_select "tr.trip-expense-total", text: /Total expenses\s+-\$187\.92/
+      assert_select "tr.trip-expense-total", text: /Total expenses\s+-\$186\.75/
       assert_select "tr.trip-revenue-final", text: /Trip profit\s+-\$82\.92/
       assert_select "tr.trip-revenue-final td[colspan='3']", text: "Trip profit"
+
+      revenue_rows = css_select(".trip-revenue-table > tbody > tr").map(&:text).map { |text| text.squish }
+      extra_payments_row = revenue_rows.index { |text| text.include?("Extra payments") }
+      stripe_fees_row = revenue_rows.index { |text| text.include?("Stripe processing fees") }
+      total_revenue_row = revenue_rows.index { |text| text.include?("Total revenue") }
+      trip_expense_row = revenue_rows.index { |text| text.include?("Trip Expense") }
+
+      assert_operator extra_payments_row, :<, stripe_fees_row
+      assert_operator stripe_fees_row, :<, total_revenue_row
+      assert_operator total_revenue_row, :<, trip_expense_row
     end
   end
 

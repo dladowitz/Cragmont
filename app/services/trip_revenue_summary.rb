@@ -95,7 +95,7 @@ class TripRevenueSummary
   end
 
   def total_revenue_cents
-    campsite_revenue_cents + one_time_payment_requests_cents
+    campsite_revenue_cents + one_time_payment_requests_cents - stripe_processing_fee_cents
   end
 
   def trip_expense_refund_cents
@@ -132,7 +132,7 @@ class TripRevenueSummary
   end
 
   def total_expense_cents
-    trip_expense_refund_cents + campsite_registration_fee_cents + stripe_processing_fee_cents
+    trip_expense_refund_cents + campsite_registration_fee_cents
   end
 
   def final_total_cents
