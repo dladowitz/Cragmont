@@ -69,7 +69,7 @@
           = required_label_tag "day_trip_signup_minor_relationship", "Relationship"
           = text_field_tag "day_trip_signup[day_trip_signup_minors_attributes][0][relationship]", "", id: "day_trip_signup_minor_relationship", data: { required_for_minor: "true" }
     %fieldset.signup-kind-options
-      %legend Gear I can bring
+      %legend Gear I plan to bring
       - if roped_climbing
         %label
           = check_box_tag "day_trip_signup[rope_60m]", "1"

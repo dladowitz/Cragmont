@@ -373,7 +373,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
               assert_select "input[name='day_trip_signup[day_trip_signup_minors_attributes][0][age]']"
               assert_select "input[name='day_trip_signup[day_trip_signup_minors_attributes][0][relationship]']"
             end
-            assert_select "legend", text: "Gear I can bring"
+            assert_select "legend", text: "Gear I plan to bring"
             assert_select "input[type='checkbox'][name='day_trip_signup[rope_60m]'][value='1']"
             assert_select "input[type='checkbox'][name='day_trip_signup[rope_70m]'][value='1']"
             assert_select "input[type='checkbox'][name='day_trip_signup[quickdraws_and_sport_anchor]'][value='1']"
@@ -617,7 +617,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_select ".climbing-ability-definition", text: /We ask that at a minimum you feel competent Top Rope climbing\./, count: 0
       assert_select "input[type='checkbox'][name='day_trip_signup[with_guest]']", count: 0
       assert_select ".guest-fields", count: 0
-      assert_select "legend", text: "Gear I can bring"
+      assert_select "legend", text: "Gear I plan to bring"
       assert_select "input[type='checkbox'][name='day_trip_signup[rope_60m]']", count: 0
       assert_select "input[type='checkbox'][name='day_trip_signup[rope_70m]']", count: 0
       assert_select "input[type='checkbox'][name='day_trip_signup[quickdraws_and_sport_anchor]']", count: 0
