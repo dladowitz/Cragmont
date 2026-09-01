@@ -30,6 +30,7 @@ class Trip < ApplicationRecord
   has_many :campsites, dependent: :destroy
   has_many :campsite_signups, dependent: :destroy
   has_many :participants, through: :campsite_signups, source: :user
+  has_many :climbing_partner_requests, dependent: :destroy
   has_many :day_trip_signups, dependent: :destroy
   has_many :day_trip_participants, through: :day_trip_signups, source: :user
   has_many :class_signups, dependent: :destroy

@@ -1208,6 +1208,88 @@ body.trip-show-page .public-liability-warning {
   margin: 0;
 }
 
+.climbing-partner-list {
+  display: grid;
+  gap: 8px;
+}
+
+.climbing-partner-panel {
+  padding-block: 18px;
+}
+
+.climbing-partner-header {
+  margin-bottom: 12px;
+}
+
+.climbing-partner-header h2,
+.climbing-partner-header p {
+  margin-bottom: 0;
+}
+
+.climbing-partner-header p {
+  margin-top: 4px;
+}
+
+.climbing-partner-card {
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 12px 14px;
+}
+
+.climbing-partner-details {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.climbing-partner-empty-state {
+  margin-bottom: 0;
+}
+
+.climbing-partner-self-service {
+  align-items: center;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 12px;
+}
+
+.climbing-partner-self-service p {
+  margin: 0;
+}
+
+dialog.signup-modal.climbing-partner-contact-modal {
+  width: min(520px, calc(100% - 32px));
+}
+
+.climbing-partner-contact-details {
+  margin-top: 16px;
+}
+
+.climbing-partner-contact-details dd {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .climbing-partner-card,
+  .climbing-partner-self-service {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .climbing-partner-contact-control .button,
+  .climbing-partner-self-service .button {
+    text-align: center;
+    width: 100%;
+  }
+}
+
 .trip-waitlist-note {
   color: var(--muted);
   font-size: 0.95rem;
@@ -6706,6 +6788,26 @@ textarea {
     background: transparent;
     box-shadow: none;
     backdrop-filter: none;
+  }
+
+  body.trip-show-page .climbing-partner-panel {
+    width: calc(100% - 20px);
+    margin-inline: auto;
+    padding: 14px;
+    border: 3px solid var(--line);
+    border-left: 4px solid #1d4ed8;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  body.trip-show-page .trip-coordinator-panel {
+    width: calc(100% - 20px);
+    margin-inline: auto;
+    padding: 14px;
+    border: 3px solid var(--line);
+    border-left: 4px solid #7c3aed;
+    border-radius: 8px;
+    background: #fff;
   }
 
   body.trip-show-page .trip-overview,

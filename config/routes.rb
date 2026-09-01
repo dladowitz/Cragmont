@@ -34,6 +34,7 @@ Rails.application.routes.draw do
     get "how-to-think-about-safety", to: "trips#safety", as: :safety, on: :collection
     resource :day_trip_signup, only: %i[create destroy]
     resource :class_signup, only: %i[create destroy]
+    resource :climbing_partner_request, only: %i[create destroy]
     post "guest_waiver_emails/:id", to: "guest_waiver_emails#create", as: :guest_waiver_email
     resources :campsites, only: [] do
       resource :campsite_signup, only: %i[create destroy] do
