@@ -1,10 +1,10 @@
 class TripDetailsEmailMailer < ApplicationMailer
   def details
     @trip_details_email = params[:trip_details_email]
-    @recipient = params[:recipient]
+    recipients = params[:recipients]
 
     mail(
-      to: @recipient.email,
+      to: recipients.map(&:email),
       subject: @trip_details_email.subject
     )
   end

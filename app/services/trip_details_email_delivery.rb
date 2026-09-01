@@ -69,13 +69,16 @@ class TripDetailsEmailDelivery
   end
 
   def deliver_to_recipients(recipients)
+    TripDetailsEmailMailer.with(
+      trip_details_email: trip_details_email,
+      recipients: recipients
+    ).details.deliver_now
+
     recipients.each do |recipient|
-      TripDetailsEmailMailer.with(
-        trip_details_email: trip_details_email,
-        recipient: recipient
-      ).details.deliver_now
       recipient.update!(delivery_status: "delivered", delivered_at: Time.current, error_message: nil)
-    rescue StandardError => error
+    end
+  rescue StandardError => error
+    recipients.each do |recipient|
       recipient.update!(delivery_status: "failed", error_message: error.message)
     end
   end
