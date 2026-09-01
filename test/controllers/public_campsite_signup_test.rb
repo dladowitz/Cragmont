@@ -945,6 +945,55 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "#campsite-#{campsites(:yosemite_a).id}", text: /Close to bathrooms/
   end
 
+  test "climbing partner board signup is separate from campsite signup" do
+    log_in_as(users(:sam))
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "form[action='#{signup_path_for}']" do
+      assert_select "input[name='campsite_signup[needs_climbing_partner]']", count: 0
+    end
+    assert_select "#climbing-partners" do
+      assert_select "p", text: /does not sign you up for the trip/
+      assert_select "form[action='#{trip_climbing_partner_request_path(trips(:yosemite))}'][method='post']" do
+        assert_select "button", "Add me to the board"
+      end
+      assert_select ".climbing-partner-self-service", text: /no campsite signup, dates, waiver, or payment required/
+    end
+  end
+
+  test "public climbing partner board shows trip level requests without requiring a campsite signup" do
+    partner_user = User.create!(first_name: "Pia", last_name: "Partner", email: "pia-partner@example.com", phone: "555-0199", password: "password")
+    private_user = User.create!(first_name: "Nora", last_name: "NotLooking", email: "nora-private@example.com", password: "password")
+    other_trip_user = User.create!(first_name: "Joshua", last_name: "Tree", email: "joshua-trip@example.com", password: "password")
+    ClimbingPartnerRequest.create!(trip: trips(:yosemite), user: partner_user)
+    ClimbingPartnerRequest.create!(trip: trips(:jtree), user: other_trip_user)
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_nil CampsiteSignup.find_by(user: partner_user)
+    assert_operator response.body.index("campsites-panel"), :<, response.body.index("climbing-partners")
+    assert_select "#climbing-partners" do
+      assert_select "h2", "Climbing Partner Board"
+      assert_select ".climbing-partner-card", count: 1 do
+        assert_select "strong", "Pia P."
+        assert_select "button", "Show contact info"
+        assert_select "a[href^='mailto:']", count: 0
+        assert_select "dialog.climbing-partner-contact-modal" do
+          assert_select "h2", "Pia P. contact info"
+          assert_select ".climbing-partner-contact-details", text: /555-0199/
+          assert_select ".climbing-partner-contact-details", text: /pia-partner@example.com/
+        end
+        assert_select ".climbing-partner-details", text: /Looking for a climbing partner on this trip/
+      end
+      assert_select ".climbing-partner-privacy-note", count: 0
+      assert_select "a[href='mailto:nora-private@example.com']", count: 0
+      assert_select "a[href='mailto:joshua-trip@example.com']", count: 0
+    end
+  end
+
   test "archived public trip detail is viewable but closed to new participants" do
     trips(:yosemite).update!(status: "archived")
 
@@ -1101,6 +1150,52 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert signup.waiver_acknowledged_at.present?
     assert_equal TripSignupWaiver.acknowledgement_text, signup.waiver_acknowledgement_text
     assert_equal TripSignupWaiver.text, signup.waiver_text
+  end
+
+  test "non-participant can add and remove a climbing partner request without waiver dates or payment" do
+    log_in_as(users(:sam))
+    request_path = trip_climbing_partner_request_path(trips(:yosemite))
+
+    assert_difference "ClimbingPartnerRequest.count", 1 do
+      assert_no_difference [ "CampsiteSignup.count", "Waiver.count", "CampsiteSignupPayment.count" ] do
+        post request_path
+      end
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite), anchor: "climbing-partners")
+    partner_request = ClimbingPartnerRequest.find_by!(trip: trips(:yosemite), user: users(:sam))
+    assert_equal "On belay! You're now on the Climbing Partner Board.", flash[:notice]
+
+    assert_difference "ClimbingPartnerRequest.count", -1 do
+      delete request_path
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite), anchor: "climbing-partners")
+    assert_not ClimbingPartnerRequest.exists?(partner_request.id)
+    assert_equal "On belay! Your climbing partner request is off the board.", flash[:notice]
+  end
+
+  test "creating the same climbing partner request twice is idempotent" do
+    log_in_as(users(:sam))
+    request_path = trip_climbing_partner_request_path(trips(:yosemite))
+
+    assert_difference "ClimbingPartnerRequest.count", 1 do
+      post request_path
+    end
+    assert_no_difference "ClimbingPartnerRequest.count" do
+      post request_path
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite), anchor: "climbing-partners")
+    assert_equal "You're already on the Climbing Partner Board.", flash[:notice]
+  end
+
+  test "logged out visitor must log in before joining the climbing partner board" do
+    assert_no_difference "ClimbingPartnerRequest.count" do
+      post trip_climbing_partner_request_path(trips(:yosemite))
+    end
+
+    assert_redirected_to new_session_url
   end
 
   test "current annual waiver skips signature for adult only trip signup" do

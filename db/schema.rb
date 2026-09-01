@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_26_091000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_01_053000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -212,6 +212,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_26_091000) do
     t.index ["trip_id", "user_id"], name: "index_class_signups_on_active_trip_user", unique: true, where: "((status)::text <> 'canceled'::text)"
     t.index ["trip_id"], name: "index_class_signups_on_trip_id"
     t.index ["user_id"], name: "index_class_signups_on_user_id"
+  end
+
+  create_table "climbing_partner_requests", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "trip_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["trip_id", "user_id"], name: "index_climbing_partner_requests_on_trip_id_and_user_id", unique: true
+    t.index ["trip_id"], name: "index_climbing_partner_requests_on_trip_id"
+    t.index ["user_id"], name: "index_climbing_partner_requests_on_user_id"
   end
 
   create_table "content_pages", force: :cascade do |t|
@@ -682,6 +692,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_26_091000) do
   add_foreign_key "campsites", "users", column: "registration_reimbursement_recorded_by_id"
   add_foreign_key "class_signups", "trips"
   add_foreign_key "class_signups", "users"
+  add_foreign_key "climbing_partner_requests", "trips"
+  add_foreign_key "climbing_partner_requests", "users"
   add_foreign_key "day_trip_signup_minors", "day_trip_signups"
   add_foreign_key "day_trip_signups", "day_trip_signups", column: "guest_of_day_trip_signup_id"
   add_foreign_key "day_trip_signups", "trips"

@@ -322,7 +322,55 @@
                               = button_to "Remove Me", trip_campsite_campsite_signup_path(@trip, @campsites.first), method: :delete, class: "button danger"
     - else
       %p.muted No campsite reservations have been added yet.
-  %section.panel
+  %section.panel.climbing-partner-panel{id: "climbing-partners"}
+    .panel-header.climbing-partner-header
+      %div
+        %h2 Climbing Partner Board
+        %p.muted Find someone to climb with. Joining this board does not sign you up for the trip.
+    - if @climbing_partner_requests.any?
+      .climbing-partner-list
+        - @climbing_partner_requests.each do |partner_request|
+          - contact_modal_title_id = "climbing-partner-contact-title-#{partner_request.id}"
+          %article.climbing-partner-card
+            .climbing-partner-details
+              %strong= partner_request.user.public_name
+              %span Looking for a climbing partner on this trip
+            .climbing-partner-contact-control{"data-controller" => "modal"}
+              %button.button.secondary{"data-action" => "modal#open", type: "button"} Show contact info
+              %dialog.signup-modal.climbing-partner-contact-modal{"aria-labelledby" => contact_modal_title_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                .signup-modal-content
+                  %div
+                    %h2{id: contact_modal_title_id} #{partner_request.user.public_name} contact info
+                    %dl.details-list.climbing-partner-contact-details
+                      %div
+                        %dt Phone
+                        %dd= partner_request.user.phone.presence || "Not provided"
+                      %div
+                        %dt Email
+                        %dd= partner_request.user.email.presence || "Not provided"
+                  .form-actions
+                    %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+    - else
+      %p.muted.climbing-partner-empty-state No climbers are looking for a partner yet.
+    - if @current_climbing_partner_request.present?
+      .climbing-partner-self-service
+        %p Found your partner? Take your request off the board.
+        = button_to "I found a partner",
+          trip_climbing_partner_request_path(@trip),
+          method: :delete,
+          class: "button secondary"
+    - elsif !@trip.archived?
+      .climbing-partner-self-service
+        - if user_signed_in?
+          %p Add your name and contact info—no campsite signup, dates, waiver, or payment required.
+          = button_to "Add me to the board",
+            trip_climbing_partner_request_path(@trip),
+            method: :post,
+            class: "button"
+        - else
+          %p Log in to add your name—no campsite signup, dates, waiver, or payment required.
+          = link_to "Log in to join the board", new_session_path, class: "button"
+  %section.panel.trip-coordinator-panel
     %h2 Trip Coordinator
     - if @trip.campsite_coordinator.present?
       %dl.details-list
