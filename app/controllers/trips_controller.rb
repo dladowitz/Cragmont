@@ -54,6 +54,7 @@ class TripsController < ApplicationController
       @waitlist_confirmation_campsites = @current_signup&.waitlisted? ? @trip.waitlist_confirmation_campsites_for(@current_signup) : []
       @waitlist_confirmation_campsite_ids = @waitlist_confirmation_campsites.map(&:id)
       @completion_signup = participant_details_signup || guest_details_signup
+      @confirmed_participant = @current_signup&.confirmed?
       @show_payment_success_modal = payment_success_return?
       if @show_payment_success_modal
         missing_waiver_signups = payment_success_missing_waiver_signups

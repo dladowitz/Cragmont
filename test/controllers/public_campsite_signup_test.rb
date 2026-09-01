@@ -2841,6 +2841,58 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "confirmed participant can open contact info for other confirmed participants" do
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    other_participant = User.create!(
+      first_name: "Piper",
+      last_name: "Peak",
+      email: "piper-participant@example.com",
+      phone: "555-0142",
+      password: "password"
+    )
+    create_campsite_signup!(campsite: campsites(:yosemite_b), user: other_participant)
+    log_in_as(users(:sam))
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select ".confirmed-participants-table th", text: "Contact", count: 2
+    assert_select ".participant-contact-control", count: 1 do
+      assert_select "button[data-action='modal#open']", text: "Contact Info"
+      assert_select "dialog.participant-contact-modal" do
+        assert_select "h2", text: "Piper P. contact info"
+        assert_select ".participant-contact-privacy-note", text: "Only confirmed participants can see this contact info"
+        assert_select "dt", text: "Phone"
+        assert_select "dd", text: "555-0142"
+        assert_select "dt", text: "Email"
+        assert_select "dd", text: "piper-participant@example.com"
+      end
+    end
+    assert_select ".participant-contact-modal", text: /sam@example.com/, count: 0
+  end
+
+  test "waitlisted participant cannot see confirmed participant contact info" do
+    confirmed_user = User.create!(
+      first_name: "Piper",
+      last_name: "Peak",
+      email: "private-confirmed@example.com",
+      phone: "555-0143",
+      password: "password"
+    )
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: confirmed_user)
+    create_waitlisted_signup!(trip: trips(:yosemite), user: users(:sam))
+    log_in_as(users(:sam))
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select ".confirmed-participants-table th", text: "Contact", count: 0
+    assert_select ".participant-contact-control", count: 0
+    assert_select ".participant-contact-modal", count: 0
+    assert_select ".confirmed-participants-table", text: /private-confirmed@example.com/, count: 0
+    assert_select ".confirmed-participants-table", text: /555-0143/, count: 0
+  end
+
   test "public parking section shows campsite spot assignments" do
     primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:alex))
     open_spot_user = User.create!(first_name: "Opal", last_name: "Open", email: "public-open-parking@example.com", password: "password")

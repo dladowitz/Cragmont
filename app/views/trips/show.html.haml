@@ -231,6 +231,8 @@
                         %th Waiver
                         %th Member
                         %th Minors
+                        - if @confirmed_participant
+                          %th Contact
                     - signups_by_primary_id = campsite.confirmed_signups.group_by { |signup| signup.guest_of_signup_id || signup.id }
                     - display_signups = campsite.confirmed_signups.reject(&:guest?).flat_map { |signup| [signup] + signups_by_primary_id.fetch(signup.id, []).select(&:guest?) }
                     %tbody
@@ -279,6 +281,26 @@
                           %td{class: ("public-empty-value" if minor_age_summary == "None"), "data-label" => "Minors"}
                             - unless minor_age_summary == "None"
                               = minor_age_summary
+                          - if @confirmed_participant
+                            %td{"data-label" => "Contact"}
+                              - unless signup.user_id == current_user.id
+                                - contact_modal_title_id = "participant-contact-title-#{signup.id}"
+                                %div.participant-contact-control{"data-controller" => "modal"}
+                                  %button.button.secondary{"data-action" => "modal#open", type: "button"} Contact Info
+                                  %dialog.signup-modal.participant-contact-modal{"aria-labelledby" => contact_modal_title_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                                    .signup-modal-content
+                                      %div
+                                        %h2{id: contact_modal_title_id} #{signup.user.public_name} contact info
+                                        %p.participant-contact-privacy-note Only confirmed participants can see this contact info
+                                        %dl.details-list.participant-contact-details
+                                          %div
+                                            %dt Phone
+                                            %dd= signup.user.phone.presence || "Not provided"
+                                          %div
+                                            %dt Email
+                                            %dd= signup.user.email.presence || "Not provided"
+                                      .form-actions
+                                        %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
                 - else
                   %p.muted No confirmed participants yet.
               = render "parking_spots", campsite: campsite
