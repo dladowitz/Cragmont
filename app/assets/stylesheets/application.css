@@ -1264,16 +1264,31 @@ body.trip-show-page .public-liability-warning {
   margin: 0;
 }
 
-dialog.signup-modal.climbing-partner-contact-modal {
+dialog.signup-modal.climbing-partner-contact-modal,
+dialog.signup-modal.participant-contact-modal {
   width: min(520px, calc(100% - 32px));
 }
 
-.climbing-partner-contact-details {
+.climbing-partner-contact-details,
+.participant-contact-details {
   margin-top: 16px;
 }
 
-.climbing-partner-contact-details dd {
+.climbing-partner-contact-details dd,
+.participant-contact-details dd {
   overflow-wrap: anywhere;
+}
+
+.participant-contact-privacy-note {
+  color: var(--muted);
+}
+
+.confirmed-participants-table .participant-contact-control .button {
+  min-height: 28px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  line-height: 1.1;
 }
 
 @media (max-width: 640px) {
@@ -7448,6 +7463,10 @@ textarea {
     width: 100%;
   }
 
+  body:not(.admin-body) .public-card-table td .participant-contact-control .button {
+    width: auto;
+  }
+
   body:not(.admin-body) .confirmed-participants-table td,
   body:not(.admin-body) .waitlist-table td {
     grid-template-columns: minmax(104px, 0.4fr) minmax(0, 1fr);
@@ -7605,6 +7624,14 @@ textarea {
   body.trip-show-page .confirmed-participants-table.public-card-table td::before {
     font-size: 0.68rem;
     line-height: 1.2;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table td[data-label="Contact"] {
+    grid-template-columns: 1fr;
+  }
+
+  body.trip-show-page .confirmed-participants-table.public-card-table td[data-label="Contact"]::before {
+    content: none;
   }
 
   body.trip-show-page .confirmed-participants-table .public-party-participant-name {
