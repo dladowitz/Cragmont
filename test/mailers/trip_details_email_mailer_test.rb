@@ -22,16 +22,23 @@ class TripDetailsEmailMailerTest < ActionMailer::TestCase
       email: users(:sam).email,
       campsite_label: "Upper Pines site A12"
     )
+    @cc_recipient = @trip_details_email.trip_details_email_recipients.create!(
+      user: users(:alex),
+      recipient_name: users(:alex).full_name,
+      email: users(:alex).email,
+      campsite_label: "Upper Pines site A13"
+    )
   end
 
-  test "details email uses Cragmont layout and a single recipient" do
+  test "details email uses Cragmont layout and puts all participants in the to field" do
     mail = TripDetailsEmailMailer.with(
       trip_details_email: @trip_details_email,
-      recipient: @recipient
+      recipients: [ @recipient, @cc_recipient ]
     ).details
 
     assert_equal "Cragmont Yosemite Trip Details", mail.subject
-    assert_equal [ users(:sam).email ], mail.to
+    assert_equal [ users(:sam).email, users(:alex).email ], mail.to
+    assert_empty Array(mail.cc)
     assert_empty Array(mail.bcc)
     assert_includes mail.html_part.body.decoded, "Cragmont"
     assert_includes mail.html_part.body.decoded, "Climbing Club"

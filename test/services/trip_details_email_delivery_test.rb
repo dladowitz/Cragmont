@@ -12,7 +12,7 @@ class TripDetailsEmailDeliveryTest < ActiveSupport::TestCase
     )
   end
 
-  test "sends individual emails to confirmed participants and snapshots what went out" do
+  test "sends one email to all confirmed participants and snapshots what went out" do
     @trip.update!(photo_album_url: "https://photos.google.com/share/yosemite-spring")
     primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     guest_user = User.create!(first_name: "Gina", last_name: "Guest", email: "gina-trip-details@example.com", password: User::DEFAULT_GUEST_PASSWORD, default_password: true)
@@ -30,7 +30,7 @@ class TripDetailsEmailDeliveryTest < ActiveSupport::TestCase
     email = @template.build_trip_details_email(@trip)
     email.save!
 
-    assert_difference -> { ActionMailer::Base.deliveries.size }, 2 do
+    assert_difference -> { ActionMailer::Base.deliveries.size }, 1 do
       TripDetailsEmailDelivery.deliver!(trip_details_email: email, sent_by: users(:alex))
     end
 
@@ -49,8 +49,10 @@ class TripDetailsEmailDeliveryTest < ActiveSupport::TestCase
 
     assert_equal [ "Gina Guest", "Sam Lee" ], email.trip_details_email_recipients.order(:recipient_name).pluck(:recipient_name)
     assert_equal 2, email.trip_details_email_recipients.delivered.count
-    assert_equal [ [ users(:sam).email ], [ guest_user.email ] ].sort, ActionMailer::Base.deliveries.map(&:to).sort
-    assert ActionMailer::Base.deliveries.all? { |mail| mail.bcc.blank? }
+    delivered_email = ActionMailer::Base.deliveries.sole
+    assert_equal [ users(:sam).email, guest_user.email ], delivered_email.to
+    assert_empty Array(delivered_email.cc)
+    assert_empty Array(delivered_email.bcc)
   end
 
   test "blocks delivery when required campsite registration details are missing" do
