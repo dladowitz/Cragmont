@@ -10,7 +10,7 @@
 %div{"data-controller" => "modal", "data-modal-clean-url-on-close-value" => "true", "data-modal-open-value" => "true"}
   %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
     .signup-modal-content
-      %div
+      .campsite-signup-modal-summary
         %h2= modal_title
         - unless guest_signup
           %p Please select dates you will be attending

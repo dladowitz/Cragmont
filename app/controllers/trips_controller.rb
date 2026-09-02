@@ -47,6 +47,7 @@ class TripsController < ApplicationController
       render :class_show
     else
       @campsites = @trip.campsites.includes(:campground, { parking_spots: { assigned_campsite_signup: :user } }, campsite_signups: [ :user, :campsite_signup_minors, { guest_of_signup: :user } ]).order(:arrival_date, :site_number)
+      @show_check_in_check_out_step = @campsites.any? { |campsite| campsite.campground.location == "Yosemite National Park" }
       @climbing_partner_requests = @trip.climbing_partner_requests.includes(:user).order(:created_at, :id)
       @current_climbing_partner_request = @trip.climbing_partner_requests.find_by(user: current_user) if user_signed_in?
       @current_signup = @trip.campsite_signups.active.includes(:campsite, :payments, { guest_of_signup: :user }, guest_signups: [ :user, :campsite ]).find_by(user: current_user) if user_signed_in?

@@ -30,6 +30,7 @@ export default class extends Controller {
     "arrivalDate",
     "capacityWarning",
     "canvas",
+    "checkInStep",
     "checkoutDate",
     "feeFields",
     "guestFields",
@@ -219,6 +220,22 @@ export default class extends Controller {
       return
     }
 
+    if (this.hasCheckInStepTarget) {
+      this.signupStepTarget.hidden = true
+      this.checkInStepTarget.hidden = false
+      this.scrollModalToTop()
+      return
+    }
+
+    this.continueAfterCheckInAgreement()
+  }
+
+  acceptCheckInAgreement() {
+    this.checkInStepTarget.hidden = true
+    this.continueAfterCheckInAgreement()
+  }
+
+  continueAfterCheckInAgreement() {
     if (!this.waiverRequiredForCurrentSelection()) {
       this.element.requestSubmit()
       return
@@ -226,6 +243,12 @@ export default class extends Controller {
 
     this.signupStepTarget.hidden = true
     this.introTarget.hidden = false
+    this.scrollModalToTop()
+  }
+
+  scrollModalToTop() {
+    const modalContent = this.element.closest(".signup-modal-content")
+    if (modalContent) modalContent.scrollTop = 0
   }
 
   checkAttendanceDates() {
@@ -674,7 +697,7 @@ export default class extends Controller {
   }
 
   signupStepSubmitText() {
-    if (this.waiverRequiredForCurrentSelection()) return this.nextSubmitTextValue
+    if (this.hasCheckInStepTarget || this.waiverRequiredForCurrentSelection()) return this.nextSubmitTextValue
 
     const amountCents = this.paymentAmountCents()
     const paymentRequired = amountCents === null ? this.feeConfigured() : amountCents > 0

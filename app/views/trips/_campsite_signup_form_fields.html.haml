@@ -37,7 +37,7 @@
         .attendance-date-row
           .field
             = required_label_tag arrival_id, "Arrival date"
-            = date_field_tag "campsite_signup[arrival_date]", existing_signup&.arrival_date, id: arrival_id, min: campsite.arrival_date, max: campsite.checkout_date - 1.day, required: true, data: { signature_target: "arrivalDate", action: "click->signature#showDatePicker focus->signature#showDatePicker input->signature#checkAttendanceDates input->signature#updatePaymentSummary" }
+            = date_field_tag "campsite_signup[arrival_date]", existing_signup&.arrival_date || campsite.arrival_date, id: arrival_id, min: campsite.arrival_date, max: campsite.checkout_date - 1.day, required: true, data: { signature_target: "arrivalDate", action: "click->signature#showDatePicker focus->signature#showDatePicker input->signature#checkAttendanceDates input->signature#updatePaymentSummary" }
           .field
             = required_label_tag checkout_id, "Checkout date"
             = date_field_tag "campsite_signup[checkout_date]", existing_signup&.checkout_date, id: checkout_id, min: campsite.arrival_date + 1.day, max: campsite.checkout_date, required: true, data: { signature_target: "checkoutDate", action: "click->signature#showDatePicker focus->signature#showDatePicker input->signature#checkAttendanceDates input->signature#updatePaymentSummary" }
@@ -130,6 +130,18 @@
     .form-actions
       %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
       %button.button{"data-action" => "signature#continueSignup", "data-signature-target" => "signupStepSubmit", :type => "button"} Next
+  - if !waiver_only && @show_check_in_check_out_step
+    %section.check-in-check-out-step{"data-signature-target" => "checkInStep", hidden: true}
+      .check-in-check-out-copy
+        %h2 Check-In and Check-Out
+        %p Climbing is a team effort, and a little communication helps everyone have a great trip. Since campsites are shared, please coordinate with the other people at your site about arrival and departure plans. Someone must check in on the first day of the reservation, or the rangers may give the campsite away.
+        %p Once you’re signed up for this trip, you’ll be able to view the contact information for other confirmed participants. Please connect with others at your campsite to make sure someone can handle first-day check-in. You can also join the trip’s WhatsApp group using the link at the top of the trip page.
+        %p Plans change—we get it! If you can’t make the trip or your arrival date changes, let the others at your site know as soon as possible. Someone arriving later may be counting on you to secure the site. Participants at another Cragmont campsite may be able to help with check-in when everyone stays in the loop.
+        %p When you leave, rangers may ask whether the campsite is empty so they can offer it to someone else. Before saying the site is available, please be completely sure no other participants are arriving later. When in doubt, tell the ranger that others are still using the site. Thanks for looking out for your fellow climbers and helping the whole trip run smoothly.
+        %p Most importantly make sure to have a good time and meet potential climbing partners for this trip or the next!
+      .form-actions
+        %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
+        %button.button{"data-action" => "signature#acceptCheckInAgreement", type: "button"} I agree to communicate with others in my site
   %section.waiver-intro{"data-signature-target" => "intro", :hidden => ""}
     .waiver-intro-copy
       - TripSignupWaiver.acknowledgement_blocks.each do |block|
