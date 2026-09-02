@@ -380,6 +380,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
             assert_select "input[type='checkbox'][name='day_trip_signup[clip_stick]'][value='1']"
             assert_select "input[type='checkbox'][name='day_trip_signup[cams_nuts_and_trad_anchor]'][value='1']"
             assert_select "input[name='day_trip_signup[crash_pad_count]']", count: 0
+            assert_select ".check-in-check-out-step", count: 0
           end
         end
       end
@@ -1976,7 +1977,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "input[type='checkbox'][name='campsite_signup[with_minors]'][value='1']"
     assert_select "input[type='checkbox'][name='campsite_signup[with_guests]'][value='1']"
     assert_select "input[type='date'][name='campsite_signup[arrival_date]'][required]"
-    assert_select "input[type='date'][name='campsite_signup[arrival_date]'][min='2026-06-12'][max='2026-06-14']"
+    assert_select "input[type='date'][name='campsite_signup[arrival_date]'][value='2026-06-12'][min='2026-06-12'][max='2026-06-14']"
     assert_select "input[type='date'][name='campsite_signup[arrival_date]'][data-action*='click->signature#showDatePicker'][data-action*='focus->signature#showDatePicker']"
     assert_select "input[type='date'][name='campsite_signup[checkout_date]'][required]"
     assert_select "input[type='date'][name='campsite_signup[checkout_date]'][min='2026-06-13'][max='2026-06-15']"
@@ -2011,6 +2012,19 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".minor-fields .minor-field-row[hidden]", count: 2
     assert_select ".minor-fields button.add-person-link", text: "Add another minor"
     assert_select "button", text: "Next"
+    assert_select ".check-in-check-out-step[data-signature-target='checkInStep'][hidden]" do
+      assert_select "h2", text: "Check-In and Check-Out"
+      assert_select ".check-in-check-out-copy > p", count: 10
+      assert_select "p", text: /Climbing is a team effort/
+      assert_select "p", text: /rangers may give the campsite away/
+      assert_select "p", text: /Once you’re signed up for this trip, you’ll be able to view the contact information for other confirmed participants\./
+      assert_select "p", text: /WhatsApp group using the link at the top of the trip page/
+      assert_select "p", text: /Plans change—we get it!/
+      assert_select "p", text: /Participants at another Cragmont campsite may be able to help with check-in/
+      assert_select "p", text: /Thanks for looking out for your fellow climbers and helping the whole trip run smoothly\./
+      assert_select "p", text: /Most importantly make sure to have a good time and meet potential climbing partners for this trip or the next!/
+      assert_select "button[data-action='signature#acceptCheckInAgreement']", text: "I agree to communicate with others in my site"
+    end
     assert_select ".waiver-intro", text: /not a teaching or instructional organization/
     assert_select "button", text: "Agree and Sign Waiver"
     assert_select ".waiver-text", text: /READ THIS DOCUMENT CAREFULLY BEFORE SIGNING/
@@ -2038,6 +2052,19 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_select ".fee-rate", text: /Additional nights\s+\$5\.00/
     end
     assert_select "form[action='#{signup_path_for}'][method='post']", text: /Pay Now and Sign Up/
+  end
+
+  test "check in and check out step is hidden outside Yosemite National Park" do
+    trip = trips(:jtree)
+    trip.update!(status: "published")
+    log_in_as(users(:sam))
+
+    get trip_url(trip)
+
+    assert_response :success
+    assert_select "button", text: "Sign up for this campsite"
+    assert_select ".check-in-check-out-step", count: 0
+    assert_select "button[data-action='signature#acceptCheckInAgreement']", count: 0
   end
 
   test "shared details link opens completion modal for signed in participant" do

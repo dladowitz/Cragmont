@@ -20,7 +20,7 @@
   %button.button{"data-action" => "modal#open", :type => "button"}= signup_button_text
   %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
     .signup-modal-content
-      %div
+      .campsite-signup-modal-summary
         .signup-modal-title-line
           %h2= modal_title
           - if waitlist_move_confirmation

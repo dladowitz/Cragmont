@@ -4254,18 +4254,25 @@ dialog.signup-modal.refund-modal .form-actions {
   border-radius: 6px;
 }
 
-.waiver-intro {
+.waiver-intro,
+.check-in-check-out-step {
   display: grid;
   gap: 20px;
 }
 
 .signup-kind-step[hidden],
+.check-in-check-out-step[hidden],
 .waiver-intro[hidden],
 [data-signature-target="waiverStep"][hidden] {
   display: none;
 }
 
-.waiver-intro-copy {
+.signup-modal-content:has(.check-in-check-out-step:not([hidden])) > .campsite-signup-modal-summary {
+  display: none;
+}
+
+.waiver-intro-copy,
+.check-in-check-out-copy {
   display: grid;
   gap: 14px;
   padding: 22px;
@@ -4278,9 +4285,14 @@ dialog.signup-modal.refund-modal .form-actions {
   overflow-wrap: break-word;
 }
 
-.waiver-intro-copy p {
+.waiver-intro-copy p,
+.check-in-check-out-copy p {
   margin: 0;
   color: black;
+}
+
+.check-in-check-out-copy h2 {
+  margin-bottom: 4px;
 }
 
 .minor-responsibility-note {
@@ -7210,9 +7222,14 @@ textarea {
   .signup-kind-options,
   .minor-fields,
   .guest-fields,
+  .check-in-check-out-copy,
   .waiver-intro-copy,
   .waiver-text {
     padding: 14px;
+  }
+
+  .check-in-check-out-copy h2 {
+    font-size: 1.45rem;
   }
 
   .signup-kind-options label {
