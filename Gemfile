@@ -52,6 +52,9 @@ gem "haml-rails", "~> 3.0"
 # Render admin-managed Markdown content pages.
 gem "commonmarker", "~> 2.0"
 
+# Generate downloadable CSV reports.
+gem "csv"
+
 # Authorize admin actions with small, explicit policy classes.
 gem "pundit", "~> 2.5"
 

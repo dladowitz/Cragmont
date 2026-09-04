@@ -735,12 +735,14 @@ body.trip-show-page .public-liability-warning {
 }
 
 .help-request-filter-form,
-.trip-filter-form {
+.trip-filter-form,
+.campsite-reimbursement-filter-form {
   margin: 0 0 18px;
 }
 
 .help-request-status-filters,
-.trip-status-filters {
+.trip-status-filters,
+.campsite-reimbursement-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
@@ -751,7 +753,8 @@ body.trip-show-page .public-liability-warning {
 }
 
 .help-request-status-filters legend,
-.trip-status-filters legend {
+.trip-status-filters legend,
+.campsite-reimbursement-filters legend {
   margin-right: 4px;
   color: var(--muted);
   font-size: 0.82rem;
@@ -760,7 +763,8 @@ body.trip-show-page .public-liability-warning {
 }
 
 .help-status-filter,
-.trip-status-filter {
+.trip-status-filter,
+.campsite-reimbursement-filter {
   display: inline-flex;
   gap: 8px;
   align-items: center;
@@ -775,15 +779,24 @@ body.trip-show-page .public-liability-warning {
 }
 
 .help-status-filter input[type="checkbox"],
-.trip-status-filter input[type="checkbox"] {
+.trip-status-filter input[type="checkbox"],
+.campsite-reimbursement-filter input[type="checkbox"] {
   width: 18px;
   height: 18px;
   padding: 0;
   accent-color: var(--accent);
 }
 
+.campsite-reimbursement-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 72px;
+  margin-left: 8px;
+}
+
 .trip-status-filter:has(input[type="checkbox"]:checked),
-.help-status-filter:has(input[type="checkbox"]:checked) {
+.help-status-filter:has(input[type="checkbox"]:checked),
+.campsite-reimbursement-filter:has(input[type="checkbox"]:checked) {
   border-color: var(--accent);
   background: #eaf6f1;
   box-shadow: inset 0 0 0 1px rgb(47 111 94 / 18%);
@@ -5421,6 +5434,83 @@ th {
 
 .content-action-list .button {
   justify-content: flex-start;
+}
+
+.campsite-reimbursement-groups {
+  display: grid;
+  gap: 24px;
+}
+
+.campsite-reimbursement-trip {
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.campsite-reimbursement-trip:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.campsite-reimbursement-trip-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 12px;
+}
+
+.campsite-reimbursement-trip-heading h3,
+.campsite-reimbursement-trip-heading p {
+  margin-bottom: 0;
+}
+
+.campsite-reimbursement-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.campsite-reimbursement-table {
+  display: table;
+  min-width: 860px;
+  overflow: visible;
+  table-layout: fixed;
+}
+
+.campsite-reimbursement-trip .table-wrapper {
+  overflow-x: auto;
+}
+
+.campsite-reimbursement-table th:nth-child(1),
+.campsite-reimbursement-table td:nth-child(1) {
+  width: 20%;
+}
+
+.campsite-reimbursement-table th:nth-child(2),
+.campsite-reimbursement-table td:nth-child(2) {
+  width: 12%;
+}
+
+.campsite-reimbursement-table th:nth-child(3),
+.campsite-reimbursement-table td:nth-child(3) {
+  width: 18%;
+}
+
+.campsite-reimbursement-table th:nth-child(4),
+.campsite-reimbursement-table td:nth-child(4) {
+  width: 12%;
+}
+
+.campsite-reimbursement-table th:nth-child(5),
+.campsite-reimbursement-table td:nth-child(5) {
+  width: 23%;
+}
+
+.campsite-reimbursement-table th:nth-child(6),
+.campsite-reimbursement-table td:nth-child(6) {
+  width: 15%;
 }
 
 .form-grid {

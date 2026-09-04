@@ -1,0 +1,12 @@
+= render "admin/shared/header", title: "Finances"
+
+%section.panel
+  .panel-header
+    %div
+      %h2 Finances
+      %p.muted Pick the financial task you want to tackle.
+
+  .content-action-list.finance-action-list
+    = link_to "Campsite Reimbursements", admin_campsite_reimbursements_path, class: "button secondary"
+    %button.button.secondary{type: "button", disabled: true} Trip Profitability — Coming soon
+    %button.button.secondary{type: "button", disabled: true} TBD — Coming soon
