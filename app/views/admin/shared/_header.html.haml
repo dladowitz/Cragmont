@@ -6,6 +6,7 @@
     = link_to "Public View", root_path, class: "admin-public-link"
   %nav.admin-nav{"aria-label" => "Admin navigation"}
     = link_to "Trips", admin_trips_path
+    = link_to "Finances", admin_finances_path
     = link_to "Help", admin_help_requests_path
     - if policy(ContentPage).index?
       = link_to "Content", admin_content_path

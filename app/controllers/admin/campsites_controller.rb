@@ -49,9 +49,9 @@ class Admin::CampsitesController < Admin::BaseController
     authorize @trip, :manage_payments?
 
     if @campsite.update(registration_reimbursement_params.merge(registration_reimbursement_recorded_by: current_user))
-      redirect_to admin_trip_path(@trip), notice: "On belay! Campsite reimbursement was recorded."
+      redirect_to registration_reimbursement_redirect_path, notice: "On belay! Campsite reimbursement was recorded."
     else
-      redirect_to admin_trip_path(@trip), alert: "Wow, that was a whipper. #{@campsite.errors.full_messages.to_sentence}", status: :see_other
+      redirect_to registration_reimbursement_redirect_path, alert: "Wow, that was a whipper. #{@campsite.errors.full_messages.to_sentence}", status: :see_other
     end
   end
 
@@ -101,5 +101,20 @@ class Admin::CampsitesController < Admin::BaseController
       :registration_reimbursement_method,
       :registration_reimbursement_notes
     )
+  end
+
+  def registration_reimbursement_redirect_path
+    return admin_trip_path(@trip) unless params[:return_to] == "campsite_reimbursements"
+
+    admin_campsite_reimbursements_path(
+      filters: "1",
+      reimbursement_status: selected_reimbursement_filters
+    )
+  end
+
+  def selected_reimbursement_filters
+    Array(params[:reimbursement_status]).select do |status|
+      status.in?(Admin::CampsiteReimbursementsController::REIMBURSEMENT_FILTERS)
+    end
   end
 end

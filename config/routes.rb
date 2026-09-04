@@ -47,6 +47,8 @@ Rails.application.routes.draw do
   namespace :admin do
     root to: redirect("/admin/trips")
     get "content", to: "content#index", as: :content
+    get "finances", to: "finances#index", as: :finances
+    get "finances/campsite_reimbursements", to: "campsite_reimbursements#index", as: :campsite_reimbursements
     resource :settings, only: %i[show update]
     resources :site_content, path: "content/settings", param: :key, only: %i[edit update]
     resources :content_pages, param: :slug, only: %i[edit update] do
