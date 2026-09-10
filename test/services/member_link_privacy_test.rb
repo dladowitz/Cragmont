@@ -12,7 +12,7 @@ class MemberLinkPrivacyTest < ActiveSupport::TestCase
       assert privacy.private_url?(url), url
       assert_not_includes privacy.redact_text("Visit #{url}"), url
     end
-    %w[https://forecast.weather.gov/point https://www.mountainproject.com/area/123
+    %w[https://. https://forecast.weather.gov/point https://www.mountainproject.com/area/123
        https://maps.google.com/?q=crag https://example.com/classes/anchors
        https://whatsapp.com.example.com/guide].each do |url|
       assert_not privacy.private_url?(url), url
@@ -29,6 +29,19 @@ class MemberLinkPrivacyTest < ActiveSupport::TestCase
       assert_not_includes html, url
       assert_includes html, 'href="/session/new"'
     end
+  end
+
+  test "normalizes browser whitespace and custom album host case without changing path case" do
+    privacy = MemberLinkPrivacy.new(urls: [ " https://EXAMPLE.com/Private%20Album " ])
+    [ "https://chat.what\tsapp.com/tab-token", "\n https://chat.whatsapp.com/space-token \r", "https://example.com/Private%20Album" ].each do |url|
+      assert privacy.private_url?(url), url
+      html = privacy.redact_html(%(<a href="#{url}">Open here</a>), login_path: "/session/new")
+      assert_includes html, 'href="/session/new"'
+      assert_not_includes html, url
+    end
+    assert_not privacy.private_url?("https://example.com/private%20album")
+    html = privacy.redact_html('<a href="https://EXAMPLE.com/Private%20Album">Photos</a><p>https://example.com/Private%20Album</p>', login_path: "/session/new")
+    assert_not_includes html, "Private%20Album"
   end
 
   test "redacts URLs in anchors labels titles code and plain text" do

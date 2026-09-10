@@ -97,6 +97,27 @@ class MemberLinksTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "custom album host variants and class prices stay private" do
+    trip = create_trip("class_trip")
+    trip.update!(photo_album_url: "https://EXAMPLE.com/Private%20Album", description: "[Open here](https://example.com/Private%20Album)", class_original_price: "See https://chat.whatsapp.com/price-token", class_offers_discount: true, class_discounted_price: "See https://photos.app.goo.gl/discount-price-token")
+    get trip_url(trip)
+    assert_response :success
+    %w[Private%20Album price-token discount-price-token].each { |secret| assert_not_includes response.body, secret }
+    log_in_as(users(:sam))
+    get trip_url(trip)
+    %w[Private%20Album price-token discount-price-token].each { |secret| assert_includes response.body, secret }
+  end
+
+  test "global liability HTML cannot bypass login with a tab inside an invite hostname" do
+    SiteSetting.current.update!(liability_warning: "Join <a href=\"https://chat.what\tsapp.com/liability-token\">here</a>")
+    get root_url
+    assert_response :success
+    assert_not_includes response.body, "liability-token"
+    log_in_as(users(:sam))
+    get root_url
+    assert_includes response.body, "liability-token"
+  end
+
   private
 
   def create_trip(type)

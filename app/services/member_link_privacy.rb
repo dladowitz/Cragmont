@@ -2,17 +2,17 @@
 class MemberLinkPrivacy
   LOGIN_MESSAGE = "Log in to reveal member links".freeze
   URL_PATTERN = %r{(?:https?://|mailto:|tel:|(?:[a-z0-9-]+\.)+[a-z]{2,}/)[^\s<>"']+|[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}}i
+  CONTACT_PATTERN = /\A(?:mailto:|tel:|[^\s@]+@[^\s@]+\.[^\s@]+\z)/i
   MEMBER_DOMAINS = %w[whatsapp.com wa.me photos.app.goo.gl photos.google.com photos.google sharedalbums.icloud.com discord.gg t.me join.slack.com].freeze
 
   def initialize(urls: [])
-    @urls = urls.map { |url| URI::DEFAULT_PARSER.unescape(url.to_s.strip).tr("\\", "/") }.compact_blank.map { |url| url.sub(%r{\Ahttps?://}i, "") }.compact_blank
+    @urls = urls.map { |url| normalize_url(url) }.compact_blank
   end
 
   def private_url?(url)
-    # Browsers decode escaped hostnames and treat backslashes as URL separators.
-    value = URI::DEFAULT_PARSER.unescape(url.to_s).tr("\\", "/")
-    return true if @urls.any? { |known| value.sub(%r{\Ahttps?://}i, "").start_with?(known) }
-    return true if value.match?(/\A(?:mailto:|tel:|[^\s@]+@[^\s@]+\.[^\s@]+\z)/i)
+    value = normalize_url(url)
+    return true if @urls.any? { |known| value.start_with?(known) }
+    return true if value.match?(CONTACT_PATTERN)
 
     value = URI::DEFAULT_PARSER.escape(value)
     uri = URI.parse(value.match?(%r{\A(?:https?:)?//}i) ? value : "https://#{value}")
@@ -34,7 +34,7 @@ class MemberLinkPrivacy
     fragment.css("a[href]").each do |link|
       next unless private_url?(link["href"]) || (link["href"].match?(%r{\A(?:https?:)?//}i) && link.text.match?(/\b(?:whatsapp|photos?|album|invite|contact)\b/i))
 
-      @urls << URI::DEFAULT_PARSER.unescape(link["href"]).tr("\\", "/").sub(%r{\Ahttps?://}i, "")
+      @urls << normalize_url(link["href"])
       link.attribute_nodes.each(&:remove)
       link["href"] = login_path
       link.content = LOGIN_MESSAGE
@@ -49,5 +49,21 @@ class MemberLinkPrivacy
       end
     end
     fragment.to_html
+  end
+
+  private
+
+  def normalize_url(url)
+    # Match browser handling of escaped hosts, whitespace, and URL separators.
+    value = URI::DEFAULT_PARSER.unescape(url.to_s).strip.delete("\t\r\n").tr("\\", "/")
+    return value if value.blank? || value.match?(CONTACT_PATTERN)
+
+    uri = URI.parse(URI::DEFAULT_PARSER.escape(value.match?(%r{\A(?:https?:)?//}i) ? value : "https://#{value}"))
+    return value if uri.host.blank?
+
+    uri.host = uri.host.downcase.sub(/(?<=.)\.\z/, "")
+    URI::DEFAULT_PARSER.unescape(uri.to_s).sub(%r{\A(?:https?:)?//}i, "")
+  rescue URI::InvalidURIError
+    value
   end
 end

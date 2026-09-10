@@ -32,8 +32,8 @@
                     - unless trip.single_day_event?
                       to #{trip.end_date.strftime("%m/%d/%y")}
               %div
-                %dt= trip.class_trip? ? "Participants" : "Sites"
-                %dd= trip.class_trip? ? trip.confirmed_signup_count : trip.campsite_count
+                %dt= trip.single_day_event? ? "Participants" : "Sites"
+                %dd= trip.single_day_event? ? trip.confirmed_signup_count : trip.campsite_count
       - if @archived_total_pages > 1
         %nav.pagination{aria: {label: "Past trip pages"}}
           - if @archived_current_page > 1

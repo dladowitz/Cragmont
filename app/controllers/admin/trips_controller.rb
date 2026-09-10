@@ -58,7 +58,7 @@ class Admin::TripsController < Admin::BaseController
       @trip_readiness_checklist = TripReadinessChecklist.new(@trip)
       @trip_readiness_categories = @trip_readiness_checklist.readiness_categories
     end
-    unless @trip.uses_day_trip_signups? || @trip.class_trip?
+    unless @trip.single_day_event?
       @trip_payment_requests = @trip.trip_payment_requests.order(created_at: :desc)
       @trip_payment_request = trip_payment_request
       @trip_details_email = @trip.trip_details_email

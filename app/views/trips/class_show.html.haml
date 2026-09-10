@@ -77,7 +77,7 @@
     %dl.details-list
       %div
         %dt= @trip.class_offers_discount? ? "Original price" : "Price"
-        %dd= format_class_price(@trip.class_original_price)
+        %dd= public_member_text(format_class_price(@trip.class_original_price))
       - if @trip.class_offers_discount? && @trip.class_discount_code.present?
         %div
           %dt Discount code
@@ -89,7 +89,7 @@
       - if @trip.class_offers_discount? && @trip.class_discounted_price.present?
         %div
           %dt Discounted price
-          %dd= format_class_price(@trip.class_discounted_price)
+          %dd= public_member_text(format_class_price(@trip.class_discounted_price))
 
   %section.panel.day-trip-participants-panel.class-trip-participants-panel
     %h2 Participants

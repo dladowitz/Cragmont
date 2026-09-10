@@ -129,6 +129,36 @@ class GymOutingsTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "archived gym outings show participant counts instead of campsites" do
+    DayTripSignup.create!(trip: @trip, user: users(:sam), climbing_abilities: [ "none" ])
+    @trip.update!(status: "archived")
+
+    get past_trips_trips_url
+    assert_response :success
+    assert_select ".archived-trip-row[href='#{trip_path(@trip)}']" do
+      assert_select "dt", text: "Participants"
+      assert_select "dd", text: "1"
+      assert_select "dt", text: "Sites", count: 0
+    end
+  end
+
+  test "gym signup counts young minors in the browser capacity warning and on the server" do
+    @trip.update!(participant_capacity: 1)
+    log_in_as(users(:sam))
+    get trip_url(@trip)
+    assert_response :success
+    assert_select "form[action='#{trip_day_trip_signup_path(@trip)}'][data-signature-available-participant-capacity-value='1'][data-signature-uncounted-minor-age-limit-value='0']"
+
+    post trip_day_trip_signup_url(@trip), params: { day_trip_signup: {
+      with_minor: "1", day_trip_signup_minors_attributes: { "0" => { first_name: "Little", last_name: "Climber", age: 5, relationship: "Child" } },
+      waiver_signature_data: SIGNATURE_DATA_URL, waiver_acknowledged_at: Time.current.iso8601
+    } }
+    assert_redirected_to trip_url(@trip)
+    signup = @trip.day_trip_signups.find_by!(user: users(:sam))
+    assert signup.waitlisted?
+    assert_equal 2, signup.party_capacity_count
+  end
+
   test "gym calendar subscriptions stay public while member links require login" do
     @trip.update!(
       whatsapp_group: "https://chat.whatsapp.com/gym-private-invite",

@@ -124,8 +124,6 @@ class DayTripSignupsController < ApplicationController
   end
 
   def signup_climbing_abilities
-    return [ "none" ] if @trip.gym_outing?
-
     @signup_climbing_abilities ||= normalized_climbing_abilities(signup_params[:climbing_abilities])
   end
 

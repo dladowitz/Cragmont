@@ -348,7 +348,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
         assert_select "dialog.day-trip-signup-modal" do
           assert_select "h2", "Sign Up"
           assert_select "form.day-trip-signup-form[action='#{trip_day_trip_signup_path(trip)}']" do
-            assert_select ".capacity-warning[hidden]", text: "This trip is currently full. You can sign up for the waitlist"
+            assert_select ".capacity-warning[hidden]", text: "There aren’t enough spaces for your group. You can sign up for the waitlist"
             assert_select "legend", text: /Climbing ability/
             assert_select ".signup-field-subtext", text: "Select the type of climbing you are competent at"
             assert_select ".climbing-ability-options[data-climbing-ability-group='true']"
