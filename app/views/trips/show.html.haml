@@ -61,6 +61,7 @@
           %span
             This site is still getting dialed in. If you find issues
             = link_to "let us know.", new_help_request_path
+    = render "calendar_download", trip: @trip
     .stats
       - if @trip.confirmed_uncounted_minor_count.positive?
         .split-signup-stat

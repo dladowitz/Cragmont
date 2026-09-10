@@ -43,6 +43,7 @@
             = public_external_link_to "Weather", weather_url, class: "trip-resource-link trip-weather-link", target: "_blank", rel: "noopener"
           - if photo_album_url.present?
             = member_link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-photo-album-link", target: "_blank", rel: "noopener"
+    = render "calendar_download", trip: @trip
     .stats
       %div
         %span Interested
