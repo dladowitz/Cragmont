@@ -5,11 +5,12 @@ class MemberLinkPrivacy
   MEMBER_DOMAINS = %w[whatsapp.com wa.me photos.app.goo.gl photos.google.com photos.google sharedalbums.icloud.com discord.gg t.me join.slack.com].freeze
 
   def initialize(urls: [])
-    @urls = urls.map { |url| url.to_s.strip }.compact_blank.map { |url| url.sub(%r{\Ahttps?://}i, "") }.compact_blank
+    @urls = urls.map { |url| URI::DEFAULT_PARSER.unescape(url.to_s.strip).tr("\\", "/") }.compact_blank.map { |url| url.sub(%r{\Ahttps?://}i, "") }.compact_blank
   end
 
   def private_url?(url)
-    value = url.to_s
+    # Browsers decode escaped hostnames and treat backslashes as URL separators.
+    value = URI::DEFAULT_PARSER.unescape(url.to_s).tr("\\", "/")
     return true if @urls.any? { |known| value.sub(%r{\Ahttps?://}i, "").start_with?(known) }
     return true if value.match?(/\A(?:mailto:|tel:|[^\s@]+@[^\s@]+\.[^\s@]+\z)/i)
 

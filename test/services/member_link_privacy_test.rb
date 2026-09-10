@@ -20,6 +20,17 @@ class MemberLinkPrivacyTest < ActiveSupport::TestCase
     end
   end
 
+  test "redacts browser normalized hostnames and backslash separators" do
+    privacy = MemberLinkPrivacy.new(urls: [ "https://example.com/private%20album" ])
+    [ "https://example.com/private%20album", "https://chat.whats%61pp.com/encoded-token", "https://chat.whatsapp.com\\backslash-token" ].each do |url|
+      assert privacy.private_url?(url)
+      assert_equal MemberLinkPrivacy::LOGIN_MESSAGE, privacy.redact_text(url)
+      html = privacy.redact_html(%(<a href="#{url}">Join us</a>), login_path: "/session/new")
+      assert_not_includes html, url
+      assert_includes html, 'href="/session/new"'
+    end
+  end
+
   test "redacts URLs in anchors labels titles code and plain text" do
     privacy = MemberLinkPrivacy.new
     secret = "https://chat.whatsapp.com/private-token"
