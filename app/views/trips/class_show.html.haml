@@ -101,7 +101,7 @@
         %tbody
           - @class_signups.each do |signup|
             %tr
-              %td{"data-label" => "Participant"}= signup.public_participant_name
+              %td{"data-label" => "Participant"}= public_member_text(signup.public_participant_name)
     - else
       %p.muted No participants yet.
     .class-participant-signup-action

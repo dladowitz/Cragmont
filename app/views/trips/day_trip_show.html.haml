@@ -180,7 +180,7 @@
         %tbody
           - @day_trip_signups.each do |signup|
             %tr
-              %td{"data-label" => "Participant"}= signup.public_participant_name
+              %td{"data-label" => "Participant"}= public_member_text(signup.public_participant_name)
               - unless @trip.gym_outing?
                 %td{"data-label" => "Climbing Skills"}= signup.skill_level_label
                 %td{"data-label" => "Bringing Gear"}= signup.shared_gear_summary
@@ -202,7 +202,7 @@
         %tbody
           - @day_trip_waitlisted_signups.each do |signup|
             %tr
-              %td{"data-label" => "Participant"}= signup.public_participant_name
+              %td{"data-label" => "Participant"}= public_member_text(signup.public_participant_name)
               - unless @trip.gym_outing?
                 %td{"data-label" => "Climbing Skills"}= signup.skill_level_label
                 %td{"data-label" => "Bringing Gear"}= signup.shared_gear_summary

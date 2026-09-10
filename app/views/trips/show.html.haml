@@ -244,7 +244,7 @@
                         - party_last = party_guest && (!next_signup&.guest? || next_signup.guest_of_signup_id != signup.guest_of_signup_id)
                         %tr{class: [("public-party-primary-row" if party_primary), ("public-party-guest-row" if party_guest), ("public-party-last-row" if party_last)].compact}
                           %td{"data-label" => "Participant"}
-                            %span.public-party-participant-name= signup.user.public_name
+                            %span.public-party-participant-name= public_member_text(signup.user.public_name)
                             %span.public-participant-mobile-status-line
                               %span= signup.user.member? ? "Member" : "Non-Member"
                               %span= signup.waiver_signed? ? "Waiver Signed" : "Waiver Missing"
@@ -327,7 +327,7 @@
                 - signup_available_from_cards = signup_confirmation_campsites.any? || direct_signup_available
                 %tr
                   %td.waitlist-priority-column{"data-label" => "Priority"}= index + 1
-                  %td{"data-label" => "Participant"}= signup.public_waitlist_name
+                  %td{"data-label" => "Participant"}= public_member_text(signup.public_waitlist_name)
                   %td{"data-label" => "Member"}= signup.user.member? ? "Member" : "Non-member"
                   %td{"data-label" => "Joined"}= signup.created_at.in_time_zone.strftime("%-m/%-d/%y %-l:%M%P")
                   %td{"data-label" => "Self Signup"}= signup.waitlist_eligible? ? "Enabled" : "Disabled"
@@ -356,7 +356,7 @@
           - contact_modal_title_id = "climbing-partner-contact-title-#{partner_request.id}"
           %article.climbing-partner-card
             .climbing-partner-details
-              %strong= partner_request.user.public_name
+              %strong= public_member_text(partner_request.user.public_name)
               %span Looking for a climbing partner on this trip
             - if user_signed_in?
               .climbing-partner-contact-control{"data-controller" => "modal"}

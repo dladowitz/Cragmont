@@ -67,6 +67,36 @@ class MemberLinksTest < ActionDispatch::IntegrationTest
     %w[title-token subtitle-token].each { |secret| assert_not_includes response.body, secret }
   end
 
+  test "user edited participant names cannot expose member links on public lists" do
+    users(:sam).update!(first_name: "https://chat.whatsapp.com/participant-token")
+    users(:alex).update!(first_name: "name-contact@example.com")
+    camping_trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+    signup = create_campsite_signup!(campsite: campsite, user: users(:sam), status: "confirmed")
+    create_waitlisted_signup!(trip: camping_trip, user: users(:alex))
+    ClimbingPartnerRequest.create!(trip: camping_trip, user: users(:sam))
+    spot = campsite.parking_spots.find_or_initialize_by(position: 1)
+    spot.update!(status: "assigned", assigned_campsite_signup: signup)
+    day_trip = create_trip("day_trip")
+    DayTripSignup.create!(trip: day_trip, user: users(:sam), climbing_abilities: [ "lead" ])
+    DayTripSignup.create!(trip: day_trip, user: users(:alex), climbing_abilities: [ "lead" ], status: "waitlisted")
+    class_trip = create_trip("class_trip")
+    ClassSignup.create!(trip: class_trip, user: users(:sam))
+
+    [ camping_trip, day_trip, class_trip ].each do |trip|
+      get trip_url(trip)
+      assert_response :success
+      %w[participant-token name-contact@example.com].each { |secret| assert_not_includes response.body, secret }
+    end
+
+    log_in_as(users(:sam))
+    [ camping_trip, day_trip, class_trip ].each do |trip|
+      get trip_url(trip)
+      assert_response :success
+      assert_includes response.body, "participant-token"
+    end
+  end
+
   private
 
   def create_trip(type)
