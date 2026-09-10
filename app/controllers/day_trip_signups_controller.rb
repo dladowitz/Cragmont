@@ -7,7 +7,7 @@ class DayTripSignupsController < ApplicationController
     minor_attributes = normalized_minor_attributes
 
     if signup.persisted?
-      redirect_to trip_path(@trip), alert: "Wow, that was a whipper. You're already signed up for this day trip."
+      redirect_to trip_path(@trip), alert: "Wow, that was a whipper. You're already signed up for this #{@trip.trip_type_label.downcase}."
     elsif none_climbing_ability_selected?
       redirect_to trip_path(@trip), alert: "Choose an available climbing ability before tying in."
     elsif signing_up_with_minors? && minor_attributes.empty?
@@ -28,7 +28,7 @@ class DayTripSignupsController < ApplicationController
     signup = @trip.day_trip_signups.active.find_by(user: current_user)
 
     if signup.blank?
-      redirect_to trip_path(@trip), alert: "You're not signed up for this day trip.", status: :see_other
+      redirect_to trip_path(@trip), alert: "You're not signed up for this #{@trip.trip_type_label.downcase}.", status: :see_other
     else
       signup.primary_signup.destroy!
       redirect_to trip_path(@trip), notice: "You're off the roster. We'll catch you on the next pitch.", status: :see_other
@@ -38,7 +38,7 @@ class DayTripSignupsController < ApplicationController
   private
 
   def set_trip
-    @trip = Trip.published_for_public.day_trip.find(params[:trip_id])
+    @trip = Trip.published_for_public.with_day_trip_signups.find(params[:trip_id])
   end
 
   def signup_params
@@ -95,6 +95,8 @@ class DayTripSignupsController < ApplicationController
   end
 
   def day_trip_signup_attributes(status:)
+    return { climbing_abilities: [ "none" ], status: status } if @trip.gym_outing?
+
     {
       climbing_abilities: signup_climbing_abilities,
       rope_60m: roped_climbing? && truthy_param?(:rope_60m),
@@ -115,18 +117,20 @@ class DayTripSignupsController < ApplicationController
 
   def day_trip_signup_notice(signup)
     if signup.waitlisted?
-      "On belay! You're on the waitlist for this day trip."
+      "On belay! You're on the waitlist for this #{@trip.trip_type_label.downcase}."
     else
-      "On belay! You've successfully signed up for this day trip."
+      "On belay! You've successfully signed up for this #{@trip.trip_type_label.downcase}."
     end
   end
 
   def signup_climbing_abilities
+    return [ "none" ] if @trip.gym_outing?
+
     @signup_climbing_abilities ||= normalized_climbing_abilities(signup_params[:climbing_abilities])
   end
 
   def none_climbing_ability_selected?
-    signup_climbing_abilities == [ "none" ]
+    !@trip.gym_outing? && signup_climbing_abilities == [ "none" ]
   end
 
   def normalized_climbing_abilities(values)

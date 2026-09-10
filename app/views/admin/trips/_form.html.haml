@@ -70,18 +70,18 @@
             = form.label :photo_album_url, "Google Photo Album"
             = form.url_field :photo_album_url
   - else
-    .form-grid{class: ("admin-day-trip-top-grid" if trip.day_trip?)}
+    .form-grid{class: ("admin-day-trip-top-grid" if trip.uses_day_trip_signups?)}
       .field.admin-trip-name-field
-        = required_label form, :name, "Climbing Area Name"
+        = required_label form, :name, (trip.gym_outing? ? "Gym outing name" : "Climbing Area Name")
         = form.text_field :name, required: true
-      - if trip.day_trip?
+      - if trip.uses_day_trip_signups?
         .field.admin-trip-participant-capacity-field
           = required_label form, :participant_capacity, "Number of participants"
-          = form.number_field :participant_capacity, min: 0
+          = form.number_field :participant_capacity, min: (trip.gym_outing? ? 1 : 0), required: true
       .field.admin-trip-location-field
         = required_label form, :location
         = form.text_field :location, required: true
-      - if trip.day_trip?
+      - if trip.uses_day_trip_signups?
         .field.admin-trip-location-image-field
           = form.label :day_trip_image, "Location image"
           = form.file_field :day_trip_image, accept: "image/*"
@@ -116,7 +116,7 @@
                     %button.participant-picker-option{type: "button", role: "option", aria: { selected: selected_option.to_s }, data: { participant_picker_target: "option", action: "participant-picker#choose", value: option[:value], label: option[:label], search_text: option[:search_text] }}
                       %span= option[:label]
                 %li.participant-picker-empty{hidden: true, data: { participant_picker_target: "empty" }} No coordinators found.
-      - if trip.persisted? && !trip.day_trip?
+      - if trip.persisted? && !trip.uses_day_trip_signups?
         .field
           = form.label :group_campfire_campsite_id, "Group Campfire Site"
           = form.select :group_campfire_campsite_id, group_campfire_options
@@ -126,52 +126,54 @@
       .field.form-grid-full.admin-trip-description-field
         = form.label :description
         = form.text_area :description, rows: 5
-    - if trip.day_trip?
+    - if trip.uses_day_trip_signups?
       .form-grid.day-trip-admin-fields
         .field
           = required_label form, :meeting_time, "Meeting time"
-          = form.time_field :meeting_time
+          = form.time_field :meeting_time, required: true
         .field
           = form.label :end_time, "End time"
           = form.time_field :end_time
         .field
-          = required_label form, :meeting_location
+          = trip.gym_outing? ? form.label(:meeting_location, "Meeting spot (optional)") : required_label(form, :meeting_location)
           = form.text_field :meeting_location
         .field
-          = required_label form, :meeting_location_url, "Meeting Location Map Link"
+          = trip.gym_outing? ? form.label(:meeting_location_url, "Gym map link") : required_label(form, :meeting_location_url, "Meeting Location Map Link")
           = form.url_field :meeting_location_url
         .field
           = form.label :cost_dollars, "Cost"
           = form.text_field :cost_dollars, value: format_cents(trip.cost_cents), inputmode: "decimal"
-        .field.form-grid-full
-          = required_label form, :climbing_types, "Types of Climbing"
-          .climbing-type-options
-            = hidden_field_tag "trip[climbing_types][]", ""
-            - Trip::CLIMBING_TYPES.each do |climbing_type|
-              - checkbox_id = "trip_climbing_types_#{climbing_type}"
-              %label.climbing-type-option{for: checkbox_id}
-                = check_box_tag "trip[climbing_types][]", climbing_type, trip.climbing_type_enabled?(climbing_type), id: checkbox_id
-                %span.climbing-type-option-mark{"aria-hidden" => "true"}
-                %span= Trip::CLIMBING_TYPE_LABELS.fetch(climbing_type)
-        .field
-          = form.label :mountain_project_url, "Mountain Project link"
-          = form.url_field :mountain_project_url
-        .field
-          = form.label :guide_book_url, "Guide book link"
-          = form.url_field :guide_book_url
-        .field.form-grid-full
-          = required_label form, :late_arrival_instructions, "How to find us if running late"
-          = form.text_area :late_arrival_instructions, rows: 3
-        .field.form-grid-full
-          = form.label :carpool_meeting_spot, "Possible carpool meeting spot"
-          = form.text_area :carpool_meeting_spot, rows: 3
+        - unless trip.gym_outing?
+          .field.form-grid-full
+            = required_label form, :climbing_types, "Types of Climbing"
+            .climbing-type-options
+              = hidden_field_tag "trip[climbing_types][]", ""
+              - Trip::CLIMBING_TYPES.each do |climbing_type|
+                - checkbox_id = "trip_climbing_types_#{climbing_type}"
+                %label.climbing-type-option{for: checkbox_id}
+                  = check_box_tag "trip[climbing_types][]", climbing_type, trip.climbing_type_enabled?(climbing_type), id: checkbox_id
+                  %span.climbing-type-option-mark{"aria-hidden" => "true"}
+                  %span= Trip::CLIMBING_TYPE_LABELS.fetch(climbing_type)
+          .field
+            = form.label :mountain_project_url, "Mountain Project link"
+            = form.url_field :mountain_project_url
+          .field
+            = form.label :guide_book_url, "Guide book link"
+            = form.url_field :guide_book_url
+          .field.form-grid-full
+            = required_label form, :late_arrival_instructions, "How to find us if running late"
+            = form.text_area :late_arrival_instructions, rows: 3
+          .field.form-grid-full
+            = form.label :carpool_meeting_spot, "Possible carpool meeting spot"
+            = form.text_area :carpool_meeting_spot, rows: 3
     .form-grid.admin-trip-resource-fields
       .field
         = form.label :whatsapp_group, "WhatsApp group"
         = form.url_field :whatsapp_group
-      .field
-        = form.label :weather_url, "Weather"
-        = form.url_field :weather_url
+      - unless trip.gym_outing?
+        .field
+          = form.label :weather_url, "Weather"
+          = form.url_field :weather_url
       .field
         = form.label :photo_album_url, "Google Photo Album"
         = form.url_field :photo_album_url

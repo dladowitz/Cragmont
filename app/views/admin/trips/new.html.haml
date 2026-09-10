@@ -17,6 +17,7 @@
             .trip-type-choice-actions
               = link_to "Camping trip", new_admin_trip_path(trip_type: "camping"), class: "button"
               = link_to "Day trip", new_admin_trip_path(trip_type: "day_trip"), class: "button secondary"
+              = link_to "Gym outing", new_admin_trip_path(trip_type: "gym_outing"), class: "button secondary"
               = link_to "Class", new_admin_trip_path(trip_type: "class_trip"), class: "button secondary"
             .form-actions
               = link_to "Cancel", admin_trips_path, class: "button secondary"

@@ -112,11 +112,11 @@
       .trip-reimbursement-summary.trip-management-reimbursement
         %strong Campsite Fees Reimbursed:
         %span.status{class: reimbursement_status_class}= "#{@reimbursed_campsites_count} of #{reimbursable_campsites_count}"
-- if @trip.day_trip?
+- if @trip.uses_day_trip_signups?
   %section.panel.day-trip-admin-details
     .panel-header
       %div
-        %h2 Crag Plan
+        %h2= @trip.gym_outing? ? "Gym Plan" : "Crag Plan"
     %dl.details-list
       %div
         %dt Meeting time
@@ -131,10 +131,11 @@
           - if @trip.meeting_location.present? && meeting_location_url.present?
             = link_to @trip.meeting_location, meeting_location_url, target: "_blank", rel: "noopener"
           - else
-            = @trip.meeting_location.presence || "Not set"
-      %div
-        %dt Types of Climbing
-        %dd= @trip.climbing_type_labels.presence&.to_sentence || "Not set"
+            = @trip.meeting_location.presence || (@trip.gym_outing? ? @trip.location : "Not set")
+      - unless @trip.gym_outing?
+        %div
+          %dt Types of Climbing
+          %dd= @trip.climbing_type_labels.presence&.to_sentence || "Not set"
       %div
         %dt Cost
         %dd= format_trip_cost(@trip.cost_cents)
@@ -239,7 +240,7 @@
               = link_to @trip.photo_album_url, photo_album_url, target: "_blank", rel: "noopener"
             - else
               = @trip.photo_album_url
-- if @trip.day_trip?
+- if @trip.uses_day_trip_signups?
   %section.panel.day-trip-participants-panel
     .panel-header
       %div
@@ -249,8 +250,9 @@
         %thead
           %tr
             %th Participant
-            %th Climbing Skills
-            %th Bringing Gear
+            - unless @trip.gym_outing?
+              %th Climbing Skills
+              %th Bringing Gear
             %th Party
             %th Waiver
             - if !@trip.deleted? && policy(@trip).manage_participants?
@@ -259,8 +261,9 @@
           - @day_trip_signups.each do |signup|
             %tr
               %td= signup.user.full_name
-              %td= signup.skill_level_label
-              %td= signup.shared_gear_summary
+              - unless @trip.gym_outing?
+                %td= signup.skill_level_label
+                %td= signup.shared_gear_summary
               %td
                 - party = []
                 - party << signup.guest_signups.map { |guest_signup| guest_signup.user.full_name }.to_sentence if signup.includes_guests?
@@ -284,8 +287,8 @@
                     %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                       .confirmation-modal-content
                         %div
-                          %h2 Remove #{signup.user.full_name} from this day trip?
-                          %p This removes the participant from the day trip roster.
+                          %h2 Remove #{signup.user.full_name} from this #{@trip.trip_type_label.downcase}?
+                          %p This removes the participant from the trip roster.
                         .form-actions
                           %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
                           = button_to "Remove", remove_admin_trip_day_trip_signup_path(@trip, signup), method: :delete, class: "button danger"
@@ -300,8 +303,9 @@
         %thead
           %tr
             %th Participant
-            %th Climbing Skills
-            %th Bringing Gear
+            - unless @trip.gym_outing?
+              %th Climbing Skills
+              %th Bringing Gear
             %th Party
             - if !@trip.deleted? && policy(@trip).manage_participants?
               %th Actions
@@ -309,8 +313,9 @@
           - @day_trip_waitlisted_signups.each do |signup|
             %tr
               %td= signup.user.full_name
-              %td= signup.skill_level_label
-              %td= signup.shared_gear_summary
+              - unless @trip.gym_outing?
+                %td= signup.skill_level_label
+                %td= signup.shared_gear_summary
               %td
                 - party = []
                 - party << signup.guest_signups.map { |guest_signup| guest_signup.user.full_name }.to_sentence if signup.includes_guests?
@@ -334,7 +339,7 @@
                       .confirmation-modal-content
                         %div
                           %h2 Remove #{signup.user.full_name} from the waitlist?
-                          %p This removes the participant from the day trip waitlist.
+                          %p This removes the participant from the trip waitlist.
                         .form-actions
                           %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
                           = button_to "Remove", remove_admin_trip_day_trip_signup_path(@trip, signup), method: :delete, class: "button danger"

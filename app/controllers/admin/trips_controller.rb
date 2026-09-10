@@ -16,7 +16,7 @@ class Admin::TripsController < Admin::BaseController
 
   def show
     authorize @trip
-    if @trip.day_trip?
+    if @trip.uses_day_trip_signups?
       @campsites = []
       @waitlisted_signups = []
       @day_trip_signups = @trip.day_trip_signups.confirmed.primary.includes(:user, :day_trip_signup_minors, guest_signups: :user).order(:created_at)
@@ -45,7 +45,7 @@ class Admin::TripsController < Admin::BaseController
       @day_trip_waitlisted_signups = []
       @class_signups = []
     end
-    @trip_participant_user_ids = if @trip.day_trip?
+    @trip_participant_user_ids = if @trip.uses_day_trip_signups?
       @trip.day_trip_signups.active.distinct.pluck(:user_id)
     elsif @trip.class_trip?
       @trip.class_signups.active.distinct.pluck(:user_id)
@@ -58,7 +58,7 @@ class Admin::TripsController < Admin::BaseController
       @trip_readiness_checklist = TripReadinessChecklist.new(@trip)
       @trip_readiness_categories = @trip_readiness_checklist.readiness_categories
     end
-    unless @trip.day_trip? || @trip.class_trip?
+    unless @trip.uses_day_trip_signups? || @trip.class_trip?
       @trip_payment_requests = @trip.trip_payment_requests.order(created_at: :desc)
       @trip_payment_request = trip_payment_request
       @trip_details_email = @trip.trip_details_email
@@ -88,7 +88,7 @@ class Admin::TripsController < Admin::BaseController
 
     @trip = Trip.new(
       trip_type: selected_new_trip_type,
-      late_arrival_instructions: Trip::DEFAULT_LATE_ARRIVAL_INSTRUCTIONS,
+      late_arrival_instructions: (Trip::DEFAULT_LATE_ARRIVAL_INSTRUCTIONS unless selected_new_trip_type == "gym_outing"),
       cost_cents: 0
     )
     authorize @trip

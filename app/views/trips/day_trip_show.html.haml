@@ -45,10 +45,11 @@
           = @trip.start_date.to_fs(:long)
           - if @trip.meeting_time.present?
             at #{@trip.meeting_time.strftime("%-l:%M%P")}
-        .public-beta-notice.trips-faq-callout
-          %span
-            Want to know what to expect on a day trip? Read
-            = link_to "here.", day_trip_what_to_expect_trips_path
+        - unless @trip.gym_outing?
+          .public-beta-notice.trips-faq-callout
+            %span
+              Want to know what to expect on a day trip? Read
+              = link_to "here.", day_trip_what_to_expect_trips_path
       .trips-index-notices.trip-summary-notices
         - if whatsapp_group_url.present? || weather_url.present? || mountain_project_url.present? || guide_book_url.present? || photo_album_url.present?
           .trip-resource-links
@@ -80,15 +81,15 @@
   %section.panel.day-trip-details-panel
     .day-trip-plan-layout
       .day-trip-plan-main
-        %h2 Crag Plan
+        %h2= @trip.gym_outing? ? "Gym Plan" : "Crag Plan"
         %dl.details-list
           %div
             %dt Meeting spot
             %dd
               - if meeting_location_url.present?
-                = link_to @trip.meeting_location, meeting_location_url, target: "_blank", rel: "noopener"
+                = link_to @trip.meeting_location.presence || @trip.location, meeting_location_url, target: "_blank", rel: "noopener"
               - else
-                = @trip.meeting_location
+                = @trip.meeting_location.presence || @trip.location
           %div
             %dt Meeting time
             %dd= @trip.meeting_time&.strftime("%-l:%M%P")
@@ -96,13 +97,14 @@
             %div
               %dt End time
               %dd= @trip.end_time.strftime("%-l:%M%P")
-          %div
-            %dt Types of climbing
-            %dd.gear-needed-list
-              - [["Sport", @trip.sport_climbing?], ["Trad", @trip.trad_climbing?], ["Bouldering", @trip.bouldering?]].each do |label, needed|
-                %span.gear-needed-item{class: ("is-needed" if needed), "aria-label" => "#{label} #{needed ? "needed" : "not needed"}"}
-                  %span.gear-needed-check{"aria-hidden" => "true"}= needed ? "✓" : ""
-                  %span= label
+          - unless @trip.gym_outing?
+            %div
+              %dt Types of climbing
+              %dd.gear-needed-list
+                - [["Sport", @trip.sport_climbing?], ["Trad", @trip.trad_climbing?], ["Bouldering", @trip.bouldering?]].each do |label, needed|
+                  %span.gear-needed-item{class: ("is-needed" if needed), "aria-label" => "#{label} #{needed ? "needed" : "not needed"}"}
+                    %span.gear-needed-check{"aria-hidden" => "true"}= needed ? "✓" : ""
+                    %span= label
           %div
             %dt Cost
             %dd= format_trip_cost(@trip.cost_cents)
@@ -114,22 +116,23 @@
             %div
               %dt Carpooling info
               %dd= linkified_simple_format(@trip.carpool_meeting_spot)
-          %div
-            %dt If you are running late
-            %dd= linkified_simple_format(@trip.late_arrival_instructions)
+          - if @trip.late_arrival_instructions.present?
+            %div
+              %dt If you are running late
+              %dd= linkified_simple_format(@trip.late_arrival_instructions)
       .day-trip-signup-action
         - if @trip.archived?
           %p.muted Archived trip. New participant signups are closed.
         - elsif @current_day_trip_signup.present?
           %p
-            %strong You are #{@current_day_trip_signup.status} for this day trip.
+            %strong You are #{@current_day_trip_signup.status} for this #{@trip.trip_type_label.downcase}.
           - unless @current_day_trip_signup.guest?
             %div{"data-controller" => "modal"}
-              %button.button.danger{"data-action" => "modal#open", type: "button"} Remove me from this day trip
+              %button.button.danger{"data-action" => "modal#open", type: "button"} Remove me from this #{@trip.trip_type_label.downcase}
               %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                 .signup-modal-content
                   %div
-                    %h2 Remove yourself from this day trip?
+                    %h2 Remove yourself from this #{@trip.trip_type_label.downcase}?
                   .form-actions
                     %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
                     = button_to "Remove Me", trip_day_trip_signup_path(@trip), method: :delete, class: "button danger"
@@ -170,14 +173,16 @@
         %thead
           %tr
             %th Participant
-            %th Climbing Skills
-            %th Bringing Gear
+            - unless @trip.gym_outing?
+              %th Climbing Skills
+              %th Bringing Gear
         %tbody
           - @day_trip_signups.each do |signup|
             %tr
               %td{"data-label" => "Participant"}= signup.public_participant_name
-              %td{"data-label" => "Climbing Skills"}= signup.skill_level_label
-              %td{"data-label" => "Bringing Gear"}= signup.shared_gear_summary
+              - unless @trip.gym_outing?
+                %td{"data-label" => "Climbing Skills"}= signup.skill_level_label
+                %td{"data-label" => "Bringing Gear"}= signup.shared_gear_summary
     - else
       %p.muted No participants yet.
 
@@ -190,14 +195,16 @@
         %thead
           %tr
             %th Participant
-            %th Climbing Skills
-            %th Bringing Gear
+            - unless @trip.gym_outing?
+              %th Climbing Skills
+              %th Bringing Gear
         %tbody
           - @day_trip_waitlisted_signups.each do |signup|
             %tr
               %td{"data-label" => "Participant"}= signup.public_participant_name
-              %td{"data-label" => "Climbing Skills"}= signup.skill_level_label
-              %td{"data-label" => "Bringing Gear"}= signup.shared_gear_summary
+              - unless @trip.gym_outing?
+                %td{"data-label" => "Climbing Skills"}= signup.skill_level_label
+                %td{"data-label" => "Bringing Gear"}= signup.shared_gear_summary
 
   %section.panel.day-trip-coordinator-panel
     .panel-header
@@ -214,11 +221,16 @@
     - else
       %p.muted Not yet set
 
-  %section.panel.day-trip-safety-panel
-    .panel-header
-      %div
-        %h2 Safety Reminder
-    .content-page-markdown
-      = render_content_page_markdown(@trip.safety_reminder)
+  - if @trip.gym_outing?
+    %section.panel.day-trip-safety-panel
+      %h2 Before you climb
+      %p On belay! Check the gym’s admission, waiver, orientation, and belay requirements. Signing up here reserves a place with the group; arrange gym admission directly with the gym.
+  - else
+    %section.panel.day-trip-safety-panel
+      .panel-header
+        %div
+          %h2 Safety Reminder
+      .content-page-markdown
+        = render_content_page_markdown(@trip.safety_reminder)
   = render "shared/liability_warning"
 %p.background-image-caption IRS Wall, Joshua Tree
