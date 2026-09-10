@@ -37,12 +37,12 @@ class MemberLinkPrivacyTest < ActiveSupport::TestCase
     html = <<~HTML
       <a href="#{secret}" title="#{secret}">#{secret}</a>
       <p title="#{secret}">#{secret} chat.whatsapp.com/bare-token member@example.com</p>
-      <code>#{secret}</code><a href="https://custom.example/album-token">Trip photos</a>
-      <p>Also https://custom.example/album-token</p>
+      <code>#{secret}</code><a href="https://custom.example/album%20token">Trip photos</a>
+      <p>Also https://custom.example/album%20token</p>
       <a href="/help">Contact us</a><a href="https://example.com/guide">Guide</a>
     HTML
     redacted = privacy.redact_html(html, login_path: "/session/new?return_to=%2Ftrips")
-    %w[private-token bare-token member@example.com album-token].each { |token| assert_not_includes redacted, token }
+    %w[private-token bare-token member@example.com album%20token].each { |token| assert_not_includes redacted, token }
     assert_includes redacted, 'href="/help"'
     assert_includes redacted, 'href="https://example.com/guide"'
     assert_includes redacted, MemberLinkPrivacy::LOGIN_MESSAGE

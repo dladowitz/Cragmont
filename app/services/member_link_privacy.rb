@@ -34,7 +34,7 @@ class MemberLinkPrivacy
     fragment.css("a[href]").each do |link|
       next unless private_url?(link["href"]) || (link["href"].match?(%r{\A(?:https?:)?//}i) && link.text.match?(/\b(?:whatsapp|photos?|album|invite|contact)\b/i))
 
-      @urls << link["href"].sub(%r{\Ahttps?://}i, "")
+      @urls << URI::DEFAULT_PARSER.unescape(link["href"]).tr("\\", "/").sub(%r{\Ahttps?://}i, "")
       link.attribute_nodes.each(&:remove)
       link["href"] = login_path
       link.content = LOGIN_MESSAGE
