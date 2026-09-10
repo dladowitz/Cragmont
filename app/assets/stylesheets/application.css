@@ -2719,7 +2719,7 @@ body.trips-index-page .trips-index-panel .muted {
 
 .archived-trip-meta div {
   display: grid;
-  grid-template-columns: 72px 1fr;
+  grid-template-columns: 7rem minmax(0, 1fr);
   gap: 10px;
 }
 

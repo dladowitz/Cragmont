@@ -22,6 +22,25 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "login returns to the resource page and preserves destination after a failed attempt" do
+    path = trip_path(trips(:yosemite))
+    get new_session_url(return_to: path)
+    assert_select "input[name='return_to'][value='#{path}']"
+    post session_url, params: { email: "sam@example.com", password: "wrong", return_to: path }
+    assert_response :unprocessable_entity
+    assert_select "input[name='return_to'][value='#{path}']"
+    post session_url, params: { email: "sam@example.com", password: "password", return_to: path }
+    assert_redirected_to path
+  end
+
+  test "login rejects external and malformed return destinations" do
+    [ "https://evil.example", "//evil.example", "/\\evil.example", "javascript:alert(1)", "/trips\nLocation: evil" ].each do |path|
+      post session_url, params: { email: "sam@example.com", password: "password", return_to: path }
+      assert_redirected_to trips_url
+      delete session_url
+    end
+  end
+
   test "logout ends the authenticated session" do
     post session_url, params: { email: "alex@example.com", password: "password" }
 

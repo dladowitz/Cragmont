@@ -7,6 +7,7 @@
   %section.panel.auth-panel
     %h1 Log in
     = form_with url: session_path, class: "admin-form" do |form|
+      = form.hidden_field :return_to, value: params[:return_to]
       .field
         = required_label form, :email
         = form.email_field :email, required: true, autocomplete: "email"

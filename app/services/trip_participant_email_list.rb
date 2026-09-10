@@ -39,7 +39,7 @@ class TripParticipantEmailList
   end
 
   def signup_scope(status)
-    if trip.day_trip?
+    if trip.uses_day_trip_signups?
       trip.day_trip_signups.public_send(status).includes(:user).order(:created_at, :id)
     elsif trip.class_trip?
       trip.class_signups.public_send(status).includes(:user).order(:created_at, :id)
