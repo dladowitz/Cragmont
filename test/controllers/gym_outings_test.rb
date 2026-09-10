@@ -128,4 +128,35 @@ class GymOutingsTest < ActionDispatch::IntegrationTest
       assert_response :not_found
     end
   end
+
+  test "gym calendar subscriptions stay public while member links require login" do
+    @trip.update!(
+      whatsapp_group: "https://chat.whatsapp.com/gym-private-invite",
+      photo_album_url: "https://example.com/gym-private-album",
+      description: "Photos: https://example.com/gym-private-album"
+    )
+    get trip_url(@trip)
+    assert_response :success
+    assert_not_includes response.body, "gym-private-invite"
+    assert_not_includes response.body, "gym-private-album"
+    assert_select "a[href='#{new_session_path(return_to: trip_path(@trip))}']", text: /log in to reveal/
+    assert_select "a[href='#{calendar_trip_path(@trip, format: :ics)}']"
+
+    get calendar_trips_url(format: :ics)
+    assert_response :success
+    assert_includes response.body, "UID:trip-#{@trip.id}@cragmontclimbing.com"
+    assert_includes response.body, "DTSTART:20261017T010000Z"
+    assert_includes response.body, "DTEND:20261017T030000Z"
+    assert_not_includes response.body, "gym-private"
+
+    log_in_as(users(:sam))
+    get trip_url(@trip)
+    assert_select "a[href='#{@trip.whatsapp_group}']"
+    assert_select "a[href='#{@trip.photo_album_url}']"
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+
+    get calendar_trip_url(@trip, format: :ics)
+    assert_response :success
+    assert_not_includes response.body, "gym-private"
+  end
 end
