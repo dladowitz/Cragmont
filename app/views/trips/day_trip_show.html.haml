@@ -116,7 +116,7 @@
             %div
               %dt Carpooling info
               %dd= linkified_simple_format(@trip.carpool_meeting_spot)
-          - if @trip.late_arrival_instructions.present?
+          - if @trip.day_trip? && @trip.late_arrival_instructions.present?
             %div
               %dt If you are running late
               %dd= linkified_simple_format(@trip.late_arrival_instructions)

@@ -88,7 +88,6 @@ class Admin::TripsController < Admin::BaseController
 
     @trip = Trip.new(
       trip_type: selected_new_trip_type,
-      late_arrival_instructions: (Trip::DEFAULT_LATE_ARRIVAL_INSTRUCTIONS unless selected_new_trip_type == "gym_outing"),
       cost_cents: 0
     )
     authorize @trip

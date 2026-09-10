@@ -60,6 +60,8 @@ class GymOutingsTest < ActionDispatch::IntegrationTest
     assert_select "a", text: "Log in to sign up"
     assert_select ".trips-faq-callout", count: 0
     assert_select "dt", text: "Types of climbing", count: 0
+    assert_select "dt", text: "If you are running late", count: 0
+    assert_not_includes response.body, Trip::DEFAULT_LATE_ARRIVAL_INSTRUCTIONS
     assert_select "p", text: /gym’s admission/
 
     log_in_as(users(:sam))
