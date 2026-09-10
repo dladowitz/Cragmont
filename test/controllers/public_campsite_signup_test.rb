@@ -92,6 +92,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public day trip detail renders mobile hero image block" do
+    log_in_as(users(:sam))
     trip = Trip.create!(
       trip_type: "day_trip",
       name: "Vent 5 Day",
@@ -897,6 +898,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public trip detail shows trip campsite and coordinator info" do
+    log_in_as(users(:sam))
     trips(:yosemite).update!(
       description: "**Yosemite** camping notes.\n\n## Parking\n\nArrive early and bring snacks.",
       whatsapp_group: "https://chat.whatsapp.com/yosemite-spring",
@@ -965,6 +967,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public climbing partner board shows trip level requests without requiring a campsite signup" do
+    log_in_as(users(:sam))
     partner_user = User.create!(first_name: "Pia", last_name: "Partner", email: "pia-partner@example.com", phone: "555-0199", password: "password")
     private_user = User.create!(first_name: "Nora", last_name: "NotLooking", email: "nora-private@example.com", password: "password")
     other_trip_user = User.create!(first_name: "Joshua", last_name: "Tree", email: "joshua-trip@example.com", password: "password")

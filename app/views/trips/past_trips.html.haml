@@ -13,11 +13,11 @@
     - if @archived_trips.any?
       .archived-trip-list
         - @archived_trips.each do |trip|
-          = link_to trip_path(trip), class: "archived-trip-row", aria: { label: "View #{trip.name}" } do
+          = link_to trip_path(trip), class: "archived-trip-row", aria: { label: "View #{public_member_text(trip.name, trip: trip)}" } do
             %div
-              %h3= trip.name
+              %h3= public_member_text(trip.name, trip: trip)
               .trip-card-title-line
-                %p= trip.location
+                %p= public_member_text(trip.location, trip: trip)
                 %span.status.trip-type-badge= trip.trip_type_label
             %dl.archived-trip-meta
               %div

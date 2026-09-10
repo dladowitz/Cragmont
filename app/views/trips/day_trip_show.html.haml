@@ -11,36 +11,36 @@
 .trip-show-mobile-hero
   .trip-show-mobile-hero-copy
     .trip-title-line
-      %h1= @trip.name
+      %h1= public_member_text(@trip.name)
       %span.status.trip-type-badge.day-trip-badge= public_trip_type_label(@trip)
       - if @trip.capacity_full?
         %span.status.danger-status Trip Full
       - elsif @trip.almost_full?
         %span.status.warning-status Almost Full
-    %p.trip-show-mobile-location= @trip.location
+    %p.trip-show-mobile-location= public_member_text(@trip.location)
     %p.trip-show-mobile-dates
       = @trip.start_date.to_fs(:long)
       - if @trip.meeting_time.present?
         at #{@trip.meeting_time.strftime("%-l:%M%P")}
     - if whatsapp_group_url.present?
-      = link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link trip-mobile-resource-link trip-whatsapp-mobile-link", target: "_blank", rel: "noopener"
+      = member_link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link trip-mobile-resource-link trip-whatsapp-mobile-link", target: "_blank", rel: "noopener"
     - if weather_url.present?
-      = link_to "Weather", weather_url, class: "trip-resource-link trip-mobile-resource-link trip-weather-mobile-link", target: "_blank", rel: "noopener"
+      = public_external_link_to "Weather", weather_url, class: "trip-resource-link trip-mobile-resource-link trip-weather-mobile-link", target: "_blank", rel: "noopener"
     - if photo_album_url.present?
-      = link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-mobile-resource-link trip-photo-album-mobile-link", target: "_blank", rel: "noopener"
+      = member_link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-mobile-resource-link trip-photo-album-mobile-link", target: "_blank", rel: "noopener"
   %span.trip-show-mobile-hero-caption IRS Wall, Joshua Tree
 %main.public-main
   %section.panel.trip-overview.day-trip-overview
     .panel-header.trip-summary-header
       .trip-summary-copy
         .trip-title-line
-          %h1= @trip.name
+          %h1= public_member_text(@trip.name)
           %span.status.trip-type-badge.day-trip-badge= public_trip_type_label(@trip)
           - if @trip.capacity_full?
             %span.status.danger-status Trip Full
           - elsif @trip.almost_full?
             %span.status.warning-status Almost Full
-        %h2= @trip.location
+        %h2= public_member_text(@trip.location)
         %p
           = @trip.start_date.to_fs(:long)
           - if @trip.meeting_time.present?
@@ -54,15 +54,15 @@
         - if whatsapp_group_url.present? || weather_url.present? || mountain_project_url.present? || guide_book_url.present? || photo_album_url.present?
           .trip-resource-links
             - if whatsapp_group_url.present?
-              = link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link trip-whatsapp-link", target: "_blank", rel: "noopener"
+              = member_link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link trip-whatsapp-link", target: "_blank", rel: "noopener"
             - if weather_url.present?
-              = link_to "Weather", weather_url, class: "trip-resource-link trip-weather-link", target: "_blank", rel: "noopener"
+              = public_external_link_to "Weather", weather_url, class: "trip-resource-link trip-weather-link", target: "_blank", rel: "noopener"
             - if mountain_project_url.present?
-              = link_to "Mountain Project", mountain_project_url, class: "trip-resource-link trip-mountain-project-link", target: "_blank", rel: "noopener"
+              = public_external_link_to "Mountain Project", mountain_project_url, class: "trip-resource-link trip-mountain-project-link", target: "_blank", rel: "noopener"
             - if guide_book_url.present?
-              = link_to "Guide Book", guide_book_url, class: "trip-resource-link trip-guide-book-link", target: "_blank", rel: "noopener"
+              = public_external_link_to "Guide Book", guide_book_url, class: "trip-resource-link trip-guide-book-link", target: "_blank", rel: "noopener"
             - if photo_album_url.present?
-              = link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-photo-album-link", target: "_blank", rel: "noopener"
+              = member_link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-photo-album-link", target: "_blank", rel: "noopener"
         .public-beta-notice.site-feedback-callout
           %span
             This site is still getting dialed in. If you find issues
@@ -87,9 +87,9 @@
             %dt Meeting spot
             %dd
               - if meeting_location_url.present?
-                = link_to @trip.meeting_location.presence || @trip.location, meeting_location_url, target: "_blank", rel: "noopener"
+                = public_external_link_to @trip.meeting_location.presence || @trip.location, meeting_location_url, target: "_blank", rel: "noopener"
               - else
-                = @trip.meeting_location.presence || @trip.location
+                = public_member_text(@trip.meeting_location.presence || @trip.location)
           %div
             %dt Meeting time
             %dd= @trip.meeting_time&.strftime("%-l:%M%P")
@@ -111,7 +111,7 @@
           - if @trip.sun_exposure.present?
             %div
               %dt Sun Exposure
-              %dd= @trip.sun_exposure
+              %dd= public_member_text(@trip.sun_exposure)
           - if @trip.carpool_meeting_spot.present?
             %div
               %dt Carpooling info
@@ -143,18 +143,18 @@
               .signup-modal-content
                 .signup-modal-title-line
                   %h2 Sign Up
-                  %p= @trip.name
+                  %p= public_member_text(@trip.name)
                 = render "day_trip_signup_form", trip: @trip, current_annual_waiver_available: current_annual_waiver_available
         - else
           = link_to "Log in to sign up", new_session_path, class: "button day-trip-signup-button"
     - if @trip.day_trip_image.attached?
       .day-trip-location-image{"data-controller" => "modal", "data-modal-disable-autofocus-value" => "true"}
-        %button.day-trip-location-image-button{"aria-label" => "Expand #{@trip.name} location image", "data-action" => "modal#open", type: "button"}
-          = image_tag @trip.day_trip_image, alt: "#{@trip.name} location image"
-        %dialog.signup-modal.location-image-modal{"aria-label" => "#{@trip.name} location image", "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+        %button.day-trip-location-image-button{"aria-label" => "Expand #{public_member_text(@trip.name)} location image", "data-action" => "modal#open", type: "button"}
+          = image_tag @trip.day_trip_image, alt: "#{public_member_text(@trip.name)} location image"
+        %dialog.signup-modal.location-image-modal{"aria-label" => "#{public_member_text(@trip.name)} location image", "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
           .location-image-modal-content
             %button.modal-close-button{"aria-label" => "Close image", "data-action" => "modal#close", type: "button"} ×
-            = image_tag @trip.day_trip_image, alt: "#{@trip.name} location image"
+            = image_tag @trip.day_trip_image, alt: "#{public_member_text(@trip.name)} location image"
 
   - if @trip.description.present?
     %section.panel.day-trip-description-panel
@@ -214,10 +214,14 @@
       %dl.details-list
         %div
           %dt Name
-          %dd= @trip.campsite_coordinator.full_name
+          %dd= public_member_text(@trip.campsite_coordinator.full_name)
         %div
           %dt Email
-          %dd= mail_to @trip.campsite_coordinator.email if @trip.campsite_coordinator.email.present?
+          %dd
+            - if user_signed_in?
+              = mail_to @trip.campsite_coordinator.email if @trip.campsite_coordinator.email.present?
+            - else
+              = link_to "Log in to reveal contact details", member_links_login_path
     - else
       %p.muted Not yet set
 

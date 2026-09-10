@@ -44,7 +44,39 @@ module ApplicationHelper
       attributes: %w[href title target rel]
     )
 
-    add_external_link_attributes(sanitized_html)
+    public_member_content(add_external_link_attributes(sanitized_html))
+  end
+
+  def member_links_login_path
+    new_session_path(return_to: request.path)
+  end
+
+  def member_link_to(text, url, **options)
+    return link_to(text, url, **options) if current_user.present?
+
+    link_to("#{public_member_text(text)} (log in to reveal)", member_links_login_path, **options.except(:target, :rel))
+  end
+
+  def public_external_link_to(text, url, **options)
+    return member_link_to(text, url, **options) if member_link_privacy.private_url?(url)
+
+    link_to(public_member_text(text), url, **options)
+  end
+
+  def public_member_text(text, trip: @trip)
+    return text if respond_to?(:current_user) && current_user.present?
+
+    member_link_privacy(trip).redact_text(text)
+  end
+
+  def member_link_privacy(trip = @trip)
+    MemberLinkPrivacy.new(urls: [ trip&.whatsapp_group, trip&.photo_album_url ])
+  end
+
+  def public_member_content(html)
+    return html if respond_to?(:current_user) && current_user.present?
+
+    member_link_privacy.redact_html(html, login_path: member_links_login_path).html_safe
   end
 
   def render_trip_details_email_markdown(markdown)
@@ -55,7 +87,7 @@ module ApplicationHelper
   end
 
   def linkified_simple_format(text)
-    simple_format(linkify_urls(text), {}, sanitize: false)
+    public_member_content(simple_format(linkify_urls(text), {}, sanitize: false))
   end
 
   def linkify_urls(text)
