@@ -45,6 +45,22 @@ class TripCalendarsControllerTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "BEGIN:VEVENT"
   end
 
+  test "unavailable events return 404 through the production exception handler" do
+    original = Rails.application.env_config["action_dispatch.show_detailed_exceptions"]
+    Rails.application.env_config["action_dispatch.show_detailed_exceptions"] = false
+    deleted = trips(:yosemite)
+    deleted.soft_delete!
+
+    [ trips(:jtree).id, deleted.id, Trip.maximum(:id) + 1 ].each do |id|
+      get calendar_trip_url(id, format: :ics)
+
+      assert_response :not_found
+      assert_empty response.body
+    end
+  ensure
+    Rails.application.env_config["action_dispatch.show_detailed_exceptions"] = original
+  end
+
   test "index offers subscription and feed URL and event page offers single download" do
     get trips_url
     assert_response :success
