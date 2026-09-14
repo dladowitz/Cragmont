@@ -1,4 +1,5 @@
-= form_with model: [:admin, trip], class: "admin-form", html: { id: "admin-trip-form" } do |form|
+- recurring_gym_form = trip.gym_outing? && trip.new_record?
+= form_with model: [:admin, trip], class: "admin-form", html: { id: "admin-trip-form" }, data: { controller: ("gym-repeat" if recurring_gym_form), turbo: (false if recurring_gym_form) } do |form|
   - coordinator_field_id = "trip_campsite_coordinator_id"
   - coordinator_options = [{ label: "Unassigned", value: "", search_text: "unassigned" }] + @users.map { |user| { label: user.full_name, value: user.id, search_text: [user.full_name, user.email].compact.join(" ").downcase } }
   - selected_coordinator_value = trip.campsite_coordinator_id.to_s
@@ -8,6 +9,35 @@
   - group_fire_night_options = [["None", Trip::GROUP_FIRE_NIGHT_NONE]] + Trip::GROUP_FIRE_NIGHT_DAYS.map { |night| [night.titleize, night] }
   = render "admin/shared/errors", record: trip
   = form.hidden_field :trip_type
+  - if recurring_gym_form
+    - schedule = @gym_meetup_schedule || GymMeetupSchedule.new(trip: trip)
+    %fieldset.admin-trip-form-section
+      %legend Recurring gym meetups
+      = render "admin/shared/errors", record: schedule
+      %p Set a steady rhythm for the crew. Each date has its own participants and calendar entry. Edit individual outings to rotate gyms or hosts.
+      = fields_for :gym_meetup_schedule, schedule do |repeat_form|
+        .form-grid
+          .field
+            = repeat_form.label :frequency, "Repeat"
+            = repeat_form.select :frequency, GymMeetupSchedule::FREQUENCIES.map { |value, label| [label, value] }, {}, data: { gym_repeat_target: "frequency", action: "gym-repeat#toggle" }
+          .field{hidden: !schedule.repeating?, "data-gym-repeat-target" => "fields"}
+            = required_label repeat_form, :ends_on, "Repeat through"
+            = repeat_form.date_field :ends_on, required: schedule.repeating?, data: { gym_repeat_target: "endDate" }
+        %div{hidden: !schedule.repeating?, "data-gym-repeat-target" => "fields"}
+          %p Pick the first meetup below. Its weekday is used for every date. Use a first-through-fourth week date that matches your repeat choice, and end within one year.
+          %p
+            %span.required-marker{"aria-hidden" => "true"} *
+            An Event Coordinator is required to host the meetups. Confirm their availability before publishing.
+          %p All dates start at the same gym and time. Changes to an outing affect only that date; the schedule ends on your chosen date.
+          %p Preview clears file selections. Choose your location image after previewing the dates.
+          = button_tag "Preview meetup dates", name: "preview_meetups", value: "1", class: "button secondary"
+      - if @preview_dates
+        %div{role: "status"}
+          %h3= "#{@preview_dates.size} meetup dates"
+          %ul
+            - @preview_dates.each do |date|
+              %li= date.strftime("%A, %B %-d, %Y")
+          %p Review the dates, then choose Create Trip below to save them all.
   - if trip.class_trip?
     .admin-class-form-sections
       %fieldset.admin-trip-form-section.admin-class-overview-section
@@ -85,7 +115,9 @@
         .field.admin-trip-location-image-field
           = form.label :day_trip_image, "Location image"
           = form.file_field :day_trip_image, accept: "image/*"
-          - if trip.day_trip_image.attached?
+          - if trip.day_trip_image.attached? && !trip.day_trip_image.blob.persisted?
+            %p{role: "alert"} Please choose your location image again before saving; file selections cannot be restored after a preview or validation error.
+          - elsif trip.day_trip_image.attached?
             %p.muted
               Current file:
               = trip.day_trip_image.filename.to_s
@@ -101,10 +133,13 @@
         = form.select :status, Trip.statuses.keys.map { |status| [status.titleize, status] }, {}, required: true
       - if policy(trip).assign_coordinator?
         .field.admin-trip-coordinator-field
-          = form.label :campsite_coordinator_id, "Event Coordinator"
+          = form.label :campsite_coordinator_id, id: "#{coordinator_field_id}-label" do
+            Event Coordinator
+            - if recurring_gym_form
+              %span{hidden: !schedule.repeating?, "data-gym-repeat-target" => "fields"}= required_marker
           .participant-picker.coordinator-picker{"data-controller" => "participant-picker", "data-participant-picker-placeholder-value" => "Unassigned", "data-action" => "keydown->participant-picker#keydown"}
             = hidden_field_tag "trip[campsite_coordinator_id]", selected_coordinator_value, id: coordinator_field_id, data: { participant_picker_target: "input" }
-            %button.participant-picker-button{type: "button", role: "combobox", aria: { expanded: "false", controls: "#{coordinator_field_id}-list", haspopup: "listbox" }, data: { participant_picker_target: "button", action: "participant-picker#toggle" }}
+            %button.participant-picker-button{type: "button", role: "combobox", aria: { labelledby: "#{coordinator_field_id}-label", expanded: "false", controls: "#{coordinator_field_id}-list", haspopup: "listbox" }, data: { participant_picker_target: "button", action: "participant-picker#toggle" }}
               %span{"data-participant-picker-target" => "label"}= selected_coordinator_label
               %span.participant-picker-chevron{"aria-hidden" => "true"}
             .participant-picker-panel{hidden: true, data: { participant_picker_target: "panel" }}

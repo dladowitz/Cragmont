@@ -100,9 +100,20 @@ class Admin::TripsController < Admin::BaseController
   def create
     @trip = Trip.new(trip_params)
     authorize @trip
+    @gym_meetup_schedule = GymMeetupSchedule.new(gym_meetup_schedule_params.merge(trip: @trip))
 
-    if @trip.save
-      redirect_to admin_trip_path(@trip), notice: "Trip was created."
+    if params[:preview_meetups].present?
+      trip_valid = @trip.valid?
+      schedule_valid = @gym_meetup_schedule.valid?
+      @preview_dates = @gym_meetup_schedule.dates if trip_valid && schedule_valid
+      render :new, status: @preview_dates ? :ok : :unprocessable_entity
+      return
+    end
+
+    if @gym_meetup_schedule.save
+      count = @gym_meetup_schedule.created_trips.size
+      notice = @gym_meetup_schedule.repeating? ? "On belay! #{count} gym meetups were created. Each date has its own participants and can be edited separately." : "Trip was created."
+      redirect_to admin_trip_path(@trip), notice: notice
     else
       render :new, status: :unprocessable_entity
     end
@@ -169,6 +180,12 @@ class Admin::TripsController < Admin::BaseController
 
   def trip_params
     params.require(:trip).permit(policy(@trip || Trip).permitted_attributes)
+  end
+
+  def gym_meetup_schedule_params
+    return {} unless params.key?(:gym_meetup_schedule)
+
+    params.expect(gym_meetup_schedule: [ :frequency, :ends_on ])
   end
 
   def selected_new_trip_type
