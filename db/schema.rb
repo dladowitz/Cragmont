@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_01_053000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_14_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -179,6 +179,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_053000) do
     t.integer "car_capacity", null: false
     t.date "checkout_date", null: false
     t.datetime "created_at", null: false
+    t.boolean "direct_signups_enabled_until_full", default: false, null: false
     t.text "notes"
     t.integer "participant_capacity", null: false
     t.bigint "registered_by_id"

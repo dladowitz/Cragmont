@@ -1636,6 +1636,25 @@ body.trip-show-page .trip-summary-header {
   justify-items: start;
 }
 
+.campsite-signup-mode {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  white-space: normal;
+}
+
+.campsite-signup-mode p {
+  margin: 0;
+}
+
+.campsite-signup-mode .status {
+  margin-left: 4px;
+}
+
+.campsite-signup-mode-button {
+  width: 100%;
+}
+
 .campsite-action-buttons {
   display: flex;
   gap: 10px;
