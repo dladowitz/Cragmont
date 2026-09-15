@@ -1,9 +1,10 @@
 class Trip < ApplicationRecord
   STATUSES = %w[draft published archived].freeze
-  TRIP_TYPES = %w[camping day_trip class_trip].freeze
+  TRIP_TYPES = %w[camping day_trip gym_outing class_trip].freeze
   TRIP_TYPE_LABELS = {
     "camping" => "Camping Trip",
     "day_trip" => "Day Trip",
+    "gym_outing" => "Gym Outing",
     "class_trip" => "Class"
   }.freeze
   CLIMBING_TYPES = %w[sport trad bouldering].freeze
@@ -47,6 +48,8 @@ class Trip < ApplicationRecord
   enum :status, STATUSES.index_with(&:itself), default: "draft"
   enum :trip_type, TRIP_TYPES.index_with(&:itself), default: "camping"
 
+  scope :with_day_trip_signups, -> { where(trip_type: %w[day_trip gym_outing]) }
+
   scope :active, -> { where(deleted_at: nil) }
   scope :deleted, -> { where.not(deleted_at: nil) }
   scope :published_for_public, -> { active.published.order(start_date: :asc, name: :asc) }
@@ -59,6 +62,8 @@ class Trip < ApplicationRecord
   validates :cost_cents, :participant_capacity, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :group_fire_night, inclusion: { in: GROUP_FIRE_NIGHTS }, allow_blank: true
   validates :meeting_time, :meeting_location, :meeting_location_url, :late_arrival_instructions, presence: true, if: :day_trip?
+  validates :meeting_time, presence: true, if: :gym_outing?
+  validates :participant_capacity, numericality: { greater_than: 0 }, if: :gym_outing?
   validates :partner_company, :class_signup_url, :class_original_price, :weather_url, presence: true, if: :class_trip?
   validate :single_day_dates_match
   validate :climbing_types_are_known
@@ -68,13 +73,13 @@ class Trip < ApplicationRecord
   validate :group_campfire_campsite_belongs_to_trip
 
   def campsite_count
-    return 0 if day_trip? || class_trip?
+    return 0 if single_day_event?
 
     campsites.size
   end
 
   def total_participant_capacity
-    return participant_capacity if day_trip? || class_trip?
+    return participant_capacity if single_day_event?
 
     campsites.loaded? ? campsites.sum(&:participant_capacity) : campsites.sum(:participant_capacity)
   end
@@ -88,14 +93,14 @@ class Trip < ApplicationRecord
   end
 
   def confirmed_capacity_count
-    return confirmed_day_trip_signups_with_guests.sum(&:party_capacity_count) if day_trip?
+    return confirmed_day_trip_signups_with_guests.sum(&:party_capacity_count) if uses_day_trip_signups?
     return confirmed_class_signups.size if class_trip?
 
     confirmed_signups_with_minors.sum(&:capacity_count)
   end
 
   def confirmed_uncounted_minor_count
-    return 0 if day_trip? || class_trip?
+    return 0 if single_day_event?
 
     confirmed_signups_with_minors.sum(&:uncounted_minor_count)
   end
@@ -109,7 +114,7 @@ class Trip < ApplicationRecord
   end
 
   def held_capacity_count
-    return confirmed_day_trip_signups_with_guests.sum(&:party_capacity_count) if day_trip?
+    return confirmed_day_trip_signups_with_guests.sum(&:party_capacity_count) if uses_day_trip_signups?
     return confirmed_class_signups.size if class_trip?
 
     capacity_holding_signups_with_minors.sum(&:capacity_count)
@@ -182,8 +187,12 @@ class Trip < ApplicationRecord
     TRIP_TYPE_LABELS.fetch(trip_type)
   end
 
+  def uses_day_trip_signups?
+    day_trip? || gym_outing?
+  end
+
   def single_day_event?
-    day_trip? || class_trip?
+    uses_day_trip_signups? || class_trip?
   end
 
   def climbing_types
@@ -247,7 +256,7 @@ class Trip < ApplicationRecord
   end
 
   def available_for_day_trip_party?(lead_count:, top_rope_count:)
-    return false unless day_trip?
+    return false unless uses_day_trip_signups?
 
     party_count = lead_count.to_i + top_rope_count.to_i
     party_count.positive? && party_count <= available_participant_capacity

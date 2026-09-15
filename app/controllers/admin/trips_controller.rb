@@ -16,7 +16,7 @@ class Admin::TripsController < Admin::BaseController
 
   def show
     authorize @trip
-    if @trip.day_trip?
+    if @trip.uses_day_trip_signups?
       @campsites = []
       @waitlisted_signups = []
       @day_trip_signups = @trip.day_trip_signups.confirmed.primary.includes(:user, :day_trip_signup_minors, guest_signups: :user).order(:created_at)
@@ -45,7 +45,7 @@ class Admin::TripsController < Admin::BaseController
       @day_trip_waitlisted_signups = []
       @class_signups = []
     end
-    @trip_participant_user_ids = if @trip.day_trip?
+    @trip_participant_user_ids = if @trip.uses_day_trip_signups?
       @trip.day_trip_signups.active.distinct.pluck(:user_id)
     elsif @trip.class_trip?
       @trip.class_signups.active.distinct.pluck(:user_id)
@@ -58,7 +58,7 @@ class Admin::TripsController < Admin::BaseController
       @trip_readiness_checklist = TripReadinessChecklist.new(@trip)
       @trip_readiness_categories = @trip_readiness_checklist.readiness_categories
     end
-    unless @trip.day_trip? || @trip.class_trip?
+    unless @trip.single_day_event?
       @trip_payment_requests = @trip.trip_payment_requests.order(created_at: :desc)
       @trip_payment_request = trip_payment_request
       @trip_details_email = @trip.trip_details_email
@@ -88,7 +88,6 @@ class Admin::TripsController < Admin::BaseController
 
     @trip = Trip.new(
       trip_type: selected_new_trip_type,
-      late_arrival_instructions: Trip::DEFAULT_LATE_ARRIVAL_INSTRUCTIONS,
       cost_cents: 0
     )
     authorize @trip
@@ -101,9 +100,20 @@ class Admin::TripsController < Admin::BaseController
   def create
     @trip = Trip.new(trip_params)
     authorize @trip
+    @gym_meetup_schedule = GymMeetupSchedule.new(gym_meetup_schedule_params.merge(trip: @trip))
 
-    if @trip.save
-      redirect_to admin_trip_path(@trip), notice: "Trip was created."
+    if params[:preview_meetups].present?
+      trip_valid = @trip.valid?
+      schedule_valid = @gym_meetup_schedule.valid?
+      @preview_dates = @gym_meetup_schedule.dates if trip_valid && schedule_valid
+      render :new, status: @preview_dates ? :ok : :unprocessable_entity
+      return
+    end
+
+    if @gym_meetup_schedule.save
+      count = @gym_meetup_schedule.created_trips.size
+      notice = @gym_meetup_schedule.repeating? ? "On belay! #{count} gym meetups were created. Each date has its own participants and can be edited separately." : "Trip was created."
+      redirect_to admin_trip_path(@trip), notice: notice
     else
       render :new, status: :unprocessable_entity
     end
@@ -170,6 +180,12 @@ class Admin::TripsController < Admin::BaseController
 
   def trip_params
     params.require(:trip).permit(policy(@trip || Trip).permitted_attributes)
+  end
+
+  def gym_meetup_schedule_params
+    return {} unless params.key?(:gym_meetup_schedule)
+
+    params.expect(gym_meetup_schedule: [ :frequency, :ends_on ])
   end
 
   def selected_new_trip_type

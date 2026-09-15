@@ -15,6 +15,6 @@
         - campsite.parking_spots.each do |spot|
           %tr
             %td{"data-label" => "Spot"}= spot.spot_label
-            %td{"data-label" => "Assignment"}= spot.public_assignment_label
+            %td{"data-label" => "Assignment"}= public_member_text(spot.public_assignment_label)
   - else
     %p.muted No parking spots for this campsite.

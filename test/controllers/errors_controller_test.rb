@@ -10,4 +10,13 @@ class ErrorsControllerTest < ActionDispatch::IntegrationTest
     assert_select "p", "That page doesn't exist"
     assert_select ".background-image-caption", "Indian Creek, UT"
   end
+
+  test "non HTML requests receive an empty not found response" do
+    [ "text/calendar", "application/json" ].each do |accept|
+      get "/404", headers: { "Accept" => accept }
+
+      assert_response :not_found
+      assert_empty response.body
+    end
+  end
 end

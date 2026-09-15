@@ -19,16 +19,23 @@
       .trips-index-notices
         .public-beta-notice
           %span
+            Keep your next climb on the calendar.
+            = link_to "Subscribe to all events", calendar_trips_url(format: :ics, protocol: "webcal"), data: { turbo: false }
+            or copy the
+            = link_to "iCal feed URL", calendar_trips_url(format: :ics), data: { turbo: false }
+            into your calendar app's subscription settings for updates.
+        .public-beta-notice
+          %span
             This site is still getting dialed in. If you find issues
             = link_to "let us know.", new_help_request_path
     - if @trips.any?
       .trip-cards
         - @trips.each do |trip|
-          = link_to trip_path(trip), class: "trip-card", aria: { label: "View #{trip.name}" } do
+          = link_to trip_path(trip), class: "trip-card", aria: { label: "View #{public_member_text(trip.name, trip: trip)}" } do
             %div
-              %h2= trip.name
+              %h2= public_member_text(trip.name, trip: trip)
               .trip-card-title-line
-                %p= trip.location
+                %p= public_member_text(trip.location, trip: trip)
                 %span.status.trip-type-badge{class: public_trip_type_badge_class(trip)}= public_trip_type_label(trip)
             %dl.trip-card-meta
               %div

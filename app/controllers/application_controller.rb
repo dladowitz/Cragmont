@@ -7,11 +7,17 @@ class ApplicationController < ActionController::Base
   # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
 
+  after_action :prevent_authenticated_response_caching
+
   helper_method :current_user, :user_signed_in?
 
   rescue_from Pundit::NotAuthorizedError, with: :user_not_authorized
 
   private
+
+  def prevent_authenticated_response_caching
+    response.headers["Cache-Control"] = "private, no-store" if user_signed_in?
+  end
 
   def current_user
     return nil if session[:user_id].blank?

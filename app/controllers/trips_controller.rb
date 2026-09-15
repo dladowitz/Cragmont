@@ -35,7 +35,7 @@ class TripsController < ApplicationController
   end
 
   def show
-    if @trip.day_trip?
+    if @trip.uses_day_trip_signups?
       @day_trip_signups = @trip.day_trip_signups.confirmed.primary.includes(:user, :day_trip_signup_minors, guest_signups: :user).order(:created_at)
       @day_trip_waitlisted_signups = @trip.day_trip_signups.waitlisted.primary.includes(:user, :day_trip_signup_minors, guest_signups: :user).order(:created_at)
       @current_day_trip_signup = @trip.day_trip_signups.active.includes(:day_trip_signup_minors, guest_signups: :user).find_by(user: current_user) if user_signed_in?

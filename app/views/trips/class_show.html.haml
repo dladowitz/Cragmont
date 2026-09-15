@@ -8,41 +8,42 @@
 .trip-show-mobile-hero
   .trip-show-mobile-hero-copy
     .trip-title-line
-      %h1= @trip.name
+      %h1= public_member_text(@trip.name)
       %span.status.trip-type-badge.external-class-badge= public_trip_type_label(@trip)
-    %p.trip-show-mobile-location= @trip.location
+    %p.trip-show-mobile-location= public_member_text(@trip.location)
     %p.trip-show-mobile-dates= @trip.start_date.to_fs(:long)
     - if whatsapp_group_url.present?
-      = link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link trip-mobile-resource-link trip-whatsapp-mobile-link", target: "_blank", rel: "noopener"
+      = member_link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link trip-mobile-resource-link trip-whatsapp-mobile-link", target: "_blank", rel: "noopener"
     - if weather_url.present?
-      = link_to "Weather", weather_url, class: "trip-resource-link trip-mobile-resource-link trip-weather-mobile-link", target: "_blank", rel: "noopener"
+      = public_external_link_to "Weather", weather_url, class: "trip-resource-link trip-mobile-resource-link trip-weather-mobile-link", target: "_blank", rel: "noopener"
     - if photo_album_url.present?
-      = link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-mobile-resource-link trip-photo-album-mobile-link", target: "_blank", rel: "noopener"
+      = member_link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-mobile-resource-link trip-photo-album-mobile-link", target: "_blank", rel: "noopener"
   %span.trip-show-mobile-hero-caption IRS Wall, Joshua Tree
 %main.public-main
   %section.panel.trip-overview.day-trip-overview.class-trip-overview
     .panel-header.trip-summary-header
       .trip-summary-copy
         .trip-title-line
-          %h1= @trip.name
+          %h1= public_member_text(@trip.name)
           %span.status.trip-type-badge.external-class-badge= public_trip_type_label(@trip)
-        %h2= @trip.location
+        %h2= public_member_text(@trip.location)
         %p= @trip.start_date.to_fs(:long)
         - if @trip.partner_company.present?
           %p
             Taught by
             - if partner_url.present?
-              = link_to @trip.partner_company.name, partner_url, target: "_blank", rel: "noopener"
+              = public_external_link_to @trip.partner_company.name, partner_url, target: "_blank", rel: "noopener"
             - else
-              = @trip.partner_company.name
+              = public_member_text(@trip.partner_company.name)
       .trips-index-notices.trip-summary-notices
         .trip-resource-links
           - if whatsapp_group_url.present?
-            = link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link trip-whatsapp-link", target: "_blank", rel: "noopener"
+            = member_link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link trip-whatsapp-link", target: "_blank", rel: "noopener"
           - if weather_url.present?
-            = link_to "Weather", weather_url, class: "trip-resource-link trip-weather-link", target: "_blank", rel: "noopener"
+            = public_external_link_to "Weather", weather_url, class: "trip-resource-link trip-weather-link", target: "_blank", rel: "noopener"
           - if photo_album_url.present?
-            = link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-photo-album-link", target: "_blank", rel: "noopener"
+            = member_link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-photo-album-link", target: "_blank", rel: "noopener"
+    = render "calendar_download", trip: @trip
     .stats
       %div
         %span Interested
@@ -62,11 +63,11 @@
         - if class_signup_url.present?
           .class-registration-card
             .day-trip-signup-action
-              = link_to "Register with #{@trip.partner_company&.name || 'guiding company'}", class_signup_url, class: "button day-trip-signup-button", target: "_blank", rel: "noopener"
+              = public_external_link_to "Register with #{@trip.partner_company&.name || 'guiding company'}", class_signup_url, class: "button day-trip-signup-button", target: "_blank", rel: "noopener"
               %p.muted.class-registration-note You must register and pay on the guiding company's website to be officially signed up.
 
   %section.panel.day-trip-safety-panel.class-reminder-panel
-    %h2= @class_reminder.title
+    %h2= public_member_text(@class_reminder.title)
     .content-page-markdown
       - class_reminder_body = @class_reminder.body.to_s.sub(/\A## Class Details[ \t]*\r?\n\r?\n?/, "")
       = render_content_page_markdown(class_reminder_body)
@@ -76,19 +77,19 @@
     %dl.details-list
       %div
         %dt= @trip.class_offers_discount? ? "Original price" : "Price"
-        %dd= format_class_price(@trip.class_original_price)
+        %dd= public_member_text(format_class_price(@trip.class_original_price))
       - if @trip.class_offers_discount? && @trip.class_discount_code.present?
         %div
           %dt Discount code
-          %dd= @trip.class_discount_code
+          %dd= public_member_text(@trip.class_discount_code)
       - if @trip.class_offers_discount? && @trip.class_discount_amount.present?
         %div
           %dt Discount amount
-          %dd= @trip.class_discount_amount
+          %dd= public_member_text(@trip.class_discount_amount)
       - if @trip.class_offers_discount? && @trip.class_discounted_price.present?
         %div
           %dt Discounted price
-          %dd= format_class_price(@trip.class_discounted_price)
+          %dd= public_member_text(format_class_price(@trip.class_discounted_price))
 
   %section.panel.day-trip-participants-panel.class-trip-participants-panel
     %h2 Participants
@@ -100,11 +101,11 @@
         %tbody
           - @class_signups.each do |signup|
             %tr
-              %td{"data-label" => "Participant"}= signup.public_participant_name
+              %td{"data-label" => "Participant"}= public_member_text(signup.public_participant_name)
     - else
       %p.muted No participants yet.
     .class-participant-signup-action
-      - company_name = @trip.partner_company&.name || "the guiding company"
+      - company_name = public_member_text(@trip.partner_company&.name || "the guiding company")
       - company_website_owner = company_name.end_with?("s") ? "#{company_name}'" : "#{company_name}'s"
       - if @trip.archived?
         %p.muted Archived class. New interest signups are closed.
