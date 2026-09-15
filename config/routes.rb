@@ -86,6 +86,8 @@ Rails.application.routes.draw do
         post :refund, on: :member
       end
       resources :campsites, except: %i[index show] do
+        patch :enable_direct_signups, on: :member
+        patch :enable_waitlist_mode, on: :member
         patch :record_registration_reimbursement, on: :member
       end
       resources :campsite_parking_spots, only: :update

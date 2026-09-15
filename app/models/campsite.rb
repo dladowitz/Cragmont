@@ -96,11 +96,27 @@ class Campsite < ApplicationRecord
   end
 
   def lock_signups!
+    return if direct_signups_enabled_until_full?
+
     update!(signups_locked_at: Time.current) if signups_locked_at.blank?
   end
 
   def lock_signups_if_full!
-    lock_signups! if capacity_full?
+    return unless capacity_full?
+
+    if direct_signups_enabled_until_full?
+      enable_waitlist_mode!
+    else
+      lock_signups!
+    end
+  end
+
+  def enable_direct_signups_until_full!
+    update!(direct_signups_enabled_until_full: true, signups_locked_at: nil)
+  end
+
+  def enable_waitlist_mode!
+    update!(direct_signups_enabled_until_full: false, signups_locked_at: Time.current)
   end
 
   def available_for_waitlist_confirmation?(signup)
