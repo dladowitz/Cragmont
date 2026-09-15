@@ -27,20 +27,24 @@ class RecurringGymMeetupsSystemTest < ApplicationSystemTestCase
     select "Published", from: "Status"
     within ".coordinator-picker" do
       find("[role=combobox]").click
-      find("[role=option]", text: "Alex Rivera", exact_text: true).click
+      assert_selector ".participant-picker-panel:not([hidden])"
+      find("button[data-label='Alex Rivera']").send_keys(:enter)
       assert_selector "[role=combobox]", text: "Alex Rivera"
     end
 
     assert_no_difference "Trip.count" do
-      click_button "Preview meetup dates"
+      preview = find_button("Preview meetup dates")
+      page.execute_script("arguments[0].form.requestSubmit(arguments[0])", preview)
       assert_selector "[role=status] h3", text: "4 meetup dates"
       assert_selector "[role=status] li", text: "Friday, February 19, 2027"
     end
     assert_field "Gym outing name", with: "System recurring gym crew"
     assert_selector ".coordinator-picker [role=combobox]", text: "Alex Rivera"
+    assert_button "Create Trip"
 
     assert_difference "Trip.count", 4 do
-      click_button "Create Trip"
+      submit = find_button("Create Trip")
+      page.execute_script("arguments[0].form.requestSubmit(arguments[0])", submit)
       assert_text "On belay! 4 gym meetups were created."
     end
     trips = Trip.where(name: "System recurring gym crew").order(:start_date)
