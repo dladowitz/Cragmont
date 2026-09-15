@@ -434,16 +434,16 @@
                   - if !@trip.deleted? && policy(@trip).manage_campsites?
                     %div{"data-controller" => "modal"}
                       - if campsite.signups_locked?
-                        %button.button.secondary.campsite-signup-mode-button{"data-action" => "modal#open", type: "button"} Allow Direct Signup
+                        %button.button.secondary.campsite-signup-mode-button{"data-action" => "modal#open", type: "button"} Disable Waitlist Mode
                         %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                           .confirmation-modal-content
                             %div
-                              %h2 Allow direct signup for #{campsite.campground.name} site #{campsite.site_number}?
+                              %h2 Disable Waitlist Mode for #{campsite.campground.name} site #{campsite.site_number}?
                               %p New participants or participants already on the trip waitlist will be able to claim open spaces directly.
                               %p The campsite will automatically return to waitlist mode when it fills again.
                             .form-actions
                               %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
-                              = button_to "Allow Direct Signup", enable_direct_signups_admin_trip_campsite_path(@trip, campsite), method: :patch, class: "button"
+                              = button_to "Disable Waitlist Mode", enable_direct_signups_admin_trip_campsite_path(@trip, campsite), method: :patch, class: "button"
                       - else
                         %button.button.secondary.campsite-signup-mode-button{"data-action" => "modal#open", type: "button"} Use Waitlist Mode
                         %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
