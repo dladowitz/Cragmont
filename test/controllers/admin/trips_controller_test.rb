@@ -151,12 +151,12 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "#admin-campsite-#{waitlist_campsite.id}" do
       assert_select ".campsite-signup-mode .status.warning-status", text: "Waitlist mode"
-      assert_select ".campsite-signup-mode > [data-controller='modal'] > button", text: "Allow Direct Signup"
+      assert_select ".campsite-signup-mode > [data-controller='modal'] > button", text: "Disable Waitlist Mode"
       assert_select "dialog.confirmation-modal" do
-        assert_select "h2", text: "Allow direct signup for Upper Pines site A12?"
+        assert_select "h2", text: "Disable Waitlist Mode for Upper Pines site A12?"
         assert_select "p", text: /New participants or participants already on the trip waitlist/
         assert_select "p", text: /automatically return to waitlist mode when it fills again/
-        assert_select "form[action='#{enable_direct_signups_admin_trip_campsite_path(trips(:yosemite), waitlist_campsite)}'] button", text: "Allow Direct Signup"
+        assert_select "form[action='#{enable_direct_signups_admin_trip_campsite_path(trips(:yosemite), waitlist_campsite)}'] button", text: "Disable Waitlist Mode"
       end
     end
     assert_select "#admin-campsite-#{direct_campsite.id}" do
