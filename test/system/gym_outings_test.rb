@@ -54,10 +54,8 @@ class GymOutingsSystemTest < ApplicationSystemTestCase
       assert_no_selector ".capacity-warning"
       assert_button "Next"
       check "Add one minor"
-      fill_in "First name", with: "Little"
-      fill_in "Last name", with: "Climber"
       fill_in "Age", with: "8"
-      fill_in "Relationship", with: "Child"
+      assert_field "Age", with: "8"
 
       assert_selector ".capacity-warning", text: "You can sign up for the waitlist"
       assert_button "Join waitlist", disabled: false
