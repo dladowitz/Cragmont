@@ -131,6 +131,7 @@ body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-pa
   text-decoration: none;
 }
 .button:hover, input[type="submit"]:hover { background: var(--accent-dark); }
+.home-hero .button:hover { color: #fff; }
 .button.secondary, .button.outline {
   border-color: var(--accent);
   background: transparent;
