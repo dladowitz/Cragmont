@@ -23,8 +23,9 @@ class GymOutingsSystemTest < ApplicationSystemTestCase
     find(".trip-whatsapp-link").click
     assert_current_path new_session_path(return_to: trip_path(@trip))
     fill_in "Email", with: users(:alex).email
-    fill_in "Password", with: "password"
-    click_button "Log in"
+    page.execute_script("arguments[0].value = arguments[1]", find_field("Password"), "password")
+    login = find_button("Log in")
+    page.execute_script("arguments[0].form.requestSubmit(arguments[0])", login)
 
     assert_current_path trip_path(@trip)
     assert_selector ".trip-whatsapp-link[href='#{@trip.whatsapp_group}']", text: "Join the WhatsApp Group"
@@ -44,9 +45,14 @@ class GymOutingsSystemTest < ApplicationSystemTestCase
   test "a young minor uses a gym spot and switches a one spot outing to the waitlist" do
     visit new_session_path(return_to: trip_path(@trip))
     fill_in "Email", with: users(:alex).email
-    fill_in "Password", with: "password"
-    click_button "Log in"
+    page.execute_script("arguments[0].value = arguments[1]", find_field("Password"), "password")
+    login = find_button("Log in")
+    page.execute_script("arguments[0].form.requestSubmit(arguments[0])", login)
     assert_current_path trip_path(@trip)
+    modal = find(".day-trip-signup-action [data-controller='modal']")
+    Selenium::WebDriver::Wait.new(timeout: 5).until do
+      page.evaluate_script("Boolean(window.Stimulus?.getControllerForElementAndIdentifier(arguments[0], 'modal'))", modal)
+    end
     click_button "Sign Up"
 
     within "dialog.day-trip-signup-modal[open]" do
