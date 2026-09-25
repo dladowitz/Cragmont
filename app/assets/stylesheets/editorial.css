@@ -147,6 +147,9 @@ body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-pa
   box-shadow: none;
 }
 .panel-header { align-items: baseline; }
+body.trips-index-page .trips-index-panel > .panel-header { flex-wrap: wrap; }
+body.trips-index-page .trips-index-panel .trips-index-notices { flex: 0 1 auto; width: 100%; margin-top: 0; }
+body.trips-index-page .trips-index-notices .calendar-subscription-notice { width: 100%; max-width: none; height: auto; justify-self: stretch; }
 .public-beta-notice, .public-liability-warning, .empty-state,
 .form-errors, .flash, .user-form-section, .note,
 .trip-card, .archived-trip-row, .campsite-card, .admin-campsite-card {
@@ -189,6 +192,7 @@ body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-pa
   text-transform: uppercase;
 }
 .status { border-bottom: 0; padding: 0; }
+.trip-type-badge { padding: 4px 9px; background: #e7f1ed; }
 .status.danger-status { color: var(--danger); }
 .status.warning-status { color: #91621c; }
 .stats { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }

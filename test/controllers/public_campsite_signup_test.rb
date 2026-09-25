@@ -56,6 +56,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".archived-trips-panel", count: 0
     assert_select ".trips-faq-callout a[href='#{what_to_expect_trips_path}']", text: "camping trips"
     assert_select ".trips-faq-callout a[href='#{day_trip_what_to_expect_trips_path}']", text: "day trips."
+    assert_select ".calendar-subscription-notice"
+    assert_select ".trips-index-notices .public-beta-notice", count: 1
     assert_select ".background-image-caption", "Regular Northwest Face, Half Dome"
   end
 
@@ -123,6 +125,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_select ".trip-title-resource-link", count: 0
     end
     assert_select ".trip-summary-notices .trip-resource-link", count: 5
+    assert_select ".trip-summary-header .site-feedback-callout", count: 0
     assert_select ".trip-summary-notices a.trip-whatsapp-link[href='https://chat.whatsapp.com/vent5'][target='_blank'][rel='noopener']", text: "Join the WhatsApp Group"
     assert_select ".trip-summary-notices a.trip-weather-link[href='https://forecast.weather.gov/vent5'][target='_blank'][rel='noopener']", text: "Weather"
     assert_select ".trip-summary-notices a.trip-mountain-project-link[href='https://www.mountainproject.com/area/vent5'][target='_blank'][rel='noopener']", text: "Mountain Project"
@@ -919,7 +922,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".trip-summary-notices a.trip-photo-album-link[href='https://photos.app.goo.gl/yosemite-spring'][target='_blank'][rel='noopener']", text: "Photo Album"
     assert_select ".trip-summary-header .trips-faq-callout", text: /camping trip/
     assert_select ".trip-summary-header .trips-faq-callout a[href='#{what_to_expect_trips_path}']", text: "here."
-    assert_select ".trip-summary-header .site-feedback-callout a[href='#{new_help_request_path}']", text: "let us know."
+    assert_select ".trip-summary-header .site-feedback-callout", count: 0
     assert_select ".trip-overview .description", text: /Notes:/
     assert_select ".trip-overview .description .content-page-markdown strong", text: "Yosemite"
     assert_select ".trip-overview .description .content-page-markdown h2", text: "Parking"
