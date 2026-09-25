@@ -13,7 +13,7 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     get admin_users_url
 
     assert_response :success
-    assert_select "h1", "Admin Dashboard"
+    assert_select "h1.visually-hidden"
     assert_select "h2", "User directory"
     assert_select "th", text: "Default Password"
     assert_select "a", text: "Alex Rivera"
@@ -59,7 +59,7 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     get admin_user_url(users(:alex))
 
     assert_response :success
-    assert_select "h1", "Admin Dashboard"
+    assert_select "h1.visually-hidden"
     assert_select ".panel-header", text: /Alex Rivera/
     assert_select ".details-list dt", text: "Club member"
     assert_select ".details-list dd", text: "Yes"

@@ -5,28 +5,14 @@
     = image_tag "home-hero.png", alt: "", class: "home-hero-image"
     .home-hero-caption Matthes Crest, Yosemite National Park
     .home-hero-copy
-      %h1 Climbing
-      %h1 Camping
-      %h1 Community
-      %p
-        Yosemite
-        %br/
-        Tahoe
-        %br/
-        Bay Area
-        %br/
-        Mt St Helena
-        %br/
-        Touchstone
-        %br/
-        Joshua Tree
-        %br/
-        Movement
-        %br/
-        Indian Creek
-        %br/
-        City of Rocks
-        %br/
-        More
+      %p.home-hero-eyebrow Find your next pitch
+      %h1
+        %span Climbing.
+        %span Camping.
+        %span Community.
+      %p.home-hero-intro Bay Area climbers heading outside, together.
+      %ul.home-destinations{aria: {label: "Places we climb"}}
+        - [ "Yosemite", "Tahoe", "Bay Area", "Mt St Helena", "Touchstone", "Joshua Tree", "Movement", "Indian Creek", "City of Rocks", "More" ].each do |destination|
+          %li= destination
       = link_to "View trips", trips_path, class: "button"
   = render "shared/liability_warning"

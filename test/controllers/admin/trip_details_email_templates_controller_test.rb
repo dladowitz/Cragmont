@@ -11,7 +11,7 @@ class Admin::TripDetailsEmailTemplatesControllerTest < ActionDispatch::Integrati
     get admin_trip_details_email_templates_url
 
     assert_response :success
-    assert_select "h1", "Admin Dashboard"
+    assert_select "h1.visually-hidden"
     assert_select "h2", "Trip Details Email Templates"
     assert_select "td", text: "Yosemite"
     assert_select "td", text: "yosemite"

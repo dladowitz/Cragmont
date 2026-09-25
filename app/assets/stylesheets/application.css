@@ -594,11 +594,35 @@ input[type="submit"]:disabled {
   padding-bottom: 0;
 }
 
+body.home-page .public-header {
+  position: absolute;
+  z-index: 10;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+body.home-page .site-name,
+body.home-page .site-name small {
+  color: #fff;
+  text-shadow: 0 2px 16px rgb(0 0 0 / 42%);
+}
+
+body.home-page .public-nav a,
+body.home-page .public-admin-link,
+body.home-page .nav-button {
+  border-color: rgb(255 255 255 / 42%);
+  background: rgb(11 21 18 / 22%);
+  color: #fff;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 36%);
+  backdrop-filter: blur(10px);
+}
+
 .home-hero {
   position: relative;
   display: grid;
-  align-items: end;
-  min-height: calc(100svh - 104px);
+  align-items: center;
+  min-height: 100svh;
   overflow: hidden;
   isolation: isolate;
   background: #1f2933;
@@ -609,8 +633,9 @@ input[type="submit"]:disabled {
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(90deg, rgba(12, 19, 25, 0.72), rgba(12, 19, 25, 0.28) 54%, rgba(12, 19, 25, 0.1)),
-    linear-gradient(0deg, rgba(12, 19, 25, 0.6), rgba(12, 19, 25, 0) 48%);
+    linear-gradient(180deg, rgb(8 17 15 / 52%), transparent 28%),
+    linear-gradient(90deg, rgb(8 17 15 / 70%), rgb(8 17 15 / 18%) 56%, transparent 78%),
+    linear-gradient(0deg, rgb(8 17 15 / 46%), transparent 42%);
   content: "";
 }
 
@@ -621,7 +646,7 @@ input[type="submit"]:disabled {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
+  object-position: center 56%;
 }
 
 .home-hero-caption {
@@ -636,30 +661,72 @@ input[type="submit"]:disabled {
 .home-hero-copy {
   width: min(1120px, calc(100% - 32px));
   margin-inline: auto;
-  padding-block: clamp(32px, 7vw, 72px);
+  padding-block: 124px 72px;
 }
 
 .home-hero h1 {
-  max-width: 680px;
+  max-width: 720px;
   margin: 0;
   color: #fff;
-  font-size: clamp(2rem, 4vw, 3.7rem);
-  line-height: 0.92;
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
+  font-family: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  font-size: clamp(3.6rem, 6.6vw, 6.6rem);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 0.86;
+  text-shadow: 0 3px 24px rgb(0 0 0 / 28%);
 }
 
-.home-hero p:not(.eyebrow) {
-  max-width: 58ch;
-  margin: 24px 0 24px;
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 1.1rem;
-  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
+.home-hero h1 span {
+  display: block;
+}
+
+.home-hero-eyebrow {
+  margin: 0 0 18px;
+  color: rgb(255 255 255 / 86%);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 14px rgb(0 0 0 / 42%);
+}
+
+.home-hero-intro {
+  max-width: 520px;
+  margin: 26px 0 16px;
+  color: #fff;
+  font-size: clamp(1.05rem, 1.5vw, 1.25rem);
+  font-weight: 650;
+  text-shadow: 0 2px 14px rgb(0 0 0 / 42%);
+}
+
+.home-destinations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 0;
+  max-width: 600px;
+  margin: 0 0 28px;
+  padding: 0;
+  color: rgb(255 255 255 / 76%);
+  font-size: 0.9rem;
+  font-weight: 650;
+  list-style: none;
+  text-shadow: 0 2px 12px rgb(0 0 0 / 48%);
+}
+
+.home-destinations li:not(:last-child)::after {
+  margin-inline: 9px;
+  color: rgb(255 255 255 / 44%);
+  content: "·";
 }
 
 .home-hero .button {
+  min-height: 50px;
+  padding-inline: 20px;
   border-color: #fff;
   background: #fff;
   color: var(--accent-dark);
+  border-radius: 999px;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 20%);
 }
 
 .public-liability-warning {
@@ -6437,6 +6504,10 @@ textarea {
     padding: 16px 10px 12px;
   }
 
+  body.home-page .public-header {
+    transform: none;
+  }
+
   .public-brand {
     flex: 1 1 auto;
     gap: 10px;
@@ -6801,17 +6872,27 @@ textarea {
 
   .home-hero-copy {
     width: min(100% - 28px, 1120px);
-    padding-block: 28px 36px;
+    padding-block: 116px 72px;
   }
 
   .home-hero h1 {
-    font-size: 2.4rem;
-    line-height: 0.96;
+    font-size: clamp(3rem, 15vw, 4.5rem);
+    line-height: 0.84;
   }
 
-  .home-hero p:not(.eyebrow) {
-    margin-block: 20px;
+  .home-hero-eyebrow {
+    margin-bottom: 14px;
+  }
+
+  .home-hero-intro {
+    margin-block: 24px 14px;
     font-size: 1rem;
+  }
+
+  .home-destinations {
+    max-width: calc(100% - 40px);
+    margin-bottom: 22px;
+    font-size: 0.78rem;
   }
 
   .home-hero .button {
