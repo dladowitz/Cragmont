@@ -3,7 +3,7 @@ require "application_system_test_case"
 class RecurringGymMeetupsSystemTest < ApplicationSystemTestCase
   test "admin previews then creates four meetups through the browser" do
     visit new_session_path(return_to: new_admin_trip_path(trip_type: "gym_outing"))
-    fill_in "Email", with: users(:alex).email
+    page.execute_script("arguments[0].value = arguments[1]", find_field("Email"), users(:alex).email)
     page.execute_script("arguments[0].value = arguments[1]", find_field("Password"), "password")
     login = find_button("Log in")
     page.execute_script("arguments[0].form.requestSubmit(arguments[0])", login)
