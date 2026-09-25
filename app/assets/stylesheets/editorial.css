@@ -41,7 +41,7 @@ h2 { font-size: clamp(1.65rem, 2.8vw, 2.25rem); }
 h3 { font-size: 1.4rem; font-weight: 500; }
 a { color: var(--accent); font-weight: 500; text-underline-offset: .2em; }
 :is(a, button, input, select, textarea, summary):focus-visible {
-  outline: 3px solid #b86624;
+  outline: 3px solid var(--accent);
   outline-offset: 3px;
 }
 .muted, .eyebrow, .panel-header p { color: var(--muted); }
@@ -171,7 +171,7 @@ body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-pa
   transform: none;
 }
 .trip-card:focus-visible, .archived-trip-row:focus-visible {
-  outline: 3px solid #b86624;
+  outline: 3px solid var(--accent);
   outline-offset: 3px;
 }
 .trip-card h2, .trip-card h3, .row-title { font-weight: 500; }
@@ -276,7 +276,7 @@ table { max-width: 100%; }
     border-radius: var(--ui-radius);
     font-weight: 500;
   }
-  .admin-nav-checkbox:focus-visible + .admin-nav-toggle { outline: 3px solid #b86624; outline-offset: 3px; }
+  .admin-nav-checkbox:focus-visible + .admin-nav-toggle { outline: 3px solid var(--accent); outline-offset: 3px; }
   .admin-nav {
     position: absolute;
     z-index: 30;
