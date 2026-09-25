@@ -2664,6 +2664,56 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "admin can pre-open a full campsite until the next signup fills it" do
+    campsite = campsites(:yosemite_a)
+    fill_campsite_capacity(campsite, "pre-open-full")
+    canceling_signup = campsite.campsite_signups.confirmed.first
+    campsite.lock_signups!
+    campsite.enable_direct_signups_until_full!
+
+    log_in_as(users(:sam))
+    post signup_url_for(campsite), params: waitlist_signup_params
+
+    waitlisted_signup = CampsiteSignup.find_by!(trip: trips(:yosemite), user: users(:sam))
+    assert waitlisted_signup.waitlisted?
+    assert campsite.reload.direct_signups_enabled_until_full?
+    assert_not campsite.signups_locked?
+
+    delete session_url
+    log_in_as(canceling_signup.user)
+    delete signup_url_for(campsite)
+
+    assert campsite.reload.direct_signups_enabled_until_full?
+    assert_not campsite.signups_locked?
+    assert_equal 1, campsite.available_participant_capacity
+
+    delete session_url
+    log_in_as(users(:sam))
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "#campsite-#{campsite.id}" do
+      assert_select "button", text: "Confirm your spot"
+      assert_select "input[type='hidden'][name='campsite_signup[intent]'][value='confirm_waitlist']"
+    end
+
+    delete session_url
+    log_in_as(users(:alex))
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "#campsite-#{campsite.id}" do
+      assert_select "button", text: "Sign up for this campsite"
+    end
+
+    post signup_url_for(campsite), params: waiver_signature_params
+
+    assert CampsiteSignup.find_by!(trip: trips(:yosemite), user: users(:alex)).confirmed?
+    assert campsite.reload.capacity_full?
+    assert_not campsite.direct_signups_enabled_until_full?
+    assert campsite.signups_locked?
+  end
+
   test "eligible waitlisted participant can confirm an open locked campsite spot" do
     campsite = campsites(:yosemite_a)
     campsite.update!(signups_locked_at: Time.current)

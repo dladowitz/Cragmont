@@ -143,6 +143,53 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_url
   end
 
+  test "trip details show campsite signup mode controls" do
+    waitlist_campsite = campsites(:yosemite_a)
+    direct_campsite = campsites(:yosemite_b)
+    waitlist_campsite.lock_signups!
+
+    get admin_trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "#admin-campsite-#{waitlist_campsite.id}" do
+      assert_select ".campsite-signup-mode .status.warning-status", text: "Waitlist mode"
+      assert_select ".campsite-signup-mode > [data-controller='modal'] > button", text: "Disable Waitlist Mode"
+      assert_select "dialog.confirmation-modal" do
+        assert_select "h2", text: "Disable Waitlist Mode for Upper Pines site A12?"
+        assert_select "p", text: /New participants or participants already on the trip waitlist/
+        assert_select "p", text: /automatically return to waitlist mode when it fills again/
+        assert_select "form[action='#{enable_direct_signups_admin_trip_campsite_path(trips(:yosemite), waitlist_campsite)}'] button", text: "Disable Waitlist Mode"
+      end
+    end
+    assert_select "#admin-campsite-#{direct_campsite.id}" do
+      assert_select ".campsite-signup-mode .status.success-status", text: "Direct signup until full"
+      assert_select ".campsite-signup-mode > [data-controller='modal'] > button", text: "Use Waitlist Mode"
+      assert_select "dialog.confirmation-modal" do
+        assert_select "h2", text: "Use waitlist mode for Upper Pines site A13?"
+        assert_select "p", text: /Existing waitlist participants and their eligibility will not change/
+        assert_select "form[action='#{enable_waitlist_mode_admin_trip_campsite_path(trips(:yosemite), direct_campsite)}'] button", text: "Use Waitlist Mode"
+      end
+    end
+  end
+
+  test "full direct-signup override shows that signup opens when space does" do
+    campsite = campsites(:yosemite_a)
+    campsite.participant_capacity.times do |index|
+      create_campsite_signup!(campsite: campsite, user: User.create!(
+        first_name: "Full",
+        last_name: "DirectMode#{index}",
+        email: "full-direct-mode-#{index}@example.com",
+        password: "password"
+      ))
+    end
+    campsite.enable_direct_signups_until_full!
+
+    get admin_trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "#admin-campsite-#{campsite.id} .campsite-signup-mode .status.success-status", text: "Direct signup when space opens"
+  end
+
   test "trip details show campsite registration fee tracking" do
     unreimbursed_campsite = campsites(:yosemite_a)
     reimbursed_campsite = campsites(:yosemite_b)

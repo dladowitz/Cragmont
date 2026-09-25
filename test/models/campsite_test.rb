@@ -181,6 +181,47 @@ class CampsiteTest < ActiveSupport::TestCase
     assert campsite.waitlist_signup_required?
   end
 
+  test "direct signup override stays open until the campsite fills again" do
+    campsite = campsites(:yosemite_a)
+    campsite.lock_signups!
+
+    campsite.enable_direct_signups_until_full!
+
+    assert campsite.direct_signups_enabled_until_full?
+    assert_not campsite.signups_locked?
+    assert campsite.direct_signup_available?
+
+    campsite.lock_signups!
+
+    assert campsite.reload.direct_signups_enabled_until_full?
+    assert_not campsite.signups_locked?
+
+    campsite.participant_capacity.times do |index|
+      create_campsite_signup!(campsite: campsite, user: User.create!(
+        first_name: "Direct",
+        last_name: "UntilFull#{index}",
+        email: "direct-until-full-#{index}@example.com",
+        password: "password"
+      ))
+    end
+    campsite.lock_signups_if_full!
+
+    assert_not campsite.reload.direct_signups_enabled_until_full?
+    assert campsite.signups_locked?
+    assert campsite.waitlist_signup_required?
+  end
+
+  test "waitlist mode immediately disables direct signup" do
+    campsite = campsites(:yosemite_a)
+    campsite.enable_direct_signups_until_full!
+
+    campsite.enable_waitlist_mode!
+
+    assert_not campsite.direct_signups_enabled_until_full?
+    assert campsite.signups_locked?
+    assert_not campsite.direct_signup_available?
+  end
+
   test "campsite can be available for waitlist confirmation when party fits" do
     campsite = campsites(:yosemite_a)
     signup = create_waitlisted_signup!(trip: trips(:yosemite), user: users(:sam))
