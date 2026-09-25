@@ -1,10 +1,11 @@
-/* Alpine editorial: one typeface, quiet surfaces, and square controls. */
+/* Alpine editorial: one typeface and quiet surfaces. */
 :root {
   --bg: #f7f5ef;
   --panel: #fffefa;
   --text: #203330;
   --muted: #586b65;
-  --line: #bdc8c2;
+  --line: #d5ddd7;
+  --ui-radius: 5px;
   --accent: #164b40;
   --accent-dark: #103d34;
   --danger: #a92e2c;
@@ -75,7 +76,7 @@ a { color: var(--accent); font-weight: 500; text-underline-offset: .2em; }
   white-space: nowrap;
 }
 .public-nav a:hover, .public-admin-link:hover, .nav-button:hover,
-.admin-nav a:hover, .admin-public-link:hover { border-bottom-color: currentColor; }
+.admin-nav a:hover, .admin-public-link:hover { opacity: .78; }
 body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
   .password-reset-edit-page, .not-found-page, .registration-new-page,
   .trip-what-to-expect-page, .help-request-page, .trip-show-page,
@@ -91,7 +92,7 @@ body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-pa
   .password-reset-edit-page, .not-found-page, .registration-new-page,
   .trip-what-to-expect-page, .help-request-page, .trip-show-page,
   .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page)
-  :is(.public-admin-link, .public-nav a, .nav-button):hover { border-bottom-color: currentColor; }
+  :is(.public-admin-link, .public-nav a, .nav-button):hover { opacity: .78; }
 .admin-header { gap: 28px; border-bottom: 1px solid var(--line); }
 .admin-brand { gap: 28px; align-items: center; }
 .admin-context { font-size: 1rem; font-weight: 500; }
@@ -110,7 +111,7 @@ body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-pa
 .home-destinations { font-size: 1.05rem; font-weight: 400; line-height: 1.5; }
 .home-hero .button {
   border-color: #fff;
-  border-radius: 0;
+  border-radius: var(--ui-radius);
   background: #fff;
   box-shadow: none;
   color: var(--accent-dark);
@@ -121,7 +122,7 @@ body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-pa
   min-height: 48px;
   padding: 10px 20px;
   border: 1px solid var(--accent);
-  border-radius: 0;
+  border-radius: var(--ui-radius);
   background: var(--accent);
   box-shadow: none;
   color: #fff;
@@ -140,15 +141,15 @@ body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-pa
 .button.danger.secondary { background: transparent; color: var(--danger); }
 .panel {
   border: 1px solid var(--line);
-  border-radius: 0;
+  border-radius: var(--ui-radius);
   background: var(--panel);
   box-shadow: none;
 }
 .panel-header { align-items: baseline; }
 .public-beta-notice, .public-liability-warning, .empty-state,
 .form-errors, .flash, .user-form-section, .note,
-.trip-card, .campsite-card, .admin-campsite-card {
-  border-radius: 0;
+.trip-card, .archived-trip-row, .campsite-card, .admin-campsite-card {
+  border-radius: var(--ui-radius);
   box-shadow: none;
 }
 .public-beta-notice { background: #edf1eb; border-color: var(--line); font-size: 1rem; }
@@ -156,16 +157,29 @@ body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-pa
 .public-liability-warning { background: var(--panel); font-size: .88rem; }
 .trip-card, .campsite-card, .admin-campsite-card {
   background: var(--panel);
-  border-color: var(--line);
+  border: 1px solid var(--line);
 }
 .trip-card:hover, .campsite-card:hover, .admin-campsite-card:hover {
   border-color: var(--accent);
   box-shadow: none;
   transform: none;
 }
+.archived-trip-row:hover, .archived-trip-row:focus-visible {
+  border-color: var(--accent);
+  box-shadow: none;
+  transform: none;
+}
+.trip-card:focus-visible, .archived-trip-row:focus-visible {
+  outline: 3px solid #b86624;
+  outline-offset: 3px;
+}
 .trip-card h2, .trip-card h3, .row-title { font-weight: 500; }
+.trip-card h2, .archived-trip-row h3 { text-decoration: none; }
+.trips-index-title-row a { text-decoration: none; }
+.trip-card:hover h2, .trip-card:focus-visible h2,
+.archived-trip-row:hover h3, .archived-trip-row:focus-visible h3 { color: var(--accent-dark); }
 .status, .status-pill, .trip-type-badge {
-  border-radius: 0;
+  border-radius: var(--ui-radius);
   background: transparent;
   color: var(--accent);
   font-size: .9rem;
@@ -173,7 +187,7 @@ body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-pa
   letter-spacing: .06em;
   text-transform: uppercase;
 }
-.status { border-bottom: 1px solid currentColor; padding: 0 0 2px; }
+.status { border-bottom: 0; padding: 0; }
 .status.danger-status { color: var(--danger); }
 .status.warning-status { color: #91621c; }
 .stats { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
@@ -188,15 +202,15 @@ input:not([type="submit"]):not([type="checkbox"]):not([type="radio"]),
 select, textarea {
   min-height: 48px;
   border-color: #869990;
-  border-radius: 0;
+  border-radius: var(--ui-radius);
   background-color: var(--panel);
   box-shadow: none;
   color: var(--text);
   font-weight: 400;
 }
 textarea { min-height: 112px; }
-.admin-form select { border-radius: 0; background-color: var(--panel); box-shadow: none; font-weight: 400; }
-.currency-field, .user-role-option, .trip-status-filter { border-radius: 0; box-shadow: none; }
+.admin-form select { border-radius: var(--ui-radius); background-color: var(--panel); box-shadow: none; font-weight: 400; }
+.currency-field, .user-role-option, .trip-status-filter { border-radius: var(--ui-radius); box-shadow: none; }
 .details-list > div { grid-template-columns: 140px minmax(0, 1fr); }
 .details-list dd { min-width: 0; overflow-wrap: anywhere; }
 th { border-bottom-color: var(--text); color: var(--muted); font-size: .88rem; font-weight: 600; letter-spacing: .06em; }
@@ -258,6 +272,7 @@ table { max-width: 100%; }
     min-height: 44px;
     padding: 8px 12px;
     border: 1px solid var(--accent);
+    border-radius: var(--ui-radius);
     font-weight: 500;
   }
   .admin-nav-checkbox:focus-visible + .admin-nav-toggle { outline: 3px solid #b86624; outline-offset: 3px; }
@@ -287,11 +302,11 @@ table { max-width: 100%; }
   .site-name span { font-size: 1.5rem; }
   .site-name small { font-size: .7rem; }
   .public-admin-link { font-size: .94rem; }
-  .public-nav-toggle { border-radius: 0; font-weight: 500; }
+  .public-nav-toggle { border-radius: var(--ui-radius); font-weight: 500; }
   .public-nav {
     max-height: calc(100dvh - 84px);
     overflow-y: auto;
-    border-radius: 0;
+    border-radius: var(--ui-radius);
     background: var(--panel);
     box-shadow: 0 8px 20px rgb(11 25 19 / 15%);
   }
@@ -312,9 +327,9 @@ table { max-width: 100%; }
   .home-hero-caption, .trips-mobile-hero-caption,
   .public-mobile-hero-caption, .trip-show-mobile-hero-caption { font-size: .88rem; }
   .panel { padding: 20px; }
-  body:not(.admin-body) .public-card-table tr { border-radius: 0; background: var(--panel); }
+  body:not(.admin-body) .public-card-table tr { border-radius: var(--ui-radius); background: var(--panel); }
   body.trip-show-page .confirmed-participants-table.public-card-table .public-party-primary-row,
-  body.trip-show-page .confirmed-participants-table.public-card-table .public-party-last-row { border-radius: 0; }
+  body.trip-show-page .confirmed-participants-table.public-card-table .public-party-last-row { border-radius: var(--ui-radius); }
   .admin-body table :is(th, td) { min-width: 108px; }
   .admin-body table :is(th, td):first-child { min-width: 170px; }
 }
@@ -340,6 +355,3 @@ table { max-width: 100%; }
   .admin-context { font-size: .86rem; }
   .admin-nav-toggle { min-width: 54px; padding: 8px; }
 }
-
-/* The same square geometry applies to the many legacy subcomponents. */
-body *:not(input[type="radio"]):not(.info-tooltip-icon) { border-radius: 0 !important; }
