@@ -5052,9 +5052,9 @@ th {
   padding: 18px 20px;
   --readiness-status-column: 78px;
   --readiness-copy-column: minmax(420px, 520px);
-  --readiness-action-column: 145px;
+  --readiness-action-column: 165px;
   width: fit-content;
-  max-width: 100%;
+  max-width: calc(100% - 32px);
 }
 
 .trip-readiness-overview {
@@ -5357,12 +5357,22 @@ th {
 }
 
 @media (max-width: 700px) {
-  .trip-readiness-header {
+  .trip-readiness-overview,
+  .trip-readiness-category {
+    width: calc(100% - 32px);
+  }
+
+  .trip-readiness-header,
+  .trip-readiness-category-header {
     grid-template-columns: 1fr;
     padding-left: 0;
   }
 
   .trip-readiness-header > div,
+  .trip-readiness-category-header > div,
+  .trip-readiness-category-header > .button,
+  .trip-readiness-category-header > .muted,
+  .trip-readiness-category-header > .trip-readiness-header-actions,
   .trip-readiness-header .trip-readiness-summary .button,
   .trip-readiness-header .trip-readiness-summary .status {
     grid-column: auto;
@@ -5377,9 +5387,21 @@ th {
     grid-template-columns: minmax(0, 1fr) max-content;
   }
 
+  .trip-readiness-category-title-row.has-trip-heading {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .trip-readiness-category-title-row.has-trip-heading .status {
+    justify-self: start;
+  }
+
   .trip-readiness-task {
     grid-template-columns: 34px minmax(0, 1fr);
     padding: 16px;
+  }
+
+  .trip-readiness-task-subtext {
+    overflow-wrap: anywhere;
   }
 
   .trip-readiness-task-actions {
@@ -5392,11 +5414,20 @@ th {
   }
 
   .trip-readiness-campsite-header,
-  .trip-readiness-trip-header,
-  .trip-readiness-group-check,
-  .trip-readiness-campsite-check {
+  .trip-readiness-trip-header {
     grid-template-columns: 1fr;
     padding-left: 0;
+  }
+
+  .trip-readiness-group-check,
+  .trip-readiness-campsite-check {
+    grid-template-columns: 34px minmax(0, 1fr);
+    padding-left: 0;
+  }
+
+  .trip-readiness-group-check > .trip-readiness-task-actions,
+  .trip-readiness-campsite-check > .trip-readiness-task-actions {
+    grid-column: 2;
   }
 
   .trip-readiness-campsite-header .trip-readiness-campsite-title-row,
@@ -7945,6 +7976,21 @@ textarea {
   body.trip-show-page .confirmed-participants-table.public-card-table .public-party-primary-row > td:first-child,
   body.trip-show-page .confirmed-participants-table.public-card-table .public-party-guest-row > td:first-child {
     padding-left: 0;
+  }
+
+  body:not(.admin-body) .day-trip-participants-panel .confirmed-participants-table.public-card-table tr:has(> td:only-child) {
+    padding: 8px 10px;
+  }
+
+  body:not(.admin-body) .day-trip-participants-panel .confirmed-participants-table.public-card-table td:only-child {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr;
+    padding: 0;
+    border-bottom: 0;
+  }
+
+  body:not(.admin-body) .day-trip-participants-panel .confirmed-participants-table.public-card-table td:only-child::before {
+    content: none;
   }
 }
 
