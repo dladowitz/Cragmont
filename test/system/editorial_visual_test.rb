@@ -11,7 +11,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
     assert_operator notice.native.rect.height, :>, 90
   end
 
-  test "badges keep their colors and login actions use two rows on a phone" do
+  test "badges, login actions, and the signed in menu work on a phone" do
     visit new_session_path
 
     colors = page.evaluate_script(<<~JS)
@@ -43,6 +43,14 @@ class EditorialVisualTest < ApplicationSystemTestCase
     login = find_button("Log in")
     page.execute_script("arguments[0].form.requestSubmit(arguments[0])", login)
     assert_selector ".flash.notice", text: "You are logged in."
+
+    page.driver.browser.manage.window.resize_to(390, 844)
+    find(".public-nav-toggle").click
+    find(".account-nav summary").click
+    assert_selector ".account-nav[open] a[href='#{profile_path}']", text: "Profile"
+    assert_button "Log out"
+
+    page.driver.browser.manage.window.resize_to(1400, 1000)
     visit admin_root_path
     assert_selector ".admin-context", text: "Admin"
     logout = find_button("Logout")

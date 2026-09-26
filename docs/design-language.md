@@ -27,7 +27,7 @@ The current public examples are [home](../app/views/home/index.html.haml), [trip
 
 ## Page patterns and decisions
 
-1. **Navigation is grouped by intent.** The public header has Club (Membership, History, Get Help, About) and Trips (Trips, Past Trips, Join the List). Login and Signup are distinct buttons, not buried in a dropdown. Preserve the same destinations and hierarchy on mobile. The club pages also use the local subnavigation with `aria-current="page"`.
+1. **Navigation is grouped by intent.** The public header has Club (Membership, History, Get Help, About) and Trips (Trips, Past Trips, Join the List). Logged-in people have a name menu with Profile and Log out; signed-out people see distinct Login and Signup buttons. Preserve the same destinations and hierarchy on mobile. The club pages also use the local subnavigation with `aria-current="page"`.
 2. **A page has one primary job.** Trip index helps someone find an outing; trip detail helps them decide and act; club pages explain the organization and point toward trips or the email list. Do not give three competing primary CTAs.
 3. **Use the right content container.** A photo-led page needs readable contrast over its image and an explicit mobile composition. A text-heavy club page uses an eyebrow, H1, lead, section headings, and restrained panel. Admin pages use the existing header, panels, tables/forms, and direct labels.
 4. **Trip metadata stays visible.** Type badge, dates, location, and available space are scan-first information. Distinguish draft/published/archived and trip types in words as well as color. Do not hide a critical fact behind hover, a disclosure, or an image.

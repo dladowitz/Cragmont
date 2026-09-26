@@ -25,8 +25,11 @@
           = link_to "Past Trips", past_trips_path
           = link_to "Join the List", join_the_list_path
       - if user_signed_in?
-        = link_to current_user.full_name, profile_path, class: "nav-profile"
-        = button_to "Log out", session_path, method: :delete, class: "nav-button"
+        %details.public-nav-group.account-nav{name: "primary-navigation"}
+          %summary= current_user.full_name
+          .public-nav-dropdown
+            = link_to "Profile", profile_path
+            = button_to "Log out", session_path, method: :delete, class: "nav-button"
       - else
         = link_to "Log in", new_session_path, class: "nav-auth nav-auth-login"
         = link_to "Signup", new_registration_path, class: "nav-auth nav-auth-signup"

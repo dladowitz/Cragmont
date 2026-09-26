@@ -2174,7 +2174,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     get trip_url(trips(:yosemite), complete_signup: token)
 
     assert_response :success
-    assert_select ".public-nav a[href='#{profile_path}']", text: "Sam Lee"
+    assert_select ".public-nav .account-nav summary", text: "Sam Lee"
+    assert_select ".public-nav .account-nav a[href='#{profile_path}']", text: "Profile"
     assert_select ".public-nav a", text: "Log in", count: 0
     assert_select "[data-controller='modal'][data-modal-open-value='true'][data-modal-clean-url-on-close-value='true']" do
       assert_select "dialog.signup-modal"

@@ -90,14 +90,21 @@ a { color: var(--accent); font-weight: 500; text-underline-offset: .2em; }
   background: var(--panel);
   box-shadow: 0 8px 20px rgb(11 25 19 / 15%);
 }
-.public-nav-group .public-nav-dropdown a {
+.account-nav .public-nav-dropdown { right: 0; left: auto; }
+.public-nav-group .public-nav-dropdown :is(a, .nav-button) {
+  display: flex;
+  width: 100%;
   min-height: 42px;
   padding: 9px 0;
   border-bottom: 1px solid var(--line);
+  background: transparent;
   color: var(--text);
+  text-align: left;
   text-shadow: none;
 }
+.public-nav-dropdown form { width: 100%; }
 .public-nav-dropdown a:last-child { border-bottom: 0; }
+.account-nav .nav-button { border-bottom: 0; }
 .public-nav a.nav-auth { padding: 8px 14px; border: 1px solid var(--accent); border-radius: var(--ui-radius); }
 .public-nav a.nav-auth-signup { background: var(--accent); color: #fff; }
 .public-nav a, .public-admin-link, .nav-button,
