@@ -392,7 +392,7 @@ table { max-width: 100%; }
   body.admin-body table.participant-email-table,
   body.admin-body table.campsite-parking-table,
   body.admin-body .help-subscriber-table table,
-  body.admin-body table.trip-details-email-recipient-table {
+  body.admin-body .trip-details-email-recipient-panel table.trip-details-email-recipient-table {
     display: table;
     width: 100%;
     overflow: visible;
@@ -400,7 +400,7 @@ table { max-width: 100%; }
   body.admin-body table.participant-email-table :is(th, td),
   body.admin-body table.campsite-parking-table :is(th, td),
   body.admin-body .help-subscriber-table table :is(th, td),
-  body.admin-body table.trip-details-email-recipient-table :is(th, td) { min-width: 0; }
+  body.admin-body .trip-details-email-recipient-panel table.trip-details-email-recipient-table :is(th, td) { min-width: 0; }
   .help-subscriber-table td:first-child { overflow-wrap: anywhere; }
   .campsite-reimbursement-groups, .campsite-reimbursement-trip,
   .campsite-reimbursement-trip .table-wrapper { min-width: 0; }
