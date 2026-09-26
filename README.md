@@ -1,5 +1,6 @@
-### Cragmont Climbng Club
+### Cragmont Climbing Club
 
+For new pages and UI changes, see the [design language and UX decisions](docs/design-language.md).
 
 
 
