@@ -47,6 +47,8 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     delete session_url
 
     assert_redirected_to root_url
+    follow_redirect!
+    assert_select ".flash-messages.auto-dismiss", text: "You are logged out."
     get profile_url
 
     assert_redirected_to new_session_url

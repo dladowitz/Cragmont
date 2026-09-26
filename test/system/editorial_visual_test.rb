@@ -1,6 +1,32 @@
 require "application_system_test_case"
 
 class EditorialVisualTest < ApplicationSystemTestCase
+  test "open navigation heading uses the Cragmont green on desktop and phone" do
+    browser = page.driver.browser
+    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 1280, height: 800, deviceScaleFactor: 1, mobile: false)
+    visit root_path
+    accent = page.evaluate_script(<<~JS)
+      (() => {
+        const sample = document.createElement("span");
+        sample.style.backgroundColor = "var(--accent)";
+        document.body.append(sample);
+        const color = getComputedStyle(sample).backgroundColor;
+        sample.remove();
+        return color;
+      })()
+    JS
+
+    find(".public-nav-group summary", text: "Club").click
+    assert_equal accent, page.evaluate_script("getComputedStyle(document.querySelector('.public-nav-group[open] > summary')).backgroundColor")
+
+    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
+    find(".public-nav-toggle").click
+    find(".public-nav-group summary", text: "Trips").click
+    assert_equal accent, page.evaluate_script("getComputedStyle(document.querySelector('.public-nav-group[open] > summary')).backgroundColor")
+  ensure
+    browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
   test "long history reads without horizontal scrolling on a phone" do
     visit history_path
     assert_selector "#longer-history h2", text: "From Cragmont Rock to Yosemite"
@@ -72,5 +98,6 @@ class EditorialVisualTest < ApplicationSystemTestCase
     page.execute_script("arguments[0].form.requestSubmit(arguments[0])", logout.native)
     assert_selector ".flash.notice", text: "You are logged out."
     assert_equal 0, page.evaluate_script("document.querySelector('.home-hero').getBoundingClientRect().top")
+    assert_no_selector ".flash.notice", visible: true, wait: 3
   end
 end

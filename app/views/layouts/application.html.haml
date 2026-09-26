@@ -35,7 +35,7 @@
   - body_class = body_classes.join(" ").presence
   %body{ class: body_class, data: { controller: ("table-scroll" if admin_body) } }
     - if notice.present? || alert.present?
-      .flash-messages
+      .flash-messages{class: ("auto-dismiss" if notice == "You are logged out." && alert.blank?)}
         - if notice.present?
           %p.flash.notice= notice
         - if alert.present?

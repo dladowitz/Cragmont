@@ -67,6 +67,8 @@ a { color: var(--accent); font-weight: 500; text-underline-offset: .2em; }
   align-items: center;
   gap: 6px;
   min-height: 44px;
+  padding: 0 10px;
+  border-radius: var(--ui-radius);
   cursor: pointer;
   color: var(--accent-dark);
   font-weight: 500;
@@ -140,6 +142,11 @@ body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-pa
   .trip-what-to-expect-page, .help-request-page, .trip-show-page,
   .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page)
   .public-nav-group summary { color: #fff; text-shadow: 0 1px 8px rgb(0 0 0 / 45%); }
+.public-nav-group[open] > summary {
+  background: var(--accent);
+  color: #fff;
+  text-shadow: none;
+}
 body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
   .password-reset-edit-page, .not-found-page, .registration-new-page,
   .trip-what-to-expect-page, .help-request-page, .trip-show-page,
@@ -210,6 +217,11 @@ body.home-page .flash-messages {
   margin: 0;
   transform: translateX(-50%);
 }
+.flash-messages.auto-dismiss {
+  pointer-events: none;
+  animation: dismiss-flash 0s 2s forwards;
+}
+@keyframes dismiss-flash { to { visibility: hidden; } }
 
 /* Common controls and content surfaces drive both public and admin pages. */
 .button, input[type="submit"] {
@@ -533,6 +545,7 @@ table { max-width: 100%; }
     box-shadow: 0 8px 20px rgb(11 25 19 / 15%);
   }
   .public-nav-checkbox:checked ~ .public-nav .public-nav-group summary { width: 100%; color: var(--text); text-shadow: none; }
+  .public-nav-checkbox:checked ~ .public-nav .public-nav-group[open] > summary { background: var(--accent); color: #fff; }
   .public-nav-dropdown { position: static; min-width: 0; padding: 0 0 0 14px; border: 0; box-shadow: none; }
   .public-nav .public-nav-dropdown a { width: 100%; border-radius: 0; }
   .public-nav-checkbox:checked ~ .public-nav a.nav-auth-login { border-color: var(--accent); color: var(--accent-dark); }
