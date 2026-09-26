@@ -1,6 +1,16 @@
 require "application_system_test_case"
 
 class EditorialVisualTest < ApplicationSystemTestCase
+  test "calendar subscription has room to breathe on desktop and phone" do
+    visit trips_path
+    notice = find(".calendar-subscription-notice")
+    assert_equal 2, notice.all("p").size
+    assert_operator notice.native.rect.height, :>, 70
+
+    page.driver.browser.manage.window.resize_to(390, 844)
+    assert_operator notice.native.rect.height, :>, 90
+  end
+
   test "badges keep their colors and login actions use two rows on a phone" do
     visit new_session_path
 

@@ -694,31 +694,12 @@ body.home-page .nav-button {
   display: block;
 }
 
-.home-hero-eyebrow {
-  margin: 0 0 18px;
-  color: rgb(255 255 255 / 86%);
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  text-shadow: 0 2px 14px rgb(0 0 0 / 42%);
-}
-
-.home-hero-intro {
-  max-width: 520px;
-  margin: 26px 0 16px;
-  color: #fff;
-  font-size: clamp(1.05rem, 1.5vw, 1.25rem);
-  font-weight: 650;
-  text-shadow: 0 2px 14px rgb(0 0 0 / 42%);
-}
-
 .home-destinations {
   display: flex;
   flex-wrap: wrap;
   gap: 6px 0;
   max-width: 600px;
-  margin: 0 0 28px;
+  margin: 24px 0 28px;
   padding: 0;
   color: rgb(255 255 255 / 76%);
   font-size: 0.9rem;
@@ -6987,15 +6968,6 @@ textarea {
   .home-hero h1 {
     font-size: clamp(3rem, 15vw, 4.5rem);
     line-height: 0.84;
-  }
-
-  .home-hero-eyebrow {
-    margin-bottom: 14px;
-  }
-
-  .home-hero-intro {
-    margin-block: 24px 14px;
-    font-size: 1rem;
   }
 
   .home-destinations {

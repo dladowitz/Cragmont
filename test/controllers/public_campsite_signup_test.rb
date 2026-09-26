@@ -17,6 +17,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".home-hero h1", text: /Climbing\.\s*Camping\.\s*Community\./
+    assert_select ".home-hero-eyebrow, .home-hero-intro", count: 0
+    assert_no_match(/Find your next pitch|Bay Area climbers heading outside, together\./, response.body)
     assert_select ".home-destinations", text: /Yosemite/
     assert_select ".home-mobile-beta-notice", count: 0
     assert_select "a[href='#{trips_path}']", text: /View trips/
@@ -56,8 +58,9 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".archived-trips-panel", count: 0
     assert_select ".trips-faq-callout a[href='#{what_to_expect_trips_path}']", text: "camping trips"
     assert_select ".trips-faq-callout a[href='#{day_trip_what_to_expect_trips_path}']", text: "day trips."
-    assert_select ".calendar-subscription-notice"
+    assert_select ".calendar-subscription-notice p", count: 2
     assert_select ".trips-index-notices .public-beta-notice", count: 1
+    assert_no_match(/getting dialed in/i, response.body)
     assert_select ".background-image-caption", "Regular Northwest Face, Half Dome"
   end
 

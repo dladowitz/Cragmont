@@ -18,12 +18,12 @@
             = link_to "day trips.", day_trip_what_to_expect_trips_path
       .trips-index-notices
         .public-beta-notice.calendar-subscription-notice
-          %span
-            Keep your next climb on the calendar.
+          %p Keep your next climb on the calendar.
+          %p
             = link_to "Subscribe to all events", calendar_trips_url(format: :ics, protocol: "webcal"), data: { turbo: false }
             or copy the
             = link_to "iCal feed URL", calendar_trips_url(format: :ics), data: { turbo: false }
-            into your calendar app's subscription settings for updates.
+            into your calendar app.
     - if @trips.any?
       .trip-cards
         - @trips.each do |trip|
