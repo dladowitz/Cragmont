@@ -22,7 +22,7 @@
         = required_label form, :name
         = form.text_field :name, required: true
       %div
-        = form.label :area_key, "Area"
+        = label_tag :area_key_display, "Area"
         = text_field_tag :area_key_display, @template.area_key, disabled: true
       .form-grid-full
         = required_label form, :subject_template, "Subject"

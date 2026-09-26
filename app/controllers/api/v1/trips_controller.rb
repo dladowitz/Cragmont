@@ -45,6 +45,9 @@ class Api::V1::TripsController < Api::V1::BaseController
     trip = Trip.find(params[:id])
     authorize trip
     return render json: { error: "Restore this trip before making changes" }, status: :conflict if trip.deleted?
+    if params[:trip].is_a?(ActionController::Parameters) && params[:trip].key?(:campsite_coordinator_id) && !policy(trip).assign_coordinator?
+      return render json: { error: "Only global trip admins can change campsite_coordinator_id" }, status: :forbidden
+    end
 
     if trip.update(permitted_payload(:trip, *policy(trip).permitted_attributes.excluding(:day_trip_image)))
       render json: { trip: trip_json(trip) }
@@ -58,6 +61,8 @@ class Api::V1::TripsController < Api::V1::BaseController
   def trip_json(trip)
     trip.as_json(only: TRIP_FIELDS).merge(
       "climbing_types" => trip.climbing_types,
+      "meeting_time" => trip.meeting_time&.strftime("%H:%M"),
+      "end_time" => trip.end_time&.strftime("%H:%M"),
       "campsites_path" => api_v1_trip_campsites_path(trip),
       "admin_path" => admin_trip_path(trip)
     )

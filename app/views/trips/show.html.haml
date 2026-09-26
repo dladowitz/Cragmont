@@ -16,11 +16,17 @@
       to #{@trip.end_date.to_fs(:long)}
     - whatsapp_group_url = safe_external_url(@trip.whatsapp_group)
     - weather_url = safe_external_url(@trip.weather_url)
+    - mountain_project_url = safe_external_url(@trip.mountain_project_url)
+    - guide_book_url = safe_external_url(@trip.guide_book_url)
     - photo_album_url = safe_external_url(@trip.photo_album_url)
     - if whatsapp_group_url.present?
       = member_link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link trip-mobile-resource-link trip-whatsapp-mobile-link", target: "_blank", rel: "noopener"
     - if weather_url.present?
       = public_external_link_to "Weather", weather_url, class: "trip-resource-link trip-mobile-resource-link trip-weather-mobile-link", target: "_blank", rel: "noopener"
+    - if mountain_project_url.present?
+      = public_external_link_to "Mountain Project", mountain_project_url, class: "trip-resource-link trip-mobile-resource-link trip-mountain-project-mobile-link", target: "_blank", rel: "noopener"
+    - if guide_book_url.present?
+      = public_external_link_to "Guide Book", guide_book_url, class: "trip-resource-link trip-mobile-resource-link trip-guide-book-mobile-link", target: "_blank", rel: "noopener"
     - if photo_album_url.present?
       = member_link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-mobile-resource-link trip-photo-album-mobile-link", target: "_blank", rel: "noopener"
   %span.trip-show-mobile-hero-caption IRS Wall, Joshua Tree
@@ -44,13 +50,17 @@
             %strong Notes:
             .content-page-markdown
               = render_content_page_markdown(@trip.description)
-      - if whatsapp_group_url.present? || weather_url.present? || photo_album_url.present?
+      - if whatsapp_group_url.present? || weather_url.present? || mountain_project_url.present? || guide_book_url.present? || photo_album_url.present?
         .trips-index-notices.trip-summary-notices
           .trip-resource-links
             - if whatsapp_group_url.present?
               = member_link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link trip-whatsapp-link", target: "_blank", rel: "noopener"
             - if weather_url.present?
               = public_external_link_to "Weather", weather_url, class: "trip-resource-link trip-weather-link", target: "_blank", rel: "noopener"
+            - if mountain_project_url.present?
+              = public_external_link_to "Mountain Project", mountain_project_url, class: "trip-resource-link trip-mountain-project-link", target: "_blank", rel: "noopener"
+            - if guide_book_url.present?
+              = public_external_link_to "Guide Book", guide_book_url, class: "trip-resource-link trip-guide-book-link", target: "_blank", rel: "noopener"
             - if photo_album_url.present?
               = member_link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-photo-album-link", target: "_blank", rel: "noopener"
     = render "calendar_download", trip: @trip
@@ -324,8 +334,9 @@
                   %td{"data-label" => "Joined"}= signup.created_at.in_time_zone.strftime("%-m/%-d/%y %-l:%M%P")
                   %td{"data-label" => "Self Signup"}= signup.waitlist_eligible? ? "Enabled" : "Disabled"
                   %td.waitlist-availability-column{"data-label" => "Availability"}= signup_available_from_cards ? "Yes" : "No"
-                  %td.waitlist-action-column{"data-label" => "Action"}
-                    - if !@trip.archived? && @current_signup&.waitlisted? && signup.id == @current_signup.id
+                  - waitlist_action_available = !@trip.archived? && @current_signup&.waitlisted? && signup.id == @current_signup.id
+                  %td.waitlist-action-column{class: ("public-empty-action" unless waitlist_action_available), "data-label" => "Action"}
+                    - if waitlist_action_available
                       %div{"data-controller" => "modal"}
                         %button.button.danger{"data-action" => "modal#open", :type => "button"} Remove From Waitlist
                         %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}

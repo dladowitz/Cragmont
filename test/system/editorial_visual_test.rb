@@ -28,9 +28,10 @@ class EditorialVisualTest < ApplicationSystemTestCase
     assert_operator actions[2].native.rect.y, :>, actions[0].native.rect.y
 
     page.driver.browser.manage.window.resize_to(1400, 1000)
-    find("input[type=email]").set("alex@example.com")
-    find("input[type=password]").set("password")
-    click_button "Log in"
+    page.execute_script("arguments[0].value = arguments[1]", find_field("Email"), "alex@example.com")
+    page.execute_script("arguments[0].value = arguments[1]", find_field("Password"), "password")
+    login = find_button("Log in")
+    page.execute_script("arguments[0].form.requestSubmit(arguments[0])", login)
     assert_selector ".flash.notice", text: "You are logged in."
     visit admin_root_path
     assert_selector ".admin-context", text: "Admin"

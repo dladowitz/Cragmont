@@ -47,9 +47,10 @@
                       to #{trip.end_date.strftime("%m/%d/%y")}
               - unless trip.class_trip?
                 %div
-                  %dt Open Spaces
+                  %dt Spaces
                   %dd
-                    = pluralize(trip.available_participant_capacity, "space")
+                    %span.status{class: (trip.capacity_full? ? "danger-status" : (trip.almost_full? ? "warning-status" : "success-status"))}
+                      = trip.capacity_full? ? "Full, waitlist open" : pluralize(trip.available_participant_capacity, "space")
     - else
       %p.muted No published trips are available right now.
   = render "shared/liability_warning"

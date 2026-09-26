@@ -26,6 +26,10 @@
       = member_link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link trip-mobile-resource-link trip-whatsapp-mobile-link", target: "_blank", rel: "noopener"
     - if weather_url.present?
       = public_external_link_to "Weather", weather_url, class: "trip-resource-link trip-mobile-resource-link trip-weather-mobile-link", target: "_blank", rel: "noopener"
+    - if mountain_project_url.present?
+      = public_external_link_to "Mountain Project", mountain_project_url, class: "trip-resource-link trip-mobile-resource-link trip-mountain-project-mobile-link", target: "_blank", rel: "noopener"
+    - if guide_book_url.present?
+      = public_external_link_to "Guide Book", guide_book_url, class: "trip-resource-link trip-mobile-resource-link trip-guide-book-mobile-link", target: "_blank", rel: "noopener"
     - if photo_album_url.present?
       = member_link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-mobile-resource-link trip-photo-album-mobile-link", target: "_blank", rel: "noopener"
   %span.trip-show-mobile-hero-caption IRS Wall, Joshua Tree

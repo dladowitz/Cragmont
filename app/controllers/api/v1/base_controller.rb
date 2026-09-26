@@ -11,6 +11,14 @@ class Api::V1::BaseController < Admin::BaseController
     render json: { error: error.message }, status: :bad_request
   end
 
+  rescue_from ActionController::ParameterMissing do |error|
+    render json: { error: "#{error.param} is required" }, status: :bad_request
+  end
+
+  rescue_from ActionDispatch::Http::Parameters::ParseError do
+    render json: { error: "Request body must be valid JSON" }, status: :bad_request
+  end
+
   private
 
   def permitted_payload(key, *attributes)

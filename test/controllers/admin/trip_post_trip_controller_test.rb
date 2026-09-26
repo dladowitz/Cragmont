@@ -10,6 +10,7 @@ class Admin::TripPostTripControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h2", "Post Trip"
+    assert_select ".trip-readiness-overview .trip-readiness-trip-heading", text: trips(:yosemite).name
     assert_select ".trip-readiness-category", count: 1
     assert_select "#readiness-post_trip", text: /All campsites reimbursed/
     assert_select "#readiness-post_trip", text: /Send collected money to Treasurer/

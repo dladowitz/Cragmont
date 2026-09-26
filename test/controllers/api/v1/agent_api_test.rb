@@ -59,6 +59,10 @@ class Api::V1::AgentApiTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_equal "Updated by coordinator", trips(:jtree).reload.description
 
+    patch api_v1_trip_url(trips(:jtree)), params: { trip: { campsite_coordinator_id: users(:alex).id } }, as: :json
+    assert_response :forbidden
+    assert_equal "Only global trip admins can change campsite_coordinator_id", response.parsed_body.fetch("error")
+
     post api_v1_trips_url, params: { trip: { name: "Nope" } }, as: :json
     assert_response :forbidden
 
@@ -109,14 +113,32 @@ class Api::V1::AgentApiTest < ActionDispatch::IntegrationTest
     post api_v1_trips_url, params: { trip: {
       trip_type: "day_trip", name: "Local Rocks", location: "Berkeley", start_date: "2026-12-11",
       meeting_time: "09:00", meeting_location: "Trailhead", meeting_location_url: "https://example.com/map",
-      late_arrival_instructions: "Meet at the trailhead", climbing_types: [ "sport" ]
+      end_time: "17:30", late_arrival_instructions: "Meet at the trailhead", climbing_types: [ "sport" ]
     } }, as: :json
     assert_response :created
     day_trip = Trip.find(response.parsed_body.fetch("trip").fetch("id"))
     assert_equal [ "sport" ], day_trip.climbing_types
+    assert_equal "09:00", response.parsed_body.dig("trip", "meeting_time")
+    assert_equal "17:30", response.parsed_body.dig("trip", "end_time")
 
     post api_v1_trip_campsites_url(day_trip), params: { campsite: { site_number: "1" } }, as: :json
     assert_response :conflict
+  end
+
+  test "API returns JSON bad requests for missing roots and malformed JSON" do
+    log_in_as(users(:alex))
+
+    post api_v1_trips_url, params: [ 1, 2 ], as: :json
+    assert_response :bad_request
+    assert_equal "trip is required", response.parsed_body.fetch("error")
+
+    post api_v1_trip_campsites_url(trips(:jtree)), params: {}, as: :json
+    assert_response :bad_request
+    assert_equal "campsite is required", response.parsed_body.fetch("error")
+
+    post api_v1_trips_url, params: '{"trip":', headers: { "CONTENT_TYPE" => "application/json", "ACCEPT" => "application/json" }
+    assert_response :bad_request
+    assert_equal "Request body must be valid JSON", response.parsed_body.fetch("error")
   end
 
   test "browser writes require the page CSRF token" do

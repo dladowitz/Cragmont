@@ -489,7 +489,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_equal "submit->parking-spot#submit", parking_form["data-action"]
       assert_select parking_form_selector do
         assert_select "input[name='_method'][value='patch']"
-        assert_select "select[name='campsite_parking_spot[assignment]'][data-parking-spot-target='select']" do
+        assert_select "select[name='campsite_parking_spot[assignment]'][data-parking-spot-target='select'][aria-label='Parking assignment for Spot 1']" do
           assert_select "option[value='unassigned'][selected]", text: "Unassigned"
           assert_select "option[value='first_come_first_serve']", text: "First Come First Serve"
           assert_select "option[value='signup_#{signup.id}']", text: "Sam Lee"

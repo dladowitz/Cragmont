@@ -13,6 +13,7 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1.visually-hidden"
+    assert_select ".panel-header .eyebrow", text: "Add campsite"
     assert_select ".panel-header", text: /Yosemite Valley Spring/
     assert_select ".registered-by-picker[data-controller='participant-picker']"
     assert_select "input[type='hidden'][name='campsite[registered_by_id]'][data-participant-picker-target='input'][value='']"

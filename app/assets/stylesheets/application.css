@@ -47,6 +47,7 @@ body.admin-body {
 body.trips-index-page {
   min-height: 100vh;
   background:
+    linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
     linear-gradient(180deg, rgb(15 23 20 / 28%), rgb(15 23 20 / 64%)),
     url("backgrounds/half-dome-ledge.jpg") center / cover fixed;
 }
@@ -54,6 +55,7 @@ body.trips-index-page {
 body.session-new-page {
   min-height: 100vh;
   background:
+    linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
     linear-gradient(180deg, rgb(15 23 20 / 22%), rgb(15 23 20 / 62%)),
     url("backgrounds/indian-creek-super-crack.jpg") center / cover fixed;
 }
@@ -61,6 +63,7 @@ body.session-new-page {
 body.password-reset-new-page {
   min-height: 100vh;
   background:
+    linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
     linear-gradient(180deg, rgb(15 23 20 / 22%), rgb(15 23 20 / 62%)),
     url("backgrounds/castle-valley-the-rectory.jpg") center / cover fixed;
 }
@@ -68,6 +71,7 @@ body.password-reset-new-page {
 body.password-reset-edit-page {
   min-height: 100vh;
   background:
+    linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
     linear-gradient(180deg, rgb(15 23 20 / 22%), rgb(15 23 20 / 62%)),
     url("backgrounds/yosemite-valley-arrowhead-arete.jpg") 72% center / cover fixed;
 }
@@ -75,6 +79,7 @@ body.password-reset-edit-page {
 body.not-found-page {
   min-height: 100vh;
   background:
+    linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
     linear-gradient(180deg, rgb(15 23 20 / 18%), rgb(15 23 20 / 58%)),
     url("backgrounds/indian-creek-falling.png") center / cover fixed;
 }
@@ -82,6 +87,7 @@ body.not-found-page {
 body.registration-new-page {
   min-height: 100vh;
   background:
+    linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
     linear-gradient(180deg, rgb(15 23 20 / 24%), rgb(15 23 20 / 64%)),
     url("backgrounds/tuolumne-meadows-cathedral-peak.jpg") center / cover fixed;
 }
@@ -89,6 +95,7 @@ body.registration-new-page {
 body.trip-what-to-expect-page {
   min-height: 100vh;
   background:
+    linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
     linear-gradient(180deg, rgb(15 23 20 / 24%), rgb(15 23 20 / 64%)),
     url("backgrounds/tuolumne-meadows-fairview-dome.jpg") center / cover fixed;
 }
@@ -96,6 +103,7 @@ body.trip-what-to-expect-page {
 body.help-request-page {
   min-height: 100vh;
   background:
+    linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
     linear-gradient(180deg, rgb(15 23 20 / 24%), rgb(15 23 20 / 64%)),
     url("backgrounds/yosemite-national-park-the-rostrum.jpg") center / cover fixed;
 }
@@ -103,6 +111,7 @@ body.help-request-page {
 body.trip-show-page {
   min-height: 100vh;
   background:
+    linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
     linear-gradient(180deg, rgb(15 23 20 / 24%), rgb(15 23 20 / 64%)),
     url("backgrounds/joshua-tree-irs-wall.jpg") center / cover fixed;
 }
@@ -111,6 +120,7 @@ body.profile-show-page,
 body.profile-edit-page {
   min-height: 100vh;
   background:
+    linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
     linear-gradient(180deg, rgb(15 23 20 / 24%), rgb(15 23 20 / 64%)),
     url("backgrounds/castle-valley-castleton-tower.jpg") center / cover fixed;
 }
@@ -633,7 +643,7 @@ body.home-page .nav-button {
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(180deg, rgb(8 17 15 / 52%), transparent 28%),
+    linear-gradient(180deg, rgb(8 17 15 / 62%), transparent 28%),
     linear-gradient(90deg, rgb(8 17 15 / 70%), rgb(8 17 15 / 18%) 56%, transparent 78%),
     linear-gradient(0deg, rgb(8 17 15 / 46%), transparent 42%);
   content: "";
@@ -1267,7 +1277,7 @@ body.trip-show-page .public-liability-warning {
 
 .waitlisted-signups-section h4,
 .trip-waitlist-section h3 {
-  color: #b47a00;
+  color: #895b00;
 }
 
 .trip-waitlist-section {
@@ -1367,7 +1377,7 @@ dialog.signup-modal.participant-contact-modal {
   min-height: 28px;
   padding: 5px 10px;
   border-radius: 4px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   line-height: 1.1;
 }
 
@@ -1380,6 +1390,7 @@ dialog.signup-modal.participant-contact-modal {
 
   .climbing-partner-contact-control .button,
   .climbing-partner-self-service .button {
+    justify-content: center;
     text-align: center;
     width: 100%;
   }
@@ -3733,7 +3744,7 @@ dialog.signup-modal.refund-modal .form-actions {
   width: 100%;
   min-height: 54px;
   padding: 12px 16px;
-  border: 1px solid #cfd8d3;
+  border: 1px solid #7f9289;
   border-radius: 8px;
   background: #fff;
   color: var(--text);
@@ -5036,6 +5047,7 @@ th {
 
 .trip-readiness-overview,
 .trip-readiness-category {
+  margin-inline: auto;
   margin-bottom: 16px;
   padding: 18px 20px;
   --readiness-status-column: 78px;
@@ -5173,7 +5185,7 @@ th {
   justify-content: center;
   height: 30px;
   border-radius: 999px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 800;
 }
 
@@ -5331,7 +5343,7 @@ th {
   border-radius: 999px;
   background: #eef4ff;
   color: #1f5fbf;
-  font-size: 0.42rem;
+  font-size: 0.75rem;
   font-weight: 800;
   line-height: 1.2;
   text-transform: uppercase;
@@ -5341,7 +5353,7 @@ th {
 .trip-readiness-small-button {
   min-height: 24px;
   padding: 2px 7px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
 }
 
 @media (max-width: 700px) {
@@ -5443,6 +5455,7 @@ th {
 }
 
 .climbing-type-option {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 9px;
@@ -5468,6 +5481,10 @@ th {
 
 .climbing-type-option input {
   position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
   opacity: 0;
   pointer-events: none;
 }
@@ -5780,7 +5797,9 @@ th {
 }
 
 .markdown-formatting-guide code {
-  display: inline-block;
+  display: inline;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
   margin-right: 6px;
   padding: 2px 5px;
   border-radius: 4px;
@@ -6677,11 +6696,14 @@ textarea {
 
   .trips-mobile-hero {
     position: relative;
-    display: block;
+    display: grid;
+    align-content: end;
+    gap: 14px;
     min-height: clamp(150px, 38vw, 220px);
     margin: 0 0 14px;
+    padding: 88px 10px 10px;
     background:
-      linear-gradient(180deg, rgb(15 23 20 / 58%), rgb(15 23 20 / 16%) 52%, rgb(15 23 20 / 38%)),
+      linear-gradient(180deg, rgb(15 23 20 / 58%), rgb(15 23 20 / 16%) 52%, rgb(15 23 20 / 68%)),
       url("backgrounds/half-dome-ledge.jpg") center 58% / cover;
   }
 
@@ -6691,11 +6713,14 @@ textarea {
 
   .public-mobile-hero {
     position: relative;
-    display: block;
+    display: grid;
+    align-content: end;
+    gap: 14px;
     min-height: clamp(200px, 52vw, 280px);
     margin: 0 0 14px;
+    padding: 88px 10px 10px;
     background:
-      linear-gradient(180deg, rgb(15 23 20 / 60%), rgb(15 23 20 / 14%) 48%, rgb(15 23 20 / 42%)),
+      linear-gradient(180deg, rgb(15 23 20 / 60%), rgb(15 23 20 / 14%) 48%, rgb(15 23 20 / 68%)),
       var(--public-mobile-hero-image) center / cover;
   }
 
@@ -6748,9 +6773,6 @@ textarea {
   }
 
   .trips-mobile-hero-title {
-    position: absolute;
-    left: 10px;
-    bottom: 18px;
     margin: 0;
     color: #fff;
     font-size: 2.25rem;
@@ -6759,10 +6781,7 @@ textarea {
   }
 
   .public-mobile-hero-title {
-    position: absolute;
-    left: 10px;
-    bottom: 18px;
-    max-width: calc(100% - 130px);
+    max-width: 100%;
     margin: 0;
     color: #fff;
     font-size: 2.25rem;
@@ -6776,9 +6795,7 @@ textarea {
   }
 
   .trips-mobile-hero-caption {
-    position: absolute;
-    right: 12px;
-    bottom: 10px;
+    justify-self: end;
     color: rgb(255 255 255 / 88%);
     font-size: 0.72rem;
     font-weight: 700;
@@ -6787,9 +6804,7 @@ textarea {
   }
 
   .public-mobile-hero-caption {
-    position: absolute;
-    right: 12px;
-    bottom: 10px;
+    justify-self: end;
     display: block;
     max-width: min(180px, calc(100% - 24px));
     color: rgb(255 255 255 / 88%);
@@ -6811,12 +6826,13 @@ textarea {
   .trip-show-mobile-hero {
     position: relative;
     display: grid;
-    align-items: end;
+    align-content: end;
+    gap: 14px;
     min-height: clamp(230px, 64vw, 320px);
     margin: 0 0 14px;
-    padding: 88px 10px 18px;
+    padding: 88px 10px 10px;
     background:
-      linear-gradient(180deg, rgb(15 23 20 / 60%), rgb(15 23 20 / 12%) 46%, rgb(15 23 20 / 52%)),
+      linear-gradient(180deg, rgb(15 23 20 / 60%), rgb(15 23 20 / 12%) 46%, rgb(15 23 20 / 68%)),
       url("backgrounds/joshua-tree-irs-wall.jpg") center 58% / cover;
     color: #fff;
   }
@@ -6832,7 +6848,6 @@ textarea {
   .trip-show-mobile-hero-copy {
     display: grid;
     gap: 7px;
-    padding-right: 92px;
   }
 
   .trip-show-mobile-hero .trip-title-line {
@@ -6866,10 +6881,8 @@ textarea {
   }
 
   .trip-show-mobile-hero-caption {
-    position: absolute;
-    right: 10px;
-    bottom: 10px;
-    max-width: 108px;
+    justify-self: end;
+    max-width: 100%;
     color: rgb(255 255 255 / 88%);
     font-size: 0.72rem;
     font-weight: 700;
@@ -6962,7 +6975,27 @@ textarea {
   }
 
   body.trips-index-page .trips-index-panel h1 {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  body.trips-index-page .archived-trips-panel h1 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   body.trips-index-page .trips-index-panel .trips-faq-callout {
@@ -6995,6 +7028,11 @@ textarea {
     background: transparent;
     box-shadow: none;
     backdrop-filter: none;
+  }
+
+  body.trips-index-page .club-archive {
+    width: calc(100% - 20px);
+    margin-inline: auto;
   }
 
   body.trip-show-page .panel {
@@ -7270,7 +7308,7 @@ textarea {
   body.trip-show-page .trip-waitlist-section {
     margin-left: -5px;
     margin-right: -10px;
-    border-left: 4px solid #b47a00;
+    border-left: 4px solid #895b00;
   }
 
   body.trip-show-page .trip-waitlist-note {
@@ -7816,6 +7854,14 @@ textarea {
   }
 
   body.trip-show-page .confirmed-participants-table.public-card-table td:empty {
+    display: none;
+  }
+
+  body.trip-show-page .waitlist-table.public-card-table td:empty {
+    display: none;
+  }
+
+  body.trip-show-page .waitlist-table.public-card-table td.public-empty-action {
     display: none;
   }
 

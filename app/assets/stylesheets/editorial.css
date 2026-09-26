@@ -20,7 +20,8 @@ button, input, select, textarea, .participant-email-address-list { font-family: 
 body.admin-body { background: #e7f1ed; }
 body.trip-safety-page, body.profile-waiver-new-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, rgb(15 23 20 / 30%), rgb(15 23 20 / 65%)),
+  background: linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
+    linear-gradient(180deg, rgb(15 23 20 / 30%), rgb(15 23 20 / 65%)),
     url("backgrounds/tuolumne-meadows-fairview-dome.jpg") center / cover fixed;
 }
 body:is(.trips-index-page, .session-new-page, .password-reset-new-page,
@@ -57,7 +58,7 @@ a { color: var(--accent); font-weight: 500; text-underline-offset: .2em; }
 .public-brand { gap: 28px; flex-wrap: nowrap; }
 .site-name { gap: 4px; line-height: .92; }
 .site-name span { font-size: 1.85rem; font-weight: 500; letter-spacing: -.06em; }
-.site-name small { font-size: .7rem; font-weight: 600; letter-spacing: .26em; }
+.site-name small { font-size: .75rem; font-weight: 600; letter-spacing: .26em; }
 .public-nav { gap: clamp(14px, 2vw, 30px); }
 .public-nav form { margin: 0; }
 .public-nav-group { position: relative; }
@@ -202,12 +203,31 @@ body.home-page .flash-messages {
 .admin-nav .button.secondary { border-color: transparent; }
 .button.danger { border-color: var(--danger); background: var(--danger); color: #fff; }
 .button.danger.secondary { background: transparent; color: var(--danger); }
+.button:disabled, input[type="submit"]:disabled,
+.waiver-form button[type="submit"]:disabled {
+  border-color: #687b74;
+  border-style: dashed;
+  background: #e7ebe8;
+  color: #40504c;
+  opacity: 1;
+}
+.button.danger.secondary:disabled {
+  border-color: #872422;
+  background: #f8e9e7;
+  color: #872422;
+}
 .panel {
   border: 1px solid var(--line);
   border-radius: var(--ui-radius);
   background: var(--panel);
   box-shadow: none;
 }
+.public-main { position: relative; z-index: 2; }
+body:is(.trips-index-page, .session-new-page, .password-reset-new-page,
+  .password-reset-edit-page, .not-found-page, .registration-new-page,
+  .trip-what-to-expect-page, .help-request-page, .trip-show-page,
+  .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page)
+  .panel { background: var(--panel); backdrop-filter: none; }
 .panel-header { align-items: baseline; }
 body.trips-index-page .trips-index-panel > .panel-header { flex-wrap: wrap; }
 body.trips-index-page .trips-index-panel .trips-index-notices { flex: 0 1 auto; width: 100%; margin-top: 0; }
@@ -295,7 +315,7 @@ label, legend { font-weight: 500; }
 input:not([type="submit"]):not([type="checkbox"]):not([type="radio"]),
 select, textarea {
   min-height: 48px;
-  border-color: #869990;
+  border-color: #7f9289;
   border-radius: var(--ui-radius);
   background-color: var(--panel);
   box-shadow: none;
@@ -327,6 +347,13 @@ table { max-width: 100%; }
     font-size: .88rem;
   }
   .admin-campsite-card { min-width: 0; width: 100%; }
+  .admin-campsite-card > *, .admin-campsite-card-header > *,
+  .campsite-participant-groups > *, .admin-campsite-parking-section,
+  .campsite-reimbursement-groups, .campsite-reimbursement-trip,
+  .campsite-reimbursement-trip .table-wrapper { min-width: 0; }
+  .admin-campsite-card table,
+  .campsite-reimbursement-trip .table-wrapper { width: 100%; max-width: 100%; }
+  .campsite-reimbursement-trip-heading h3 { min-width: 0; overflow-wrap: anywhere; }
   .admin-campsite-card-header {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas: "heading" "dates" "registration" "fees" "actions";
@@ -394,7 +421,7 @@ table { max-width: 100%; }
   }
   .public-brand { gap: 16px; }
   .site-name span { font-size: 1.5rem; }
-  .site-name small { font-size: .7rem; }
+  .site-name small { font-size: .75rem; }
   .public-admin-link { font-size: .94rem; }
   .public-nav-toggle { border-radius: var(--ui-radius); font-weight: 500; }
   .public-nav {
@@ -441,6 +468,7 @@ table { max-width: 100%; }
   .home-destinations { font-size: 1rem; }
   .home-hero-caption, .trips-mobile-hero-caption,
   .public-mobile-hero-caption, .trip-show-mobile-hero-caption { font-size: .88rem; }
+  body.trip-show-page .confirmed-participants-table.public-card-table td::before { font-size: .75rem; }
   .panel { padding: 20px; }
   body:not(.admin-body) .public-card-table tr { border-radius: var(--ui-radius); background: var(--panel); }
   body.trip-show-page .confirmed-participants-table.public-card-table .public-party-primary-row,
@@ -457,7 +485,7 @@ table { max-width: 100%; }
   .public-header { gap: 8px; }
   .public-brand { gap: 10px; }
   .site-name span { font-size: 1.28rem; }
-  .site-name small { font-size: .65rem; letter-spacing: .18em; }
+  .site-name small { font-size: .75rem; letter-spacing: .18em; }
   .public-admin-link { font-size: .84rem; }
   .public-nav-toggle { min-width: 54px; padding: 8px; }
   .public-nav-toggle-icon { display: none; }
@@ -469,4 +497,18 @@ table { max-width: 100%; }
   .admin-nav a { white-space: normal; }
   .admin-context { font-size: .86rem; }
   .admin-nav-toggle { min-width: 54px; padding: 8px; }
+}
+
+@media (max-width: 900px) {
+  body.trip-show-page .campsite-card-header { flex-direction: column; align-items: stretch; }
+  body.trip-show-page .campsite-signup-action { min-width: 0; justify-items: start; }
+  body.trip-show-page .campsite-signup-action p { text-align: left; }
+  body.trip-show-page .campsite-card-list { padding-left: 0; }
+  body.trip-show-page .campsite-card,
+  body.trip-show-page .campsite-card > *,
+  body.trip-show-page .campsite-participant-groups > *,
+  body.trip-show-page .public-campsite-parking-section { min-width: 0; }
+  body.trip-show-page table { display: block; width: 100%; max-width: 100%; overflow-x: auto; }
+  body.trip-show-page .date-pair div { grid-template-columns: 84px minmax(0, 1fr); }
+  body.trip-show-page .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
