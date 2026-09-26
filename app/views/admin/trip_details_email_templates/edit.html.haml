@@ -9,7 +9,7 @@
         Existing trip drafts and sent emails keep their own copies.
     .actions
       = link_to "All templates", admin_trip_details_email_templates_path, class: "button secondary"
-      = link_to "Back to settings", admin_settings_path, class: "button secondary"
+      = link_to "Back to Content", admin_content_path, class: "button secondary"
 
   = form_with model: [:admin, @template],
     url: admin_trip_details_email_template_path(@template),
@@ -22,7 +22,7 @@
         = required_label form, :name
         = form.text_field :name, required: true
       %div
-        = form.label :area_key, "Area"
+        = label_tag :area_key_display, "Area"
         = text_field_tag :area_key_display, @template.area_key, disabled: true
       .form-grid-full
         = required_label form, :subject_template, "Subject"

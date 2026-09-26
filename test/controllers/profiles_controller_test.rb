@@ -1,13 +1,16 @@
 require "test_helper"
 
 class ProfilesControllerTest < ActionDispatch::IntegrationTest
-  test "public header links signed in user name to profile" do
+  test "public header groups profile and log out under the signed in name" do
     log_in_as(users(:alex))
 
     get trips_url
 
     assert_response :success
-    assert_select ".public-nav a[href='#{profile_path}']", text: "Alex Rivera"
+    assert_select ".public-nav .account-nav summary", text: "Alex Rivera"
+    assert_select ".public-nav .account-nav a[href='#{profile_path}']", text: "Profile"
+    assert_select ".public-nav .account-nav form[action='#{session_path}'] button", text: "Log out"
+    assert_select ".public-nav > a[href='#{profile_path}']", count: 0
   end
 
   test "logged in user can view profile" do

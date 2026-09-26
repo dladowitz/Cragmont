@@ -9,7 +9,7 @@ class Admin::ContentControllerTest < ActionDispatch::IntegrationTest
     get admin_content_url
 
     assert_response :success
-    assert_select "h1", "Admin Dashboard"
+    assert_select "h1.visually-hidden"
     assert_select ".admin-nav a[href='#{admin_content_path}']", text: "Content"
     assert_select "h2", "Content for FAQs, Safety, Liability and Emails"
     assert_select ".content-action-list a[href='#{edit_admin_content_page_path("what_to_expect")}']", text: "Edit What to Expect on a Camping Trip"

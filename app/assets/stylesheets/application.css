@@ -47,6 +47,7 @@ body.admin-body {
 body.trips-index-page {
   min-height: 100vh;
   background:
+    linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
     linear-gradient(180deg, rgb(15 23 20 / 28%), rgb(15 23 20 / 64%)),
     url("backgrounds/half-dome-ledge.jpg") center / cover fixed;
 }
@@ -54,6 +55,7 @@ body.trips-index-page {
 body.session-new-page {
   min-height: 100vh;
   background:
+    linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
     linear-gradient(180deg, rgb(15 23 20 / 22%), rgb(15 23 20 / 62%)),
     url("backgrounds/indian-creek-super-crack.jpg") center / cover fixed;
 }
@@ -61,6 +63,7 @@ body.session-new-page {
 body.password-reset-new-page {
   min-height: 100vh;
   background:
+    linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
     linear-gradient(180deg, rgb(15 23 20 / 22%), rgb(15 23 20 / 62%)),
     url("backgrounds/castle-valley-the-rectory.jpg") center / cover fixed;
 }
@@ -68,6 +71,7 @@ body.password-reset-new-page {
 body.password-reset-edit-page {
   min-height: 100vh;
   background:
+    linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
     linear-gradient(180deg, rgb(15 23 20 / 22%), rgb(15 23 20 / 62%)),
     url("backgrounds/yosemite-valley-arrowhead-arete.jpg") 72% center / cover fixed;
 }
@@ -75,6 +79,7 @@ body.password-reset-edit-page {
 body.not-found-page {
   min-height: 100vh;
   background:
+    linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
     linear-gradient(180deg, rgb(15 23 20 / 18%), rgb(15 23 20 / 58%)),
     url("backgrounds/indian-creek-falling.png") center / cover fixed;
 }
@@ -82,6 +87,7 @@ body.not-found-page {
 body.registration-new-page {
   min-height: 100vh;
   background:
+    linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
     linear-gradient(180deg, rgb(15 23 20 / 24%), rgb(15 23 20 / 64%)),
     url("backgrounds/tuolumne-meadows-cathedral-peak.jpg") center / cover fixed;
 }
@@ -89,6 +95,7 @@ body.registration-new-page {
 body.trip-what-to-expect-page {
   min-height: 100vh;
   background:
+    linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
     linear-gradient(180deg, rgb(15 23 20 / 24%), rgb(15 23 20 / 64%)),
     url("backgrounds/tuolumne-meadows-fairview-dome.jpg") center / cover fixed;
 }
@@ -96,6 +103,7 @@ body.trip-what-to-expect-page {
 body.help-request-page {
   min-height: 100vh;
   background:
+    linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
     linear-gradient(180deg, rgb(15 23 20 / 24%), rgb(15 23 20 / 64%)),
     url("backgrounds/yosemite-national-park-the-rostrum.jpg") center / cover fixed;
 }
@@ -103,6 +111,7 @@ body.help-request-page {
 body.trip-show-page {
   min-height: 100vh;
   background:
+    linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
     linear-gradient(180deg, rgb(15 23 20 / 24%), rgb(15 23 20 / 64%)),
     url("backgrounds/joshua-tree-irs-wall.jpg") center / cover fixed;
 }
@@ -111,6 +120,7 @@ body.profile-show-page,
 body.profile-edit-page {
   min-height: 100vh;
   background:
+    linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
     linear-gradient(180deg, rgb(15 23 20 / 24%), rgb(15 23 20 / 64%)),
     url("backgrounds/castle-valley-castleton-tower.jpg") center / cover fixed;
 }
@@ -166,6 +176,10 @@ body.profile-edit-page .public-nav a {
   font-size: 0.9rem;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
   pointer-events: none;
+}
+
+body:is(.trips-index-page, .trip-show-page, .help-request-page, .profile-show-page, .profile-edit-page, .profile-waiver-new-page) .background-image-caption {
+  display: none;
 }
 
 .trips-mobile-hero {
@@ -594,11 +608,35 @@ input[type="submit"]:disabled {
   padding-bottom: 0;
 }
 
+body.home-page .public-header {
+  position: absolute;
+  z-index: 10;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+body.home-page .site-name,
+body.home-page .site-name small {
+  color: #fff;
+  text-shadow: 0 2px 16px rgb(0 0 0 / 42%);
+}
+
+body.home-page .public-nav a,
+body.home-page .public-admin-link,
+body.home-page .nav-button {
+  border-color: rgb(255 255 255 / 42%);
+  background: rgb(11 21 18 / 22%);
+  color: #fff;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 36%);
+  backdrop-filter: blur(10px);
+}
+
 .home-hero {
   position: relative;
   display: grid;
-  align-items: end;
-  min-height: calc(100svh - 104px);
+  align-items: center;
+  min-height: 100svh;
   overflow: hidden;
   isolation: isolate;
   background: #1f2933;
@@ -609,8 +647,9 @@ input[type="submit"]:disabled {
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(90deg, rgba(12, 19, 25, 0.72), rgba(12, 19, 25, 0.28) 54%, rgba(12, 19, 25, 0.1)),
-    linear-gradient(0deg, rgba(12, 19, 25, 0.6), rgba(12, 19, 25, 0) 48%);
+    linear-gradient(180deg, rgb(8 17 15 / 62%), transparent 28%),
+    linear-gradient(90deg, rgb(8 17 15 / 70%), rgb(8 17 15 / 18%) 56%, transparent 78%),
+    linear-gradient(0deg, rgb(8 17 15 / 46%), transparent 42%);
   content: "";
 }
 
@@ -621,7 +660,7 @@ input[type="submit"]:disabled {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
+  object-position: center 56%;
 }
 
 .home-hero-caption {
@@ -636,30 +675,53 @@ input[type="submit"]:disabled {
 .home-hero-copy {
   width: min(1120px, calc(100% - 32px));
   margin-inline: auto;
-  padding-block: clamp(32px, 7vw, 72px);
+  padding-block: 124px 72px;
 }
 
 .home-hero h1 {
-  max-width: 680px;
+  max-width: 720px;
   margin: 0;
   color: #fff;
-  font-size: clamp(2rem, 4vw, 3.7rem);
-  line-height: 0.92;
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
+  font-family: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  font-size: clamp(3.6rem, 6.6vw, 6.6rem);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 0.86;
+  text-shadow: 0 3px 24px rgb(0 0 0 / 28%);
 }
 
-.home-hero p:not(.eyebrow) {
-  max-width: 58ch;
-  margin: 24px 0 24px;
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 1.1rem;
-  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
+.home-hero h1 span {
+  display: block;
+}
+
+.home-destinations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 0;
+  max-width: 600px;
+  margin: 24px 0 28px;
+  padding: 0;
+  color: rgb(255 255 255 / 76%);
+  font-size: 0.9rem;
+  font-weight: 650;
+  list-style: none;
+  text-shadow: 0 2px 12px rgb(0 0 0 / 48%);
+}
+
+.home-destinations li:not(:last-child)::after {
+  margin-inline: 9px;
+  color: rgb(255 255 255 / 44%);
+  content: "·";
 }
 
 .home-hero .button {
+  min-height: 50px;
+  padding-inline: 20px;
   border-color: #fff;
   background: #fff;
   color: var(--accent-dark);
+  border-radius: 999px;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 20%);
 }
 
 .public-liability-warning {
@@ -720,6 +782,18 @@ body.trip-show-page .public-liability-warning {
 .panel h3,
 .panel p {
   margin-top: 0;
+}
+
+/* Titles wrap instead of squeezing header buttons onto two lines. */
+.panel-header > .actions {
+  flex-shrink: 0;
+}
+
+@media (min-width: 761px) {
+  .panel-header .button,
+  .admin-body td .button {
+    white-space: nowrap;
+  }
 }
 
 .panel-header p,
@@ -1200,7 +1274,7 @@ body.trip-show-page .public-liability-warning {
 
 .waitlisted-signups-section h4,
 .trip-waitlist-section h3 {
-  color: #b47a00;
+  color: #895b00;
 }
 
 .trip-waitlist-section {
@@ -1277,6 +1351,10 @@ body.trip-show-page .public-liability-warning {
   margin: 0;
 }
 
+.climbing-partner-self-service > :last-child {
+  flex-shrink: 0;
+}
+
 dialog.signup-modal.climbing-partner-contact-modal,
 dialog.signup-modal.participant-contact-modal {
   width: min(520px, calc(100% - 32px));
@@ -1300,8 +1378,9 @@ dialog.signup-modal.participant-contact-modal {
   min-height: 28px;
   padding: 5px 10px;
   border-radius: 4px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   line-height: 1.1;
+  white-space: nowrap;
 }
 
 @media (max-width: 640px) {
@@ -1313,6 +1392,7 @@ dialog.signup-modal.participant-contact-modal {
 
   .climbing-partner-contact-control .button,
   .climbing-partner-self-service .button {
+    justify-content: center;
     text-align: center;
     width: 100%;
   }
@@ -1429,8 +1509,13 @@ dialog.signup-modal.participant-contact-modal {
   color: var(--text);
 }
 
+/* Cap the links column so long "(log in to reveal)" links wrap instead of squeezing the title. */
 body.trip-show-page .trip-summary-header {
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 620px);
+  grid-template-columns: minmax(0, 1fr) fit-content(34%);
+}
+
+body.trip-show-page .trip-resource-links {
+  text-align: right;
 }
 
 .trip-summary-top-row {
@@ -2045,12 +2130,17 @@ body.trip-show-page .trip-summary-header {
 }
 
 .campsite-card-header h3,
-.admin-campsite-card-header h4,
+.admin-campsite-card-header h3,
 .campsite-card-header p,
 .admin-campsite-card-header p,
 .campground-group h3,
 .campground-group p {
   margin: 0;
+}
+
+.admin-campsite-card-header h3 {
+  font-size: 1rem;
+  font-weight: 400;
 }
 
 .campsite-card-header p,
@@ -3071,6 +3161,7 @@ body.trip-show-page .panel {
 .day-trip-signup-button {
   justify-content: center;
   min-width: 180px;
+  text-align: center;
 }
 
 .day-trip-signup-button.is-waitlist {
@@ -3442,7 +3533,7 @@ dialog.signup-modal.refund-modal .currency-field:hover {
 
 dialog.signup-modal.refund-modal .currency-field:focus-within {
   border-color: var(--accent) !important;
-  outline: 3px solid rgb(47 111 94 / 18%);
+  outline: 3px solid var(--accent);
   outline-offset: 2px;
   box-shadow: 0 0 0 1px rgb(47 111 94 / 18%);
 }
@@ -3528,7 +3619,7 @@ dialog.signup-modal.refund-modal .form-actions {
 }
 
 .admin-campsite-choice-selector input[type="radio"]:focus-visible {
-  outline: 3px solid rgb(47 111 94 / 22%);
+  outline: 3px solid var(--accent);
   outline-offset: 3px;
 }
 
@@ -3589,7 +3680,7 @@ dialog.signup-modal.refund-modal .form-actions {
 }
 
 .admin-add-participant-options {
-  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
   gap: 12px;
 }
 
@@ -3666,7 +3757,7 @@ dialog.signup-modal.refund-modal .form-actions {
   width: 100%;
   min-height: 54px;
   padding: 12px 16px;
-  border: 1px solid #cfd8d3;
+  border: 1px solid #7f9289;
   border-radius: 8px;
   background: #fff;
   color: var(--text);
@@ -3688,7 +3779,7 @@ dialog.signup-modal.refund-modal .form-actions {
 
 .participant-picker-button:focus-visible {
   border-color: var(--accent);
-  outline: 3px solid rgb(47 111 94 / 18%);
+  outline: 3px solid var(--accent);
   outline-offset: 2px;
   box-shadow: 0 0 0 1px rgb(47 111 94 / 18%);
 }
@@ -3825,7 +3916,7 @@ dialog.signup-modal.refund-modal .form-actions {
 .admin-add-participant-fields select:focus,
 .admin-add-participant-fields select:focus-visible {
   border-color: var(--accent);
-  outline: 3px solid rgb(47 111 94 / 18%);
+  outline: 3px solid var(--accent);
   outline-offset: 2px;
   box-shadow: 0 0 0 1px rgb(47 111 94 / 18%);
 }
@@ -4163,7 +4254,7 @@ dialog.signup-modal.refund-modal .form-actions {
 }
 
 .climbing-ability-card:has(input:focus-visible) {
-  outline: 3px solid rgb(47 111 94 / 22%);
+  outline: 3px solid var(--accent);
   outline-offset: 3px;
 }
 
@@ -4836,6 +4927,11 @@ th {
   color: #1d4ed8;
 }
 
+.trip-type-badge.gym-outing-badge {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
 .missing-value {
   color: var(--danger);
   font-weight: 750;
@@ -4969,13 +5065,14 @@ th {
 
 .trip-readiness-overview,
 .trip-readiness-category {
+  margin-inline: auto;
   margin-bottom: 16px;
   padding: 18px 20px;
   --readiness-status-column: 78px;
-  --readiness-copy-column: minmax(420px, 520px);
-  --readiness-action-column: 145px;
+  --readiness-copy-column: minmax(0, 520px);
+  --readiness-action-column: 165px;
   width: fit-content;
-  max-width: 100%;
+  max-width: calc(100% - 32px);
 }
 
 .trip-readiness-overview {
@@ -5106,7 +5203,7 @@ th {
   justify-content: center;
   height: 30px;
   border-radius: 999px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 800;
 }
 
@@ -5251,9 +5348,10 @@ th {
 }
 
 .trip-readiness-campsite-check h4,
-.trip-readiness-group-check h4 {
+.trip-readiness-group-check h3 {
   margin: 0;
   font-size: 1rem;
+  font-weight: 400;
   line-height: 1.15;
 }
 
@@ -5264,7 +5362,7 @@ th {
   border-radius: 999px;
   background: #eef4ff;
   color: #1f5fbf;
-  font-size: 0.42rem;
+  font-size: 0.75rem;
   font-weight: 800;
   line-height: 1.2;
   text-transform: uppercase;
@@ -5274,16 +5372,26 @@ th {
 .trip-readiness-small-button {
   min-height: 24px;
   padding: 2px 7px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
 }
 
 @media (max-width: 700px) {
-  .trip-readiness-header {
+  .trip-readiness-overview,
+  .trip-readiness-category {
+    width: calc(100% - 32px);
+  }
+
+  .trip-readiness-header,
+  .trip-readiness-category-header {
     grid-template-columns: 1fr;
     padding-left: 0;
   }
 
   .trip-readiness-header > div,
+  .trip-readiness-category-header > div,
+  .trip-readiness-category-header > .button,
+  .trip-readiness-category-header > .muted,
+  .trip-readiness-category-header > .trip-readiness-header-actions,
   .trip-readiness-header .trip-readiness-summary .button,
   .trip-readiness-header .trip-readiness-summary .status {
     grid-column: auto;
@@ -5298,9 +5406,21 @@ th {
     grid-template-columns: minmax(0, 1fr) max-content;
   }
 
+  .trip-readiness-category-title-row.has-trip-heading {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .trip-readiness-category-title-row.has-trip-heading .status {
+    justify-self: start;
+  }
+
   .trip-readiness-task {
     grid-template-columns: 34px minmax(0, 1fr);
     padding: 16px;
+  }
+
+  .trip-readiness-task-subtext {
+    overflow-wrap: anywhere;
   }
 
   .trip-readiness-task-actions {
@@ -5313,11 +5433,20 @@ th {
   }
 
   .trip-readiness-campsite-header,
-  .trip-readiness-trip-header,
-  .trip-readiness-group-check,
-  .trip-readiness-campsite-check {
+  .trip-readiness-trip-header {
     grid-template-columns: 1fr;
     padding-left: 0;
+  }
+
+  .trip-readiness-group-check,
+  .trip-readiness-campsite-check {
+    grid-template-columns: 34px minmax(0, 1fr);
+    padding-left: 0;
+  }
+
+  .trip-readiness-group-check > .trip-readiness-task-actions,
+  .trip-readiness-campsite-check > .trip-readiness-task-actions {
+    grid-column: 2;
   }
 
   .trip-readiness-campsite-header .trip-readiness-campsite-title-row,
@@ -5376,6 +5505,7 @@ th {
 }
 
 .climbing-type-option {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 9px;
@@ -5401,6 +5531,10 @@ th {
 
 .climbing-type-option input {
   position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
   opacity: 0;
   pointer-events: none;
 }
@@ -5441,7 +5575,7 @@ th {
 }
 
 .climbing-type-option:has(input:focus-visible) {
-  outline: 3px solid rgb(47 111 94 / 22%);
+  outline: 3px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -5547,6 +5681,17 @@ th {
     "status status status status status status . . . . . ."
     "description description description description description description description description description description description description";
   align-items: start;
+}
+
+@media (min-width: 761px) and (max-width: 1100px) {
+  .admin-day-trip-top-grid {
+    grid-template-areas:
+      "name name name name name participants participants participants participants actions actions actions"
+      "date date date date date date coordinator coordinator coordinator coordinator coordinator coordinator"
+      "location location location location location location image image image image image image"
+      "status status status status status status . . . . . ."
+      "description description description description description description description description description description description description";
+  }
 }
 
 .admin-day-trip-top-grid .admin-trip-name-field {
@@ -5713,13 +5858,16 @@ th {
 }
 
 .markdown-formatting-guide code {
-  display: inline-block;
+  display: inline;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
   margin-right: 6px;
   padding: 2px 5px;
   border-radius: 4px;
   background: #eef4f1;
   color: var(--accent-dark);
   font-size: 0.9rem;
+  overflow-wrap: anywhere;
 }
 
 .content-page-preview-header {
@@ -5859,12 +6007,13 @@ th {
 
 .trip-details-email-sent-summary {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
 
 .trip-details-email-sent-summary > div {
   display: grid;
+  align-content: start;
   gap: 4px;
   padding: 14px;
   border: 1px solid var(--line);
@@ -5882,6 +6031,12 @@ th {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
   gap: 20px;
   align-items: start;
+  width: min(1280px, calc(100% - 32px));
+  margin-inline: auto;
+}
+
+.participant-email-section-grid > .participant-email-section {
+  width: auto;
 }
 
 .participant-email-section-header {
@@ -5980,7 +6135,7 @@ th {
 .admin-form select:focus,
 .admin-form select:focus-visible {
   border-color: var(--accent);
-  outline: 3px solid rgb(47 111 94 / 18%);
+  outline: 3px solid var(--accent);
   outline-offset: 2px;
   box-shadow: 0 0 0 1px rgb(47 111 94 / 18%);
 }
@@ -6456,6 +6611,10 @@ textarea {
     padding: 16px 10px 12px;
   }
 
+  body.home-page .public-header {
+    transform: none;
+  }
+
   .public-brand {
     flex: 1 1 auto;
     gap: 10px;
@@ -6606,11 +6765,14 @@ textarea {
 
   .trips-mobile-hero {
     position: relative;
-    display: block;
+    display: grid;
+    align-content: end;
+    gap: 14px;
     min-height: clamp(150px, 38vw, 220px);
     margin: 0 0 14px;
+    padding: 88px 10px 10px;
     background:
-      linear-gradient(180deg, rgb(15 23 20 / 58%), rgb(15 23 20 / 16%) 52%, rgb(15 23 20 / 38%)),
+      linear-gradient(180deg, rgb(15 23 20 / 58%), rgb(15 23 20 / 16%) 52%, rgb(15 23 20 / 68%)),
       url("backgrounds/half-dome-ledge.jpg") center 58% / cover;
   }
 
@@ -6620,11 +6782,14 @@ textarea {
 
   .public-mobile-hero {
     position: relative;
-    display: block;
+    display: grid;
+    align-content: end;
+    gap: 14px;
     min-height: clamp(200px, 52vw, 280px);
     margin: 0 0 14px;
+    padding: 88px 10px 10px;
     background:
-      linear-gradient(180deg, rgb(15 23 20 / 60%), rgb(15 23 20 / 14%) 48%, rgb(15 23 20 / 42%)),
+      linear-gradient(180deg, rgb(15 23 20 / 60%), rgb(15 23 20 / 14%) 48%, rgb(15 23 20 / 68%)),
       var(--public-mobile-hero-image) center / cover;
   }
 
@@ -6677,9 +6842,6 @@ textarea {
   }
 
   .trips-mobile-hero-title {
-    position: absolute;
-    left: 10px;
-    bottom: 18px;
     margin: 0;
     color: #fff;
     font-size: 2.25rem;
@@ -6688,10 +6850,7 @@ textarea {
   }
 
   .public-mobile-hero-title {
-    position: absolute;
-    left: 10px;
-    bottom: 18px;
-    max-width: calc(100% - 130px);
+    max-width: 100%;
     margin: 0;
     color: #fff;
     font-size: 2.25rem;
@@ -6705,9 +6864,7 @@ textarea {
   }
 
   .trips-mobile-hero-caption {
-    position: absolute;
-    right: 12px;
-    bottom: 10px;
+    justify-self: end;
     color: rgb(255 255 255 / 88%);
     font-size: 0.72rem;
     font-weight: 700;
@@ -6716,9 +6873,7 @@ textarea {
   }
 
   .public-mobile-hero-caption {
-    position: absolute;
-    right: 12px;
-    bottom: 10px;
+    justify-self: end;
     display: block;
     max-width: min(180px, calc(100% - 24px));
     color: rgb(255 255 255 / 88%);
@@ -6740,12 +6895,13 @@ textarea {
   .trip-show-mobile-hero {
     position: relative;
     display: grid;
-    align-items: end;
+    align-content: end;
+    gap: 14px;
     min-height: clamp(230px, 64vw, 320px);
     margin: 0 0 14px;
-    padding: 88px 10px 18px;
+    padding: 88px 10px 10px;
     background:
-      linear-gradient(180deg, rgb(15 23 20 / 60%), rgb(15 23 20 / 12%) 46%, rgb(15 23 20 / 52%)),
+      linear-gradient(180deg, rgb(15 23 20 / 60%), rgb(15 23 20 / 12%) 46%, rgb(15 23 20 / 68%)),
       url("backgrounds/joshua-tree-irs-wall.jpg") center 58% / cover;
     color: #fff;
   }
@@ -6761,7 +6917,6 @@ textarea {
   .trip-show-mobile-hero-copy {
     display: grid;
     gap: 7px;
-    padding-right: 92px;
   }
 
   .trip-show-mobile-hero .trip-title-line {
@@ -6795,10 +6950,8 @@ textarea {
   }
 
   .trip-show-mobile-hero-caption {
-    position: absolute;
-    right: 10px;
-    bottom: 10px;
-    max-width: 108px;
+    justify-self: end;
+    max-width: 100%;
     color: rgb(255 255 255 / 88%);
     font-size: 0.72rem;
     font-weight: 700;
@@ -6820,17 +6973,18 @@ textarea {
 
   .home-hero-copy {
     width: min(100% - 28px, 1120px);
-    padding-block: 28px 36px;
+    padding-block: 116px 72px;
   }
 
   .home-hero h1 {
-    font-size: 2.4rem;
-    line-height: 0.96;
+    font-size: clamp(3rem, 15vw, 4.5rem);
+    line-height: 0.84;
   }
 
-  .home-hero p:not(.eyebrow) {
-    margin-block: 20px;
-    font-size: 1rem;
+  .home-destinations {
+    max-width: calc(100% - 40px);
+    margin-bottom: 22px;
+    font-size: 0.78rem;
   }
 
   .home-hero .button {
@@ -6881,7 +7035,27 @@ textarea {
   }
 
   body.trips-index-page .trips-index-panel h1 {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  body.trips-index-page .archived-trips-panel h1 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   body.trips-index-page .trips-index-panel .trips-faq-callout {
@@ -6914,6 +7088,11 @@ textarea {
     background: transparent;
     box-shadow: none;
     backdrop-filter: none;
+  }
+
+  body.trips-index-page .club-archive {
+    width: calc(100% - 20px);
+    margin-inline: auto;
   }
 
   body.trip-show-page .panel {
@@ -7189,7 +7368,7 @@ textarea {
   body.trip-show-page .trip-waitlist-section {
     margin-left: -5px;
     margin-right: -10px;
-    border-left: 4px solid #b47a00;
+    border-left: 4px solid #895b00;
   }
 
   body.trip-show-page .trip-waitlist-note {
@@ -7583,6 +7762,10 @@ textarea {
     text-transform: uppercase;
   }
 
+  body:not(.admin-body) .public-card-table td > .status {
+    justify-self: start;
+  }
+
   body:not(.admin-body) .public-card-table td .button,
   body:not(.admin-body) .public-card-table td button {
     justify-content: center;
@@ -7738,6 +7921,14 @@ textarea {
     display: none;
   }
 
+  body.trip-show-page .waitlist-table.public-card-table td:empty {
+    display: none;
+  }
+
+  body.trip-show-page .waitlist-table.public-card-table td.public-empty-action {
+    display: none;
+  }
+
   body.trip-show-page .confirmed-participants-table.public-card-table td.public-empty-value {
     display: none;
   }
@@ -7807,6 +7998,21 @@ textarea {
   body.trip-show-page .confirmed-participants-table.public-card-table .public-party-primary-row > td:first-child,
   body.trip-show-page .confirmed-participants-table.public-card-table .public-party-guest-row > td:first-child {
     padding-left: 0;
+  }
+
+  body:not(.admin-body) .day-trip-participants-panel .confirmed-participants-table.public-card-table tr:has(> td:only-child) {
+    padding: 8px 10px;
+  }
+
+  body:not(.admin-body) .day-trip-participants-panel .confirmed-participants-table.public-card-table td:only-child {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr;
+    padding: 0;
+    border-bottom: 0;
+  }
+
+  body:not(.admin-body) .day-trip-participants-panel .confirmed-participants-table.public-card-table td:only-child::before {
+    content: none;
   }
 }
 

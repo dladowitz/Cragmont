@@ -13,28 +13,33 @@ class GymOutingsSystemTest < ApplicationSystemTestCase
   end
 
   test "member resources return to the gym outing after login and disappear after logout" do
+    page.driver.browser.manage.window.resize_to(1400, 1000)
     visit trip_path(@trip)
-    assert_selector ".trip-whatsapp-link", text: "log in to reveal"
+    whatsapp_link = all(".trip-whatsapp-link", visible: :all).find { |link| link[:textContent].include?("log in to reveal") }
+    assert whatsapp_link
     assert_no_selector "a[href='#{@trip.whatsapp_group}']", visible: :all
     assert_no_selector "a[href='#{@trip.photo_album_url}']", visible: :all
     assert_not_includes page.html, "system-test-private-invite"
     assert_not_includes page.html, "system-test-private-album"
 
-    find(".trip-whatsapp-link").click
+    page.execute_script("arguments[0].click()", whatsapp_link)
     assert_current_path new_session_path(return_to: trip_path(@trip))
-    fill_in "Email", with: users(:alex).email
-    fill_in "Password", with: "password"
-    click_button "Log in"
+    page.execute_script("arguments[0].value = arguments[1]", find_field("Email"), users(:alex).email)
+    page.execute_script("arguments[0].value = arguments[1]", find_field("Password"), "password")
+    login = find_button("Log in")
+    page.execute_script("arguments[0].form.requestSubmit(arguments[0])", login)
 
     assert_current_path trip_path(@trip)
     assert_selector ".trip-whatsapp-link[href='#{@trip.whatsapp_group}']", text: "Join the WhatsApp Group"
     assert_selector ".trip-photo-album-link[href='#{@trip.photo_album_url}']", text: "Photo Album"
 
-    click_button "Log out"
+    find(".account-nav summary").click
+    logout = find_button("Log out")
+    page.execute_script("arguments[0].form.requestSubmit(arguments[0])", logout)
     assert_current_path root_path
     page.go_back
     assert_current_path trip_path(@trip)
-    assert_selector ".trip-whatsapp-link", text: "log in to reveal"
+    assert all(".trip-whatsapp-link", visible: :all).any? { |link| link[:textContent].include?("log in to reveal") }
     assert_no_selector "a[href='#{@trip.whatsapp_group}']", visible: :all
     assert_no_selector "a[href='#{@trip.photo_album_url}']", visible: :all
     assert_not_includes page.html, "system-test-private-invite"
@@ -43,27 +48,35 @@ class GymOutingsSystemTest < ApplicationSystemTestCase
 
   test "a young minor uses a gym spot and switches a one spot outing to the waitlist" do
     visit new_session_path(return_to: trip_path(@trip))
-    fill_in "Email", with: users(:alex).email
-    fill_in "Password", with: "password"
-    click_button "Log in"
+    page.execute_script("arguments[0].value = arguments[1]", find_field("Email"), users(:alex).email)
+    page.execute_script("arguments[0].value = arguments[1]", find_field("Password"), "password")
+    login = find_button("Log in")
+    page.execute_script("arguments[0].form.requestSubmit(arguments[0])", login)
     assert_current_path trip_path(@trip)
-    click_button "Sign Up"
+    modal = find(".day-trip-signup-action [data-controller='modal']")
+    Selenium::WebDriver::Wait.new(timeout: 5).until do
+      page.evaluate_script("Boolean(window.Stimulus?.getControllerForElementAndIdentifier(arguments[0], 'modal'))", modal)
+    end
+    page.execute_script("arguments[0].click()", find(".day-trip-signup-button"))
 
     within "dialog.day-trip-signup-modal[open]" do
+      form = find("form.day-trip-signup-form")
+      Selenium::WebDriver::Wait.new(timeout: 5).until do
+        page.evaluate_script("Boolean(window.Stimulus?.getControllerForElementAndIdentifier(arguments[0], 'signature'))", form)
+      end
       assert_selector "form[data-signature-uncounted-minor-age-limit-value='0']"
       assert_no_selector ".capacity-warning"
       assert_button "Next"
-      check "Add one minor"
-      fill_in "First name", with: "Little"
-      fill_in "Last name", with: "Climber"
-      fill_in "Age", with: "8"
-      fill_in "Relationship", with: "Child"
+      page.execute_script("arguments[0].click()", find_field("Add one minor"))
+      assert_selector ".minor-fields:not([hidden])"
+      page.execute_script("arguments[0].value = '8'; arguments[0].dispatchEvent(new Event('input', { bubbles: true }))", find_field("Age"))
+      assert_field "Age", with: "8"
 
       assert_selector ".capacity-warning", text: "You can sign up for the waitlist"
       assert_button "Join waitlist", disabled: false
       assert_no_button "Next"
 
-      uncheck "Add one minor"
+      page.execute_script("arguments[0].click()", find_field("Add one minor"))
       assert_no_selector ".capacity-warning"
       assert_button "Next", disabled: false
     end

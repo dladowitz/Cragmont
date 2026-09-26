@@ -1,5 +1,5 @@
 - if trips.any?
-  %table
+  %table.admin-trips-table
     %thead
       %tr
         %th Trip
@@ -18,7 +18,7 @@
             = link_to trip.name, admin_trip_path(trip)
             %span= trip.location
           %td
-            %span.status.trip-type-badge= trip.trip_type_label
+            %span.status.trip-type-badge{class: ("gym-outing-badge" if trip.gym_outing?)}= trip.trip_type_label
           %td
             - if trip.class_trip? && trip.partner_company.present?
               = link_to trip.partner_company.name, admin_partner_company_path(trip.partner_company)

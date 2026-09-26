@@ -19,11 +19,15 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     get admin_trips_url
 
     assert_response :success
-    assert_select "h1", "Admin Dashboard"
+    assert_select "body.admin-body[data-controller~='table-scroll']"
+    assert_select "table.admin-trips-table"
+    assert_select "h1.visually-hidden"
     assert_select ".admin-public-link", "Public View"
     assert_select ".admin-nav a", text: "Trips"
     assert_select ".admin-nav a[href='#{admin_content_path}']", text: "Content"
-    assert_select ".admin-nav a", text: "Public View", count: 0
+    assert_select ".admin-nav a", text: "Public View", count: 1
+    assert_select ".admin-brand .site-name", text: /Cragmont/
+    assert_select "#admin-nav-toggle[aria-label='Toggle admin navigation menu']"
     assert_select ".admin-nav form[action='#{session_path}'][method='post']" do
       assert_select "input[name='_method'][value='delete']"
       assert_select "button.button.secondary", text: "Logout"
@@ -347,7 +351,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     get admin_trip_url(trips(:yosemite))
 
     assert_response :success
-    assert_select "h1", "Admin Dashboard"
+    assert_select "h1.visually-hidden"
     assert_select ".admin-public-link", "Public View"
     assert_select ".trip-summary-header", text: /Yosemite Valley Spring/
     assert_select ".trip-summary-header .actions", count: 0
@@ -414,7 +418,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".trip-management-panel .trip-management-actions a.button.secondary[href='#{admin_trip_transactions_path(trips(:yosemite))}']", text: "Transactions"
     assert_select ".trip-management-panel .trip-management-actions .button.danger", text: "Delete trip", count: 0
     assert_select ".campground-group", count: 0
-    assert_select ".admin-campsite-card-header h4", text: "Upper Pines site A12"
+    assert_select ".admin-campsite-card-header h3", text: "Upper Pines site A12"
     assert_select ".admin-campsite-card-header p", text: "Yosemite National Park"
     assert_select ".campsite-registration", text: /Site registered by:\s*Alex Rivera/
     assert_select "#admin-campsite-#{campsites(:yosemite_b).id}" do
@@ -487,7 +491,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
       assert_equal "submit->parking-spot#submit", parking_form["data-action"]
       assert_select parking_form_selector do
         assert_select "input[name='_method'][value='patch']"
-        assert_select "select[name='campsite_parking_spot[assignment]'][data-parking-spot-target='select']" do
+        assert_select "select[name='campsite_parking_spot[assignment]'][data-parking-spot-target='select'][aria-label='Parking assignment for Spot 1']" do
           assert_select "option[value='unassigned'][selected]", text: "Unassigned"
           assert_select "option[value='first_come_first_serve']", text: "First Come First Serve"
           assert_select "option[value='signup_#{signup.id}']", text: "Sam Lee"
@@ -1384,7 +1388,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     get new_admin_trip_url(trip_type: "camping")
 
     assert_response :success
-    assert_select "h1", "Admin Dashboard"
+    assert_select "h1.visually-hidden"
     assert_select "h2", "New camping trip"
     assert_select "input[type='hidden'][name='trip[trip_type]'][value='camping']"
     assert_select "select[name='trip[trip_type]']", count: 0

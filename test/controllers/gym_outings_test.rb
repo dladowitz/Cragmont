@@ -12,6 +12,8 @@ class GymOutingsTest < ActionDispatch::IntegrationTest
 
   test "admins can choose create and edit a gym outing without outdoor fields" do
     log_in_as(users(:alex))
+    get admin_trips_url
+    assert_select ".admin-trips-table .trip-type-badge.gym-outing-badge", text: "Gym Outing"
     get new_admin_trip_url
     assert_select "a[href='#{new_admin_trip_path(trip_type: 'gym_outing')}']", text: "Gym outing"
 
@@ -50,9 +52,10 @@ class GymOutingsTest < ActionDispatch::IntegrationTest
 
   test "gym outing appears publicly with its schedule and gym specific registration" do
     get trips_url
-    assert_select ".trip-card[href='#{trip_path(@trip)}'] .trip-type-badge", text: "Gym Outing"
+    assert_select ".trip-card[href='#{trip_path(@trip)}'] .trip-type-badge.gym-outing-badge", text: "Gym Outing"
     get trip_url(@trip)
     assert_response :success
+    assert_select ".trip-type-badge.gym-outing-badge", count: 2
     assert_select "h2", text: "Gym Plan"
     assert_select "dd", text: "Movement, San Francisco"
     assert_select "dd", text: "6:00pm"

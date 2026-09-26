@@ -1,5 +1,20 @@
 Rails.application.routes.draw do
   root "home#index"
+  get "about", to: "club#about", as: :about
+  get "membership", to: "club#membership", as: :membership
+  get "history", to: "club#history", as: :history
+  get "join-the-list", to: "club#join_the_list", as: :join_the_list
+  get "past-trips", to: "trips#past_trips", as: :past_trips
+  get "/.well-known/openapi.json", to: redirect("/openapi.json")
+
+  namespace :api, defaults: { format: :json } do
+    namespace :v1 do
+      resources :campgrounds, only: %i[index create]
+      resources :trips, only: %i[index show create update] do
+        resources :campsites, only: %i[index create update]
+      end
+    end
+  end
 
   if Rails.env.development? || Rails.env.staging?
     letter_opener_access = lambda do |request|

@@ -1,0 +1,643 @@
+/* Alpine editorial: one typeface and quiet surfaces. */
+:root {
+  --bg: #f7f5ef;
+  --panel: #fffefa;
+  --text: #203330;
+  --muted: #586b65;
+  --line: #d5ddd7;
+  --ui-radius: 5px;
+  --accent: #164b40;
+  --accent-dark: #103d34;
+  --danger: #a92e2c;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  color: var(--text);
+  font: 400 1rem/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+button, input, select, textarea, .participant-email-address-list { font-family: inherit; }
+body.admin-body { background: #e7f1ed; }
+body.trip-safety-page, body.profile-waiver-new-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, rgb(15 23 20 / 55%), transparent 180px),
+    linear-gradient(180deg, rgb(15 23 20 / 30%), rgb(15 23 20 / 65%)),
+    url("backgrounds/tuolumne-meadows-fairview-dome.jpg") center / cover fixed;
+}
+body:is(.trips-index-page, .session-new-page, .password-reset-new-page,
+  .password-reset-edit-page, .not-found-page, .registration-new-page,
+  .trip-what-to-expect-page, .help-request-page, .trip-show-page,
+  .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page) {
+  background-attachment: scroll;
+}
+
+:is(h1, h2, h3, h4) {
+  font-family: inherit;
+  font-weight: 400;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+}
+h1 { font-size: clamp(2.7rem, 5vw, 4.6rem); }
+h2 { font-size: clamp(1.65rem, 2.8vw, 2.25rem); }
+h3 { font-size: 1.4rem; font-weight: 500; }
+a { color: var(--accent); font-weight: 500; text-underline-offset: .2em; }
+:is(a, button, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+.muted, .eyebrow, .panel-header p { color: var(--muted); }
+.eyebrow { font-size: .9rem; font-weight: 600; letter-spacing: .12em; }
+
+/* Navigation sits on the photograph where a page has one. */
+.public-header, .admin-header {
+  width: min(1280px, calc(100% - 48px));
+  min-height: 90px;
+  padding: 15px 0;
+  align-items: center;
+}
+.public-brand { gap: 28px; flex-wrap: nowrap; }
+.site-name { gap: 4px; line-height: .92; }
+.site-name span { font-size: 1.85rem; font-weight: 500; letter-spacing: -.06em; }
+.site-name small { font-size: .75rem; font-weight: 600; letter-spacing: .26em; }
+.public-nav { gap: clamp(14px, 2vw, 30px); }
+.public-nav form { margin: 0; }
+.public-nav-group { position: relative; }
+.public-nav-group summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 10px;
+  border-radius: var(--ui-radius);
+  cursor: pointer;
+  color: var(--accent-dark);
+  font-weight: 500;
+  list-style: none;
+}
+.public-nav-group summary::-webkit-details-marker { display: none; }
+/* A drawn chevron centers on the text; the "⌄" glyph sat below it. Points up while open. */
+.public-nav-group summary::after { content: ""; width: .4em; height: .4em; border: solid currentColor; border-width: 0 2px 2px 0; transform: translateY(-25%) rotate(45deg); }
+.public-nav-group[open] summary::after { transform: translateY(25%) rotate(-135deg); }
+.public-nav-group:not([open]) .public-nav-dropdown { display: none; }
+.public-nav-dropdown {
+  position: absolute;
+  z-index: 50;
+  top: 100%;
+  left: -16px;
+  display: grid;
+  min-width: 190px;
+  padding: 8px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius);
+  background: var(--panel);
+  box-shadow: 0 8px 20px rgb(11 25 19 / 15%);
+}
+.account-nav .public-nav-dropdown { right: 0; left: auto; }
+.public-nav-group .public-nav-dropdown :is(a, .nav-button) {
+  display: flex;
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  text-shadow: none;
+}
+.public-nav-dropdown form { width: 100%; }
+.public-nav-dropdown a:last-child { border-bottom: 0; }
+.account-nav .nav-button { border-bottom: 0; }
+.public-nav a.nav-auth { padding: 8px 14px; border: 1px solid var(--accent); border-radius: var(--ui-radius); }
+.public-nav a.nav-auth-signup { background: var(--accent); color: #fff; }
+.public-nav a, .public-admin-link, .nav-button,
+.admin-nav a, .admin-public-link, .admin-nav .button {
+  min-height: 44px;
+  padding: 9px 0 6px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--accent-dark);
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.public-nav a:hover, .public-admin-link:hover, .nav-button:hover,
+.admin-nav a:hover, .admin-public-link:hover { opacity: .78; }
+body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
+  .password-reset-edit-page, .not-found-page, .registration-new-page,
+  .trip-what-to-expect-page, .help-request-page, .trip-show-page,
+  .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page)
+  :is(.site-name, .site-name small, .public-admin-link, .public-nav a, .nav-button) {
+  color: #fff;
+  background: transparent;
+  border-color: transparent;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 45%);
+  backdrop-filter: none;
+}
+body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
+  .password-reset-edit-page, .not-found-page, .registration-new-page,
+  .trip-what-to-expect-page, .help-request-page, .trip-show-page,
+  .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page)
+  .public-nav-group summary { color: #fff; text-shadow: 0 1px 8px rgb(0 0 0 / 45%); }
+.public-nav-group[open] > summary {
+  background: var(--accent);
+  color: #fff;
+  text-shadow: none;
+}
+body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
+  .password-reset-edit-page, .not-found-page, .registration-new-page,
+  .trip-what-to-expect-page, .help-request-page, .trip-show-page,
+  .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page)
+  .public-nav a.nav-auth-login { border-color: #fff; color: #fff; }
+body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
+  .password-reset-edit-page, .not-found-page, .registration-new-page,
+  .trip-what-to-expect-page, .help-request-page, .trip-show-page,
+  .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page)
+  .public-nav a.nav-auth-signup { background: #fff; border-color: #fff; color: var(--accent-dark); text-shadow: none; }
+body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
+  .password-reset-edit-page, .not-found-page, .registration-new-page,
+  .trip-what-to-expect-page, .help-request-page, .trip-show-page,
+  .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page)
+  :is(.public-admin-link, .public-nav a, .nav-button):hover { opacity: .78; }
+/* Focus rings over a photograph are white; menus that open on a light panel keep the green ring. */
+body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
+  .password-reset-edit-page, .not-found-page, .registration-new-page,
+  .trip-what-to-expect-page, .help-request-page, .trip-show-page,
+  .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page) .public-header :focus-visible,
+body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
+  .password-reset-edit-page, .not-found-page, .registration-new-page,
+  .trip-what-to-expect-page, .help-request-page, .trip-show-page,
+  .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page) .public-nav-checkbox:focus-visible + .public-nav-toggle,
+:is(.home-hero, .trips-mobile-hero, .trip-show-mobile-hero, .public-mobile-hero) :focus-visible {
+  outline-color: #fff;
+}
+body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
+  .password-reset-edit-page, .not-found-page, .registration-new-page,
+  .trip-what-to-expect-page, .help-request-page, .trip-show-page,
+  .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page)
+  :is(.public-nav-dropdown, .public-nav-checkbox:checked ~ .public-nav) :focus-visible {
+  outline-color: var(--accent);
+}
+/* Dropdowns open on a light panel, so they drop the white photo-header text. */
+body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
+  .password-reset-edit-page, .not-found-page, .registration-new-page,
+  .trip-what-to-expect-page, .help-request-page, .trip-show-page,
+  .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page)
+  .public-nav-dropdown a { color: var(--text); text-shadow: none; }
+.admin-header { gap: 28px; border-bottom: 1px solid var(--line); }
+.admin-brand { gap: 28px; align-items: center; }
+.admin-context { padding: 4px 10px; background: var(--accent); color: #fff; font-size: .9rem; font-weight: 600; }
+.admin-body .site-name, .admin-body .site-name small { color: var(--text); text-shadow: none; }
+.admin-nav { gap: clamp(12px, 1.4vw, 24px); }
+.admin-nav-checkbox, .admin-nav-toggle { display: none; }
+
+/* The homepage keeps the image and composition, with calmer type and CTA. */
+.home-hero h1 {
+  font: 400 clamp(3.1rem, 6vw, 5.6rem)/1.04 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: -.055em;
+}
+.home-hero-copy { width: min(1120px, calc(100% - 48px)); }
+.home-destinations { font-size: 1.05rem; font-weight: 400; line-height: 1.5; }
+.home-hero .button {
+  border-color: #fff;
+  border-radius: var(--ui-radius);
+  background: #fff;
+  box-shadow: none;
+  color: var(--accent-dark);
+}
+body.home-page .flash-messages {
+  position: absolute;
+  z-index: 18;
+  top: 90px;
+  left: 50%;
+  width: min(1280px, calc(100% - 48px));
+  margin: 0;
+  transform: translateX(-50%);
+}
+.flash-messages.auto-dismiss {
+  pointer-events: none;
+  animation: dismiss-flash 0s 2s forwards;
+}
+@keyframes dismiss-flash { to { visibility: hidden; } }
+
+/* Common controls and content surfaces drive both public and admin pages. */
+.button, input[type="submit"] {
+  min-height: 48px;
+  padding: 10px 20px;
+  border: 1px solid var(--accent);
+  border-radius: var(--ui-radius);
+  background: var(--accent);
+  box-shadow: none;
+  color: #fff;
+  font-weight: 600;
+  line-height: 1.35;
+  text-decoration: none;
+}
+.button:hover, input[type="submit"]:hover { background: var(--accent-dark); }
+.home-hero .button:hover { color: #fff; }
+.button.secondary, .button.outline {
+  border-color: var(--accent);
+  background: transparent;
+  color: var(--accent);
+}
+.button.secondary:hover, .button.outline:hover { background: #e7eee9; }
+.admin-nav .button.secondary { border-color: transparent; }
+.button.danger { border-color: var(--danger); background: var(--danger); color: #fff; }
+.button.danger.secondary { background: transparent; color: var(--danger); }
+.button:disabled, input[type="submit"]:disabled,
+.waiver-form button[type="submit"]:disabled {
+  border-color: #687b74;
+  border-style: dashed;
+  background: #e7ebe8;
+  color: #40504c;
+  opacity: 1;
+}
+.button.danger.secondary:disabled {
+  border-color: #872422;
+  background: #f8e9e7;
+  color: #872422;
+}
+.panel {
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius);
+  background: var(--panel);
+  box-shadow: none;
+}
+.public-main { position: relative; z-index: 2; }
+body:is(.trips-index-page, .session-new-page, .password-reset-new-page,
+  .password-reset-edit-page, .not-found-page, .registration-new-page,
+  .trip-what-to-expect-page, .help-request-page, .trip-show-page,
+  .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page)
+  .panel { background: var(--panel); backdrop-filter: none; }
+.panel-header { align-items: baseline; }
+body.trips-index-page .trips-index-panel > .panel-header { flex-wrap: wrap; }
+body.trips-index-page .trips-index-panel .trips-index-notices { flex: 0 1 auto; width: 100%; margin-top: 0; }
+body.trips-index-page .trips-index-notices .calendar-subscription-notice {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  padding: 16px 20px;
+  justify-self: stretch;
+  line-height: 1.45;
+}
+.calendar-subscription-notice p { margin: 0; color: var(--text); }
+.calendar-subscription-notice p + p { margin-top: 6px; }
+.public-beta-notice, .public-liability-warning, .empty-state,
+.form-errors, .flash, .user-form-section, .note,
+.trip-card, .archived-trip-row, .campsite-card, .admin-campsite-card {
+  border-radius: var(--ui-radius);
+  box-shadow: none;
+}
+.public-beta-notice { background: #edf1eb; border-color: var(--line); font-size: 1rem; }
+.public-beta-notice strong { border-radius: 0; font-weight: 600; }
+.public-liability-warning { background: var(--panel); font-size: .88rem; }
+.club-main { max-width: 1040px; }
+.club-panel { padding: clamp(24px, 4vw, 52px); }
+.club-panel h1 { margin: 0 0 22px; }
+.club-subnav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+.club-subnav a { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 14px; border: 1px solid var(--line); border-radius: var(--ui-radius); text-decoration: none; }
+.club-subnav a[aria-current="page"] { background: #e7f1ed; border-color: var(--accent); }
+.club-copy { max-width: 76ch; font-size: 1.05rem; line-height: 1.65; }
+.club-copy .club-lead { font-size: clamp(1.15rem, 2vw, 1.35rem); line-height: 1.5; }
+.club-copy h2 { margin-top: 32px; font-size: 1.55rem; }
+.club-requirements li { margin-bottom: 18px; padding-left: 6px; }
+.club-requirements strong { display: block; color: var(--accent-dark); }
+.club-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.club-timeline section { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 24px; border-top: 1px solid var(--line); padding: 22px 0; }
+.club-timeline h2 { margin-top: 0; }
+.club-timeline .club-year { color: var(--accent-dark); font-weight: 600; }
+.club-source { color: var(--muted); font-size: .95rem; }
+.club-history-article { margin-top: 40px; padding-top: 36px; border-top: 1px solid var(--line); }
+.club-history-article h2 { margin: 0 0 18px; font-size: clamp(2rem, 3vw, 2.7rem); }
+.club-history-article h3 { margin: 32px 0 12px; }
+.club-history-byline { color: var(--muted); font-size: .95rem; }
+.club-history-sources { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); font-size: .95rem; }
+.club-history-sources h3 { margin-top: 0; }
+.club-form { display: block; width: 100%; height: 1600px; margin-top: 20px; border: 1px solid var(--line); border-radius: var(--ui-radius); }
+.archived-trips-panel, .club-archive { position: relative; z-index: 2; }
+.club-archive { margin-top: 24px; }
+.club-archive > .muted { margin-bottom: 24px; }
+.club-report { padding: 20px 0; border-top: 1px solid var(--line); }
+.club-report h3 { margin: 0 0 8px; }
+.club-report-details { margin-top: 12px; }
+.club-report-details summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+.club-report-copy { max-width: 76ch; margin-top: 16px; line-height: 1.65; }
+.club-report-copy p { margin: 0 0 14px; }
+@media (max-width: 600px) {
+  .club-timeline section { grid-template-columns: 1fr; gap: 0; }
+  .club-form { height: 1900px; }
+}
+.trip-card, .campsite-card, .admin-campsite-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+.trip-card:hover, .campsite-card:hover, .admin-campsite-card:hover {
+  border-color: var(--accent);
+  box-shadow: none;
+  transform: none;
+}
+.archived-trip-row:hover, .archived-trip-row:focus-visible {
+  border-color: var(--accent);
+  box-shadow: none;
+  transform: none;
+}
+.trip-card:focus-visible, .archived-trip-row:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+.trip-card h2, .trip-card h3, .row-title { font-weight: 500; }
+.trip-card h2, .archived-trip-row h3 { text-decoration: none; }
+.trips-index-title-row a { text-decoration: none; }
+.trip-card:hover h2, .trip-card:focus-visible h2,
+.archived-trip-row:hover h3, .archived-trip-row:focus-visible h3 { color: var(--accent-dark); }
+.status, .status-pill, .trip-type-badge {
+  border-radius: var(--ui-radius);
+  font-size: .9rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.trip-type-badge { padding: 4px 9px; background: #e7f1ed; }
+.status.danger-status { color: var(--danger); }
+.status.warning-status { color: #91621c; }
+.stats { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.stats > div { border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.stats strong { font-size: 1.9rem; font-weight: 400; }
+.stats span { color: var(--muted); font-size: .88rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+
+label, legend { font-weight: 500; }
+.required-marker { color: var(--danger); font-weight: 700; }
+.field :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea),
+input:not([type="submit"]):not([type="checkbox"]):not([type="radio"]),
+select, textarea {
+  min-height: 48px;
+  border-color: #7f9289;
+  border-radius: var(--ui-radius);
+  background-color: var(--panel);
+  box-shadow: none;
+  color: var(--text);
+  font-weight: 400;
+}
+textarea { min-height: 112px; }
+.admin-form select { border-radius: var(--ui-radius); background-color: var(--panel); box-shadow: none; font-weight: 400; }
+.currency-field, .user-role-option, .trip-status-filter { border-radius: var(--ui-radius); box-shadow: none; }
+.details-list > div { grid-template-columns: 140px minmax(0, 1fr); }
+.details-list dd { min-width: 0; overflow-wrap: anywhere; }
+.campground-website { min-width: 0; overflow-wrap: anywhere; }
+th { border-bottom-color: var(--text); color: var(--muted); font-size: .88rem; font-weight: 600; letter-spacing: .06em; }
+td { border-bottom-color: var(--line); }
+table { max-width: 100%; }
+.admin-table-action-button, .trip-status-filters legend { font-size: .9rem; }
+.admin-user-phone { white-space: nowrap; }
+
+@media (max-width: 1280px) {
+  .admin-body table.admin-trips-table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  .admin-body table.admin-trips-table.is-scrollable::before {
+    content: "Swipe for more columns →";
+    display: block;
+    padding: 8px 12px;
+    color: var(--muted);
+    font-size: .88rem;
+  }
+  body.admin-body table.admin-trips-table td:first-child { min-width: 14rem; }
+  .admin-campsite-card { min-width: 0; width: 100%; }
+  .admin-campsite-card > *, .admin-campsite-card-header > *,
+  .campsite-participant-groups > *, .admin-campsite-parking-section { min-width: 0; }
+  .admin-campsite-card table { width: 100%; max-width: 100%; }
+  .admin-campsite-card-header {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "heading" "dates" "registration" "fees" "actions";
+  }
+  .admin-campsite-card-header > *,
+  .admin-campsite-card .stats { min-width: 0; }
+  .admin-campsite-card .campsite-card-actions { justify-self: start; }
+  .admin-campsite-card .campsite-action-buttons { flex-wrap: wrap; white-space: normal; }
+}
+
+@media (min-width: 1101px) and (max-width: 1280px) {
+  .admin-body .trip-waitlist-section th:last-child .info-tooltip-box {
+    right: 0;
+    left: auto;
+    transform: translateY(4px);
+  }
+  .admin-body .trip-waitlist-section th:last-child .info-tooltip:is(:hover, :focus, :focus-visible) .info-tooltip-box {
+    transform: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .admin-body table,
+  body.profile-show-page .public-card-table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  .admin-body table.is-scrollable::before {
+    content: "Swipe for more columns →";
+    display: block;
+    padding: 8px 12px;
+    color: var(--muted);
+    font-size: .88rem;
+  }
+  body.admin-body table.user-trip-history-table td:first-child,
+  body.profile-show-page table.user-trip-history-table td:first-child { min-width: 14rem; }
+  body.admin-body table.participant-email-table,
+  body.admin-body table.campsite-parking-table,
+  body.admin-body .help-subscriber-table table,
+  body.admin-body .trip-details-email-recipient-panel table.trip-details-email-recipient-table {
+    display: table;
+    width: 100%;
+    overflow: visible;
+  }
+  body.admin-body table.participant-email-table :is(th, td),
+  body.admin-body table.campsite-parking-table :is(th, td),
+  body.admin-body .help-subscriber-table table :is(th, td),
+  body.admin-body .trip-details-email-recipient-panel table.trip-details-email-recipient-table :is(th, td) { min-width: 0; }
+  .help-subscriber-table td:first-child { overflow-wrap: anywhere; }
+  .campsite-reimbursement-groups, .campsite-reimbursement-trip,
+  .campsite-reimbursement-trip .table-wrapper { min-width: 0; }
+  .campsite-reimbursement-trip .table-wrapper { width: 100%; max-width: 100%; }
+  .campsite-reimbursement-trip-heading h3 { min-width: 0; overflow-wrap: anywhere; }
+}
+
+@media (max-width: 980px) {
+  .admin-header { align-items: stretch; flex-direction: column; gap: 12px; }
+  .admin-brand { justify-content: space-between; }
+  .admin-nav { gap: 8px 20px; }
+}
+
+@media (min-width: 761px) and (max-width: 840px) {
+  /* Keeps the full super admin nav on one row so Logout isn't orphaned. */
+  .admin-nav { column-gap: 14px; }
+  .admin-nav :is(a, .button) { font-size: .95rem; }
+}
+
+@media (max-width: 760px) {
+  .public-header, .admin-header, .public-main, .flash-messages {
+    width: min(100% - 32px, 1280px);
+  }
+  .public-header { min-height: 76px; padding: 12px 0; }
+  .admin-header { flex-direction: row; align-items: center; min-height: 76px; gap: 10px; }
+  .admin-brand { gap: 12px; justify-content: flex-start; min-width: 0; }
+  .admin-nav-shell { position: relative; margin-left: auto; }
+  .admin-nav-checkbox {
+    position: absolute;
+    display: block;
+    width: 1px !important;
+    height: 1px;
+    opacity: 0;
+  }
+  .admin-nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 68px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border: 1px solid var(--accent);
+    border-radius: var(--ui-radius);
+    font-weight: 500;
+  }
+  .admin-nav-checkbox:focus-visible + .admin-nav-toggle { outline: 3px solid var(--accent); outline-offset: 3px; }
+  /* The base rule hides this input; it must render (invisibly) so keyboard users can reach the Menu toggle. */
+  .public-nav-checkbox { display: block; width: 1px !important; }
+  .public-nav-checkbox:focus-visible + .public-nav-toggle { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .admin-nav {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 8px);
+    right: 0;
+    display: none;
+    width: min(280px, calc(100vw - 32px));
+    max-height: calc(100dvh - 84px);
+    overflow-y: auto;
+    padding: 10px 18px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    box-shadow: 0 8px 20px rgb(11 25 19 / 15%);
+  }
+  .admin-nav-checkbox:checked ~ .admin-nav { display: grid; gap: 0; }
+  .admin-nav :is(a, .button) { display: flex; min-height: 46px; width: 100%; border-bottom: 1px solid var(--line); text-align: left; }
+  .admin-nav form { width: 100%; }
+  .admin-nav form .button { border: 0; padding-inline: 0; }
+  body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
+    .registration-new-page, .help-request-page, .trip-show-page) .public-header {
+    padding: 12px 16px;
+  }
+  .public-brand { gap: 16px; }
+  .site-name span { font-size: 1.5rem; }
+  .site-name small { font-size: .75rem; }
+  .public-admin-link { font-size: .94rem; }
+  .public-nav-toggle { border-radius: var(--ui-radius); font-weight: 500; }
+  .public-nav {
+    max-height: calc(100dvh - 84px);
+    overflow-y: auto;
+    border-radius: var(--ui-radius);
+    background: var(--panel);
+    box-shadow: 0 8px 20px rgb(11 25 19 / 15%);
+  }
+  .public-nav-checkbox:checked ~ .public-nav .public-nav-group summary { width: 100%; color: var(--text); text-shadow: none; }
+  .public-nav-checkbox:checked ~ .public-nav .public-nav-group[open] > summary { background: var(--accent); color: #fff; }
+  .public-nav-dropdown { position: static; min-width: 0; padding: 0 0 0 14px; border: 0; box-shadow: none; }
+  .public-nav .public-nav-dropdown a { width: 100%; border-radius: 0; }
+  .public-nav-checkbox:checked ~ .public-nav a.nav-auth-login { border-color: var(--accent); color: var(--accent-dark); }
+  .public-nav-checkbox:checked ~ .public-nav a.nav-auth-signup { background: var(--accent); border-color: var(--accent); color: #fff; text-shadow: none; }
+  .public-nav a, .public-nav .nav-button,
+  body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
+    .registration-new-page, .help-request-page, .trip-show-page) :is(.public-nav a, .nav-button) {
+    color: var(--text);
+    text-shadow: none;
+  }
+  .public-nav-checkbox:checked ~ .public-nav :is(a, .nav-button) {
+    color: var(--text);
+    text-shadow: none;
+  }
+  body.home-page .flash-messages {
+    top: 82px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    transform: none;
+  }
+  body.session-new-page .auth-panel .form-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  body.session-new-page .auth-panel .form-actions :is(.button, input[type="submit"]) {
+    min-width: 0;
+    padding-inline: 10px;
+  }
+  body.session-new-page .auth-panel .form-actions .button:last-child { grid-column: 1 / -1; }
+  .home-hero-copy { width: min(100% - 32px, 1120px); padding-top: 150px; }
+  .home-main { width: 100%; }
+  .home-hero h1 { font-size: clamp(2.8rem, 11vw, 4.5rem); }
+  .home-destinations { font-size: 1rem; }
+  .home-hero-caption, .trips-mobile-hero-caption,
+  .public-mobile-hero-caption, .trip-show-mobile-hero-caption { font-size: .88rem; }
+  body.trip-show-page .confirmed-participants-table.public-card-table td::before { font-size: .75rem; }
+  .panel { padding: 20px; }
+  body:not(.admin-body) .public-card-table tr { border-radius: var(--ui-radius); background: var(--panel); }
+  body.trip-show-page .confirmed-participants-table.public-card-table .public-party-primary-row,
+  body.trip-show-page .confirmed-participants-table.public-card-table .public-party-last-row { border-radius: var(--ui-radius); }
+  body.profile-show-page .public-card-table { display: grid; overflow: visible; }
+  body.profile-show-page .user-trip-history-table.public-card-table td > * { grid-column: 2; }
+  body.profile-show-page .user-trip-history-table.public-card-table .date-pair div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+  .admin-body table :is(th, td) { min-width: 108px; }
+  .admin-body table :is(th, td):first-child { min-width: 170px; }
+  body.profile-show-page table.user-trip-history-table.public-card-table td:first-child { min-width: 0; }
+}
+
+.participant-emails-panel .panel-header,
+.participant-email-section-header { flex-wrap: wrap; }
+.participant-emails-panel .button,
+.participant-email-copy-button { white-space: nowrap; }
+
+@media (max-width: 360px) {
+  .details-list > div,
+  .date-pair div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .details-list dt, .date-pair dt { white-space: normal; }
+  .details-list dd, .date-pair dd { overflow-wrap: anywhere; }
+  /* Stack profile cards so badges like "Confirmed" don't break mid-word. */
+  body.profile-show-page .public-card-table td { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  body.profile-show-page .user-trip-history-table.public-card-table td > * { grid-column: 1; }
+  .public-header { gap: 8px; }
+  .public-brand { gap: 10px; }
+  .site-name span { font-size: 1.28rem; }
+  .site-name small { font-size: .75rem; letter-spacing: .18em; }
+  .public-admin-link { font-size: .84rem; }
+  .public-nav-toggle { min-width: 54px; padding: 8px; }
+  .public-nav-toggle-icon { display: none; }
+  .home-hero-copy { padding-top: 125px; }
+  .home-hero h1 { font-size: clamp(2.35rem, 11vw, 3rem); }
+  .home-destinations { font-size: .95rem; gap: 4px 0; }
+  .panel { padding: 16px; }
+  .button, input[type="submit"] { white-space: normal; }
+  .admin-nav a { white-space: normal; }
+  .admin-context { font-size: .86rem; }
+  .admin-nav-toggle { min-width: 54px; padding: 8px; }
+}
+
+@media (max-width: 900px) {
+  body.trip-show-page .campsite-card-header { flex-direction: column; align-items: stretch; }
+  body.trip-show-page .campsite-signup-action { min-width: 0; justify-items: start; }
+  body.trip-show-page .campsite-signup-action p { text-align: left; }
+  body.trip-show-page .campsite-card-list { padding-left: 0; }
+  body.trip-show-page .campsite-card,
+  body.trip-show-page .campsite-card > *,
+  body.trip-show-page .campsite-participant-groups > *,
+  body.trip-show-page .public-campsite-parking-section { min-width: 0; }
+  body.trip-show-page table { display: block; width: 100%; max-width: 100%; overflow-x: auto; }
+  body.trip-show-page .date-pair div { grid-template-columns: 84px minmax(0, 1fr); }
+  body.trip-show-page .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

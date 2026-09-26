@@ -5,7 +5,7 @@
       %h2= @campground.name
       %p= @campground.location
       - if (website_url = campground_website_url(@campground))
-        %p= link_to website_url, website_url, rel: "noopener", target: "_blank"
+        %p.campground-website= link_to website_url, website_url, rel: "noopener", target: "_blank"
     .actions
       = link_to "Edit campground", edit_admin_campground_path(@campground), class: "button secondary"
       = button_to "Delete campground", admin_campground_path(@campground), method: :delete, class: "button danger"

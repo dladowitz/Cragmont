@@ -1,0 +1,14 @@
+- content_for :title, "Join the List | Cragmont Climbing Club"
+- content_for :body_class, "club-page"
+- form_url = "https://docs.google.com/forms/d/e/1FAIpQLSdGYS2L_RzoxMxIVP9vM51bdzqy9ivHLbizCE6aS_6FigywXQ/viewform"
+= render "shared/public_header"
+%main.public-main.club-main
+  %article.panel.club-panel
+    %p.eyebrow Cragmont Climbing Club
+    %h1 Join the List
+    = render "navigation"
+    .club-copy.content-page-markdown
+      %p.club-lead Stay in the loop about club events, trip reports, climbing partners, and other climbing-related conversations.
+      %p Complete the club's Google Form below to join the email list. This is separate from creating an account for trip signups on this site.
+      %p= link_to "Open the form in a new tab", form_url, target: "_blank", rel: "noopener"
+    %iframe.club-form{src: "#{form_url}?embedded=true", title: "Join the Cragmont Climbing Club email list", loading: "lazy"}

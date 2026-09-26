@@ -1,21 +1,26 @@
 %header.admin-header
   .admin-brand
-    %div
-      %p.eyebrow Cragmont
-      %h1= "Admin Dashboard"
-    = link_to "Public View", root_path, class: "admin-public-link"
-  %nav.admin-nav{"aria-label" => "Admin navigation"}
-    = link_to "Trips", admin_trips_path
-    = link_to "Finances", admin_finances_path
-    = link_to "Help", admin_help_requests_path
-    - if policy(ContentPage).index?
-      = link_to "Content", admin_content_path
-    - if policy(PartnerCompany).index?
-      = link_to "Partners", admin_partner_companies_path
-    - if policy(Campground).index?
-      = link_to "Campgrounds", admin_campgrounds_path
-    - if policy(User).index?
-      = link_to "Users", admin_users_path
-    - if policy(SiteSetting.current).show?
-      = link_to "Settings", admin_settings_path
-    = button_to "Logout", session_path, method: :delete, class: "button secondary"
+    = link_to root_path, class: "site-name" do
+      %span Cragmont
+      %small Climbing Club
+    %span.admin-context Admin
+    %h1.visually-hidden= title
+  .admin-nav-shell
+    %input#admin-nav-toggle.admin-nav-checkbox{type: "checkbox", aria: {label: "Toggle admin navigation menu"}}
+    %label.admin-nav-toggle{for: "admin-nav-toggle"} Menu
+    %nav.admin-nav{"aria-label" => "Admin navigation"}
+      = link_to "Trips", admin_trips_path
+      = link_to "Finances", admin_finances_path
+      = link_to "Help", admin_help_requests_path
+      - if policy(ContentPage).index?
+        = link_to "Content", admin_content_path
+      - if policy(PartnerCompany).index?
+        = link_to "Partners", admin_partner_companies_path
+      - if policy(Campground).index?
+        = link_to "Campgrounds", admin_campgrounds_path
+      - if policy(User).index?
+        = link_to "Users", admin_users_path
+      - if policy(SiteSetting.current).show?
+        = link_to "Settings", admin_settings_path
+      = link_to "Public View", root_path, class: "admin-public-link"
+      = button_to "Logout", session_path, method: :delete, class: "button secondary"

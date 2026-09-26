@@ -127,7 +127,7 @@ class Trip < ApplicationRecord
   def almost_full?
     return false if capacity_full? || total_participant_capacity.zero?
 
-    confirmed_signup_count.to_f / total_participant_capacity >= ALMOST_FULL_CAPACITY_THRESHOLD
+    held_capacity_count.to_f / total_participant_capacity >= ALMOST_FULL_CAPACITY_THRESHOLD
   end
 
   def waitlisted_signups

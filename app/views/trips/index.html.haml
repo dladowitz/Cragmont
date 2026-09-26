@@ -17,17 +17,13 @@
             or
             = link_to "day trips.", day_trip_what_to_expect_trips_path
       .trips-index-notices
-        .public-beta-notice
-          %span
-            Keep your next climb on the calendar.
+        .public-beta-notice.calendar-subscription-notice
+          %p Keep your next climb on the calendar.
+          %p
             = link_to "Subscribe to all events", calendar_trips_url(format: :ics, protocol: "webcal"), data: { turbo: false }
             or copy the
             = link_to "iCal feed URL", calendar_trips_url(format: :ics), data: { turbo: false }
-            into your calendar app's subscription settings for updates.
-        .public-beta-notice
-          %span
-            This site is still getting dialed in. If you find issues
-            = link_to "let us know.", new_help_request_path
+            into your calendar app.
     - if @trips.any?
       .trip-cards
         - @trips.each do |trip|
@@ -51,9 +47,10 @@
                       to #{trip.end_date.strftime("%m/%d/%y")}
               - unless trip.class_trip?
                 %div
-                  %dt Open Spaces
+                  %dt Spaces
                   %dd
-                    = pluralize(trip.available_participant_capacity, "space")
+                    %span.status{class: (trip.capacity_full? ? "danger-status" : (trip.almost_full? ? "warning-status" : "success-status"))}
+                      = trip.capacity_full? ? "Full, waitlist open" : pluralize(trip.available_participant_capacity, "space")
     - else
       %p.muted No published trips are available right now.
   = render "shared/liability_warning"

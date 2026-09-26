@@ -4,6 +4,7 @@
     %meta{:content => "text/html; charset=UTF-8", "http-equiv" => "Content-Type"}/
     %title= content_for(:title) || "Cragmont Climbing"
     %meta{:content => "width=device-width,initial-scale=1", :name => "viewport"}/
+    %link{rel: "service-desc", type: "application/vnd.oai.openapi+json", href: "/openapi.json"}
     %meta{:content => "yes", :name => "apple-mobile-web-app-capable"}/
     %meta{:content => "Cragmont", :name => "application-name"}/
     %meta{:content => "yes", :name => "mobile-web-app-capable"}/
@@ -26,14 +27,15 @@
     = stylesheet_link_tag :app, "data-turbo-track": "reload"
     = javascript_importmap_tags
   - environment_name = visible_environment_name
+  - admin_body = controller_path.start_with?("admin/")
   - body_classes = []
-  - body_classes << "admin-body" if controller_path.start_with?("admin/")
+  - body_classes << "admin-body" if admin_body
   - body_classes << content_for(:body_class).to_s if content_for?(:body_class)
   - body_classes << "has-environment-indicator" if environment_name.present?
   - body_class = body_classes.join(" ").presence
-  %body{ class: body_class }
+  %body{ class: body_class, data: { controller: ("table-scroll" if admin_body) } }
     - if notice.present? || alert.present?
-      .flash-messages
+      .flash-messages{class: ("auto-dismiss" if notice == "You are logged out." && alert.blank?)}
         - if notice.present?
           %p.flash.notice= notice
         - if alert.present?

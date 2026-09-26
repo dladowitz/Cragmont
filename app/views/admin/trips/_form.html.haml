@@ -143,7 +143,7 @@
               %span{"data-participant-picker-target" => "label"}= selected_coordinator_label
               %span.participant-picker-chevron{"aria-hidden" => "true"}
             .participant-picker-panel{hidden: true, data: { participant_picker_target: "panel" }}
-              = search_field_tag nil, "", class: "participant-picker-search", placeholder: "Search coordinators", autocomplete: "off", data: { participant_picker_target: "search", action: "input->participant-picker#filter" }
+              = search_field_tag nil, "", class: "participant-picker-search", placeholder: "Search coordinators", aria: { label: "Search coordinators" }, autocomplete: "off", data: { participant_picker_target: "search", action: "input->participant-picker#filter" }
               %ul.participant-picker-list{id: "#{coordinator_field_id}-list", role: "listbox"}
                 - coordinator_options.each do |option|
                   - selected_option = option[:value].to_s == selected_coordinator_value

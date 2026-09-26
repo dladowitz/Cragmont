@@ -1,0 +1,21 @@
+- content_for :title, "About the Club | Cragmont Climbing Club"
+- content_for :body_class, "club-page"
+= render "shared/public_header"
+%main.public-main.club-main
+  %article.panel.club-panel
+    %p.eyebrow Cragmont Climbing Club
+    %h1 About the Club
+    = render "navigation"
+    .club-copy.content-page-markdown
+      %p.club-lead We are a Bay Area community of climbers who head outside together, share campfires, and keep finding new partners for the next pitch.
+      %h2 What we do
+      %p Club outings have ranged from weekend trips in Yosemite, Tuolumne Meadows, and Lovers Leap to longer adventures at Joshua Tree, Red Rocks, and Smith Rock. Closer to home, members have gathered for gym nights, local climbing, safety practice, picnics, and other social events. Check the current trip calendar for what is happening now.
+      %p= link_to "Explore current trips", trips_path, class: "button secondary"
+      %h2 Where we came from
+      %p Today's club was formed in 1988 to carry on the climbing community of the Sierra Club Rock Climbing Section. Its name reaches back to the original Cragmont Climbing Club, founded in Berkeley in 1932 by Dick Leonard and fellow early California climbers.
+      %p= link_to "Read the club's history", history_path
+      %h2 Find your people
+      %p You can get to know the club through local gatherings and trips. You do not need to be a full member to express interest. Climbing has real risks, and everyone is responsible for choosing suitable partners and judging their own abilities; Cragmont does not provide instruction or certify climbers.
+      .club-actions
+        = link_to "Join the email list", join_the_list_path, class: "button"
+        = link_to "How membership works", membership_path, class: "button secondary"

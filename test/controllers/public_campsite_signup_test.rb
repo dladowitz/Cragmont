@@ -16,10 +16,10 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     get root_url
 
     assert_response :success
-    assert_select "h1", text: "Climbing"
-    assert_select "h1", text: "Camping"
-    assert_select "h1", text: "Community"
-    assert_select "p", text: /Yosemite/
+    assert_select ".home-hero h1", text: /Climbing\.\s*Camping\.\s*Community\./
+    assert_select ".home-hero-eyebrow, .home-hero-intro", count: 0
+    assert_no_match(/Find your next pitch|Bay Area climbers heading outside, together\./, response.body)
+    assert_select ".home-destinations", text: /Yosemite/
     assert_select ".home-mobile-beta-notice", count: 0
     assert_select "a[href='#{trips_path}']", text: /View trips/
     assert_select "script[src*='googletagmanager.com']", count: 0
@@ -47,7 +47,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] h2", text: "Yosemite Valley Spring"
     assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] .date-range-desktop", text: /June 12, 2026\s*to June 15, 2026/
     assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] .date-range-mobile", text: /06\/12\/26\s*to 06\/15\/26/
-    assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] .trip-card-meta", text: /Open Spaces\s*10 spaces/
+    assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] .trip-card-meta", text: /Spaces\s*10 spaces/
     assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] .trip-card-meta", text: /Capacity/, count: 0
     assert_select ".trip-card[href='#{trip_path(class_trip)}'] .trip-card-meta", text: /Open Spaces/, count: 0
     assert_select ".trip-card[href='#{trip_path(class_trip)}'] .trip-type-badge.external-class-badge", text: "External Class"
@@ -58,6 +58,9 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".archived-trips-panel", count: 0
     assert_select ".trips-faq-callout a[href='#{what_to_expect_trips_path}']", text: "camping trips"
     assert_select ".trips-faq-callout a[href='#{day_trip_what_to_expect_trips_path}']", text: "day trips."
+    assert_select ".calendar-subscription-notice p", count: 2
+    assert_select ".trips-index-notices .public-beta-notice", count: 1
+    assert_no_match(/getting dialed in/i, response.body)
     assert_select ".background-image-caption", "Regular Northwest Face, Half Dome"
   end
 
@@ -119,12 +122,12 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".trip-type-badge.day-trip-badge", text: "Day Trip"
-    assert_select ".trip-summary-header .trips-faq-callout", text: /day trip/
-    assert_select ".trip-summary-header .trips-faq-callout a[href='#{day_trip_what_to_expect_trips_path}']", text: "here."
+    assert_select ".trip-summary-header .trips-faq-callout", count: 0
     assert_select ".trip-summary-copy .trip-title-line" do
       assert_select ".trip-title-resource-link", count: 0
     end
     assert_select ".trip-summary-notices .trip-resource-link", count: 5
+    assert_select ".trip-summary-header .site-feedback-callout", count: 0
     assert_select ".trip-summary-notices a.trip-whatsapp-link[href='https://chat.whatsapp.com/vent5'][target='_blank'][rel='noopener']", text: "Join the WhatsApp Group"
     assert_select ".trip-summary-notices a.trip-weather-link[href='https://forecast.weather.gov/vent5'][target='_blank'][rel='noopener']", text: "Weather"
     assert_select ".trip-summary-notices a.trip-mountain-project-link[href='https://www.mountainproject.com/area/vent5'][target='_blank'][rel='noopener']", text: "Mountain Project"
@@ -839,6 +842,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".archived-trips-panel" do
       assert_select "h1", "Past Trips"
+      assert_select "h2.visually-hidden", "Recent trips"
       assert_select "a[href='#{trips_path}']", text: "Current Trips"
       archived_trips[1..5].each do |trip|
         assert_select ".archived-trip-row[href='#{trip_path(trip)}'] h3", text: trip.name
@@ -919,9 +923,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".trip-summary-notices a.trip-whatsapp-link[href='https://chat.whatsapp.com/yosemite-spring'][target='_blank'][rel='noopener']", text: "Join the WhatsApp Group"
     assert_select ".trip-summary-notices a.trip-weather-link[href='https://forecast.weather.gov/yosemite-spring'][target='_blank'][rel='noopener']", text: "Weather"
     assert_select ".trip-summary-notices a.trip-photo-album-link[href='https://photos.app.goo.gl/yosemite-spring'][target='_blank'][rel='noopener']", text: "Photo Album"
-    assert_select ".trip-summary-header .trips-faq-callout", text: /camping trip/
-    assert_select ".trip-summary-header .trips-faq-callout a[href='#{what_to_expect_trips_path}']", text: "here."
-    assert_select ".trip-summary-header .site-feedback-callout a[href='#{new_help_request_path}']", text: "let us know."
+    assert_select ".trip-summary-header .trips-faq-callout", count: 0
+    assert_select ".trip-summary-header .site-feedback-callout", count: 0
     assert_select ".trip-overview .description", text: /Notes:/
     assert_select ".trip-overview .description .content-page-markdown strong", text: "Yosemite"
     assert_select ".trip-overview .description .content-page-markdown h2", text: "Parking"
@@ -2171,7 +2174,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     get trip_url(trips(:yosemite), complete_signup: token)
 
     assert_response :success
-    assert_select ".public-nav a[href='#{profile_path}']", text: "Sam Lee"
+    assert_select ".public-nav .account-nav summary", text: "Sam Lee"
+    assert_select ".public-nav .account-nav a[href='#{profile_path}']", text: "Profile"
     assert_select ".public-nav a", text: "Log in", count: 0
     assert_select "[data-controller='modal'][data-modal-open-value='true'][data-modal-clean-url-on-close-value='true']" do
       assert_select "dialog.signup-modal"

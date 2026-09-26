@@ -11,7 +11,7 @@ class Admin::TripDetailsEmailTemplatesControllerTest < ActionDispatch::Integrati
     get admin_trip_details_email_templates_url
 
     assert_response :success
-    assert_select "h1", "Admin Dashboard"
+    assert_select "h1.visually-hidden"
     assert_select "h2", "Trip Details Email Templates"
     assert_select "td", text: "Yosemite"
     assert_select "td", text: "yosemite"
@@ -27,6 +27,7 @@ class Admin::TripDetailsEmailTemplatesControllerTest < ActionDispatch::Integrati
     assert_select "h2", "Edit Yosemite Template"
     assert_select "label[for='trip_details_email_template_name'] .required-marker", text: "*"
     assert_select "input[name='trip_details_email_template[name]'][required][value='Yosemite']"
+    assert_select "label[for='area_key_display']", text: "Area"
     assert_select "input[name='area_key_display'][disabled][value='yosemite']"
     assert_select "input[name='trip_details_email_template[subject_template]'][required][value='#{@template.subject_template}']"
     assert_select "input[name='trip_details_email_template[active]'][type='checkbox'][checked]"
