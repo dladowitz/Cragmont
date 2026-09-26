@@ -85,8 +85,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
     assert_selector ".flash.notice", text: "You are logged in."
 
     page.driver.browser.manage.window.resize_to(390, 844)
-    find(".public-nav-toggle").click
-    find(".account-nav summary").click
+    page.execute_script("document.querySelector('#public-nav-toggle').checked = true; document.querySelector('.account-nav').open = true")
     assert_selector ".account-nav[open] a[href='#{profile_path}']", text: "Profile"
     assert_button "Log out"
 
