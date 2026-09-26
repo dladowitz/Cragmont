@@ -1508,7 +1508,7 @@ dialog.signup-modal.participant-contact-modal {
 }
 
 body.trip-show-page .trip-summary-header {
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 620px);
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .trip-summary-top-row {
