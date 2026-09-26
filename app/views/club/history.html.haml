@@ -1,0 +1,38 @@
+- content_for :title, "History | Cragmont Climbing Club"
+- content_for :body_class, "club-page"
+= render "shared/public_header"
+%main.public-main.club-main
+  %article.panel.club-panel
+    %p.eyebrow Cragmont Climbing Club
+    %h1 History
+    = render "navigation"
+    .club-copy.content-page-markdown
+      %p.club-lead From Berkeley practice rocks to Yosemite granite, the club's name carries nearly a century of climbing history.
+      .club-timeline
+        %section
+          %p.club-year 1931–32
+          %div
+            %h2 A club takes shape
+            %p Jules Eichorn, Dick Leonard, Bestor Robinson, and other Bay Area climbers practiced rope techniques on Berkeley rocks. They formed the original Cragmont Climbing Club in March 1932, naming it for one of their local climbing areas. Later that year, the group joined the Sierra Club's new Rock Climbing Section.
+        %section
+          %p.club-year 1932–33
+          %div
+            %h2 Learning to climb safely
+            %p The group trained relentlessly on belaying and rappelling before taking ropes to Yosemite. Their experiments helped develop the hip belay and more dynamic ways to catch a fall—important steps in American climbing technique.
+        %section
+          %p.club-year 1933
+          %div
+            %h2 First roped climbs in Yosemite
+            %p On Labor Day weekend, club climbers traveled to Yosemite Valley. Leonard, Eichorn, Robinson, and Hervey Voge climbed partway up Washington Column to the place later called Lunch Ledge. They turned back rather than rush into harder terrain above.
+        %section
+          %p.club-year 1934
+          %div
+            %h2 The Cathedral Spires
+            %p Leonard, Eichorn, and Robinson reached the summit of Higher Cathedral Spire in April and Lower Cathedral Spire in August. Their attempts combined careful preparation, a willingness to retreat, and the early use of aid on Yosemite granite.
+        %section
+          %p.club-year 1988
+          %div
+            %h2 The club continues
+            %p A new Cragmont Climbing Club formed to continue the community and outings of the Sierra Club Rock Climbing Section after organized climbing ended there. The Berkeley name and its climbing tradition lived on.
+      %p.club-source This is a brief adaptation of the club's history. The earlier site includes Steve Roper's longer account from %cite Camp 4, credited there as reprinted with permission.
+      = link_to "Read the full original history", "https://www.cragmontclimbingclub.org/history", target: "_blank", rel: "noopener", class: "button secondary"

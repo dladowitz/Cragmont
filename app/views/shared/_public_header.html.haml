@@ -11,13 +11,22 @@
       %span.public-nav-toggle-text Menu
       %span.public-nav-toggle-icon{aria: {hidden: "true"}}
     %nav.public-nav{aria: {label: "Primary"}}
+      %details.public-nav-group{name: "primary-navigation"}
+        %summary Club
+        .public-nav-dropdown
+          = link_to "Membership", membership_path
+          = link_to "History", history_path
+          = link_to "Get Help", new_help_request_path
+          = link_to "About", about_path
+      %details.public-nav-group{name: "primary-navigation"}
+        %summary Trips
+        .public-nav-dropdown
+          = link_to "Trips", trips_path
+          = link_to "Past Trips", past_trips_path
+          = link_to "Join the List", join_the_list_path
       - if user_signed_in?
-        = link_to current_user.full_name, profile_path
-        = link_to "Trips", trips_path
-        = link_to "Get Help", new_help_request_path
+        = link_to current_user.full_name, profile_path, class: "nav-profile"
         = button_to "Log out", session_path, method: :delete, class: "nav-button"
       - else
-        = link_to "Trips", trips_path
-        = link_to "Get Help", new_help_request_path
-        = link_to "Log in", new_session_path
-        = link_to "Signup", new_registration_path
+        = link_to "Log in", new_session_path, class: "nav-auth nav-auth-login"
+        = link_to "Signup", new_registration_path, class: "nav-auth nav-auth-signup"

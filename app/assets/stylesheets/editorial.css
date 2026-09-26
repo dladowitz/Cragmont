@@ -60,6 +60,43 @@ a { color: var(--accent); font-weight: 500; text-underline-offset: .2em; }
 .site-name small { font-size: .7rem; font-weight: 600; letter-spacing: .26em; }
 .public-nav { gap: clamp(14px, 2vw, 30px); }
 .public-nav form { margin: 0; }
+.public-nav-group { position: relative; }
+.public-nav-group summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  cursor: pointer;
+  color: var(--accent-dark);
+  font-weight: 500;
+  list-style: none;
+}
+.public-nav-group summary::-webkit-details-marker { display: none; }
+.public-nav-group summary::after { content: "⌄"; font-size: 1.2em; line-height: 1; }
+.public-nav-group:not([open]) .public-nav-dropdown { display: none; }
+.public-nav-dropdown {
+  position: absolute;
+  z-index: 50;
+  top: 100%;
+  left: -16px;
+  display: grid;
+  min-width: 190px;
+  padding: 8px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius);
+  background: var(--panel);
+  box-shadow: 0 8px 20px rgb(11 25 19 / 15%);
+}
+.public-nav-group .public-nav-dropdown a {
+  min-height: 42px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
+  text-shadow: none;
+}
+.public-nav-dropdown a:last-child { border-bottom: 0; }
+.public-nav a.nav-auth { padding: 8px 14px; border: 1px solid var(--accent); border-radius: var(--ui-radius); }
+.public-nav a.nav-auth-signup { background: var(--accent); color: #fff; }
 .public-nav a, .public-admin-link, .nav-button,
 .admin-nav a, .admin-public-link, .admin-nav .button {
   min-height: 44px;
@@ -88,6 +125,21 @@ body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-pa
   text-shadow: 0 1px 8px rgb(0 0 0 / 45%);
   backdrop-filter: none;
 }
+body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
+  .password-reset-edit-page, .not-found-page, .registration-new-page,
+  .trip-what-to-expect-page, .help-request-page, .trip-show-page,
+  .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page)
+  .public-nav-group summary { color: #fff; text-shadow: 0 1px 8px rgb(0 0 0 / 45%); }
+body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
+  .password-reset-edit-page, .not-found-page, .registration-new-page,
+  .trip-what-to-expect-page, .help-request-page, .trip-show-page,
+  .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page)
+  .public-nav a.nav-auth-login { border-color: #fff; color: #fff; }
+body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
+  .password-reset-edit-page, .not-found-page, .registration-new-page,
+  .trip-what-to-expect-page, .help-request-page, .trip-show-page,
+  .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page)
+  .public-nav a.nav-auth-signup { background: #fff; border-color: #fff; color: var(--accent-dark); text-shadow: none; }
 body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
   .password-reset-edit-page, .not-found-page, .registration-new-page,
   .trip-what-to-expect-page, .help-request-page, .trip-show-page,
@@ -169,6 +221,36 @@ body.trips-index-page .trips-index-notices .calendar-subscription-notice { width
 .public-beta-notice { background: #edf1eb; border-color: var(--line); font-size: 1rem; }
 .public-beta-notice strong { border-radius: 0; font-weight: 600; }
 .public-liability-warning { background: var(--panel); font-size: .88rem; }
+.club-main { max-width: 1040px; }
+.club-panel { padding: clamp(24px, 4vw, 52px); }
+.club-panel h1 { margin: 0 0 22px; }
+.club-subnav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+.club-subnav a { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 14px; border: 1px solid var(--line); border-radius: var(--ui-radius); text-decoration: none; }
+.club-subnav a[aria-current="page"] { background: #e7f1ed; border-color: var(--accent); }
+.club-copy { max-width: 76ch; font-size: 1.05rem; line-height: 1.65; }
+.club-copy .club-lead { font-size: clamp(1.15rem, 2vw, 1.35rem); line-height: 1.5; }
+.club-copy h2 { margin-top: 32px; font-size: 1.55rem; }
+.club-requirements li { margin-bottom: 18px; padding-left: 6px; }
+.club-requirements strong { display: block; color: var(--accent-dark); }
+.club-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.club-timeline section { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 24px; border-top: 1px solid var(--line); padding: 22px 0; }
+.club-timeline h2 { margin-top: 0; }
+.club-timeline .club-year { color: var(--accent-dark); font-weight: 600; }
+.club-source { color: var(--muted); font-size: .95rem; }
+.club-form { display: block; width: 100%; height: 1600px; margin-top: 20px; border: 1px solid var(--line); border-radius: var(--ui-radius); }
+.archived-trips-panel, .club-archive { position: relative; z-index: 2; }
+.club-archive { margin-top: 24px; }
+.club-archive > .muted { margin-bottom: 24px; }
+.club-report { padding: 20px 0; border-top: 1px solid var(--line); }
+.club-report h3 { margin: 0 0 8px; }
+.club-report-details { margin-top: 12px; }
+.club-report-details summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+.club-report-copy { max-width: 76ch; margin-top: 16px; line-height: 1.65; }
+.club-report-copy p { margin: 0 0 14px; }
+@media (max-width: 600px) {
+  .club-timeline section { grid-template-columns: 1fr; gap: 0; }
+  .club-form { height: 1900px; }
+}
 .trip-card, .campsite-card, .admin-campsite-card {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -322,6 +404,11 @@ table { max-width: 100%; }
     background: var(--panel);
     box-shadow: 0 8px 20px rgb(11 25 19 / 15%);
   }
+  .public-nav-checkbox:checked ~ .public-nav .public-nav-group summary { width: 100%; color: var(--text); text-shadow: none; }
+  .public-nav-dropdown { position: static; min-width: 0; padding: 0 0 0 14px; border: 0; box-shadow: none; }
+  .public-nav .public-nav-dropdown a { width: 100%; border-radius: 0; }
+  .public-nav-checkbox:checked ~ .public-nav a.nav-auth-login { border-color: var(--accent); color: var(--accent-dark); }
+  .public-nav-checkbox:checked ~ .public-nav a.nav-auth-signup { background: var(--accent); border-color: var(--accent); color: #fff; text-shadow: none; }
   .public-nav a, .public-nav .nav-button,
   body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
     .registration-new-page, .help-request-page, .trip-show-page) :is(.public-nav a, .nav-button) {

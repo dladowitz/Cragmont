@@ -1,5 +1,10 @@
 Rails.application.routes.draw do
   root "home#index"
+  get "about", to: "club#about", as: :about
+  get "membership", to: "club#membership", as: :membership
+  get "history", to: "club#history", as: :history
+  get "join-the-list", to: "club#join_the_list", as: :join_the_list
+  get "past-trips", to: "trips#past_trips", as: :past_trips
 
   if Rails.env.development? || Rails.env.staging?
     letter_opener_access = lambda do |request|
