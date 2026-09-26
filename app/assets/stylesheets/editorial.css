@@ -334,6 +334,45 @@ table { max-width: 100%; }
 .admin-table-action-button, .trip-status-filters legend { font-size: .9rem; }
 .admin-user-phone { white-space: nowrap; }
 
+@media (max-width: 1280px) {
+  .admin-body table.admin-trips-table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  .admin-body table.admin-trips-table.is-scrollable::before {
+    content: "Swipe for more columns →";
+    display: block;
+    padding: 8px 12px;
+    color: var(--muted);
+    font-size: .88rem;
+  }
+  body.admin-body table.admin-trips-table td:first-child { min-width: 14rem; }
+  .admin-campsite-card { min-width: 0; width: 100%; }
+  .admin-campsite-card > *, .admin-campsite-card-header > *,
+  .campsite-participant-groups > *, .admin-campsite-parking-section { min-width: 0; }
+  .admin-campsite-card table { width: 100%; max-width: 100%; }
+  .admin-campsite-card-header {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "heading" "dates" "registration" "fees" "actions";
+  }
+  .admin-campsite-card-header > *,
+  .admin-campsite-card .stats { min-width: 0; }
+  .admin-campsite-card .campsite-card-actions { justify-self: start; }
+  .admin-campsite-card .campsite-action-buttons { flex-wrap: wrap; white-space: normal; }
+}
+
+@media (min-width: 1101px) and (max-width: 1280px) {
+  .admin-body .trip-waitlist-section th:last-child .info-tooltip-box {
+    right: 0;
+    left: auto;
+    transform: translateY(4px);
+  }
+  .admin-body .trip-waitlist-section th:last-child .info-tooltip:is(:hover, :focus, :focus-visible) .info-tooltip-box {
+    transform: none;
+  }
+}
+
 @media (max-width: 1100px) {
   .admin-body table,
   body.profile-show-page .public-card-table {
@@ -348,7 +387,6 @@ table { max-width: 100%; }
     color: var(--muted);
     font-size: .88rem;
   }
-  body.admin-body table.admin-trips-table td:first-child,
   body.admin-body table.user-trip-history-table td:first-child,
   body.profile-show-page table.user-trip-history-table td:first-child { min-width: 14rem; }
   body.admin-body table.participant-email-table,
@@ -364,22 +402,10 @@ table { max-width: 100%; }
   body.admin-body .help-subscriber-table table :is(th, td),
   body.admin-body table.trip-details-email-recipient-table :is(th, td) { min-width: 0; }
   .help-subscriber-table td:first-child { overflow-wrap: anywhere; }
-  .admin-campsite-card { min-width: 0; width: 100%; }
-  .admin-campsite-card > *, .admin-campsite-card-header > *,
-  .campsite-participant-groups > *, .admin-campsite-parking-section,
   .campsite-reimbursement-groups, .campsite-reimbursement-trip,
   .campsite-reimbursement-trip .table-wrapper { min-width: 0; }
-  .admin-campsite-card table,
   .campsite-reimbursement-trip .table-wrapper { width: 100%; max-width: 100%; }
   .campsite-reimbursement-trip-heading h3 { min-width: 0; overflow-wrap: anywhere; }
-  .admin-campsite-card-header {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "heading" "dates" "registration" "fees" "actions";
-  }
-  .admin-campsite-card-header > *,
-  .admin-campsite-card .stats { min-width: 0; }
-  .admin-campsite-card .campsite-card-actions { justify-self: start; }
-  .admin-campsite-card .campsite-action-buttons { flex-wrap: wrap; white-space: normal; }
 }
 
 @media (max-width: 980px) {

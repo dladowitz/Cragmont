@@ -178,6 +178,10 @@ body.profile-edit-page .public-nav a {
   pointer-events: none;
 }
 
+body:is(.trips-index-page, .trip-show-page, .help-request-page, .profile-show-page, .profile-edit-page, .profile-waiver-new-page) .background-image-caption {
+  display: none;
+}
+
 .trips-mobile-hero {
   display: none;
 }
