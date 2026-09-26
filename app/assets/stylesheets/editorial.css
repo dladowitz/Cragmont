@@ -146,6 +146,31 @@ body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-pa
   .trip-what-to-expect-page, .help-request-page, .trip-show-page,
   .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page)
   :is(.public-admin-link, .public-nav a, .nav-button):hover { opacity: .78; }
+/* Focus rings over a photograph are white; menus that open on a light panel keep the green ring. */
+body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
+  .password-reset-edit-page, .not-found-page, .registration-new-page,
+  .trip-what-to-expect-page, .help-request-page, .trip-show-page,
+  .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page) .public-header :focus-visible,
+body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
+  .password-reset-edit-page, .not-found-page, .registration-new-page,
+  .trip-what-to-expect-page, .help-request-page, .trip-show-page,
+  .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page) .public-nav-checkbox:focus-visible + .public-nav-toggle,
+:is(.home-hero, .trips-mobile-hero, .trip-show-mobile-hero, .public-mobile-hero) :focus-visible {
+  outline-color: #fff;
+}
+body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
+  .password-reset-edit-page, .not-found-page, .registration-new-page,
+  .trip-what-to-expect-page, .help-request-page, .trip-show-page,
+  .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page)
+  :is(.public-nav-dropdown, .public-nav-checkbox:checked ~ .public-nav) :focus-visible {
+  outline-color: var(--accent);
+}
+/* Dropdowns open on a light panel, so they drop the white photo-header text. */
+body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
+  .password-reset-edit-page, .not-found-page, .registration-new-page,
+  .trip-what-to-expect-page, .help-request-page, .trip-show-page,
+  .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page)
+  .public-nav-dropdown a { color: var(--text); text-shadow: none; }
 .admin-header { gap: 28px; border-bottom: 1px solid var(--line); }
 .admin-brand { gap: 28px; align-items: center; }
 .admin-context { padding: 4px 10px; background: var(--accent); color: #fff; font-size: .9rem; font-weight: 600; }
@@ -447,6 +472,9 @@ table { max-width: 100%; }
     font-weight: 500;
   }
   .admin-nav-checkbox:focus-visible + .admin-nav-toggle { outline: 3px solid var(--accent); outline-offset: 3px; }
+  /* The base rule hides this input; it must render (invisibly) so keyboard users can reach the Menu toggle. */
+  .public-nav-checkbox { display: block; width: 1px !important; }
+  .public-nav-checkbox:focus-visible + .public-nav-toggle { outline: 3px solid var(--accent); outline-offset: 3px; }
   .admin-nav {
     position: absolute;
     z-index: 30;
