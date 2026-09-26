@@ -30,7 +30,9 @@ class ClubControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", "History"
     assert_select ".club-timeline section", count: 5
-    assert_select "a[href='https://www.cragmontclimbingclub.org/history']", "Read the full original history"
+    assert_select "article#longer-history h2", "From Cragmont Rock to Yosemite"
+    assert_select "article#longer-history section", count: 4
+    assert_select ".club-history-sources a[href='https://www.cragmontclimbingclub.org/history']", /Steve Roper's full account/
   end
 
   test "past trips has a public top-level page" do

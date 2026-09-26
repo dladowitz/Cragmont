@@ -299,6 +299,12 @@ body.trips-index-page .trips-index-notices .calendar-subscription-notice {
 .club-timeline h2 { margin-top: 0; }
 .club-timeline .club-year { color: var(--accent-dark); font-weight: 600; }
 .club-source { color: var(--muted); font-size: .95rem; }
+.club-history-article { margin-top: 40px; padding-top: 36px; border-top: 1px solid var(--line); }
+.club-history-article h2 { margin: 0 0 18px; font-size: clamp(2rem, 3vw, 2.7rem); }
+.club-history-article h3 { margin: 32px 0 12px; }
+.club-history-byline { color: var(--muted); font-size: .95rem; }
+.club-history-sources { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); font-size: .95rem; }
+.club-history-sources h3 { margin-top: 0; }
 .club-form { display: block; width: 100%; height: 1600px; margin-top: 20px; border: 1px solid var(--line); border-radius: var(--ui-radius); }
 .archived-trips-panel, .club-archive { position: relative; z-index: 2; }
 .club-archive { margin-top: 24px; }

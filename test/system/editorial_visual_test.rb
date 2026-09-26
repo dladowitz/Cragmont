@@ -1,6 +1,19 @@
 require "application_system_test_case"
 
 class EditorialVisualTest < ApplicationSystemTestCase
+  test "long history reads without horizontal scrolling on a phone" do
+    visit history_path
+    assert_selector "#longer-history h2", text: "From Cragmont Rock to Yosemite"
+
+    browser = page.driver.browser
+    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
+    assert_equal 390, page.evaluate_script("window.innerWidth")
+    assert_operator find("#longer-history").native.rect.width, :<=, 390
+    assert_operator page.evaluate_script("document.documentElement.scrollWidth - window.innerWidth"), :<=, 0
+  ensure
+    browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
   test "calendar subscription has room to breathe on desktop and phone" do
     visit trips_path
     notice = find(".calendar-subscription-notice")
