@@ -19,6 +19,8 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     get admin_trips_url
 
     assert_response :success
+    assert_select "body.admin-body[data-controller~='table-scroll']"
+    assert_select "table.admin-trips-table"
     assert_select "h1.visually-hidden"
     assert_select ".admin-public-link", "Public View"
     assert_select ".admin-nav a", text: "Trips"

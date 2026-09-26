@@ -331,6 +331,7 @@ th { border-bottom-color: var(--text); color: var(--muted); font-size: .88rem; f
 td { border-bottom-color: var(--line); }
 table { max-width: 100%; }
 .admin-table-action-button, .trip-status-filters legend { font-size: .9rem; }
+.admin-user-phone { white-space: nowrap; }
 
 @media (max-width: 1100px) {
   .admin-body table,
@@ -339,13 +340,24 @@ table { max-width: 100%; }
     max-width: 100%;
     overflow-x: auto;
   }
-  .admin-body table::before {
+  .admin-body table.is-scrollable::before {
     content: "Swipe for more columns →";
     display: block;
     padding: 8px 12px;
     color: var(--muted);
     font-size: .88rem;
   }
+  body.admin-body table.admin-trips-table td:first-child,
+  body.admin-body table.user-trip-history-table td:first-child,
+  body.profile-show-page table.user-trip-history-table td:first-child { min-width: 14rem; }
+  body.admin-body table.participant-email-table,
+  body.admin-body table.campsite-parking-table {
+    display: table;
+    width: 100%;
+    overflow: visible;
+  }
+  body.admin-body table.participant-email-table :is(th, td),
+  body.admin-body table.campsite-parking-table :is(th, td) { min-width: 0; }
   .admin-campsite-card { min-width: 0; width: 100%; }
   .admin-campsite-card > *, .admin-campsite-card-header > *,
   .campsite-participant-groups > *, .admin-campsite-parking-section,
@@ -473,9 +485,21 @@ table { max-width: 100%; }
   body:not(.admin-body) .public-card-table tr { border-radius: var(--ui-radius); background: var(--panel); }
   body.trip-show-page .confirmed-participants-table.public-card-table .public-party-primary-row,
   body.trip-show-page .confirmed-participants-table.public-card-table .public-party-last-row { border-radius: var(--ui-radius); }
+  body.profile-show-page .public-card-table { display: grid; overflow: visible; }
+  body.profile-show-page .user-trip-history-table.public-card-table td > * { grid-column: 2; }
+  body.profile-show-page .user-trip-history-table.public-card-table .date-pair div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
   .admin-body table :is(th, td) { min-width: 108px; }
   .admin-body table :is(th, td):first-child { min-width: 170px; }
+  body.profile-show-page table.user-trip-history-table.public-card-table td:first-child { min-width: 0; }
 }
+
+.participant-emails-panel .panel-header,
+.participant-email-section-header { flex-wrap: wrap; }
+.participant-emails-panel .button,
+.participant-email-copy-button { white-space: nowrap; }
 
 @media (max-width: 360px) {
   .details-list > div,

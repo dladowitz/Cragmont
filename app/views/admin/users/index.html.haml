@@ -28,7 +28,7 @@
                   %span.member-icon-placeholder{"aria-hidden" => "true"}
                 = link_to user.full_name, admin_user_path(user)
             %td= user.email.presence || tag.span("None")
-            %td= user.phone.presence || tag.span("None")
+            %td.admin-user-phone= user.phone.presence || tag.span("None")
             %td= user.member? ? "Yes" : "No"
             %td= user.roles.order(:name).map(&:name).to_sentence.presence || "None"
             %td= user.default_password? ? "Yes" : "No"
