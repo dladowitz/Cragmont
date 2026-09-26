@@ -7760,6 +7760,10 @@ textarea {
     text-transform: uppercase;
   }
 
+  body:not(.admin-body) .public-card-table td > .status {
+    justify-self: start;
+  }
+
   body:not(.admin-body) .public-card-table td .button,
   body:not(.admin-body) .public-card-table td button {
     justify-content: center;

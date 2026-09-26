@@ -538,6 +538,9 @@ table { max-width: 100%; }
   .date-pair div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   .details-list dt, .date-pair dt { white-space: normal; }
   .details-list dd, .date-pair dd { overflow-wrap: anywhere; }
+  /* Stack profile cards so badges like "Confirmed" don't break mid-word. */
+  body.profile-show-page .public-card-table td { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  body.profile-show-page .user-trip-history-table.public-card-table td > * { grid-column: 1; }
   .public-header { gap: 8px; }
   .public-brand { gap: 10px; }
   .site-name span { font-size: 1.28rem; }
