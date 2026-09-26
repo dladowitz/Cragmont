@@ -1,0 +1,233 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Cragmont Agent API",
+    "version": "1.0.0",
+    "description": "Manage club trips and campsite reservations from a signed-in admin browser session. No separate agent credential is needed. The browser sends the existing session cookie; POST and PATCH requests must also send X-CSRF-Token from the admin page's csrf-token meta tag. Requests use the signed-in person's current admin permissions. New trips default to draft. This API does not manage participants, payments, deletions, or external reservation providers."
+  },
+  "servers": [{ "url": "/" }],
+  "security": [{ "adminSession": [] }],
+  "paths": {
+    "/api/v1/trips": {
+      "get": {
+        "operationId": "listTrips",
+        "summary": "List trips visible to this admin",
+        "description": "Returns up to 100 trips, newest ID first. Pass next_before_id as before_id to get the next page. Includes drafts and archived trips.",
+        "parameters": [{ "name": "before_id", "in": "query", "schema": { "type": "integer", "minimum": 1 } }],
+        "responses": {
+          "200": { "description": "Trip page", "content": { "application/json": { "schema": { "type": "object", "properties": { "trips": { "type": "array", "items": { "$ref": "#/components/schemas/Trip" } }, "next_before_id": { "type": ["integer", "null"] } } } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      },
+      "post": {
+        "operationId": "createTrip",
+        "security": [{ "adminSession": [], "csrfToken": [] }],
+        "summary": "Create a trip",
+        "description": "Requires a trip admin or super admin. Requires name, location, start_date, and trip_type; camping trips also require end_date. Type-specific rules are enforced by the same model as the admin form. Optional gym_meetup_schedule can create repeated gym outings; created_trip_ids lists every created outing.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["trip"], "properties": { "trip": { "$ref": "#/components/schemas/TripWrite" }, "gym_meetup_schedule": { "$ref": "#/components/schemas/GymMeetupSchedule" } } } } } },
+        "responses": {
+          "201": { "description": "Created trip", "content": { "application/json": { "schema": { "type": "object", "properties": { "trip": { "$ref": "#/components/schemas/Trip" }, "created_trip_ids": { "type": "array", "items": { "type": "integer" } } } } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/api/v1/trips/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/TripId" }],
+      "get": {
+        "operationId": "getTrip",
+        "summary": "Read one trip",
+        "responses": {
+          "200": { "description": "Trip details", "content": { "application/json": { "schema": { "type": "object", "properties": { "trip": { "$ref": "#/components/schemas/Trip" } } } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "patch": {
+        "operationId": "updateTrip",
+        "security": [{ "adminSession": [], "csrfToken": [] }],
+        "summary": "Edit a trip",
+        "description": "Partial update. Deleted trips cannot be changed. A coordinator can edit only their assigned trip; only global trip admins can change campsite_coordinator_id.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["trip"], "properties": { "trip": { "$ref": "#/components/schemas/TripWrite" } } } } } },
+        "responses": {
+          "200": { "description": "Updated trip", "content": { "application/json": { "schema": { "type": "object", "properties": { "trip": { "$ref": "#/components/schemas/Trip" } } } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/api/v1/trips/{trip_id}/campsites": {
+      "parameters": [{ "$ref": "#/components/parameters/TripIdNested" }],
+      "get": {
+        "operationId": "listCampsiteReservations",
+        "summary": "Read campsite reservations for a trip",
+        "responses": {
+          "200": { "description": "Campsite reservations", "content": { "application/json": { "schema": { "type": "object", "properties": { "campsites": { "type": "array", "items": { "$ref": "#/components/schemas/Campsite" } } } } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "post": {
+        "operationId": "createCampsiteReservation",
+        "security": [{ "adminSession": [], "csrfToken": [] }],
+        "summary": "Load a campsite reservation into a camping trip",
+        "description": "Requires campground_id, site_number, arrival_date, checkout_date, participant_capacity, and car_capacity. Use GET first to avoid duplicates when retrying a request. registration_fee is entered in dollars. Dates must fit within the trip.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["campsite"], "properties": { "campsite": { "$ref": "#/components/schemas/CampsiteWrite" } } } } } },
+        "responses": {
+          "201": { "description": "Created reservation", "content": { "application/json": { "schema": { "type": "object", "properties": { "campsite": { "$ref": "#/components/schemas/Campsite" } } } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/api/v1/trips/{trip_id}/campsites/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/TripIdNested" }, { "$ref": "#/components/parameters/CampsiteId" }],
+      "patch": {
+        "operationId": "updateCampsiteReservation",
+        "security": [{ "adminSession": [], "csrfToken": [] }],
+        "summary": "Edit a campsite reservation",
+        "description": "Partial update. The campsite must belong to the trip, and the trip must be active and of type camping.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["campsite"], "properties": { "campsite": { "$ref": "#/components/schemas/CampsiteWrite" } } } } } },
+        "responses": {
+          "200": { "description": "Updated reservation", "content": { "application/json": { "schema": { "type": "object", "properties": { "campsite": { "$ref": "#/components/schemas/Campsite" } } } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/api/v1/campgrounds": {
+      "get": {
+        "operationId": "listCampgrounds",
+        "summary": "Find campground IDs for campsite reservations",
+        "responses": {
+          "200": { "description": "Campgrounds", "content": { "application/json": { "schema": { "type": "object", "properties": { "campgrounds": { "type": "array", "items": { "$ref": "#/components/schemas/Campground" } } } } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "operationId": "createCampground",
+        "security": [{ "adminSession": [], "csrfToken": [] }],
+        "summary": "Create a campground when a reservation uses a new one",
+        "description": "Requires name and location; only a trip admin or super admin can create one.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["campground"], "properties": { "campground": { "$ref": "#/components/schemas/CampgroundWrite" } } } } } },
+        "responses": {
+          "201": { "description": "Created campground", "content": { "application/json": { "schema": { "type": "object", "properties": { "campground": { "$ref": "#/components/schemas/Campground" } } } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "adminSession": { "type": "apiKey", "in": "cookie", "name": "_cragmont_session", "description": "Existing signed-in admin browser session. The browser sends this cookie automatically; do not copy it into prompts." },
+      "csrfToken": { "type": "apiKey", "in": "header", "name": "X-CSRF-Token", "description": "Required for POST and PATCH. Read the csrf-token meta tag from the current admin page." }
+    },
+    "parameters": {
+      "TripId": { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } },
+      "TripIdNested": { "name": "trip_id", "in": "path", "required": true, "schema": { "type": "integer" } },
+      "CampsiteId": { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+    },
+    "schemas": {
+      "TripWrite": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" }, "location": { "type": "string" },
+          "start_date": { "type": "string", "format": "date" }, "end_date": { "type": "string", "format": "date" },
+          "status": { "type": "string", "enum": ["draft", "published", "archived"], "default": "draft" },
+          "trip_type": { "type": "string", "enum": ["camping", "day_trip", "gym_outing", "class_trip"] },
+          "description": { "type": "string" }, "campsite_coordinator_id": { "type": ["integer", "null"] },
+          "participant_capacity": { "type": "integer", "minimum": 0 }, "cost_cents": { "type": "integer", "minimum": 0 },
+          "cost_dollars": { "type": "string", "description": "Alternative to cost_cents for entering dollars" },
+          "climbing_types": { "type": "array", "items": { "type": "string", "enum": ["sport", "trad", "bouldering"] } },
+          "meeting_time": { "type": "string", "example": "09:00" }, "end_time": { "type": "string", "example": "16:00" },
+          "meeting_location": { "type": "string" }, "meeting_location_url": { "type": "string", "format": "uri" },
+          "late_arrival_instructions": { "type": "string" }, "carpool_meeting_spot": { "type": "string" },
+          "weather_url": { "type": "string", "format": "uri" }, "whatsapp_group": { "type": "string", "format": "uri" },
+          "photo_album_url": { "type": "string", "format": "uri" }, "mountain_project_url": { "type": "string", "format": "uri" },
+          "guide_book_url": { "type": "string", "format": "uri" }, "sun_exposure": { "type": "string" },
+          "partner_company_id": { "type": "integer" }, "class_signup_url": { "type": "string", "format": "uri" },
+          "class_original_price": { "type": "string" }, "class_offers_discount": { "type": "boolean" },
+          "class_discount_code": { "type": "string" }, "class_discount_amount": { "type": "string" },
+          "class_discounted_price": { "type": "string" }, "group_campfire_campsite_id": { "type": "integer" },
+          "group_fire_night": { "type": "string", "enum": ["none", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] }
+        }
+      },
+      "Trip": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" }, "name": { "type": "string" }, "location": { "type": "string" },
+          "start_date": { "type": "string", "format": "date" }, "end_date": { "type": ["string", "null"], "format": "date" },
+          "description": { "type": ["string", "null"] }, "status": { "type": "string" }, "trip_type": { "type": "string" },
+          "campsite_coordinator_id": { "type": ["integer", "null"] }, "participant_capacity": { "type": ["integer", "null"] },
+          "cost_cents": { "type": "integer" }, "climbing_types": { "type": "array", "items": { "type": "string" } },
+          "meeting_time": { "type": ["string", "null"] }, "end_time": { "type": ["string", "null"] },
+          "meeting_location": { "type": ["string", "null"] }, "meeting_location_url": { "type": ["string", "null"] },
+          "late_arrival_instructions": { "type": ["string", "null"] }, "carpool_meeting_spot": { "type": ["string", "null"] },
+          "weather_url": { "type": ["string", "null"] }, "whatsapp_group": { "type": ["string", "null"] },
+          "photo_album_url": { "type": ["string", "null"] }, "mountain_project_url": { "type": ["string", "null"] },
+          "guide_book_url": { "type": ["string", "null"] }, "sun_exposure": { "type": ["string", "null"] },
+          "partner_company_id": { "type": ["integer", "null"] }, "class_signup_url": { "type": ["string", "null"] },
+          "class_original_price": { "type": ["string", "null"] }, "class_offers_discount": { "type": "boolean" },
+          "class_discount_code": { "type": ["string", "null"] }, "class_discount_amount": { "type": ["string", "null"] },
+          "class_discounted_price": { "type": ["string", "null"] }, "group_campfire_campsite_id": { "type": ["integer", "null"] },
+          "group_fire_night": { "type": ["string", "null"] }, "updated_at": { "type": "string", "format": "date-time" },
+          "campsites_path": { "type": "string" }, "admin_path": { "type": "string" }
+        }
+      },
+      "GymMeetupSchedule": { "type": "object", "additionalProperties": false, "properties": { "frequency": { "type": "string", "enum": ["none", "monthly", "first_third", "second_fourth"] }, "ends_on": { "type": "string", "format": "date" } } },
+      "CampsiteWrite": {
+        "type": "object", "additionalProperties": false,
+        "properties": {
+          "campground_id": { "type": "integer" }, "site_number": { "type": "string" },
+          "arrival_date": { "type": "string", "format": "date" }, "checkout_date": { "type": "string", "format": "date" },
+          "participant_capacity": { "type": "integer", "minimum": 0, "maximum": 50 }, "car_capacity": { "type": "integer", "minimum": 0 },
+          "registered_by_id": { "type": ["integer", "null"] }, "registration_fee": { "type": "string", "description": "Dollars, e.g. 35.00" },
+          "registration_number": { "type": "string" }, "notes": { "type": "string" }
+        }
+      },
+      "Campsite": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" }, "trip_id": { "type": "integer" }, "campground_id": { "type": "integer" },
+          "campground_name": { "type": "string" }, "site_number": { "type": "string" },
+          "arrival_date": { "type": "string", "format": "date" }, "checkout_date": { "type": "string", "format": "date" },
+          "participant_capacity": { "type": "integer" }, "car_capacity": { "type": "integer" },
+          "registered_by_id": { "type": ["integer", "null"] }, "registered_by_name": { "type": ["string", "null"] },
+          "registration_fee_cents": { "type": "integer" }, "registration_number": { "type": ["string", "null"] },
+          "notes": { "type": ["string", "null"] }, "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CampgroundWrite": { "type": "object", "additionalProperties": false, "properties": { "name": { "type": "string" }, "location": { "type": "string" }, "website": { "type": "string", "format": "uri" }, "notes": { "type": "string" } } },
+      "Campground": { "type": "object", "description": "CampgroundWrite fields plus ID.", "properties": { "id": { "type": "integer" }, "name": { "type": "string" }, "location": { "type": "string" }, "website": { "type": ["string", "null"] }, "notes": { "type": ["string", "null"] } } }
+    },
+    "responses": {
+      "BadRequest": { "description": "Missing or unsupported fields", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } },
+      "Unauthorized": { "description": "No signed-in admin browser session", "content": { "application/json": { "schema": { "type": "object", "properties": { "message": { "type": "string" } } } } } },
+      "Forbidden": { "description": "Admin role does not permit this action", "content": { "application/json": { "schema": { "type": "object", "properties": { "message": { "type": "string" } } } } } },
+      "NotFound": { "description": "Resource not found", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } },
+      "Conflict": { "description": "Trip state prevents the change", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } },
+      "ValidationError": { "description": "Model validation failed", "content": { "application/json": { "schema": { "type": "object", "properties": { "errors": { "type": "array", "items": { "type": "string" } } } } } } }
+    }
+  }
+}
