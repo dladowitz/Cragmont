@@ -172,6 +172,8 @@ module ApplicationHelper
   def public_trip_type_badge_class(trip)
     if trip.class_trip?
       "external-class-badge"
+    elsif trip.gym_outing?
+      "gym-outing-badge"
     elsif trip.uses_day_trip_signups?
       "day-trip-badge"
     end

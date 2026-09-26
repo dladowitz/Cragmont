@@ -57,7 +57,8 @@ class EditorialVisualTest < ApplicationSystemTestCase
       (() => {
         return ["status", "status warning-status", "status danger-status",
           "status-pill open-status", "status-pill resolved-status",
-          "status trip-type-badge external-class-badge", "status trip-type-badge day-trip-badge"].map(classes => {
+          "status trip-type-badge external-class-badge", "status trip-type-badge day-trip-badge",
+          "status trip-type-badge gym-outing-badge"].map(classes => {
           const badge = document.createElement("span");
           badge.className = classes;
           document.body.append(badge);
@@ -68,7 +69,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
       })()
     JS
 
-    assert_equal 6, colors.uniq.size
+    assert_equal 7, colors.uniq.size
     assert_not_includes colors, "rgba(0, 0, 0, 0)"
 
     page.driver.browser.manage.window.resize_to(390, 844)

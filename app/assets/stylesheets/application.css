@@ -4927,6 +4927,11 @@ th {
   color: #1d4ed8;
 }
 
+.trip-type-badge.gym-outing-badge {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
 .missing-value {
   color: var(--danger);
   font-weight: 750;

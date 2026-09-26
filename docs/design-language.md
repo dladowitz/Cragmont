@@ -21,7 +21,7 @@ Cragmont is a real climbing club, not a booking marketplace. Pages should feel o
 | Width | Shared `public-main`/`panel` rhythm; narrower `club-main` and readable `club-copy` for long prose | Wide for trip browsing, comfortable line lengths for reading. |
 | Photography | A relevant climbing image where it adds context; overlay or panel for text; location caption | A photo is not a substitute for a heading or legible copy. |
 | Actions | Filled green primary button; outlined secondary; danger style only for destructive actions | The next step should be unmistakable. |
-| Badges | Compact text **and** color. Camping/default is green, day trip is blue, external class is amber; operational statuses retain their own semantic colors | The type/status must remain understandable without color. Preserve these distinctions when making pages. |
+| Badges | Compact text **and** color. Camping/default is green, day trip is blue, gym outing is orange, external class is amber; operational statuses retain their own semantic colors | The type/status must remain understandable without color. Preserve these distinctions when making pages. |
 
 The current public examples are [home](../app/views/home/index.html.haml), [trips](../app/views/trips/index.html.haml), [membership](../app/views/club/membership.html.haml), and [history](../app/views/club/history.html.haml). Reuse their HAML structure and existing classes before inventing a new component. `editorial.css` carries the newer visual treatment; check `application.css` for the original component and responsive rules before editing either file. Avoid stacking a page-specific override on a shared style unless the page genuinely differs.
 
