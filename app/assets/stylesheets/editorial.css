@@ -73,7 +73,9 @@ a { color: var(--accent); font-weight: 500; text-underline-offset: .2em; }
   list-style: none;
 }
 .public-nav-group summary::-webkit-details-marker { display: none; }
-.public-nav-group summary::after { content: "⌄"; font-size: 1.2em; line-height: 1; }
+/* A drawn chevron centers on the text; the "⌄" glyph sat below it. Points up while open. */
+.public-nav-group summary::after { content: ""; width: .4em; height: .4em; border: solid currentColor; border-width: 0 2px 2px 0; transform: translateY(-25%) rotate(45deg); }
+.public-nav-group[open] summary::after { transform: translateY(25%) rotate(-135deg); }
 .public-nav-group:not([open]) .public-nav-dropdown { display: none; }
 .public-nav-dropdown {
   position: absolute;

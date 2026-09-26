@@ -418,7 +418,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".trip-management-panel .trip-management-actions a.button.secondary[href='#{admin_trip_transactions_path(trips(:yosemite))}']", text: "Transactions"
     assert_select ".trip-management-panel .trip-management-actions .button.danger", text: "Delete trip", count: 0
     assert_select ".campground-group", count: 0
-    assert_select ".admin-campsite-card-header h4", text: "Upper Pines site A12"
+    assert_select ".admin-campsite-card-header h3", text: "Upper Pines site A12"
     assert_select ".admin-campsite-card-header p", text: "Yosemite National Park"
     assert_select ".campsite-registration", text: /Site registered by:\s*Alex Rivera/
     assert_select "#admin-campsite-#{campsites(:yosemite_b).id}" do

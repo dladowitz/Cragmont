@@ -842,6 +842,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".archived-trips-panel" do
       assert_select "h1", "Past Trips"
+      assert_select "h2.visually-hidden", "Recent trips"
       assert_select "a[href='#{trips_path}']", text: "Current Trips"
       archived_trips[1..5].each do |trip|
         assert_select ".archived-trip-row[href='#{trip_path(trip)}'] h3", text: trip.name

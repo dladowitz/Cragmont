@@ -2130,12 +2130,17 @@ body.trip-show-page .trip-resource-links {
 }
 
 .campsite-card-header h3,
-.admin-campsite-card-header h4,
+.admin-campsite-card-header h3,
 .campsite-card-header p,
 .admin-campsite-card-header p,
 .campground-group h3,
 .campground-group p {
   margin: 0;
+}
+
+.admin-campsite-card-header h3 {
+  font-size: 1rem;
+  font-weight: 400;
 }
 
 .campsite-card-header p,
@@ -5338,9 +5343,10 @@ th {
 }
 
 .trip-readiness-campsite-check h4,
-.trip-readiness-group-check h4 {
+.trip-readiness-group-check h3 {
   margin: 0;
   font-size: 1rem;
+  font-weight: 400;
   line-height: 1.15;
 }
 

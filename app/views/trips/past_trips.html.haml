@@ -11,6 +11,7 @@
           %h1 Past Trips
           = link_to "Current Trips", trips_path
     - if @archived_trips.any?
+      %h2.visually-hidden Recent trips
       .archived-trip-list
         - @archived_trips.each do |trip|
           = link_to trip_path(trip), class: "archived-trip-row", aria: { label: "View #{public_member_text(trip.name, trip: trip)}" } do
