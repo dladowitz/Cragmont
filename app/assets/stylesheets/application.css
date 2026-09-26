@@ -803,6 +803,11 @@ body.trip-show-page .public-liability-warning {
   margin-top: 0;
 }
 
+/* Titles wrap instead of squeezing header buttons onto two lines. */
+.panel-header > .actions {
+  flex-shrink: 0;
+}
+
 .panel-header p,
 .muted {
   color: var(--muted);
@@ -5055,7 +5060,7 @@ th {
   margin-bottom: 16px;
   padding: 18px 20px;
   --readiness-status-column: 78px;
-  --readiness-copy-column: minmax(420px, 520px);
+  --readiness-copy-column: minmax(0, 520px);
   --readiness-action-column: 165px;
   width: fit-content;
   max-width: calc(100% - 32px);
@@ -6014,6 +6019,12 @@ th {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
   gap: 20px;
   align-items: start;
+  width: min(1280px, calc(100% - 32px));
+  margin-inline: auto;
+}
+
+.participant-email-section-grid > .participant-email-section {
+  width: auto;
 }
 
 .participant-email-section-header {
