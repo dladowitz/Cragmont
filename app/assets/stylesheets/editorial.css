@@ -414,6 +414,12 @@ table { max-width: 100%; }
   .admin-nav { gap: 8px 20px; }
 }
 
+@media (min-width: 761px) and (max-width: 840px) {
+  /* Keeps the full super admin nav on one row so Logout isn't orphaned. */
+  .admin-nav { column-gap: 14px; }
+  .admin-nav :is(a, .button) { font-size: .95rem; }
+}
+
 @media (max-width: 760px) {
   .public-header, .admin-header, .public-main, .flash-messages {
     width: min(100% - 32px, 1280px);

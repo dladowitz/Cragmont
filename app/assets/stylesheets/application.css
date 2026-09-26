@@ -6010,12 +6010,13 @@ th {
 
 .trip-details-email-sent-summary {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
 
 .trip-details-email-sent-summary > div {
   display: grid;
+  align-content: start;
   gap: 4px;
   padding: 14px;
   border: 1px solid var(--line);
