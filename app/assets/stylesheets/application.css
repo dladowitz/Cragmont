@@ -5633,6 +5633,17 @@ th {
   align-items: start;
 }
 
+@media (min-width: 761px) and (max-width: 1100px) {
+  .admin-day-trip-top-grid {
+    grid-template-areas:
+      "name name name name name participants participants participants participants actions actions actions"
+      "date date date date date date coordinator coordinator coordinator coordinator coordinator coordinator"
+      "location location location location location location image image image image image image"
+      "status status status status status status . . . . . ."
+      "description description description description description description description description description description description description";
+  }
+}
+
 .admin-day-trip-top-grid .admin-trip-name-field {
   grid-area: name;
 }
