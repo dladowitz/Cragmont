@@ -1528,8 +1528,13 @@ dialog.signup-modal.participant-contact-modal {
   color: var(--text);
 }
 
+/* Cap the links column so long "(log in to reveal)" links wrap instead of squeezing the title. */
 body.trip-show-page .trip-summary-header {
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) fit-content(34%);
+}
+
+body.trip-show-page .trip-resource-links {
+  text-align: right;
 }
 
 .trip-summary-top-row {
