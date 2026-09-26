@@ -808,6 +808,13 @@ body.trip-show-page .public-liability-warning {
   flex-shrink: 0;
 }
 
+@media (min-width: 761px) {
+  .panel-header .button,
+  .admin-body td .button {
+    white-space: nowrap;
+  }
+}
+
 .panel-header p,
 .muted {
   color: var(--muted);
@@ -1363,6 +1370,10 @@ body.trip-show-page .public-liability-warning {
   margin: 0;
 }
 
+.climbing-partner-self-service > :last-child {
+  flex-shrink: 0;
+}
+
 dialog.signup-modal.climbing-partner-contact-modal,
 dialog.signup-modal.participant-contact-modal {
   width: min(520px, calc(100% - 32px));
@@ -1388,6 +1399,7 @@ dialog.signup-modal.participant-contact-modal {
   border-radius: 4px;
   font-size: 0.75rem;
   line-height: 1.1;
+  white-space: nowrap;
 }
 
 @media (max-width: 640px) {
@@ -3158,6 +3170,7 @@ body.trip-show-page .panel {
 .day-trip-signup-button {
   justify-content: center;
   min-width: 180px;
+  text-align: center;
 }
 
 .day-trip-signup-button.is-waitlist {
