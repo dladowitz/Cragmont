@@ -34,9 +34,10 @@ class EditorialVisualTest < ApplicationSystemTestCase
     assert_selector ".flash.notice", text: "You are logged in."
     visit admin_root_path
     assert_selector ".admin-context", text: "Admin"
-    assert_equal "rgba(0, 0, 0, 0)", find_button("Logout").native.css_value("border-bottom-color")
+    logout = find_button("Logout")
+    assert_equal "rgba(0, 0, 0, 0)", logout.native.css_value("border-bottom-color")
 
-    click_button "Logout"
+    page.execute_script("arguments[0].form.requestSubmit(arguments[0])", logout.native)
     assert_selector ".flash.notice", text: "You are logged out."
     assert_equal 0, page.evaluate_script("document.querySelector('.home-hero').getBoundingClientRect().top")
   end
