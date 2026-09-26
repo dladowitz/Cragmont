@@ -17,7 +17,7 @@ body {
   font: 400 1rem/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 button, input, select, textarea, .participant-email-address-list { font-family: inherit; }
-body.admin-body { background: var(--bg); }
+body.admin-body { background: #e7f1ed; }
 body.trip-safety-page, body.profile-waiver-new-page {
   min-height: 100vh;
   background: linear-gradient(180deg, rgb(15 23 20 / 30%), rgb(15 23 20 / 65%)),
@@ -95,7 +95,7 @@ body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-pa
   :is(.public-admin-link, .public-nav a, .nav-button):hover { opacity: .78; }
 .admin-header { gap: 28px; border-bottom: 1px solid var(--line); }
 .admin-brand { gap: 28px; align-items: center; }
-.admin-context { font-size: 1rem; font-weight: 500; }
+.admin-context { padding: 4px 10px; background: var(--accent); color: #fff; font-size: .9rem; font-weight: 600; }
 .admin-body .site-name, .admin-body .site-name small { color: var(--text); text-shadow: none; }
 .admin-nav { gap: clamp(12px, 1.4vw, 24px); }
 .admin-nav-checkbox, .admin-nav-toggle { display: none; }
@@ -115,6 +115,15 @@ body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-pa
   background: #fff;
   box-shadow: none;
   color: var(--accent-dark);
+}
+body.home-page .flash-messages {
+  position: absolute;
+  z-index: 18;
+  top: 90px;
+  left: 50%;
+  width: min(1280px, calc(100% - 48px));
+  margin: 0;
+  transform: translateX(-50%);
 }
 
 /* Common controls and content surfaces drive both public and admin pages. */
@@ -138,6 +147,7 @@ body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-pa
   color: var(--accent);
 }
 .button.secondary:hover, .button.outline:hover { background: #e7eee9; }
+.admin-nav .button.secondary { border-color: transparent; }
 .button.danger { border-color: var(--danger); background: var(--danger); color: #fff; }
 .button.danger.secondary { background: transparent; color: var(--danger); }
 .panel {
@@ -184,14 +194,11 @@ body.trips-index-page .trips-index-notices .calendar-subscription-notice { width
 .archived-trip-row:hover h3, .archived-trip-row:focus-visible h3 { color: var(--accent-dark); }
 .status, .status-pill, .trip-type-badge {
   border-radius: var(--ui-radius);
-  background: transparent;
-  color: var(--accent);
   font-size: .9rem;
   font-weight: 600;
   letter-spacing: .06em;
   text-transform: uppercase;
 }
-.status { border-bottom: 0; padding: 0; }
 .trip-type-badge { padding: 4px 9px; background: #e7f1ed; }
 .status.danger-status { color: var(--danger); }
 .status.warning-status { color: #91621c; }
@@ -325,6 +332,22 @@ table { max-width: 100%; }
     color: var(--text);
     text-shadow: none;
   }
+  body.home-page .flash-messages {
+    top: 82px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    transform: none;
+  }
+  body.session-new-page .auth-panel .form-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  body.session-new-page .auth-panel .form-actions :is(.button, input[type="submit"]) {
+    min-width: 0;
+    padding-inline: 10px;
+  }
+  body.session-new-page .auth-panel .form-actions .button:last-child { grid-column: 1 / -1; }
   .home-hero-copy { width: min(100% - 32px, 1120px); padding-top: 150px; }
   .home-main { width: 100%; }
   .home-hero h1 { font-size: clamp(2.8rem, 11vw, 4.5rem); }

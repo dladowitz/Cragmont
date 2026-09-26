@@ -183,13 +183,15 @@ class TripTest < ActiveSupport::TestCase
 
     assert_not trip.almost_full?
 
-    create_campsite_signup!(campsite: campsites(:yosemite_b), user: User.create!(
+    create_campsite_signup!(campsite: campsites(:yosemite_b), status: "pending_payment", user: User.create!(
       first_name: "Almost",
       last_name: "FullThreshold",
       email: "almost-full-threshold@example.com",
       password: "password"
     ))
 
+    assert_equal 7, trip.confirmed_signup_count
+    assert_equal 2, trip.available_participant_capacity
     assert trip.almost_full?
     assert_not trip.capacity_full?
   end

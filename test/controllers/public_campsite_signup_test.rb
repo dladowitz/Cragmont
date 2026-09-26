@@ -119,8 +119,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".trip-type-badge.day-trip-badge", text: "Day Trip"
-    assert_select ".trip-summary-header .trips-faq-callout", text: /day trip/
-    assert_select ".trip-summary-header .trips-faq-callout a[href='#{day_trip_what_to_expect_trips_path}']", text: "here."
+    assert_select ".trip-summary-header .trips-faq-callout", count: 0
     assert_select ".trip-summary-copy .trip-title-line" do
       assert_select ".trip-title-resource-link", count: 0
     end
@@ -920,8 +919,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".trip-summary-notices a.trip-whatsapp-link[href='https://chat.whatsapp.com/yosemite-spring'][target='_blank'][rel='noopener']", text: "Join the WhatsApp Group"
     assert_select ".trip-summary-notices a.trip-weather-link[href='https://forecast.weather.gov/yosemite-spring'][target='_blank'][rel='noopener']", text: "Weather"
     assert_select ".trip-summary-notices a.trip-photo-album-link[href='https://photos.app.goo.gl/yosemite-spring'][target='_blank'][rel='noopener']", text: "Photo Album"
-    assert_select ".trip-summary-header .trips-faq-callout", text: /camping trip/
-    assert_select ".trip-summary-header .trips-faq-callout a[href='#{what_to_expect_trips_path}']", text: "here."
+    assert_select ".trip-summary-header .trips-faq-callout", count: 0
     assert_select ".trip-summary-header .site-feedback-callout", count: 0
     assert_select ".trip-overview .description", text: /Notes:/
     assert_select ".trip-overview .description .content-page-markdown strong", text: "Yosemite"
