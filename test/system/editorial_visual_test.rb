@@ -3,7 +3,7 @@ require "application_system_test_case"
 class EditorialVisualTest < ApplicationSystemTestCase
   test "open navigation heading uses the Cragmont green on desktop and phone" do
     browser = page.driver.browser
-    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 1280, height: 800, deviceScaleFactor: 1, mobile: false)
+    browser.manage.window.resize_to(1400, 1000)
     visit root_path
     accent = page.evaluate_script(<<~JS)
       (() => {
@@ -19,12 +19,12 @@ class EditorialVisualTest < ApplicationSystemTestCase
     find(".public-nav-group summary", text: "Club").click
     assert_equal accent, page.evaluate_script("getComputedStyle(document.querySelector('.public-nav-group[open] > summary')).backgroundColor")
 
-    browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
+    browser.manage.window.resize_to(390, 844)
     find(".public-nav-toggle").click
     find(".public-nav-group summary", text: "Trips").click
     assert_equal accent, page.evaluate_script("getComputedStyle(document.querySelector('.public-nav-group[open] > summary')).backgroundColor")
   ensure
-    browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
+    browser&.manage&.window&.resize_to(1400, 1000)
   end
 
   test "long history reads without horizontal scrolling on a phone" do
