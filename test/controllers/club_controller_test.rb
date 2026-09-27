@@ -17,6 +17,9 @@ class ClubControllerTest < ActionDispatch::IntegrationTest
     assert_select "nav.public-nav details:nth-child(2) a[href='#{history_path}']", "History"
     assert_select "nav.public-nav details:nth-child(2) a[href='#{new_help_request_path}']", "Get Help"
     assert_select "nav.public-nav details:nth-child(2) a[href='#{about_path}']", "About"
+    assert_select "nav.public-nav details:nth-child(2) a" do |links|
+      assert_equal [ "Membership", "History", "About", "Join the List", "Get Help" ], links.map(&:text)
+    end
     assert_select "nav.public-nav a.nav-auth-login[href='#{new_session_path}']", "Log in"
     assert_select "nav.public-nav a.nav-auth-signup[href='#{new_registration_path}']", "Signup"
     assert_select "nav.club-subnav a[href='#{about_path}'][aria-current='page']", "About"

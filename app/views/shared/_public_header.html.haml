@@ -22,8 +22,9 @@
         .public-nav-dropdown
           = link_to "Membership", membership_path
           = link_to "History", history_path
-          = link_to "Get Help", new_help_request_path
           = link_to "About", about_path
+          = link_to "Join the List", join_the_list_path
+          = link_to "Get Help", new_help_request_path
       - if user_signed_in?
         %details.public-nav-group.account-nav{name: "primary-navigation", data: {navigation_target: "group"}}
           %summary= current_user.full_name
