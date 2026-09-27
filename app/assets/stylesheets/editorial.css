@@ -40,6 +40,10 @@ body:is(.trips-index-page, .session-new-page, .password-reset-new-page,
 h1 { font-size: clamp(2.7rem, 5vw, 4.6rem); }
 h2 { font-size: clamp(1.65rem, 2.8vw, 2.25rem); }
 h3 { font-size: 1.4rem; font-weight: 500; }
+@media (min-width: 901px) {
+  .trip-summary-copy h1 { font-size: clamp(2.4rem, 4.4vw, 4rem); }
+  .trip-summary-copy > h2 { font-size: clamp(1.5rem, 2.5vw, 2rem); }
+}
 a { color: var(--accent); font-weight: 500; text-underline-offset: .2em; }
 :is(a, button, input, select, textarea, summary):focus-visible {
   outline: 3px solid var(--accent);

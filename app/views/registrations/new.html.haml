@@ -1,11 +1,11 @@
 - content_for :body_class, "registration-new-page"
 = render "shared/public_header"
 .public-mobile-hero.public-mobile-hero-registration
-  %h1.public-mobile-hero-title.public-mobile-hero-title-stacked Create account
+  %h1.public-mobile-hero-title.public-mobile-hero-title-stacked Create your Cragmont account
   %span.public-mobile-hero-caption Cathedral Peak, Tuolumne Meadows
 %main.public-main
   %section.panel
-    %h1 Create account
+    %h1 Create your Cragmont account
     = form_with model: @user, url: registration_path, class: "admin-form" do |form|
       - if @user.errors.of_kind?(:email, :taken)
         .form-errors.registration-existing-account-alert

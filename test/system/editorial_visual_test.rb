@@ -9,6 +9,8 @@ class EditorialVisualTest < ApplicationSystemTestCase
         page.driver.browser.manage.window.resize_to(width, height)
         assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
         assert_selector "h1", count: 1
+        assert_selector "h1", text: "Log in to Cragmont" if path == new_session_path
+        assert_selector "h1", text: "Create your Cragmont account" if path == new_registration_path
         if width > 900 || path == edit_password_reset_path(token)
           heading = find("main h1")
           assert_equal "32px", heading.native.css_value("font-size")
@@ -32,6 +34,19 @@ class EditorialVisualTest < ApplicationSystemTestCase
         end
       end
     end
+  ensure
+    page.driver.browser.manage.window.resize_to(1400, 1000)
+  end
+
+  test "trip headings are slightly smaller on desktop and unchanged on mobile" do
+    page.driver.browser.manage.window.resize_to(1440, 900)
+    visit trip_path(trips(:yosemite))
+    assert_in_delta 63.36, find(".trip-summary-copy h1").native.css_value("font-size").to_f, 0.1
+    assert_equal "32px", find(".trip-summary-copy > h2").native.css_value("font-size")
+
+    page.driver.browser.manage.window.resize_to(390, 844)
+    assert_equal "28px", find(".trip-show-mobile-hero h1").native.css_value("font-size")
+    assert_equal "15.36px", find(".trip-show-mobile-location").native.css_value("font-size")
   ensure
     page.driver.browser.manage.window.resize_to(1400, 1000)
   end
