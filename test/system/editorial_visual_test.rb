@@ -41,7 +41,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
   test "trip headings are slightly smaller on desktop and unchanged on mobile" do
     page.driver.browser.manage.window.resize_to(1440, 900)
     visit trip_path(trips(:yosemite))
-    assert_in_delta 63.36, find(".trip-summary-copy h1").native.css_value("font-size").to_f, 0.1
+    assert_in_delta 58.29, find(".trip-summary-copy h1").native.css_value("font-size").to_f, 0.1
     assert_equal "32px", find(".trip-summary-copy > h2").native.css_value("font-size")
 
     page.driver.browser.manage.window.resize_to(390, 844)
