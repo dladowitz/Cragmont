@@ -2,6 +2,7 @@ require "application_system_test_case"
 
 class EditorialVisualTest < ApplicationSystemTestCase
   test "expanded reports animate across the grid and restore their neighbors when collapsed" do
+    page.driver.browser.manage.window.resize_to(1400, 1000)
     visit trip_reports_path
     titles = all(".club-report h2").map(&:text)
     page.execute_script(<<~JS)
@@ -16,7 +17,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
     [ 2, 3 ].each do |index|
       report = find(".club-report", text: titles[index])
       neighbor = find(".club-report", text: titles[index == 2 ? 3 : 2])
-      report.find("summary").click
+      report.find("summary").send_keys(:enter)
       assert_selector ".club-report-details[open]"
       assert_equal page.evaluate_script("document.querySelector('.club-report-grid').offsetWidth"),
         page.evaluate_script("arguments[0].offsetWidth", report)
@@ -120,6 +121,8 @@ class EditorialVisualTest < ApplicationSystemTestCase
 
     page.driver.browser.manage.window.resize_to(390, 844)
     assert_operator notice.native.rect.height, :>, 90
+  ensure
+    page.driver.browser.manage.window.resize_to(1400, 1000)
   end
 
   test "badges, login actions, and the signed in menu work on a phone" do

@@ -35,7 +35,7 @@ class GymOutingsSystemTest < ApplicationSystemTestCase
 
     find("button[aria-label='Dismiss notification']").click
     assert_no_selector ".flash.notice"
-    find(".account-nav summary").click
+    find(".account-nav summary").send_keys(:enter)
     logout = find_button("Log out")
     page.execute_script("arguments[0].form.requestSubmit(arguments[0])", logout)
     assert_current_path root_path
