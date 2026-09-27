@@ -1,6 +1,7 @@
 require "test_helper"
 
 class ClubControllerTest < ActionDispatch::IntegrationTest
+  setup { LegacyTripReportImport.call }
   test "club pages are public and linked from navigation" do
     get about_url
     assert_response :success

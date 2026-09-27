@@ -9,6 +9,9 @@
         = "#{@category.completed_count} of #{@category.total_count}"
     .trip-readiness-summary
       = link_to "Back to trip", admin_trip_path(@trip), class: "button secondary"
+      - report = TripReport.for_trip(@trip)
+      - if policy(report).update?
+        = link_to(report.persisted? ? "Edit trip report" : "Write trip report", report_edit_path(report), class: "button")
   - if @trip.deleted?
     .deleted-trip-banner
       %strong This trip has been deleted.

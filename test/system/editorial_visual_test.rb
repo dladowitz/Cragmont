@@ -1,6 +1,7 @@
 require "application_system_test_case"
 
 class EditorialVisualTest < ApplicationSystemTestCase
+  setup { LegacyTripReportImport.call }
   test "auth forms keep compact headings and deliberate action rows across screen sizes" do
     token = users(:alex).generate_password_reset_token!
     [ new_session_path, new_password_reset_path, edit_password_reset_path(token), new_registration_path ].each do |path|

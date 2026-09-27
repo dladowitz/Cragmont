@@ -40,6 +40,25 @@ class Trip < ApplicationRecord
   has_many :trip_readiness_completions, dependent: :destroy
   has_one :trip_details_email, dependent: :destroy
   has_one_attached :day_trip_image
+  has_one :trip_report, dependent: :restrict_with_error
+
+  def public_report_trip?
+    !deleted? && (published? || archived?)
+  end
+
+  def report_ended?(now = Time.current)
+    zone = TripCalendar::TIME_ZONE
+    if single_day_event? && end_time.present? && meeting_time.present?
+      date = end_time <= meeting_time ? start_date + 1 : start_date
+      zone.local(date.year, date.month, date.day, end_time.hour, end_time.min, end_time.sec) < now
+    else
+      end_date < now.in_time_zone(zone).to_date
+    end
+  end
+
+  def automatic_report_eligible?
+    auto_trip_report? && public_report_trip? && report_ended? && TripReport.google_album?(photo_album_url)
+  end
 
   before_validation :normalize_climbing_types
   before_validation :sync_single_day_end_date

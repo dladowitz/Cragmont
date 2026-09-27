@@ -4,3 +4,4 @@
     One-time download. For updates,
     = link_to "subscribe to all events", calendar_trips_url(format: :ics, protocol: "webcal"), data: { turbo: false }
     in your calendar app.
+= render "trips/report_links", trip: trip

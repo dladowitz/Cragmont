@@ -36,6 +36,9 @@
               %div
                 %dt= trip.single_day_event? ? "Participants" : "Sites"
                 %dd= trip.single_day_event? ? trip.confirmed_signup_count : trip.campsite_count
+          - report = TripReport.for_trip(trip)
+          - if report.public_payload
+            %p.archived-report-link= link_to "Read report: #{public_member_text(trip.name, trip: trip)}", public_report_path(report)
       - if @archived_total_pages > 1
         %nav.pagination{aria: {label: "Past trip pages"}}
           - if @archived_current_page > 1

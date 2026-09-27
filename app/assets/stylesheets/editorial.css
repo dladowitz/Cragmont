@@ -346,6 +346,43 @@ body.trips-index-page .trips-index-notices .calendar-subscription-notice {
 .club-report-details summary { cursor: pointer; color: var(--accent); font-weight: 600; min-height: 44px; align-content: center; }
 .club-report-copy { max-width: 76ch; margin-top: 16px; line-height: 1.65; }
 .club-report-copy p { margin: 0 0 14px; }
+.report-page-title { font-size: clamp(1.8rem, 3vw, 2.6rem); margin: 24px 0; }
+.report-photo-gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.report-photo-gallery figure:first-child { grid-column: 1 / -1; }
+.club-report-gallery figure { margin: 0; min-width: 0; }
+.club-report-gallery figcaption { font-size: .85rem; margin-top: 6px; overflow-wrap: anywhere; }
+.report-album-card { display: block; background: #e7f1ed; padding: 24px; margin: 16px 0; border-radius: var(--ui-radius); }
+.report-meta { color: var(--muted); font-size: .95rem; }
+.trip-report-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin: 12px 0; }
+.report-filters { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; margin-bottom: 24px; }
+.report-management-row { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 20px 0; border-bottom: 1px solid var(--line); }
+.report-management-row:last-child { border-bottom: 0; }
+.report-management-row h3, .report-management-row p { margin: 0 0 8px; }
+.report-editor-columns { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 32px; }
+.report-write, .report-preview { min-width: 0; }
+.report-write .field { margin-bottom: 18px; }
+.report-preview { padding: 20px; background: #f7f5ef; border: 1px solid var(--line); border-radius: var(--ui-radius); align-self: start; overflow-wrap: anywhere; }
+.report-preview h3 { margin-top: 0; }
+.report-editor .report-editor-tabs { display: none; }
+.report-editor-actions { position: sticky; bottom: 0; z-index: 3; padding: 14px 0 calc(14px + env(safe-area-inset-bottom)); background: var(--panel); border-top: 1px solid var(--line); }
+.report-formatting { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.report-formatting .button { min-width: 44px; min-height: 44px; padding: 6px 12px; }
+.report-edit-photo { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.report-edit-photo img { width: 120px; height: 90px; object-fit: cover; border-radius: var(--ui-radius); }
+.report-edit-photo .actions { gap: 6px; margin-top: 8px; }
+.report-edit-photo .button { min-width: 44px; min-height: 44px; font-size: .85rem; padding: 6px 10px; }
+.report-auto-setting { flex-basis: 100%; }
+.report-editor [role="alert"] { color: var(--danger); }
+@media (max-width: 900px) {
+  .report-editor-columns { display: block; }
+  .report-editor .report-editor-tabs { display: flex; gap: 10px; margin: 16px 0; }
+  .report-editor .report-editor-tabs .button[aria-pressed="true"] { background: var(--accent); color: white; }
+  .report-editor:not(.show-preview) .report-preview, .report-editor.show-preview .report-write { display: none; }
+  .report-management-row { flex-direction: column; align-items: stretch; gap: 12px; }
+  .report-editor-actions { position: static; }
+  .report-edit-photo { grid-template-columns: 1fr; }
+  .report-editor .form-grid { grid-template-columns: 1fr; }
+}
 @media (max-width: 600px) {
   .club-report-grid { grid-template-columns: 1fr; gap: 24px; }
   .club-timeline section { grid-template-columns: 1fr; gap: 0; }

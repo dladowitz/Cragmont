@@ -217,6 +217,7 @@
         .field
           = form.label :sun_exposure, "Sun Exposure"
           = form.text_field :sun_exposure, placeholder: "Sun in the morning. Shade in the afternoon"
+  = render "admin/trips/report_setting", form: form
   .form-actions
     = form.submit
     = link_to "Cancel", trip.persisted? ? admin_trip_path(trip) : admin_trips_path, class: "button secondary"

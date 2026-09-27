@@ -1,6 +1,7 @@
 ### Cragmont Climbing Club
 
 For new pages and UI changes, see the [design language and UX decisions](docs/design-language.md).
+For report editing, automatic album publication, the session API, and migrations, see [trip reports](docs/trip-reports.md).
 
 
 

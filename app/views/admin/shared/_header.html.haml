@@ -10,6 +10,8 @@
     %label.admin-nav-toggle{for: "admin-nav-toggle"} Menu
     %nav.admin-nav{"aria-label" => "Admin navigation"}
       = link_to "Trips", admin_trips_path
+      - if policy(TripReport).index?
+        = link_to "Trip Reports", admin_trip_reports_path
       = link_to "Finances", admin_finances_path
       = link_to "Help", admin_help_requests_path
       - if policy(ContentPage).index?

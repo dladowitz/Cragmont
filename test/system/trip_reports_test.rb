@@ -1,0 +1,86 @@
+require "application_system_test_case"
+
+class TripReportsTest < ApplicationSystemTestCase
+  setup do
+    @old_forgery_protection = ActionController::Base.allow_forgery_protection
+    ActionController::Base.allow_forgery_protection = true
+    @trip = trips(:yosemite)
+    @trip.update!(campsite_coordinator: users(:sam), auto_trip_report: true,
+      photo_album_url: "https://photos.app.goo.gl/sample")
+    travel_to Time.utc(2026, 7, 1)
+    visit new_session_path
+    fill_in "Email", with: users(:sam).email
+    fill_in "Password", with: "password"
+    click_button "Log in", exact: true
+    assert_selector ".account-nav"
+    visit new_admin_trip_report_path(trip_id: @trip.id)
+  end
+
+  teardown do
+    ActionController::Base.allow_forgery_protection = @old_forgery_protection
+    travel_back
+    page.driver.browser.manage.window.resize_to(1400, 1000)
+  end
+
+  test "coordinator autosaves previews and publishes without leaking draft changes" do
+    fill_in "Story (optional)", with: "A brilliant day on granite."
+    assert_selector "[data-report-editor-target='status']", text: "Saved at", wait: 5
+    report = TripReport.find_by!(trip: @trip)
+    assert_empty report.public_payload["body"]
+
+    [ [ 1440, 900 ], [ 768, 1024 ], [ 717, 512 ], [ 390, 844 ], [ 344, 882 ] ].each do |width, height|
+      page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: width < 901)
+      assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
+      if width <= 900
+        find_button("Preview", exact: true).send_keys(:enter)
+        assert_selector ".report-preview", text: "A brilliant day on granite.", wait: 5
+        assert_no_selector ".report-write"
+        find_button("Write", exact: true).send_keys(:enter)
+      end
+      assert_selector "textarea"
+    end
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+    click_button "Publish report", exact: true
+    assert_selector "[data-report-editor-target='status']", text: "now public"
+    assert_equal "A brilliant day on granite.", report.reload.public_payload["body"]
+    fill_in "Story (optional)", with: "Unfinished edits are private."
+    click_button "Save draft", exact: true
+    assert_selector "[data-report-editor-target='publication']", text: "unpublished changes"
+    assert_equal "A brilliant day on granite.", report.reload.public_payload["body"]
+    visit current_path
+    assert_field "Story (optional)", with: "Unfinished edits are private."
+    accept_confirm { click_button "Hide report", exact: true }
+    assert_selector "[data-report-editor-target='status']", text: "Report hidden"
+    assert_nil report.reload.public_payload
+  ensure
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
+  test "photo captions order and conflict handling preserve the editors work" do
+    attach_file "Add photos", [
+      Rails.root.join("app/assets/images/trip-reports/2026-08-14-tuolumne.jpg"),
+      Rails.root.join("app/assets/images/trip-reports/2026-08-22-snowshed-tahoe.jpg")
+    ]
+    assert_selector ".report-edit-photo", count: 2, wait: 10
+    rows = all(".report-edit-photo")
+    first_id = rows.first["data-photo-id"]
+    second_id = rows.last["data-photo-id"]
+    rows.last.fill_in "Caption / image description", with: "Granite slabs"
+    rows.last.find_button("Make cover", exact: true).send_keys(:enter)
+    assert_selector ".report-edit-photo:first-child[data-photo-id='#{second_id}']"
+    click_button "Save draft", exact: true
+    assert_selector "[data-report-editor-target='status']", text: "Saved at", wait: 5
+    report = TripReport.find_by!(trip: @trip)
+    assert_equal [ second_id.to_i, first_id.to_i ], report.draft["photos"].map { |photo| photo["id"] }
+    assert_equal "Granite slabs", report.draft["photos"].first["caption"]
+    click_button "Publish report", exact: true
+    assert_selector "[data-report-editor-target='status']", text: "now public"
+
+    report.reload.save_draft!({ body: "Another editor's saved work" }, version: report.lock_version, actor: users(:alex))
+    fill_in "Story (optional)", with: "Keep my unsaved text"
+    click_button "Save draft", exact: true
+    assert_selector "[role='alert']", text: "Someone else changed this report"
+    assert_field "Story (optional)", with: "Keep my unsaved text"
+    assert_equal "Another editor's saved work", report.reload.draft["body"]
+  end
+end

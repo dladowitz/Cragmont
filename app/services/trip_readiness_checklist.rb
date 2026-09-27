@@ -337,6 +337,13 @@ class TripReadinessChecklist
   def post_trip_tasks
     tasks = [
       automatic_task(
+        :trip_report_published,
+        "Trip report published",
+        TripReport.for_trip(trip).public_payload.present?,
+        complete_detail: "The trip report is visible in Trip Reports.",
+        incomplete_detail: "Add photos or a story using Write trip report."
+      ),
+      automatic_task(
         :all_campsites_reimbursed,
         "All campsites reimbursed",
         reimbursable_campsites.any? && reimbursable_campsites.all?(&:registration_reimbursed?),

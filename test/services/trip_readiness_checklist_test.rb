@@ -198,7 +198,7 @@ class TripReadinessChecklistTest < ActiveSupport::TestCase
     task_names = category.tasks.map(&:name)
     task_keys = category.tasks.map(&:key)
 
-    assert_equal [ "Send reminder to participants to upload photos to album" ], task_names
+    assert_equal [ "Trip report published", "Send reminder to participants to upload photos to album" ], task_names
     assert_not_includes task_keys, "all_campsites_reimbursed"
     assert_not_includes task_keys, "send_collected_money_to_treasurer"
     assert_not TripReadinessChecklist.completable_task_key?("all_campsites_reimbursed", trip: trip)

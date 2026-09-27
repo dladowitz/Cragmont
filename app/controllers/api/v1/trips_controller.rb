@@ -1,6 +1,6 @@
 class Api::V1::TripsController < Api::V1::BaseController
   TRIP_FIELDS = %i[
-    id name location start_date end_date description status trip_type campsite_coordinator_id
+    id name location start_date end_date description status trip_type campsite_coordinator_id auto_trip_report
     participant_capacity cost_cents meeting_time end_time meeting_location meeting_location_url
     late_arrival_instructions carpool_meeting_spot weather_url whatsapp_group photo_album_url
     mountain_project_url guide_book_url sun_exposure partner_company_id class_signup_url

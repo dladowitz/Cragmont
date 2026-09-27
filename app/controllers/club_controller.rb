@@ -7,5 +7,7 @@ class ClubController < ApplicationController
 
   def join_the_list; end
 
-  def trip_reports; end
+  def trip_reports
+    @reports = TripReport.public_reports
+  end
 end

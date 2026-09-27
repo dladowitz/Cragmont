@@ -2,12 +2,124 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Cragmont Agent API",
-    "version": "1.0.0",
-    "description": "Manage club trips and campsite reservations from a signed-in admin browser session. No separate agent credential is needed. The browser sends the existing session cookie; POST and PATCH requests must also send X-CSRF-Token from the admin page's csrf-token meta tag. Requests use the signed-in person's current admin permissions. New trips default to draft. This API does not manage participants, payments, deletions, or external reservation providers."
+    "version": "1.1.0",
+    "description": "Manage club trips, trip reports, and campsite reservations from a signed-in admin browser session. No separate agent credential is needed. The browser sends the existing session cookie; POST and PATCH requests must also send X-CSRF-Token from the admin page's csrf-token meta tag. Requests use the signed-in person's current admin permissions. New trips and report edits default to draft. This API does not manage participants, payments, deletions, or external reservation providers."
   },
   "servers": [{ "url": "/" }],
   "security": [{ "adminSession": [] }],
   "paths": {
+    "/api/v1/trip_reports": {
+      "get": {
+        "operationId": "listTripReports",
+        "summary": "List reports manageable by this admin or assigned coordinator",
+        "description": "Includes private drafts and virtual automatic photo reports. Virtual entries have a null id; POST a draft with that trip_id before editing. No records are created by GET.",
+        "parameters": [
+          { "name": "q", "in": "query", "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["draft", "published", "hidden"] } }
+        ],
+        "responses": {
+          "200": { "description": "Scoped reports", "content": { "application/json": { "schema": { "type": "object", "properties": { "reports": { "type": "array", "items": { "$ref": "#/components/schemas/TripReport" } } } } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      },
+      "post": {
+        "operationId": "createTripReport",
+        "summary": "Create a private report draft, prefilled from a linked trip",
+        "description": "One report per trip. Assigned coordinators may create reports only for their own trips. Global trip admins may omit trip_id for a historical report, supplying title, start_date, end_date, and trip_type. Duplicate trip reports return 409. This does not publish the draft.",
+        "security": [{ "adminSession": [], "csrfToken": [] }],
+        "requestBody": { "$ref": "#/components/requestBodies/TripReportDraft" },
+        "responses": {
+          "201": { "$ref": "#/components/responses/TripReportSaved" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/api/v1/trip_reports/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/TripId" }],
+      "get": {
+        "operationId": "getTripReport",
+        "summary": "Read an authorized report draft and current lock_version",
+        "responses": {
+          "200": { "description": "Report draft", "content": { "application/json": { "schema": { "type": "object", "properties": { "report": { "$ref": "#/components/schemas/TripReport" } } } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "patch": {
+        "operationId": "saveTripReportDraft",
+        "summary": "Save private edits without changing the published snapshot",
+        "description": "Requires trip_report.lock_version from the last response. On 409, stop and reconcile instead of retrying with a newer version blindly. Only global trip admins may link a historical report to a trip. Linked reports cannot be detached. Unknown fields are rejected.",
+        "security": [{ "adminSession": [], "csrfToken": [] }],
+        "requestBody": { "$ref": "#/components/requestBodies/TripReportDraft" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/TripReportSaved" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/api/v1/trip_reports/{id}/publish": {
+      "parameters": [{ "$ref": "#/components/parameters/TripId" }],
+      "patch": {
+        "operationId": "publishTripReport",
+        "summary": "Publish the saved draft and restore a hidden report",
+        "description": "Makes story, album, and selected photos public. Requires content (story, album, or photo). Linked trips must be public and ended. Always save draft edits first.",
+        "security": [{ "adminSession": [], "csrfToken": [] }],
+        "requestBody": { "$ref": "#/components/requestBodies/ReportVersion" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/TripReportSaved" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/api/v1/trip_reports/{id}/hide": {
+      "parameters": [{ "$ref": "#/components/parameters/TripId" }],
+      "patch": {
+        "operationId": "hideTripReport",
+        "summary": "Hide the report, including its automatic photo-only entry",
+        "description": "Persists suppression until explicitly published again. Does not delete the trip, draft, or photos.",
+        "security": [{ "adminSession": [], "csrfToken": [] }],
+        "requestBody": { "$ref": "#/components/requestBodies/ReportVersion" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/TripReportSaved" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/api/v1/trip_reports/{id}/photos": {
+      "parameters": [{ "$ref": "#/components/parameters/TripId" }],
+      "post": {
+        "operationId": "uploadTripReportPhotos",
+        "summary": "Upload authorized images to a private report draft",
+        "description": "JPEG, PNG, or WebP, up to 10 MB and 40 megapixels each; at most 24 draft photos. Response includes attachment IDs in draft.photos. PATCH that ordered array to set captions, reorder, select the first photo as cover, or remove a photo from the draft. None of these changes become public until publishing.",
+        "security": [{ "adminSession": [], "csrfToken": [] }],
+        "requestBody": { "required": true, "content": { "multipart/form-data": { "schema": { "type": "object", "required": ["lock_version", "photos[]"], "properties": { "lock_version": { "type": "integer" }, "photos[]": { "type": "array", "items": { "type": "string", "format": "binary" } } } } } } },
+        "responses": {
+          "200": { "$ref": "#/components/responses/TripReportSaved" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
     "/api/v1/trips": {
       "get": {
         "operationId": "listTrips",
@@ -138,6 +250,10 @@
     }
   },
   "components": {
+    "requestBodies": {
+      "TripReportDraft": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["trip_report"], "properties": { "trip_report": { "$ref": "#/components/schemas/TripReportWrite" } } } } } },
+      "ReportVersion": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["lock_version"], "properties": { "lock_version": { "type": "integer", "minimum": 0 } } } } } }
+    },
     "securitySchemes": {
       "adminSession": { "type": "apiKey", "in": "cookie", "name": "_cragmont_session", "description": "Existing signed-in admin browser session. The browser sends this cookie automatically; do not copy it into prompts." },
       "csrfToken": { "type": "apiKey", "in": "header", "name": "X-CSRF-Token", "description": "Required for POST and PATCH. Read the csrf-token meta tag from the current admin page." }
@@ -148,6 +264,31 @@
       "CampsiteId": { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
     },
     "schemas": {
+      "TripReportWrite": {
+        "type": "object", "additionalProperties": false,
+        "properties": {
+          "trip_id": { "type": ["integer", "null"] },
+          "lock_version": { "type": "integer", "minimum": 0, "description": "Required for updates; use latest returned value" },
+          "title": { "type": "string", "maxLength": 250 },
+          "start_date": { "type": "string", "format": "date" }, "end_date": { "type": "string", "format": "date" },
+          "location": { "type": "string", "maxLength": 250 },
+          "trip_type": { "type": "string", "enum": ["camping", "day_trip", "gym_outing", "class_trip"] },
+          "body": { "type": "string", "maxLength": 100000, "description": "Markdown; rendered with the existing safe content renderer" },
+          "byline": { "type": "string", "maxLength": 250 },
+          "album_url": { "type": "string", "description": "Empty or an HTTPS Google Photos album link" },
+          "photos": { "type": "array", "maxItems": 24, "items": { "type": "object", "additionalProperties": false, "required": ["id"], "properties": { "id": { "type": "integer" }, "caption": { "type": "string", "maxLength": 500 } } } }
+        }
+      },
+      "TripReport": {
+        "type": "object",
+        "properties": {
+          "id": { "type": ["integer", "null"] }, "trip_id": { "type": ["integer", "null"] },
+          "lock_version": { "type": "integer" }, "draft": { "type": "object", "description": "Draft content fields; imported reports also include read-only legacy_image" },
+          "status": { "type": "string" }, "hidden": { "type": "boolean" },
+          "published_at": { "type": ["string", "null"], "format": "date-time" },
+          "updated_at": { "type": ["string", "null"], "format": "date-time" }, "edit_path": { "type": "string" }
+        }
+      },
       "TripWrite": {
         "type": "object",
         "additionalProperties": false,
@@ -165,6 +306,7 @@
           "late_arrival_instructions": { "type": "string" }, "carpool_meeting_spot": { "type": "string" },
           "weather_url": { "type": "string", "format": "uri" }, "whatsapp_group": { "type": "string", "format": "uri" },
           "photo_album_url": { "type": "string", "format": "uri" }, "mountain_project_url": { "type": "string", "format": "uri" },
+          "auto_trip_report": { "type": "boolean", "default": true, "description": "New trips: make the Google Photos link public after the trip ends. Existing trips retain false for album privacy. This does not hide an explicitly published report; use its hide endpoint." },
           "guide_book_url": { "type": "string", "format": "uri" }, "sun_exposure": { "type": "string" },
           "partner_company_id": { "type": "integer" }, "class_signup_url": { "type": "string", "format": "uri" },
           "class_original_price": { "type": "string" }, "class_offers_discount": { "type": "boolean" },
@@ -222,6 +364,7 @@
       "Campground": { "type": "object", "description": "CampgroundWrite fields plus ID.", "properties": { "id": { "type": "integer" }, "name": { "type": "string" }, "location": { "type": "string" }, "website": { "type": ["string", "null"] }, "notes": { "type": ["string", "null"] } } }
     },
     "responses": {
+      "TripReportSaved": { "description": "Saved report with latest lock_version", "content": { "application/json": { "schema": { "type": "object", "properties": { "report": { "$ref": "#/components/schemas/TripReport" }, "preview_html": { "type": "string" }, "photos_html": { "type": "string" } } } } } },
       "BadRequest": { "description": "Missing or unsupported fields", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } },
       "Unauthorized": { "description": "No signed-in admin browser session", "content": { "application/json": { "schema": { "type": "object", "properties": { "message": { "type": "string" } } } } } },
       "Forbidden": { "description": "Admin role does not permit this action", "content": { "application/json": { "schema": { "type": "object", "properties": { "message": { "type": "string" } } } } } },

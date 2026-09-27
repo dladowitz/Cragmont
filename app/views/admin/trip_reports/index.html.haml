@@ -1,0 +1,32 @@
+= render "admin/shared/header", title: "Trip Reports"
+%main
+  %section.panel
+    .panel-header
+      %div
+        %h2 Trip Reports
+        %p.muted Write a story, add photos, or manage an automatically published album.
+      = link_to "New trip report", new_admin_trip_report_path, class: "button"
+    = form_with url: admin_trip_reports_path, method: :get, class: "report-filters" do |form|
+      .field
+        = form.label :q, "Search reports"
+        = form.search_field :q, value: params[:q]
+      .field
+        = form.label :status, "Status"
+        = form.select :status, options_for_select([["All", ""], ["Drafts", "draft"], ["Published", "published"], ["Hidden", "hidden"]], params[:status])
+      = form.submit "Filter", class: "button secondary"
+    .report-management-list
+      - @reports.each do |report|
+        %article.report-management-row
+          %div
+            %h3= link_to report.draft["title"], report_edit_path(report)
+            %p.muted
+              = report.draft["start_date"]
+              - if report.trip&.campsite_coordinator
+                · #{report.trip.campsite_coordinator.full_name}
+            %span.status= report.display_status
+          .actions
+            = link_to(report.published.present? ? "Edit report" : "Continue report", report_edit_path(report), class: "button secondary")
+            - if report.public_payload
+              = link_to "View public report", public_report_path(report)
+      - if @reports.empty?
+        %p.muted No reports match this view. Choose New trip report to get started.
