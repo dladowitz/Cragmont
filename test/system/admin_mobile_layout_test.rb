@@ -17,7 +17,10 @@ class AdminMobileLayoutTest < ApplicationSystemTestCase
 
   test "admin records and navigation reflow without horizontal scrolling on small screens" do
     campgrounds(:upper_pines).update!(name: "Hodgdon Meadow Campground")
-    trips(:yosemite).update!(name: "Yosemite Valley and Tuolumne Meadows Climbing Weekend")
+    resources = { "WhatsApp Group" => "https://chat.whatsapp.com/test", "Weather" => "https://forecast.weather.gov/test", "Mountain Project" => "https://www.mountainproject.com/area/test", "Guide Book" => "https://example.com/a-long-guide-book-address", "Google Photo Album" => "https://photos.app.goo.gl/test" }
+    trips(:yosemite).update!(name: "Yosemite Valley and Tuolumne Meadows Climbing Weekend",
+      whatsapp_group: resources["WhatsApp Group"], weather_url: resources["Weather"], mountain_project_url: resources["Mountain Project"],
+      guide_book_url: resources["Guide Book"], photo_album_url: resources["Google Photo Album"], sun_exposure: "Afternoon shade")
     {
       "trips" => admin_trips_path,
       "reimbursements" => admin_campsite_reimbursements_path(filters: "1", reimbursement_status: [ "all" ]),
@@ -28,6 +31,23 @@ class AdminMobileLayoutTest < ApplicationSystemTestCase
         page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: width <= 760)
         assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0, "#{name} at #{width}px"
         if name == "manage"
+          within ".admin-trip-resources-panel" do
+            assert_text "Afternoon shade"
+            resources.each do |label, url|
+              link = find("a[href='#{url}']")
+              assert_equal(width <= 760 ? label : url, link.text)
+              assert_equal url, link[:href]
+              assert_equal "_blank", link[:target]
+              assert_equal "noopener", link[:rel]
+              if width <= 760
+                assert_no_text url
+                assert_equal "underline", link.native.css_value("text-decoration-line")
+                assert_operator link.native.rect.height, :>=, 44
+              end
+            end
+          end
+          find(".admin-trip-resources-panel").evaluate_script("this.scrollIntoView({block: 'start', behavior: 'instant'})")
+          save_screenshot(Rails.root.join("tmp/screenshots/admin-resources-#{width}.png"))
           links = all(".trip-management-actions > a")
           if width <= 980
             assert_equal 1, links.map { |link| link.native.rect.x }.uniq.size
@@ -47,13 +67,22 @@ class AdminMobileLayoutTest < ApplicationSystemTestCase
             table.all(":scope > tbody > tr > td").each do |cell|
               assert_operator cell.evaluate_script("this.scrollWidth - this.clientWidth"), :<=, 1, "Clipped #{cell.text} at #{width}px"
             end
+            if name == "trips"
+              table.all(":scope > tbody > tr > td:nth-child(n + 2):nth-child(-n + 5)").each do |cell|
+                assert_equal "right", cell.native.css_value("text-align")
+                assert_equal "left", cell.evaluate_script("getComputedStyle(this, '::before').textAlign")
+                cell.all(":scope > .status, :scope > .date-pair").each do |value|
+                  assert_in_delta cell.native.rect.x + cell.native.rect.width, value.native.rect.x + value.native.rect.width, 1
+                end
+              end
+            end
           end
           first(".admin-record-table").evaluate_script("this.scrollIntoView({block: 'start', behavior: 'instant'})")
         end
         save_screenshot(Rails.root.join("tmp/screenshots/admin-mobile-#{name}-#{width}.png"))
       end
     end
-    tap find(".trip-management-actions a", text: "Trip Readiness")
+    find(".trip-management-actions a", text: "Trip Readiness").send_keys(:return)
     assert_current_path readiness_admin_trip_path(trips(:yosemite))
   end
 
@@ -61,14 +90,14 @@ class AdminMobileLayoutTest < ApplicationSystemTestCase
     page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
     visit admin_trips_path
     assert_selector ".trip-filter-disclosure:not([open]) > summary", text: "Draft, Published"
-    find(".trip-filter-disclosure > summary").send_keys(:enter)
+    find(".trip-filter-disclosure > summary").send_keys(:return)
     find_field("Draft").send_keys(:space)
     find_field("Archived").send_keys(:space)
     assert_checked_field "Archived"
     tap find_button("Apply filters")
     assert_selector ".trip-filter-disclosure:not([open]) > summary", text: "Published, Archived"
     assert_no_selector ".admin-record-table", text: trips(:jtree).name
-    find(".trip-filter-disclosure > summary").send_keys(:enter)
+    find(".trip-filter-disclosure > summary").send_keys(:return)
     assert_checked_field "Published"
     assert_checked_field "Archived"
     assert_unchecked_field "Draft"

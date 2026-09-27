@@ -7191,21 +7191,8 @@ textarea {
     margin-top: 12px;
   }
 
-  body.day-trip-show-page .class-reminder-panel {
-    margin-top: 22px;
-  }
-
   .class-reminder-panel .content-page-markdown h2 {
     margin-bottom: 4px;
-  }
-
-  body.day-trip-show-page .day-trip-description-panel,
-  body.day-trip-show-page .day-trip-participants-panel,
-  body.day-trip-show-page .day-trip-coordinator-panel,
-  body.day-trip-show-page .day-trip-safety-panel {
-    margin-bottom: 4px;
-    padding-top: 4px;
-    padding-bottom: 4px;
   }
 
   body.day-trip-show-page .day-trip-description-panel .panel-header,

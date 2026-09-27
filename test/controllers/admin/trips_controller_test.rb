@@ -1591,11 +1591,11 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".admin-trip-resources-panel" do
       assert_select "h2", "Additional Resources"
       assert_select ".details-list", text: /Sun Exposure\s*Morning sun, afternoon shade/
-      assert_select "a[href='https://chat.whatsapp.com/vent5-admin'][target='_blank'][rel='noopener']", text: "https://chat.whatsapp.com/vent5-admin"
-      assert_select "a[href='https://forecast.weather.gov/vent5-admin'][target='_blank'][rel='noopener']", text: "https://forecast.weather.gov/vent5-admin"
-      assert_select "a[href='https://www.mountainproject.com/area/vent5-admin'][target='_blank'][rel='noopener']", text: "https://www.mountainproject.com/area/vent5-admin"
-      assert_select "a[href='https://example.com/vent-5-guide'][target='_blank'][rel='noopener']", text: "https://example.com/vent-5-guide"
-      assert_select "a[href='https://photos.app.goo.gl/vent5-admin'][target='_blank'][rel='noopener']", text: "https://photos.app.goo.gl/vent5-admin"
+      assert_select "a[href='https://chat.whatsapp.com/vent5-admin'][target='_blank'][rel='noopener'] .resource-url", text: "https://chat.whatsapp.com/vent5-admin"
+      assert_select "a[href='https://forecast.weather.gov/vent5-admin'][target='_blank'][rel='noopener'] .resource-url", text: "https://forecast.weather.gov/vent5-admin"
+      assert_select "a[href='https://www.mountainproject.com/area/vent5-admin'][target='_blank'][rel='noopener'] .resource-url", text: "https://www.mountainproject.com/area/vent5-admin"
+      assert_select "a[href='https://example.com/vent-5-guide'][target='_blank'][rel='noopener'] .resource-url", text: "https://example.com/vent-5-guide"
+      assert_select "a[href='https://photos.app.goo.gl/vent5-admin'][target='_blank'][rel='noopener'] .resource-url", text: "https://photos.app.goo.gl/vent5-admin"
     end
     assert_select ".day-trip-participants-panel" do
       assert_select "th", text: "Climbing Skills"

@@ -9,7 +9,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
       "gym_outing" => { meeting_time: "18:00" },
       "class_trip" => { partner_company: partner_companies(:vertical_world), class_signup_url: "https://example.com/class", class_original_price: "250", weather_url: "https://example.com/weather" }
     }.each do |type, attributes|
-      trip = Trip.create!(name: "Typography test", location: "Castle Rock", start_date: Date.new(2026, 9, 19),
+      trip = Trip.create!(name: "Rescue Systems Refresher", location: "Castle Rock", start_date: Date.new(2026, 9, 19),
         status: "archived", trip_type: type, participant_capacity: 8,
         description: "An outing with the club.\n\nBring your climbing gear.", **attributes)
       visit trip_path(trip)
@@ -17,13 +17,28 @@ class EditorialVisualTest < ApplicationSystemTestCase
         page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: width <= 760)
         if width > 760
           assert_equal "rgba(88, 107, 101, 1)", find(".day-trip-participants-panel > p").native.css_value("color")
+          assert_equal "rgba(255, 254, 250, 1)", find(".day-trip-participants-panel").native.css_value("background-color")
+          assert_equal "400", find(".day-trip-participants-panel h2").native.css_value("font-weight")
           next
         end
 
+        assert_equal "rgba(247, 245, 239, 1)", find("body").native.css_value("background-color")
+        assert_equal "700", find(".trip-show-mobile-hero h1").native.css_value("font-weight")
+        if width == 390
+          find(".trip-show-mobile-hero").evaluate_script("this.scrollIntoView({block: 'start', behavior: 'instant'})")
+          save_screenshot(Rails.root.join("tmp/screenshots/trip-hero-#{type}-#{width}.png"))
+        end
+        all(".public-main > .panel").each do |section|
+          assert_equal "rgba(0, 0, 0, 0)", section.native.css_value("background-color")
+          assert_equal "24px", section.native.css_value("margin-bottom")
+        end
+        all(".public-main h2").each { |heading| assert_equal "700", heading.native.css_value("font-weight") }
         assert_in_delta 10, find(".trip-overview").evaluate_script("this.getBoundingClientRect().bottom - this.querySelector('.stats').getBoundingClientRect().bottom"), 0.5
         sections = all(".day-trip-description-panel, .day-trip-participants-panel, .day-trip-coordinator-panel, .day-trip-safety-panel")
         assert_equal(type == "class_trip" ? 3 : 4, sections.size)
         sections.each do |section|
+          assert_equal [ "0px", "0px" ], %w[padding-top padding-bottom].map { |property| section.native.css_value(property) }
+          assert_in_delta 24, section.evaluate_script("this.getBoundingClientRect().top - this.previousElementSibling.getBoundingClientRect().bottom"), 0.5
           heading = section.first("h2")
           paragraphs = section.all(":scope > p, .content-page-markdown p")
           assert paragraphs.any?
@@ -38,6 +53,25 @@ class EditorialVisualTest < ApplicationSystemTestCase
         assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
         sections.first.evaluate_script("this.scrollIntoView({block: 'start', behavior: 'instant'})")
         save_screenshot(Rails.root.join("tmp/screenshots/trip-paragraphs-#{type}-#{width}.png"))
+      end
+
+      next unless type == "day_trip"
+
+      8.times do |index|
+        user = User.create!(first_name: "Climber #{index}", last_name: "Example", password: "password")
+        trip.day_trip_signups.create!(user: user, climbing_abilities: [ "lead", "top_rope" ],
+          rope_60m: true, rope_70m: true, quickdraws_and_sport_anchor: true, cams_nuts_and_trad_anchor: true)
+      end
+      visit trip_path(trip)
+      [ [ 390, 844 ], [ 717, 512 ] ].each do |width, height|
+        page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: true)
+        assert_selector ".day-trip-participants-panel tbody tr", count: 8
+        all(".day-trip-participants-panel tbody tr").each { |row| assert_equal "rgba(0, 0, 0, 0)", row.native.css_value("background-color") }
+        coordinator = find(".day-trip-coordinator-panel")
+        assert_in_delta 24, coordinator.evaluate_script("this.getBoundingClientRect().top - this.previousElementSibling.getBoundingClientRect().bottom"), 0.5
+        assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
+        coordinator.evaluate_script("this.scrollIntoView({block: 'end', behavior: 'instant'})")
+        save_screenshot(Rails.root.join("tmp/screenshots/trip-long-participants-#{width}.png"))
       end
     end
   ensure
@@ -63,6 +97,8 @@ class EditorialVisualTest < ApplicationSystemTestCase
       [ [ 1440, 1000 ], [ 980, 900 ], [ 768, 1024 ], [ 717, 512 ], [ 390, 844 ], [ 344, 882 ] ].each do |width, height|
         page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: width <= 760)
         if width <= 760 && !path.start_with?("/admin")
+          assert_equal "700", find(".trip-show-mobile-hero h1").native.css_value("font-weight")
+          all(".public-main > .panel").each { |section| assert_equal "rgba(0, 0, 0, 0)", section.native.css_value("background-color") }
           assert_in_delta 10, find(".trip-overview").evaluate_script("this.getBoundingClientRect().bottom - this.querySelector('.stats').getBoundingClientRect().bottom"), 0.5
         end
         all(".stats").each do |group|
@@ -180,7 +216,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
       end
     end
     page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
-    find_link("Admin", exact: true).send_keys(:enter)
+    find_link("Admin", exact: true).send_keys(:return)
     assert_current_path admin_trips_path
   ensure
     page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")

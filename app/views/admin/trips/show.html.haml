@@ -203,46 +203,17 @@
         %div
           %dt Sun Exposure
           %dd= @trip.sun_exposure
-      - if @trip.whatsapp_group.present?
-        %div
-          %dt WhatsApp Group
-          %dd
-            - if whatsapp_group_url.present?
-              = link_to @trip.whatsapp_group, whatsapp_group_url, target: "_blank", rel: "noopener"
-            - else
-              = @trip.whatsapp_group
-      - if @trip.weather_url.present?
-        %div
-          %dt Weather
-          %dd
-            - if weather_url.present?
-              = link_to @trip.weather_url, weather_url, target: "_blank", rel: "noopener"
-            - else
-              = @trip.weather_url
-      - if @trip.mountain_project_url.present?
-        %div
-          %dt Mountain Project
-          %dd
-            - if mountain_project_url.present?
-              = link_to @trip.mountain_project_url, mountain_project_url, target: "_blank", rel: "noopener"
-            - else
-              = @trip.mountain_project_url
-      - if @trip.guide_book_url.present?
-        %div
-          %dt Guide Book
-          %dd
-            - if guide_book_url.present?
-              = link_to @trip.guide_book_url, guide_book_url, target: "_blank", rel: "noopener"
-            - else
-              = @trip.guide_book_url
-      - if @trip.photo_album_url.present?
-        %div
-          %dt Google Photo Album
-          %dd
-            - if photo_album_url.present?
-              = link_to @trip.photo_album_url, photo_album_url, target: "_blank", rel: "noopener"
-            - else
-              = @trip.photo_album_url
+      - [["WhatsApp Group", @trip.whatsapp_group, whatsapp_group_url], ["Weather", @trip.weather_url, weather_url], ["Mountain Project", @trip.mountain_project_url, mountain_project_url], ["Guide Book", @trip.guide_book_url, guide_book_url], ["Google Photo Album", @trip.photo_album_url, photo_album_url]].each do |label, value, url|
+        - if value.present?
+          %div{class: ("admin-resource-link" if url.present?)}
+            %dt= label
+            %dd
+              - if url.present?
+                = link_to url, target: "_blank", rel: "noopener" do
+                  %span.resource-name= label
+                  %span.resource-url= value
+              - else
+                = value
 - if @trip.uses_day_trip_signups?
   %section.panel.day-trip-participants-panel
     .panel-header

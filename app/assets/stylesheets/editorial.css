@@ -442,6 +442,7 @@ textarea { min-height: 112px; }
 .currency-field, .user-role-option, .trip-status-filter { border-radius: var(--ui-radius); box-shadow: none; }
 .details-list > div { grid-template-columns: 140px minmax(0, 1fr); }
 .details-list dd { min-width: 0; overflow-wrap: anywhere; }
+.admin-resource-link .resource-name { display: none; }
 .campground-website { min-width: 0; overflow-wrap: anywhere; }
 th { border-bottom-color: var(--text); color: var(--muted); font-size: .88rem; font-weight: 600; letter-spacing: .06em; }
 td { border-bottom-color: var(--line); }
@@ -649,6 +650,9 @@ table { max-width: 100%; }
   .admin-record-table .reimbursement-status-link { min-height: 44px; text-align: left; }
   .campsite-reimbursement-status { align-items: start; flex-direction: column; gap: 0; }
   .admin-trips-table > tbody > tr { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .admin-trips-table > tbody > tr > td:nth-child(n + 2):nth-child(-n + 5) { text-align: right; }
+  .admin-trips-table > tbody > tr > td[data-label]::before { text-align: left; }
+  .admin-trips-table > tbody > tr > td > :is(.status, .date-pair, .coordinator-contact) { justify-self: end; }
   body.admin-body table.admin-trips-table > tbody > tr > td:nth-child(n + 6):nth-child(-n + 8) {
     display: flex;
     flex-direction: column;
@@ -697,6 +701,10 @@ table { max-width: 100%; }
 }
 
 @media (max-width: 760px) {
+  .admin-trip-resources-panel .admin-resource-link { grid-template-columns: minmax(0, 1fr); }
+  .admin-resource-link > dt, .admin-resource-link .resource-url { display: none; }
+  .admin-resource-link .resource-name { display: inline; }
+  .admin-resource-link a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: underline; }
   .trip-status-filters { grid-template-columns: 1fr; }
   .trip-filter-form > .button { width: 100%; }
   .campsite-reimbursement-filter-form > .form-field { flex-basis: 100%; }
@@ -750,6 +758,9 @@ table { max-width: 100%; }
   .public-mobile-hero-caption, .trip-show-mobile-hero-caption { font-size: .88rem; }
   body.trip-show-page .confirmed-participants-table.public-card-table > tbody > tr > td::before { font-size: .75rem; }
   .panel { padding: 20px; }
+  body.trip-show-page .public-main > .panel { background: transparent; }
+  body.trip-show-page .trip-show-mobile-hero h1,
+  body.trip-show-page .public-main h2 { font-weight: 700; }
   body:not(.admin-body) .public-card-table > tbody > tr { border-radius: var(--ui-radius); background: var(--panel); }
   body.trip-show-page .confirmed-participants-table.public-card-table .public-party-primary-row,
   body.trip-show-page .confirmed-participants-table.public-card-table .public-party-last-row { border-radius: var(--ui-radius); }
