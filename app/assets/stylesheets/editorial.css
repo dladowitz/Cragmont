@@ -420,8 +420,7 @@ body.trips-index-page .trips-index-notices .calendar-subscription-notice {
 .trip-type-badge { padding: 4px 9px; background: #e7f1ed; }
 .status.danger-status { color: var(--danger); }
 .status.warning-status { color: #91621c; }
-.stats { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-.stats > div { border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.stats > div { border-radius: var(--ui-radius); }
 .stats strong { font-size: 1.9rem; font-weight: 400; }
 .stats span { color: var(--muted); font-size: .88rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
 

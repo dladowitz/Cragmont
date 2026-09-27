@@ -2,6 +2,49 @@ require "application_system_test_case"
 
 class EditorialVisualTest < ApplicationSystemTestCase
   setup { LegacyTripReportImport.call }
+  test "trip and campsite counts use distinct outlined boxes at every screen size" do
+    campsites(:yosemite_a).update!(participant_capacity: 2)
+    campsites(:yosemite_b).update!(participant_capacity: 2)
+    signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    [ 16, 8 ].each do |age|
+      signup.campsite_signup_minors.create!(first_name: "Child", last_name: "Lee", age: age, relationship: "Child")
+    end
+    create_campsite_signup!(campsite: campsites(:yosemite_b), user: users(:alex))
+    visit new_session_path
+    fill_in "Email", with: users(:alex).email
+    fill_in "Password", with: "password"
+    click_button "Log in", exact: true
+    assert_selector ".account-nav"
+
+    [ trip_path(trips(:yosemite)), admin_trip_path(trips(:yosemite)) ].each do |path|
+      visit path
+      [ [ 1440, 1000 ], [ 980, 900 ], [ 768, 1024 ], [ 717, 512 ], [ 390, 844 ], [ 344, 882 ] ].each do |width, height|
+        page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: width <= 760)
+        all(".stats").each do |group|
+          assert_equal "0px", group.native.css_value("border-top-width")
+          assert_equal "0px", group.native.css_value("border-bottom-width")
+        end
+        all(".stats > div").each do |box|
+          assert_equal "1px", box.native.css_value("border-width")
+          assert_equal "5px", box.native.css_value("border-radius")
+        end
+        all(".parking-breakdown, .parking-breakdown-item").each do |parking|
+          assert_operator parking.evaluate_script("this.scrollWidth - this.clientWidth"), :<=, 1
+        end
+        { "success" => "rgba(236, 248, 242, 1)", "warning" => "rgba(255, 248, 219, 1)", "danger" => "rgba(255, 241, 240, 1)" }.each do |status, color|
+          assert_equal color, find(".stats .#{status}-stat").native.css_value("background-color")
+        end
+        assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
+        first(".stats").evaluate_script("this.scrollIntoView({block: 'center', behavior: 'instant'})")
+        save_screenshot(Rails.root.join("tmp/screenshots/stat-boxes-#{path.start_with?('/admin') ? 'admin' : 'public'}-#{width}.png"))
+        first(".campsite-stats").evaluate_script("this.scrollIntoView({block: 'center', behavior: 'instant'})")
+        save_screenshot(Rails.root.join("tmp/screenshots/campsite-stat-boxes-#{path.start_with?('/admin') ? 'admin' : 'public'}-#{width}.png"))
+      end
+    end
+  ensure
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
   test "club pages and standalone reports keep the Yosemite background and readable navigation" do
     report = TripReport.where.not(legacy_key: nil).first!
     [ about_path, history_path, membership_path, join_the_list_path, trip_reports_path, trip_report_path(report) ].each do |path|

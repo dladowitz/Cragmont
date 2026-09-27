@@ -2239,11 +2239,6 @@ body.trip-show-page .trip-resource-links {
   margin-top: 0;
 }
 
-.campsite-card .stats > div,
-.admin-campsite-card .stats > div {
-  background: #fbfaf7;
-}
-
 .campsite-notes {
   margin: 0;
 }
@@ -2338,10 +2333,10 @@ body.trip-show-page .trip-resource-links {
 }
 
 .parking-breakdown {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 18px;
+  gap: 8px 18px;
 }
 
 .parking-breakdown-item {
@@ -7424,7 +7419,8 @@ textarea {
   }
 
   .parking-breakdown {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 8px;
   }
 
