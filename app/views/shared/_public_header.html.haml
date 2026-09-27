@@ -4,7 +4,7 @@
       %span Cragmont
       %small Climbing Club
     - if current_user&.admin_access?
-      = link_to "Admin", admin_root_path, class: "public-admin-link"
+      = link_to "Admin", admin_root_path, class: "button public-admin-link"
   .public-nav-shell{data: {controller: "navigation", action: "click@window->navigation#closeOutside keydown.esc@window->navigation#closeOnEscape"}}
     %input#public-nav-toggle.public-nav-checkbox{type: "checkbox", aria: {label: "Toggle navigation menu"}, data: {navigation_target: "toggle"}}
     %label.public-nav-toggle{for: "public-nav-toggle"}

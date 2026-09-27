@@ -2,6 +2,34 @@ require "application_system_test_case"
 
 class EditorialVisualTest < ApplicationSystemTestCase
   setup { LegacyTripReportImport.call }
+  test "Admin is a consistent deep green homepage button on public and admin pages" do
+    assign_role(users(:sam), :trip_admin)
+    visit new_session_path
+    fill_in "Email", with: users(:sam).email
+    fill_in "Password", with: "password"
+    click_button "Log in", exact: true
+    assert_selector ".account-nav"
+
+    [ root_path, about_path, admin_trip_reports_path ].each do |path|
+      visit path
+      [ [ 1440, 900 ], [ 768, 1024 ], [ 717, 512 ], [ 390, 844 ], [ 344, 882 ] ].each do |width, height|
+        page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: width <= 760)
+        admin = find_link("Admin", exact: true)
+        assert_equal admin_root_path, URI.parse(admin[:href]).path
+        assert_equal "rgba(22, 75, 64, 1)", admin.native.css_value("background-color")
+        assert_equal "rgba(255, 255, 255, 1)", admin.native.css_value("color")
+        assert_equal "5px", admin.native.css_value("border-radius")
+        assert_operator admin.native.rect.height, :>=, 48
+        assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
+      end
+    end
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+    find_link("Admin", exact: true).send_keys(:enter)
+    assert_current_path admin_trips_path
+  ensure
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
   test "auth forms keep compact headings and deliberate action rows across screen sizes" do
     token = users(:alex).generate_password_reset_token!
     [ new_session_path, new_password_reset_path, edit_password_reset_path(token), new_registration_path ].each do |path|

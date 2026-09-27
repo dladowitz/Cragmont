@@ -3,7 +3,7 @@
     = link_to root_path, class: "site-name" do
       %span Cragmont
       %small Climbing Club
-    %span.admin-context Admin
+    = link_to "Admin", admin_root_path, class: "button admin-context"
     %h1.visually-hidden= title
   .admin-nav-shell{data: {controller: "navigation", action: "click@window->navigation#closeOutside keydown.esc@window->navigation#closeOnEscape"}}
     %input#admin-nav-toggle.admin-nav-checkbox{type: "checkbox", aria: {label: "Toggle admin navigation menu"}, data: {navigation_target: "toggle"}}

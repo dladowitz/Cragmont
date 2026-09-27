@@ -115,7 +115,7 @@ a { color: var(--accent); font-weight: 500; text-underline-offset: .2em; }
 .public-nav-group .public-nav-dropdown > :last-child .nav-button { border-bottom: 0; }
 .public-nav a.nav-auth { padding: 8px 14px; border: 1px solid var(--accent); border-radius: var(--ui-radius); }
 .public-nav a.nav-auth-signup { background: var(--accent); color: #fff; }
-.public-nav a, .public-admin-link, .nav-button,
+.public-nav a, .nav-button,
 .admin-nav a, .admin-public-link, .admin-nav .button {
   min-height: 44px;
   padding: 9px 0 6px;
@@ -130,13 +130,13 @@ a { color: var(--accent); font-weight: 500; text-underline-offset: .2em; }
   text-decoration: none;
   white-space: nowrap;
 }
-.public-nav a:hover, .public-admin-link:hover, .nav-button:hover,
+.public-nav a:hover, .nav-button:hover,
 .admin-nav a:hover, .admin-public-link:hover { opacity: .78; }
 body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
   .password-reset-edit-page, .not-found-page, .registration-new-page,
   .trip-what-to-expect-page, .help-request-page, .trip-show-page,
   .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page)
-  :is(.site-name, .site-name small, .public-admin-link, .public-nav a, .nav-button) {
+  :is(.site-name, .site-name small, .public-nav a, .nav-button) {
   color: #fff;
   background: transparent;
   border-color: transparent;
@@ -167,7 +167,7 @@ body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-pa
   .password-reset-edit-page, .not-found-page, .registration-new-page,
   .trip-what-to-expect-page, .help-request-page, .trip-show-page,
   .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page)
-  :is(.public-admin-link, .public-nav a, .nav-button):hover { opacity: .78; }
+  :is(.public-nav a, .nav-button):hover { opacity: .78; }
 /* Focus rings over a photograph are white; menus that open on a light panel keep the green ring. */
 body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-page,
   .password-reset-edit-page, .not-found-page, .registration-new-page,
@@ -195,7 +195,6 @@ body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-pa
   .public-nav-dropdown a { color: var(--text); text-shadow: none; }
 .admin-header { gap: 28px; border-bottom: 1px solid var(--line); }
 .admin-brand { gap: 28px; align-items: center; }
-.admin-context { padding: 4px 10px; background: var(--accent); color: #fff; font-size: .9rem; font-weight: 600; }
 .admin-body .site-name, .admin-body .site-name small { color: var(--text); text-shadow: none; }
 .admin-nav { gap: clamp(12px, 1.4vw, 24px); }
 .admin-nav-checkbox, .admin-nav-toggle { display: none; }
@@ -593,7 +592,6 @@ table { max-width: 100%; }
   .public-brand { gap: 16px; }
   .site-name span { font-size: 1.5rem; }
   .site-name small { font-size: .75rem; }
-  .public-admin-link { font-size: .94rem; }
   .public-nav-toggle { border-radius: var(--ui-radius); font-weight: 500; }
   .public-nav {
     max-height: calc(100dvh - 84px);
@@ -659,7 +657,6 @@ table { max-width: 100%; }
   .public-brand { gap: 10px; }
   .site-name span { font-size: 1.28rem; }
   .site-name small { font-size: .75rem; letter-spacing: .18em; }
-  .public-admin-link { font-size: .84rem; }
   .public-nav-toggle { min-width: 54px; padding: 8px; }
   .public-nav-toggle-icon { display: none; }
   .home-hero-copy { padding-top: 125px; }
@@ -668,7 +665,6 @@ table { max-width: 100%; }
   .panel { padding: 16px; }
   .button, input[type="submit"] { white-space: normal; }
   .admin-nav a { white-space: normal; }
-  .admin-context { font-size: .86rem; }
   .admin-nav-toggle { min-width: 54px; padding: 8px; }
 }
 

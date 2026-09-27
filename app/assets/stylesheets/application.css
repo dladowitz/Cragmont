@@ -535,7 +535,6 @@ body.trips-index-page .trips-index-notices .public-beta-notice {
 }
 
 .public-nav a,
-.public-admin-link,
 .nav-button {
   display: inline-flex;
   align-items: center;
@@ -622,7 +621,6 @@ body.home-page .site-name small {
 }
 
 body.home-page .public-nav a,
-body.home-page .public-admin-link,
 body.home-page .nav-button {
   border-color: rgb(255 255 255 / 42%);
   background: rgb(11 21 18 / 22%);
@@ -6674,12 +6672,6 @@ textarea {
     font-size: 0.82rem;
   }
 
-  .public-admin-link {
-    min-height: 34px;
-    padding: 6px 10px;
-    font-size: 0.9rem;
-  }
-
   .public-nav-shell {
     position: relative;
     flex: 0 0 auto;
@@ -6854,19 +6846,12 @@ textarea {
     background-position: center 48%;
   }
 
-  body.home-page .public-admin-link,
   body.home-page .public-nav-toggle,
-  body.trips-index-page .public-admin-link,
   body.trips-index-page .public-nav-toggle,
-  body.session-new-page .public-admin-link,
   body.session-new-page .public-nav-toggle,
-  body.password-reset-new-page .public-admin-link,
   body.password-reset-new-page .public-nav-toggle,
-  body.registration-new-page .public-admin-link,
   body.registration-new-page .public-nav-toggle,
-  body.help-request-page .public-admin-link,
   body.help-request-page .public-nav-toggle,
-  body.trip-show-page .public-admin-link,
   body.trip-show-page .public-nav-toggle {
     border-color: rgb(255 255 255 / 78%);
     background: rgb(15 23 20 / 18%);
