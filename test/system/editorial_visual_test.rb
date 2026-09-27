@@ -2,6 +2,74 @@ require "application_system_test_case"
 
 class EditorialVisualTest < ApplicationSystemTestCase
   setup { LegacyTripReportImport.call }
+  test "club pages and standalone reports keep the Yosemite background and readable navigation" do
+    report = TripReport.where.not(legacy_key: nil).first!
+    [ about_path, history_path, membership_path, join_the_list_path, trip_reports_path, trip_report_path(report) ].each do |path|
+      visit path
+      [ [ 1440, 900 ], [ 760, 1024 ], [ 717, 512 ], [ 360, 844 ] ].each do |width, height|
+        page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: width <= 760)
+        assert_includes find("body").native.css_value("background-image"), "tuolumne-meadows-fairview-dome"
+        assert_equal "fixed", find("body").native.css_value("background-attachment").split(", ").last
+        assert_equal "rgba(255, 255, 255, 1)", find(".site-name").native.css_value("color")
+        assert_equal "rgba(255, 254, 250, 1)", first(".panel").native.css_value("background-color")
+        assert_selector ".background-image-caption", text: "Fairview Dome, Tuolumne Meadows, Yosemite"
+        assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
+        save_screenshot(Rails.root.join("tmp/screenshots/club-background-#{width}.png")) if path == about_path
+      end
+    end
+    find(".public-nav-checkbox", visible: :all).send_keys(:space)
+    summary = find(".public-nav-group summary", text: "Trips")
+    assert_equal "rgba(32, 51, 48, 1)", summary.native.css_value("color")
+    summary.send_keys(:enter)
+    link = find(".public-nav-dropdown a", text: "Past Trips", exact_text: true)
+    assert_equal "rgba(32, 51, 48, 1)", link.native.css_value("color")
+    link.send_keys(:escape)
+    assert_no_selector ".public-nav-group[open]"
+  ensure
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
+  test "admin header and report actions stay aligned across screen sizes" do
+    visit new_session_path
+    fill_in "Email", with: users(:alex).email
+    fill_in "Password", with: "password"
+    click_button "Log in", exact: true
+    assert_selector ".account-nav"
+    visit admin_trip_reports_path
+
+    [ 1440, 1280, 1176, 1024, 981, 980, 840, 768, 717, 390, 344 ].each do |width|
+      page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: 900, deviceScaleFactor: 1, mobile: width <= 760)
+      brand = find(".admin-brand .site-name").native.rect
+      admin = find_link("Admin", exact: true).native.rect
+      assert_in_delta brand.y + brand.height / 2.0, admin.y + admin.height / 2.0, 1, "Brand alignment at #{width}px"
+      assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
+      if width > 980
+        nav = all(".admin-nav a, .admin-nav button")
+        assert_equal 1, nav.map { |link| link.native.rect.y }.uniq.size, "Navigation wraps at #{width}px"
+      else
+        menu = find(".admin-nav-toggle").native.rect
+        assert_in_delta brand.y + brand.height / 2.0, menu.y + menu.height / 2.0, 1, "Menu alignment at #{width}px"
+        assert_no_selector ".admin-nav"
+        find(".admin-nav-checkbox", visible: :all).send_keys(:space)
+        assert_link "Settings"
+        assert_button "Logout"
+        find(".admin-nav-checkbox", visible: :all).send_keys(:escape)
+        assert_no_selector ".admin-nav"
+      end
+      if width > 900
+        actions = all(".report-management-row > .actions")
+        assert_equal 1, actions.map { |row| row.native.rect.x }.uniq.size, "Report actions shift at #{width}px"
+        actions.each do |row|
+          edit, public_link = row.all("a").map { |link| link.native.rect }
+          assert_in_delta edit.y + edit.height / 2.0, public_link.y + public_link.height / 2.0, 1
+        end
+      end
+      save_screenshot(Rails.root.join("tmp/screenshots/admin-reports-#{width}.png")) if [ 1176, 390 ].include?(width)
+    end
+  ensure
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
   test "Admin is a consistent deep green homepage button on public and admin pages" do
     assign_role(users(:sam), :trip_admin)
     visit new_session_path
@@ -80,14 +148,39 @@ class EditorialVisualTest < ApplicationSystemTestCase
     assert_equal "15.36px", find(".trip-show-mobile-location").native.css_value("font-size")
     heading = find("h1").native.rect
     assert_operator find(".trip-type-badge").native.rect.y, :>=, heading.y + heading.height
+    [ 1440, 760, 360 ].each do |width|
+      page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: 900, deviceScaleFactor: 1, mobile: width <= 760)
+      assert_selector "a.trip-calendar-download", text: "(Calendar)", count: 1
+      link = find_link("(Calendar)")
+      assert_equal calendar_trip_path(trips(:yosemite), format: :ics), URI.parse(link[:href]).path
+      assert_includes link.find(:xpath, "..").text, "June 12, 2026"
+      if width <= 760
+        assert_equal find(".trip-show-mobile-dates").native.css_value("color"), link.native.css_value("color")
+      end
+      assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
+    end
   ensure
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
     page.driver.browser.manage.window.resize_to(1400, 1000)
   end
 
   test "expanded reports animate across the grid and restore their neighbors when collapsed" do
     page.driver.browser.manage.window.resize_to(1400, 1000)
+    visit new_session_path
+    fill_in "Email", with: users(:alex).email
+    fill_in "Password", with: "password"
+    click_button "Log in", exact: true
+    assert_selector ".account-nav"
     visit trip_reports_path
     titles = all(".club-report h2").map(&:text)
+    [ 1400, 760, 360 ].each do |width|
+      page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: 900, deviceScaleFactor: 1, mobile: width <= 760)
+      report = find(".club-report", text: titles[3])
+      edit = report.find_link("Edit report").native.rect
+      assert_operator edit.y + edit.height, :<=, report.find("summary").native.rect.y
+      assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
+    end
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
     page.execute_script(<<~JS)
       window.reportAnimations = 0;
       const animateReport = Element.prototype.animate;
@@ -125,6 +218,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
     assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
   ensure
     browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
     page.driver.browser.manage.window.resize_to(1400, 1000)
   end
 

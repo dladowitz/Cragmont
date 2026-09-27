@@ -54,7 +54,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".trip-card[href='#{trip_path(day_trip)}'] .trip-type-badge.day-trip-badge", text: "Day Trip"
     assert_select ".trip-card[href='#{trip_path(trips(:jtree))}']", count: 0
     assert_select "a", text: "View trip", count: 0
-    assert_select "a[href='#{past_trips_trips_path}']", text: "Past Trips"
+    assert_select "nav.public-nav a[href='#{past_trips_path}']", text: "Past Trips"
+    assert_select "main a[href='#{past_trips_trips_path}']", count: 0
     assert_select ".archived-trips-panel", count: 0
     assert_select ".trips-faq-callout a[href='#{what_to_expect_trips_path}']", text: "camping trips"
     assert_select ".trips-faq-callout a[href='#{day_trip_what_to_expect_trips_path}']", text: "day trips."
@@ -843,7 +844,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".archived-trips-panel" do
       assert_select "h1", "Past Trips"
       assert_select "h2.visually-hidden", "Recent trips"
-      assert_select "a[href='#{trips_path}']", text: "Current Trips"
+      assert_select "a[href='#{trips_path}']", count: 0
       archived_trips[1..5].each do |trip|
         assert_select ".archived-trip-row[href='#{trip_path(trip)}'] h3", text: trip.name
       end

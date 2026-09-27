@@ -69,6 +69,13 @@ class TripCalendarsControllerTest < ActionDispatch::IntegrationTest
 
     get trip_url(trips(:yosemite))
     assert_response :success
-    assert_select "a[href='#{calendar_trip_path(trips(:yosemite), format: :ics)}']", text: "Add to calendar (.ics)"
+    [ ".trip-summary-copy > p", ".trip-show-mobile-dates" ].each do |dates|
+      assert_select "#{dates} a[href='#{calendar_trip_path(trips(:yosemite), format: :ics)}'][data-turbo='false']", text: "(Calendar)", count: 1
+    end
+    assert_no_match(/One-time download|For updates|subscribe to all events/, response.body)
+
+    log_in_as(users(:alex))
+    get trip_url(trips(:yosemite))
+    assert_select ".trip-report-actions", count: 1
   end
 end

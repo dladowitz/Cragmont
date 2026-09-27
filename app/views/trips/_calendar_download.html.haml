@@ -1,7 +1,1 @@
-%p.trip-calendar-download
-  = link_to "Add to calendar (.ics)", calendar_trip_path(trip, format: :ics), data: { turbo: false }
-  %span.muted
-    One-time download. For updates,
-    = link_to "subscribe to all events", calendar_trips_url(format: :ics, protocol: "webcal"), data: { turbo: false }
-    in your calendar app.
-= render "trips/report_links", trip: trip
+= link_to "(Calendar)", calendar_trip_path(trip, format: :ics), class: "trip-calendar-download", data: { turbo: false }

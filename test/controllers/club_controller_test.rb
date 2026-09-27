@@ -23,13 +23,13 @@ class ClubControllerTest < ActionDispatch::IntegrationTest
     end
     assert_select "nav.public-nav a.nav-auth-login[href='#{new_session_path}']", "Log in"
     assert_select "nav.public-nav a.nav-auth-signup[href='#{new_registration_path}']", "Signup"
-    assert_select "nav.club-subnav a[href='#{about_path}'][aria-current='page']", "About"
+    assert_select "nav.club-subnav", count: 0
 
     get membership_url
     assert_response :success
     assert_select "h1", "Membership"
     assert_select ".club-requirements li", count: 4
-    assert_select "nav.club-subnav a[href='#{membership_path}'][aria-current='page']", "Membership"
+    assert_select "nav.club-subnav", count: 0
 
     get history_url
     assert_response :success
@@ -45,7 +45,7 @@ class ClubControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", "Past Trips"
     assert_select ".club-report", count: 0
-    assert_select "a[href='#{trip_reports_path}']", minimum: 1
+    assert_select "nav.public-nav a[href='#{trip_reports_path}']", count: 1
   end
 
   test "trip reports have their own public gallery with album links and full reports" do
@@ -68,6 +68,21 @@ class ClubControllerTest < ActionDispatch::IntegrationTest
     assert_select ".club-report-details p", /Vertical Pursuits/
   end
 
+  test "page switching stays in the top navigation rather than page content" do
+    destinations = [ trips_path, past_trips_path, past_trips_trips_path, trip_reports_path,
+      about_path, membership_path, history_path, join_the_list_path ]
+    (destinations.uniq + [ trip_report_path(TripReport.first!) ]).each do |path|
+      get path
+      assert_response :success
+      assert_select "nav.public-nav a[href='#{trips_path}']", count: 1
+      assert_select "nav.public-nav a[href='#{membership_path}']", count: 1
+      destinations.each do |destination|
+        assert_select "main a[href='#{destination}']", count: 0
+      end
+      assert_select "main nav.club-subnav", count: 0
+    end
+  end
+
   test "public pages do not show the obsolete site beta banner" do
     [ root_url, trips_url, past_trips_url, trip_reports_url, about_url, membership_url,
       history_url, join_the_list_url, new_session_url, new_registration_url,
@@ -84,6 +99,6 @@ class ClubControllerTest < ActionDispatch::IntegrationTest
     form_url = "https://docs.google.com/forms/d/e/1FAIpQLSdGYS2L_RzoxMxIVP9vM51bdzqy9ivHLbizCE6aS_6FigywXQ/viewform"
     assert_select "iframe.club-form[src='#{form_url}?embedded=true'][title='Join the Cragmont Climbing Club email list']"
     assert_select "a[href='#{form_url}'][target='_blank']", "Open the form in a new tab"
-    assert_select "nav.club-subnav a[href='#{join_the_list_path}'][aria-current='page']", "Join the List"
+    assert_select "nav.club-subnav", count: 0
   end
 end

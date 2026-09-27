@@ -7,10 +7,7 @@
   %section#archived-trips.panel.archived-trips-panel
     .panel-header
       .trips-index-copy
-        .trips-index-title-row
-          %h1 Past Trips
-          = link_to "Current Trips", trips_path
-          = link_to "Trip Reports", trip_reports_path
+        %h1 Past Trips
     - if @archived_trips.any?
       %h2.visually-hidden Recent trips
       .archived-trip-list

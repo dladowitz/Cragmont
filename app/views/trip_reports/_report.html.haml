@@ -25,6 +25,8 @@
         · #{payload["location"]}
   - if album
     = link_to "View photos", album, target: "_blank", rel: "noopener", class: ("report-album-card" unless legacy_image || report_photos.any?)
+  - if !preview && policy(report).update?
+    %p= link_to "Edit report", report_edit_path(report)
   - if payload["body"].present?
     %details.club-report-details{open: (true if local_assigns[:expanded])}
       %summary Read trip report
@@ -32,5 +34,3 @@
         = render_content_page_markdown(payload["body"])
         - if payload["byline"].present?
           %p.club-history-byline= payload["byline"]
-  - if !preview && policy(report).update?
-    %p= link_to "Edit report", report_edit_path(report)

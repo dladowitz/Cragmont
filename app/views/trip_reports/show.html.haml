@@ -1,8 +1,8 @@
 - content_for :title, "#{@payload['title']} | Trip Reports"
+- content_for :body_class, "club-page trip-reports-page"
 = render "shared/public_header"
 %main.public-main.club-main
   %section.panel
-    = link_to "All trip reports", trip_reports_path
     %h1.report-page-title= @payload["title"]
     = render "report", report: @report, payload: @payload, preview: false, hide_heading: true, expanded: true
     - if @report.trip

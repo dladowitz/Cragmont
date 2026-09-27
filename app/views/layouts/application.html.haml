@@ -44,6 +44,8 @@
             %button.flash-dismiss{type: "button", "aria-label" => "Dismiss notification", data: {action: "flash#dismiss"}}
               %span{"aria-hidden" => "true"} ×
     = yield
+    - if content_for(:body_class).to_s.split.include?("club-page")
+      %p.background-image-caption Fairview Dome, Tuolumne Meadows, Yosemite
     - if environment_name.present?
       %footer.environment-indicator{"aria-label" => "Environment indicator"}
         %span= "Env: #{environment_name}"

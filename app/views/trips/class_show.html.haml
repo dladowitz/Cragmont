@@ -11,7 +11,9 @@
       %h1= public_member_text(@trip.name)
       %span.status.trip-type-badge.external-class-badge= public_trip_type_label(@trip)
     %p.trip-show-mobile-location= public_member_text(@trip.location)
-    %p.trip-show-mobile-dates= @trip.start_date.to_fs(:long)
+    %p.trip-show-mobile-dates
+      = @trip.start_date.to_fs(:long)
+      = render "calendar_download", trip: @trip
     - if whatsapp_group_url.present?
       = member_link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link trip-mobile-resource-link trip-whatsapp-mobile-link", target: "_blank", rel: "noopener"
     - if weather_url.present?
@@ -27,7 +29,9 @@
           %h1= public_member_text(@trip.name)
           %span.status.trip-type-badge.external-class-badge= public_trip_type_label(@trip)
         %h2= public_member_text(@trip.location)
-        %p= @trip.start_date.to_fs(:long)
+        %p
+          = @trip.start_date.to_fs(:long)
+          = render "calendar_download", trip: @trip
         - if @trip.partner_company.present?
           %p
             Taught by
@@ -43,7 +47,7 @@
             = public_external_link_to "Weather", weather_url, class: "trip-resource-link trip-weather-link", target: "_blank", rel: "noopener"
           - if photo_album_url.present?
             = member_link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-photo-album-link", target: "_blank", rel: "noopener"
-    = render "calendar_download", trip: @trip
+    = render "report_links", trip: @trip
     .stats
       %div
         %span Interested
