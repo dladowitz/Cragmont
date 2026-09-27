@@ -60,7 +60,7 @@ class GymOutingsTest < ActionDispatch::IntegrationTest
     assert_select "dd", text: "Movement, San Francisco"
     assert_select "dd", text: "6:00pm"
     assert_select "dd", text: "8:00pm"
-    assert_select "a", text: "Log in to sign up"
+    assert_select "a[href='#{new_session_path(return_to: trip_path(@trip))}']", text: "Log in to sign up"
     assert_select ".trips-faq-callout", count: 0
     assert_select "dt", text: "Types of climbing", count: 0
     assert_select "dt", text: "If you are running late", count: 0
@@ -73,6 +73,20 @@ class GymOutingsTest < ActionDispatch::IntegrationTest
     assert_select "input[name='day_trip_signup[with_minor]']"
     assert_select "[data-climbing-ability-group]", count: 0
     assert_select "legend", text: "Gear I plan to bring", count: 0
+    assert_select "[data-signature-target='signupStep'] button[type='button'][data-action='modal#close']", text: "Cancel"
+  end
+
+  test "overnight end times are explicit on public and admin trip details" do
+    @trip.update!(end_time: "01:00")
+    get trip_url(@trip)
+    assert_select "dd", text: "1:00am (next day)"
+
+    log_in_as(users(:alex))
+    get admin_trip_url(@trip)
+    assert_select "dd", text: "1:00am (next day)"
+    get edit_admin_trip_url(@trip)
+    assert_select "input[name='trip[end_time]'][aria-describedby='trip-end-time-hint']"
+    assert_select "#trip-end-time-hint", text: /ends the next day/
   end
 
   test "gym signup requires login and waiver then counts a minor and waitlists overflow" do

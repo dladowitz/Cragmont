@@ -6,4 +6,6 @@ class ClubController < ApplicationController
   def history; end
 
   def join_the_list; end
+
+  def trip_reports; end
 end

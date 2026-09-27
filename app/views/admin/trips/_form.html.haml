@@ -30,7 +30,7 @@
             An Event Coordinator is required to host the meetups. Confirm their availability before publishing.
           %p All dates start at the same gym and time. Changes to an outing affect only that date; the schedule ends on your chosen date.
           %p Preview clears file selections. Choose your location image after previewing the dates.
-          = button_tag "Preview meetup dates", name: "preview_meetups", value: "1", class: "button secondary"
+          = button_tag "Preview meetup dates", name: "preview_meetups", value: "1", class: "button secondary", formnovalidate: true
       - if @preview_dates
         %div{role: "status"}
           %h3= "#{@preview_dates.size} meetup dates"
@@ -168,7 +168,8 @@
           = form.time_field :meeting_time, required: true
         .field
           = form.label :end_time, "End time"
-          = form.time_field :end_time
+          = form.time_field :end_time, aria: { describedby: "trip-end-time-hint" }
+          %p.field-hint#trip-end-time-hint An end time at or before the meeting time means the outing ends the next day.
         .field
           = trip.gym_outing? ? form.label(:meeting_location, "Meeting spot (optional)") : required_label(form, :meeting_location)
           = form.text_field :meeting_location

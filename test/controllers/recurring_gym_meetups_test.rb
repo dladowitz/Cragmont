@@ -20,6 +20,28 @@ class RecurringGymMeetupsTest < ActionDispatch::IntegrationTest
     assert_select "label[for=trip_campsite_coordinator_id] > span:not([hidden]) .required-marker", text: "*"
   end
 
+  test "preview only requires schedule fields while creation still requires the full trip" do
+    attributes = meetup_params
+    attributes[:trip] = attributes[:trip].slice(:trip_type, :start_date, :campsite_coordinator_id)
+
+    assert_no_difference "Trip.count" do
+      post admin_trips_url, params: attributes.merge(preview_meetups: "1")
+    end
+    assert_response :success
+    assert_select "button[name='preview_meetups'][formnovalidate]"
+    assert_select "[role=status] li", count: 2
+
+    assert_no_difference "Trip.count" do
+      post admin_trips_url, params: attributes
+    end
+    assert_response :unprocessable_entity
+
+    attributes[:trip][:start_date] = ""
+    post admin_trips_url, params: attributes.merge(preview_meetups: "1")
+    assert_response :unprocessable_entity
+    assert_select "[role=status] li", count: 0
+  end
+
   test "preview warns that uploaded images must be selected again without persisting them" do
     Tempfile.create([ "gym-preview", ".png" ]) do |file|
       file.binmode

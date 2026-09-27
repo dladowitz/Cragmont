@@ -17,10 +17,10 @@
         %div
           %dt Recorded By
           %dd= current_user.full_name
-      = form_with model: [:admin, trip, campsite], url: record_registration_reimbursement_admin_trip_campsite_path(trip, campsite), method: :patch, class: "admin-form" do |form|
+      = form_with model: [:admin, trip, campsite], namespace: dom_id(campsite, :reimbursement), url: record_registration_reimbursement_admin_trip_campsite_path(trip, campsite), method: :patch, class: "admin-form" do |form|
         - if return_to.present?
-          = hidden_field_tag :return_to, return_to
-          = hidden_field_tag :filters, "1"
+          = hidden_field_tag :return_to, return_to, id: nil
+          = hidden_field_tag :filters, "1", id: nil
           - reimbursement_filters.each do |status|
             = hidden_field_tag "reimbursement_status[]", status, id: nil
         .form-field

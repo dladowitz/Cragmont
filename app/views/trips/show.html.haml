@@ -184,7 +184,7 @@
                   - else
                     = render "campsite_signup_form", trip: @trip, campsite: campsite
                 - else
-                  = link_to "Log in to sign up", new_session_path, class: "button"
+                  = link_to "Log in to sign up", member_links_login_path, class: "button"
             .campsite-card-details
               .stats.campsite-stats
                 - if campsite.confirmed_uncounted_minor_count.positive?
@@ -398,7 +398,7 @@
             class: "button"
         - else
           %p Log in to add your name—no campsite signup, dates, waiver, or payment required.
-          = link_to "Log in to join the board", new_session_path, class: "button"
+          = link_to "Log in to join the board", member_links_login_path, class: "button"
   %section.panel.trip-coordinator-panel
     %h2 Trip Coordinator
     - if @trip.campsite_coordinator.present?

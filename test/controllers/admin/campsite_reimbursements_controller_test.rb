@@ -14,6 +14,21 @@ class Admin::CampsiteReimbursementsControllerTest < ActionDispatch::IntegrationT
     log_in_as(users(:alex))
   end
 
+  test "each reimbursement form has unique controls and matching labels" do
+    campsites(:yosemite_b).update!(registration_fee: "25")
+    get admin_campsite_reimbursements_url
+
+    forms = css_select(".campsite-registration-reimbursement-modal form")
+    assert_equal 2, forms.size
+    ids = forms.flat_map { |form| form.css("[id]").map { |input| input["id"] } }
+    assert_equal ids.uniq, ids
+    forms.each do |form|
+      form.css("label[for]").each do |label|
+        assert_equal 1, form.css("[id='#{label['for']}']").size
+      end
+    end
+  end
+
   test "defaults to positive-fee unreimbursed campsites" do
     excluded_day_trip_campsite = create_excluded_campsite!("Day Trip Site", "day_trip")
     excluded_class_campsite = create_excluded_campsite!("Class Trip Site", "class_trip")

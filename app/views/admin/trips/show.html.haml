@@ -123,7 +123,7 @@
         %dd= @trip.meeting_time&.strftime("%-l:%M%P") || "Not set"
       %div
         %dt End time
-        %dd= @trip.end_time&.strftime("%-l:%M%P") || "None"
+        %dd= formatted_trip_end_time(@trip) || "None"
       %div
         %dt Meeting location
         %dd

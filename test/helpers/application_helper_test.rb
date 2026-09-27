@@ -3,6 +3,19 @@ require "fileutils"
 require "tmpdir"
 
 class ApplicationHelperTest < ActionView::TestCase
+  test "end times distinguish overnight outings without inventing missing times" do
+    trip = Trip.new(meeting_time: "18:00", end_time: "20:00")
+    assert_equal "8:00pm", formatted_trip_end_time(trip)
+    trip.end_time = "01:00"
+    assert_equal "1:00am (next day)", formatted_trip_end_time(trip)
+    trip.end_time = "18:00"
+    assert_equal "6:00pm (next day)", formatted_trip_end_time(trip)
+    trip.meeting_time = nil
+    assert_equal "6:00pm", formatted_trip_end_time(trip)
+    trip.end_time = nil
+    assert_nil formatted_trip_end_time(trip)
+  end
+
   test "visible environment name only appears for development and staging" do
     with_rails_env("development") do
       assert_equal "Development", visible_environment_name

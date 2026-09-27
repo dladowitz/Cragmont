@@ -98,7 +98,7 @@
           - if @trip.end_time.present?
             %div
               %dt End time
-              %dd= @trip.end_time.strftime("%-l:%M%P")
+              %dd= formatted_trip_end_time(@trip)
           - unless @trip.gym_outing?
             %div
               %dt Types of climbing
@@ -148,7 +148,7 @@
                   %p= public_member_text(@trip.name)
                 = render "day_trip_signup_form", trip: @trip, current_annual_waiver_available: current_annual_waiver_available
         - else
-          = link_to "Log in to sign up", new_session_path, class: "button day-trip-signup-button"
+          = link_to "Log in to sign up", member_links_login_path, class: "button day-trip-signup-button"
     - if @trip.day_trip_image.attached?
       .day-trip-location-image{"data-controller" => "modal", "data-modal-disable-autofocus-value" => "true"}
         %button.day-trip-location-image-button{"aria-label" => "Expand #{public_member_text(@trip.name)} location image", "data-action" => "modal#open", type: "button"}

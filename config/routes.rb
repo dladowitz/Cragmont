@@ -5,6 +5,7 @@ Rails.application.routes.draw do
   get "history", to: "club#history", as: :history
   get "join-the-list", to: "club#join_the_list", as: :join_the_list
   get "past-trips", to: "trips#past_trips", as: :past_trips
+  get "trip-reports", to: "club#trip_reports", as: :trip_reports
   get "/.well-known/openapi.json", to: redirect("/openapi.json")
 
   namespace :api, defaults: { format: :json } do

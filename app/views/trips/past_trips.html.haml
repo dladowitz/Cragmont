@@ -10,6 +10,7 @@
         .trips-index-title-row
           %h1 Past Trips
           = link_to "Current Trips", trips_path
+          = link_to "Trip Reports", trip_reports_path
     - if @archived_trips.any?
       %h2.visually-hidden Recent trips
       .archived-trip-list
@@ -44,6 +45,5 @@
             = link_to "Next", past_trips_trips_path(archived_page: @archived_current_page + 1, anchor: "archived-trips"), class: "button secondary"
     - else
       %p.muted No trips from this site's calendar have been archived yet.
-  = render "club_archive"
   = render "shared/liability_warning"
 %p.background-image-caption Regular Northwest Face, Half Dome

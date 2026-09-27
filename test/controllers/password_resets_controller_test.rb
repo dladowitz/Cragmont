@@ -57,7 +57,7 @@ class PasswordResetsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_entity
-    assert_select ".flash.alert", "We couldn't find an account with that email address. Double check the spelling or create an account with that email address"
+    assert_select ".flash.alert .flash-text", "We couldn't find an account with that email address. Double check the spelling or create an account with that email address"
     assert_select "input[type='email'][name='email'][value='nobody@example.com']"
   end
 

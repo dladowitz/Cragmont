@@ -113,9 +113,9 @@
                           .form-actions
                             %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
                             = submit_tag "Issue Refund", class: "button danger"
-      %fieldset.transaction-fee-details
+      %fieldset.transaction-fee-details{data: {controller: "table-scroll"}}
         %legend Fee details
-        %table.transaction-fee-table
+        %table.transaction-fee-table{tabindex: "0", aria: {label: "Fee breakdown"}}
           %thead
             %tr
               %th Participant

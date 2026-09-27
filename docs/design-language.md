@@ -27,12 +27,14 @@ The current public examples are [home](../app/views/home/index.html.haml), [trip
 
 ## Page patterns and decisions
 
-1. **Navigation is grouped by intent.** The public header has Club (Membership, History, Get Help, About) and Trips (Trips, Past Trips, Join the List). Logged-in people have a name menu with Profile and Log out; signed-out people see distinct Login and Signup buttons. Preserve the same destinations and hierarchy on mobile. The club pages also use the local subnavigation with `aria-current="page"`.
+1. **Navigation is grouped by intent.** The public header has Trips first (Trips, Past Trips, Trip Reports, Join the List), then Club (Membership, History, Get Help, About). Past Trips is the calendar archive; Trip Reports is the separate photo/report gallery, retaining full-album links. Logged-in people have a name menu with Profile and Log out; signed-out people see distinct Login and Signup buttons. Preserve the same destinations and hierarchy on mobile. The club pages also use the local subnavigation with `aria-current="page"`.
 2. **A page has one primary job.** Trip index helps someone find an outing; trip detail helps them decide and act; club pages explain the organization and point toward trips or the email list. Do not give three competing primary CTAs.
 3. **Use the right content container.** A photo-led page needs readable contrast over its image and an explicit mobile composition. A text-heavy club page uses an eyebrow, H1, lead, section headings, and restrained panel. Admin pages use the existing header, panels, tables/forms, and direct labels.
 4. **Trip metadata stays visible.** Type badge, dates, location, and available space are scan-first information. Distinguish draft/published/archived and trip types in words as well as color. Do not hide a critical fact behind hover, a disclosure, or an image.
 5. **Forms are honest.** Mark every required field with the red `*` via `required_label`/`required_label_tag`, pair it with the actual `required` input attribute when applicable, and put useful errors near the form. Group related fields with headings/fieldsets. After a successful action, show what happened and the next step; after failure, preserve entered data where possible.
 6. **Links navigate; buttons act.** Keep external links identifiable and safe. Separate joining the email list from creating a site account; they are different actions. Preserve member-only link privacy rather than exposing URLs in public copy.
+7. **Feedback uses the shared toast, not a page-wide banner.** Notifications float top-right on desktop and across the top on mobile without shifting page content. Each has an accessible X button, a live status/alert message, and a short entrance/exit animation (disabled for reduced motion). Notices dismiss after 5 seconds, logout after 2, and errors after 8; hovering or focusing pauses dismissal. Keep field-level validation inline too. Do not restore the obsolete “site is still getting dialed in” banner.
+8. **Report images must belong to the report.** Keep original album links and use only authorized photo sources, never unrelated stock imagery as a trip photo. The 22 archive thumbnails were copied anonymously from the published [club archive](https://www.cragmontclimbingclub.org/past-trips) on September 26, 2026 into `app/assets/images/trip-reports/`, named by outing and date. Serve these optimized local assets: Google Sites image URLs are temporary and must not be hard-coded. Keep fixed dimensions, lazy loading, descriptive alt text, and the separate full-album link. Do not import images from a signed-in private album without approval.
 
 ## Accessibility and responsive acceptance
 
@@ -40,8 +42,13 @@ Before calling a new page finished, check it at approximately **360px, 760px, an
 
 - No horizontal page overflow, clipped controls, unreadable photo text, or CTA hidden below an oversized hero on narrow screens.
 - One H1, meaningful heading order, explicit form labels, useful image alt text (or empty alt for decorative images), and captions for meaningful climbing photography.
-- Menus, disclosures, forms, and dialogs work with keyboard and have visible focus; meaning does not depend on color alone.
+- Menus, disclosures, forms, and dialogs work with keyboard and have visible focus; meaning does not depend on color alone. Navigation closes on outside click/tap. Escape closes the open submenu and returns focus to its heading; a second Escape closes the mobile menu and returns focus to Menu. Keep menu labels non-selectable, an 8px gap above expanded menus, and no divider after the last item.
 - Loading, empty, validation, success, and permission states make sense. Realistic long names, missing optional data, and zero available spaces do not break the layout.
+- Scope responsive table rules to the table's own sections, rows, and cells; dialogs may contain nested tables. Keep fee headers readable and use the existing `table-scroll` hint for overflow.
+- Give repeated model forms a record-specific `namespace:` so every label targets its own input. Every dialog step needs an explicit Cancel or Close button, including on touch screens.
+- Preserve the selected trip through login using `member_links_login_path`. Hide admin actions when their policy denies them. Date previews validate schedule inputs; saving still validates the entire event.
+- Earlier or equal end times mean an overnight outing, as in the calendar feed. Use `formatted_trip_end_time` to show “next day” and explain this beside the admin input.
+- Expanded trip reports span the whole gallery row and move their former neighbor below, including when expanding the right-hand card. Animate the reflow when supported, respect reduced motion, retain keyboard focus, and restore the card's position when collapsed. Keep photos bounded and report text at a readable line length.
 - Trip/privacy/safety language remains accurate for signed-out and signed-in visitors. Do not use a static screenshot as proof of an interactive flow.
 
 ## First-pass workflow for a new page

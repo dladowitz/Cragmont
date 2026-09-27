@@ -236,8 +236,7 @@ textarea {
 }
 
 .admin-header,
-.panel,
-.flash-messages {
+.panel {
   width: min(1280px, calc(100% - 32px));
   margin-inline: auto;
 }
@@ -922,7 +921,7 @@ body.trip-show-page .public-liability-warning {
   font-size: 0.95rem;
 }
 
-.user-trip-history-table td {
+.user-trip-history-table > tbody > tr > td {
   vertical-align: top;
 }
 
@@ -1203,6 +1202,7 @@ body.trip-show-page .public-liability-warning {
 
 .transaction-fee-table {
   table-layout: fixed;
+  overflow-wrap: normal;
 }
 
 .transaction-fee-table th,
@@ -6366,7 +6366,71 @@ textarea {
 }
 
 .flash-messages {
-  margin-top: 16px;
+  position: fixed;
+  z-index: 100;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  width: min(400px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px - env(safe-area-inset-top));
+  overflow-y: auto;
+  display: grid;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.flash {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 8px 8px 16px;
+  border-radius: var(--ui-radius);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 16%);
+  pointer-events: auto;
+  animation: flash-enter 180ms ease-out;
+  transition: opacity 180ms ease-in, transform 180ms ease-in;
+}
+
+.flash-text {
+  flex: 1;
+  min-width: 0;
+  margin: 10px 0;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+.flash-dismiss {
+  flex: 0 0 44px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ui-radius);
+  background: transparent;
+  color: inherit;
+  font-size: 1.6rem;
+  cursor: pointer;
+}
+
+.flash-dismiss:hover {
+  background: rgb(0 0 0 / 6%);
+}
+
+.flash.is-dismissing {
+  opacity: 0;
+  transform: translateY(-12px);
+  pointer-events: none;
+}
+
+@keyframes flash-enter {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flash { animation: none; transition: none; }
 }
 
 .flash.notice {
@@ -6555,35 +6619,15 @@ textarea {
   }
 
   .public-header,
-  .public-main,
-  .flash-messages {
+  .public-main {
     width: min(100% - 20px, 1280px);
   }
 
-  body.home-page .flash-messages,
-  body.trips-index-page .flash-messages,
-  body.session-new-page .flash-messages,
-  body.password-reset-new-page .flash-messages,
-  body.registration-new-page .flash-messages,
-  body.help-request-page .flash-messages,
-  body.trip-show-page .flash-messages {
-    position: absolute;
-    z-index: 18;
-    top: 82px;
-    left: 10px;
-    right: 10px;
+  .flash-messages {
+    top: max(12px, env(safe-area-inset-top));
+    left: max(12px, env(safe-area-inset-left));
+    right: max(12px, env(safe-area-inset-right));
     width: auto;
-    margin: 0;
-  }
-
-  body.home-page .flash-messages .flash,
-  body.trips-index-page .flash-messages .flash,
-  body.session-new-page .flash-messages .flash,
-  body.password-reset-new-page .flash-messages .flash,
-  body.registration-new-page .flash-messages .flash,
-  body.help-request-page .flash-messages .flash,
-  body.trip-show-page .flash-messages .flash {
-    padding: 12px 14px;
   }
 
   .public-header {
@@ -6776,10 +6820,6 @@ textarea {
       url("backgrounds/half-dome-ledge.jpg") center 58% / cover;
   }
 
-  body.trips-index-page:has(.flash-messages) .trips-mobile-hero {
-    min-height: clamp(230px, 56vw, 300px);
-  }
-
   .public-mobile-hero {
     position: relative;
     display: grid;
@@ -6791,13 +6831,6 @@ textarea {
     background:
       linear-gradient(180deg, rgb(15 23 20 / 60%), rgb(15 23 20 / 14%) 48%, rgb(15 23 20 / 68%)),
       var(--public-mobile-hero-image) center / cover;
-  }
-
-  body.session-new-page:has(.flash-messages) .public-mobile-hero,
-  body.password-reset-new-page:has(.flash-messages) .public-mobile-hero,
-  body.registration-new-page:has(.flash-messages) .public-mobile-hero,
-  body.help-request-page:has(.flash-messages) .public-mobile-hero {
-    min-height: clamp(280px, 68vw, 360px);
   }
 
   .public-mobile-hero-help {
@@ -6908,10 +6941,6 @@ textarea {
 
   body.day-trip-show-page .trip-show-mobile-hero {
     margin-bottom: 0;
-  }
-
-  body.trip-show-page:has(.flash-messages) .trip-show-mobile-hero {
-    min-height: clamp(300px, 76vw, 390px);
   }
 
   .trip-show-mobile-hero-copy {
@@ -7273,18 +7302,18 @@ textarea {
     gap: 6px;
   }
 
-  body.day-trip-show-page .day-trip-participants-panel .public-card-table tbody {
+  body.day-trip-show-page .day-trip-participants-panel .public-card-table > tbody {
     gap: 6px;
   }
 
-  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table tr {
+  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table > tbody > tr {
     grid-template-columns: 1fr;
     padding: 6px 0;
     border: 0;
     background: transparent;
   }
 
-  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table td {
+  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table > tbody > tr > td {
     grid-column: 1 / -1;
     grid-template-columns: minmax(118px, 0.38fr) minmax(0, 1fr);
     gap: 12px;
@@ -7293,8 +7322,8 @@ textarea {
     padding-bottom: 3px;
   }
 
-  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table td:first-child,
-  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table td:nth-child(2) {
+  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table > tbody > tr > td:first-child,
+  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table > tbody > tr > td:nth-child(2) {
     grid-column: 1 / -1;
     grid-template-columns: minmax(118px, 0.38fr) minmax(0, 1fr);
     justify-self: stretch;
@@ -7302,12 +7331,12 @@ textarea {
     white-space: normal;
   }
 
-  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table td:nth-child(3) {
+  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table > tbody > tr > td:nth-child(3) {
     display: grid;
   }
 
-  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table td:first-child::before,
-  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table td:nth-child(2)::before {
+  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table > tbody > tr > td:first-child::before,
+  body.day-trip-show-page .day-trip-participants-panel .confirmed-participants-table.public-card-table > tbody > tr > td:nth-child(2)::before {
     content: attr(data-label);
   }
 
@@ -7719,16 +7748,16 @@ textarea {
     table-layout: auto;
   }
 
-  body:not(.admin-body) .public-card-table thead {
+  body:not(.admin-body) .public-card-table > thead {
     display: none;
   }
 
-  body:not(.admin-body) .public-card-table tbody {
+  body:not(.admin-body) .public-card-table > tbody {
     display: grid;
     gap: 12px;
   }
 
-  body:not(.admin-body) .public-card-table tr {
+  body:not(.admin-body) .public-card-table > tbody > tr {
     display: grid;
     gap: 0;
     padding: 12px 14px;
@@ -7737,7 +7766,7 @@ textarea {
     background: #fbfaf7;
   }
 
-  body:not(.admin-body) .public-card-table td {
+  body:not(.admin-body) .public-card-table > tbody > tr > td {
     display: grid;
     grid-template-columns: minmax(104px, 0.4fr) minmax(0, 1fr);
     gap: 12px;
@@ -7749,11 +7778,11 @@ textarea {
     width: auto !important;
   }
 
-  body:not(.admin-body) .public-card-table td:last-child {
+  body:not(.admin-body) .public-card-table > tbody > tr > td:last-child {
     border-bottom: 0;
   }
 
-  body:not(.admin-body) .public-card-table td::before {
+  body:not(.admin-body) .public-card-table > tbody > tr > td::before {
     content: attr(data-label);
     color: var(--muted);
     font-size: 0.76rem;
@@ -7762,17 +7791,17 @@ textarea {
     text-transform: uppercase;
   }
 
-  body:not(.admin-body) .public-card-table td > .status {
+  body:not(.admin-body) .public-card-table > tbody > tr > td > .status {
     justify-self: start;
   }
 
-  body:not(.admin-body) .public-card-table td .button,
-  body:not(.admin-body) .public-card-table td button {
+  body:not(.admin-body) .public-card-table > tbody > tr > td .button,
+  body:not(.admin-body) .public-card-table > tbody > tr > td button {
     justify-content: center;
     width: 100%;
   }
 
-  body:not(.admin-body) .public-card-table td .participant-contact-control .button {
+  body:not(.admin-body) .public-card-table > tbody > tr > td .participant-contact-control .button {
     width: auto;
   }
 
@@ -7795,12 +7824,12 @@ textarea {
     margin-bottom: 0;
   }
 
-  body.trip-show-page .public-campsite-parking-section .campsite-parking-table.public-card-table tbody {
+  body.trip-show-page .public-campsite-parking-section .campsite-parking-table.public-card-table > tbody {
     display: grid;
     gap: 0;
   }
 
-  body.trip-show-page .public-campsite-parking-section .campsite-parking-table.public-card-table tr {
+  body.trip-show-page .public-campsite-parking-section .campsite-parking-table.public-card-table > tbody > tr {
     display: grid;
     grid-template-columns: minmax(72px, 0.34fr) minmax(0, 1fr);
     gap: 10px;
@@ -7811,12 +7840,12 @@ textarea {
     background: transparent;
   }
 
-  body.trip-show-page .public-campsite-parking-section .campsite-parking-table.public-card-table tr:last-child {
+  body.trip-show-page .public-campsite-parking-section .campsite-parking-table.public-card-table > tbody > tr:last-child {
     border-bottom: 0;
     padding-bottom: 0;
   }
 
-  body.trip-show-page .public-campsite-parking-section .campsite-parking-table.public-card-table td {
+  body.trip-show-page .public-campsite-parking-section .campsite-parking-table.public-card-table > tbody > tr > td {
     display: block;
     min-width: 0;
     padding: 0;
@@ -7827,7 +7856,7 @@ textarea {
     overflow-wrap: anywhere;
   }
 
-  body.trip-show-page .public-campsite-parking-section .campsite-parking-table.public-card-table td::before {
+  body.trip-show-page .public-campsite-parking-section .campsite-parking-table.public-card-table > tbody > tr > td::before {
     content: none;
   }
 
@@ -7845,11 +7874,11 @@ textarea {
     gap: 0;
   }
 
-  body.trip-show-page .confirmed-participants-table.public-card-table tbody {
+  body.trip-show-page .confirmed-participants-table.public-card-table > tbody {
     gap: 0;
   }
 
-  body.trip-show-page .confirmed-participants-table.public-card-table tr {
+  body.trip-show-page .confirmed-participants-table.public-card-table > tbody > tr {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 0 12px;
@@ -7861,11 +7890,11 @@ textarea {
     background: transparent;
   }
 
-  body.trip-show-page .confirmed-participants-table.public-card-table tr:last-child {
+  body.trip-show-page .confirmed-participants-table.public-card-table > tbody > tr:last-child {
     border-bottom: 0;
   }
 
-  body.trip-show-page .confirmed-participants-table.public-card-table td {
+  body.trip-show-page .confirmed-participants-table.public-card-table > tbody > tr > td {
     grid-template-columns: minmax(82px, 0.36fr) minmax(0, 1fr);
     gap: 10px;
     padding: 5px 0;
@@ -7875,14 +7904,14 @@ textarea {
     line-height: 1.25;
   }
 
-  body.trip-show-page .confirmed-participants-table.public-card-table td:first-child {
+  body.trip-show-page .confirmed-participants-table.public-card-table > tbody > tr > td:first-child {
     grid-column: 1;
     grid-template-columns: 1fr;
     padding-top: 10px;
     padding-bottom: 2px;
   }
 
-  body.trip-show-page .confirmed-participants-table.public-card-table td:nth-child(2) {
+  body.trip-show-page .confirmed-participants-table.public-card-table > tbody > tr > td:nth-child(2) {
     grid-column: 2;
     grid-template-columns: 1fr;
     justify-self: end;
@@ -7904,50 +7933,50 @@ textarea {
     line-height: 1.2;
   }
 
-  body.trip-show-page .confirmed-participants-table.public-card-table td:nth-child(n + 3) {
+  body.trip-show-page .confirmed-participants-table.public-card-table > tbody > tr > td:nth-child(n + 3) {
     grid-column: 1 / -1;
   }
 
-  body.trip-show-page .confirmed-participants-table.public-card-table td:nth-child(3),
-  body.trip-show-page .confirmed-participants-table.public-card-table td:nth-child(4) {
+  body.trip-show-page .confirmed-participants-table.public-card-table > tbody > tr > td:nth-child(3),
+  body.trip-show-page .confirmed-participants-table.public-card-table > tbody > tr > td:nth-child(4) {
     display: none;
   }
 
-  body.trip-show-page .confirmed-participants-table.public-card-table td:last-child {
+  body.trip-show-page .confirmed-participants-table.public-card-table > tbody > tr > td:last-child {
     padding-bottom: 10px;
   }
 
-  body.trip-show-page .confirmed-participants-table.public-card-table td:empty {
+  body.trip-show-page .confirmed-participants-table.public-card-table > tbody > tr > td:empty {
     display: none;
   }
 
-  body.trip-show-page .waitlist-table.public-card-table td:empty {
+  body.trip-show-page .waitlist-table.public-card-table > tbody > tr > td:empty {
     display: none;
   }
 
-  body.trip-show-page .waitlist-table.public-card-table td.public-empty-action {
+  body.trip-show-page .waitlist-table.public-card-table > tbody > tr > td.public-empty-action {
     display: none;
   }
 
-  body.trip-show-page .confirmed-participants-table.public-card-table td.public-empty-value {
+  body.trip-show-page .confirmed-participants-table.public-card-table > tbody > tr > td.public-empty-value {
     display: none;
   }
 
-  body.trip-show-page .confirmed-participants-table.public-card-table td:first-child::before,
-  body.trip-show-page .confirmed-participants-table.public-card-table td:nth-child(2)::before {
+  body.trip-show-page .confirmed-participants-table.public-card-table > tbody > tr > td:first-child::before,
+  body.trip-show-page .confirmed-participants-table.public-card-table > tbody > tr > td:nth-child(2)::before {
     content: none;
   }
 
-  body.trip-show-page .confirmed-participants-table.public-card-table td::before {
+  body.trip-show-page .confirmed-participants-table.public-card-table > tbody > tr > td::before {
     font-size: 0.68rem;
     line-height: 1.2;
   }
 
-  body.trip-show-page .confirmed-participants-table.public-card-table td[data-label="Contact"] {
+  body.trip-show-page .confirmed-participants-table.public-card-table > tbody > tr > td[data-label="Contact"] {
     grid-template-columns: 1fr;
   }
 
-  body.trip-show-page .confirmed-participants-table.public-card-table td[data-label="Contact"]::before {
+  body.trip-show-page .confirmed-participants-table.public-card-table > tbody > tr > td[data-label="Contact"]::before {
     content: none;
   }
 
@@ -8000,18 +8029,18 @@ textarea {
     padding-left: 0;
   }
 
-  body:not(.admin-body) .day-trip-participants-panel .confirmed-participants-table.public-card-table tr:has(> td:only-child) {
+  body:not(.admin-body) .day-trip-participants-panel .confirmed-participants-table.public-card-table > tbody > tr:has(> td:only-child) {
     padding: 8px 10px;
   }
 
-  body:not(.admin-body) .day-trip-participants-panel .confirmed-participants-table.public-card-table td:only-child {
+  body:not(.admin-body) .day-trip-participants-panel .confirmed-participants-table.public-card-table > tbody > tr > td:only-child {
     grid-column: 1 / -1;
     grid-template-columns: 1fr;
     padding: 0;
     border-bottom: 0;
   }
 
-  body:not(.admin-body) .day-trip-participants-panel .confirmed-participants-table.public-card-table td:only-child::before {
+  body:not(.admin-body) .day-trip-participants-panel .confirmed-participants-table.public-card-table > tbody > tr > td:only-child::before {
     content: none;
   }
 }

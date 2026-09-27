@@ -80,6 +80,16 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_select "a", text: "Yosemite Valley Spring"
   end
 
+  test "trip admins can view users without being offered super admin actions" do
+    users(:sam).roles << roles(:trip_admin)
+    log_in_as(users(:sam))
+    get admin_user_url(users(:alex))
+
+    assert_response :success
+    assert_select "a[href='#{edit_admin_user_path(users(:alex))}']", count: 0
+    assert_select "button", text: "Delete user", count: 0
+  end
+
   test "user details show signed up trips with transactions" do
     user = users(:sam)
     signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: user)

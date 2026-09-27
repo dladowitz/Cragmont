@@ -5,8 +5,8 @@
       %small Climbing Club
     %span.admin-context Admin
     %h1.visually-hidden= title
-  .admin-nav-shell
-    %input#admin-nav-toggle.admin-nav-checkbox{type: "checkbox", aria: {label: "Toggle admin navigation menu"}}
+  .admin-nav-shell{data: {controller: "navigation", action: "click@window->navigation#closeOutside keydown.esc@window->navigation#closeOnEscape"}}
+    %input#admin-nav-toggle.admin-nav-checkbox{type: "checkbox", aria: {label: "Toggle admin navigation menu"}, data: {navigation_target: "toggle"}}
     %label.admin-nav-toggle{for: "admin-nav-toggle"} Menu
     %nav.admin-nav{"aria-label" => "Admin navigation"}
       = link_to "Trips", admin_trips_path

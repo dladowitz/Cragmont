@@ -51,6 +51,13 @@ module ApplicationHelper
     new_session_path(return_to: request.path)
   end
 
+  def formatted_trip_end_time(trip)
+    return if trip.end_time.blank?
+
+    time = trip.end_time.strftime("%-l:%M%P")
+    trip.meeting_time.present? && trip.end_time <= trip.meeting_time ? "#{time} (next day)" : time
+  end
+
   def member_link_to(text, url, **options)
     return link_to(text, url, **options) if current_user.present?
 

@@ -33,6 +33,8 @@ class GymOutingsSystemTest < ApplicationSystemTestCase
     assert_selector ".trip-whatsapp-link[href='#{@trip.whatsapp_group}']", text: "Join the WhatsApp Group"
     assert_selector ".trip-photo-album-link[href='#{@trip.photo_album_url}']", text: "Photo Album"
 
+    find("button[aria-label='Dismiss notification']").click
+    assert_no_selector ".flash.notice"
     find(".account-nav summary").click
     logout = find_button("Log out")
     page.execute_script("arguments[0].form.requestSubmit(arguments[0])", logout)

@@ -1,6 +1,78 @@
 require "application_system_test_case"
 
 class EditorialVisualTest < ApplicationSystemTestCase
+  test "expanded reports animate across the grid and restore their neighbors when collapsed" do
+    visit trip_reports_path
+    titles = all(".club-report h2").map(&:text)
+    page.execute_script(<<~JS)
+      window.reportAnimations = 0;
+      const animateReport = Element.prototype.animate;
+      Element.prototype.animate = function(...args) {
+        window.reportAnimations += 1;
+        return animateReport.apply(this, args);
+      };
+    JS
+
+    [ 2, 3 ].each do |index|
+      report = find(".club-report", text: titles[index])
+      neighbor = find(".club-report", text: titles[index == 2 ? 3 : 2])
+      report.find("summary").click
+      assert_selector ".club-report-details[open]"
+      assert_equal page.evaluate_script("document.querySelector('.club-report-grid').offsetWidth"),
+        page.evaluate_script("arguments[0].offsetWidth", report)
+      assert_operator page.evaluate_script("arguments[0].offsetTop", neighbor), :>=,
+        page.evaluate_script("arguments[0].offsetTop + arguments[0].offsetHeight", report)
+      assert_equal "Read trip report", page.evaluate_script("document.activeElement.textContent")
+      report.find("summary").send_keys(:space)
+      assert_no_selector ".club-report-details[open]"
+      assert_equal titles, all(".club-report h2").map(&:text)
+    end
+    assert_operator page.evaluate_script("window.reportAnimations"), :>, 0
+
+    browser = page.driver.browser
+    browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-reduced-motion", value: "reduce" } ])
+    animation_count = page.evaluate_script("window.reportAnimations")
+    browser.manage.window.resize_to(390, 844)
+    report = find(".club-report", text: titles[3])
+    report.find("summary").send_keys(:enter)
+    assert_selector ".club-report-details[open]"
+    assert_equal titles, all(".club-report h2").map(&:text)
+    assert_equal animation_count, page.evaluate_script("window.reportAnimations")
+    assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
+  ensure
+    browser&.execute_cdp("Emulation.setEmulatedMedia", features: [])
+    page.driver.browser.manage.window.resize_to(1400, 1000)
+  end
+
+  test "navigation dismisses on outside clicks and Escape without breaking links" do
+    visit trip_reports_path
+    find(".public-nav-group summary", text: "Trips").click
+    assert_selector ".public-nav-group[open]"
+    find("h1").click
+    assert_no_selector ".public-nav-group[open]"
+
+    find(".public-nav-group summary", text: "Trips").click
+    find(".public-nav-dropdown a", text: "Past Trips", exact_text: true).send_keys(:escape)
+    assert_no_selector ".public-nav-group[open]"
+    assert_equal "Trips", page.evaluate_script("document.activeElement.textContent")
+
+    find(".public-nav-group summary", text: "Club").click
+    find(".public-nav-dropdown a", text: "About", exact_text: true).click
+    assert_current_path about_path
+
+    page.driver.browser.manage.window.resize_to(390, 844)
+    find(".public-nav-toggle").click
+    find(".public-nav-group summary", text: "Club").click
+    find(".public-nav-dropdown a", text: "About", exact_text: true).send_keys(:escape)
+    assert_no_selector ".public-nav-group[open]"
+    assert_selector "#public-nav-toggle:checked", visible: :all
+    find(".public-nav-group summary", text: "Club").send_keys(:escape)
+    assert_no_selector "#public-nav-toggle:checked", visible: :all
+    assert_equal "public-nav-toggle", page.evaluate_script("document.activeElement.id")
+  ensure
+    page.driver.browser.manage.window.resize_to(1400, 1000)
+  end
+
   test "open navigation heading uses the Cragmont green on desktop and phone" do
     browser = page.driver.browser
     browser.manage.window.resize_to(1400, 1000)

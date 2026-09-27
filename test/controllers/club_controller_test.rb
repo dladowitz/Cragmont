@@ -7,15 +7,16 @@ class ClubControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", "About the Club"
     assert_select "nav.public-nav details[open]", count: 0
     assert_select "nav.public-nav details", count: 2
-    assert_select "nav.public-nav details:first-child summary", "Club"
-    assert_select "nav.public-nav details:first-child a[href='#{membership_path}']", "Membership"
-    assert_select "nav.public-nav details:first-child a[href='#{history_path}']", "History"
-    assert_select "nav.public-nav details:first-child a[href='#{new_help_request_path}']", "Get Help"
-    assert_select "nav.public-nav details:first-child a[href='#{about_path}']", "About"
-    assert_select "nav.public-nav details:nth-child(2) summary", "Trips"
-    assert_select "nav.public-nav details:nth-child(2) a[href='#{trips_path}']", "Trips"
-    assert_select "nav.public-nav details:nth-child(2) a[href='#{past_trips_path}']", "Past Trips"
-    assert_select "nav.public-nav details:nth-child(2) a[href='#{join_the_list_path}']", "Join the List"
+    assert_select "nav.public-nav details:first-child summary", "Trips"
+    assert_select "nav.public-nav details:first-child a[href='#{trips_path}']", "Trips"
+    assert_select "nav.public-nav details:first-child a[href='#{past_trips_path}']", "Past Trips"
+    assert_select "nav.public-nav details:first-child a[href='#{trip_reports_path}']", "Trip Reports"
+    assert_select "nav.public-nav details:first-child a[href='#{join_the_list_path}']", "Join the List"
+    assert_select "nav.public-nav details:nth-child(2) summary", "Club"
+    assert_select "nav.public-nav details:nth-child(2) a[href='#{membership_path}']", "Membership"
+    assert_select "nav.public-nav details:nth-child(2) a[href='#{history_path}']", "History"
+    assert_select "nav.public-nav details:nth-child(2) a[href='#{new_help_request_path}']", "Get Help"
+    assert_select "nav.public-nav details:nth-child(2) a[href='#{about_path}']", "About"
     assert_select "nav.public-nav a.nav-auth-login[href='#{new_session_path}']", "Log in"
     assert_select "nav.public-nav a.nav-auth-signup[href='#{new_registration_path}']", "Signup"
     assert_select "nav.club-subnav a[href='#{about_path}'][aria-current='page']", "About"
@@ -39,10 +40,38 @@ class ClubControllerTest < ActionDispatch::IntegrationTest
     get past_trips_url
     assert_response :success
     assert_select "h1", "Past Trips"
+    assert_select ".club-report", count: 0
+    assert_select "a[href='#{trip_reports_path}']", minimum: 1
+  end
+
+  test "trip reports have their own public gallery with album links and full reports" do
+    get trip_reports_url
+    assert_response :success
+    assert_select "h1", "Trip Reports"
     assert_select ".club-report", count: 22
-    assert_select ".club-report h3", "Yosemite Valley - Sept 18th, 2026"
+    assert_select ".club-report-gallery img[loading='lazy'][width][height]", count: 22
+    assert_select ".club-report-gallery img[src^='/assets/trip-reports/']", count: 22
+    assert_select ".club-report-gallery-placeholder", count: 0
+    thumbnails = Rails.root.glob("app/assets/images/trip-reports/*.jpg")
+    assert_equal 22, thumbnails.size
+    thumbnails.each do |file|
+      assert_equal "\xFF\xD8".b, File.binread(file, 2), "#{file.basename} must be a JPEG, not an error response"
+      path = ActionController::Base.helpers.asset_path("trip-reports/#{file.basename}")
+      assert_select ".club-report-gallery img[src='#{path}']", count: 1
+    end
+    assert_select ".club-report h2", "Yosemite Valley - Sept 18th, 2026"
     assert_select ".club-report a[href='https://photos.app.goo.gl/eomxL1uoWFnRjkkJ6']", "View photos"
     assert_select ".club-report-details p", /Vertical Pursuits/
+  end
+
+  test "public pages do not show the obsolete site beta banner" do
+    [ root_url, trips_url, past_trips_url, trip_reports_url, about_url, membership_url,
+      history_url, join_the_list_url, new_session_url, new_registration_url,
+      new_help_request_url, trip_url(trips(:yosemite)) ].each do |url|
+      get url
+      assert_response :success
+      assert_no_match(/still getting dialed in/i, response.body, url)
+    end
   end
 
   test "join page embeds the existing Google Form with an accessible fallback" do

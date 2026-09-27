@@ -103,9 +103,8 @@ class Admin::TripsController < Admin::BaseController
     @gym_meetup_schedule = GymMeetupSchedule.new(gym_meetup_schedule_params.merge(trip: @trip))
 
     if params[:preview_meetups].present?
-      trip_valid = @trip.valid?
       schedule_valid = @gym_meetup_schedule.valid?
-      @preview_dates = @gym_meetup_schedule.dates if trip_valid && schedule_valid
+      @preview_dates = @gym_meetup_schedule.dates if schedule_valid
       render :new, status: @preview_dates ? :ok : :unprocessable_entity
       return
     end

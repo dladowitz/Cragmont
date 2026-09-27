@@ -62,6 +62,7 @@ a { color: var(--accent); font-weight: 500; text-underline-offset: .2em; }
 .public-nav { gap: clamp(14px, 2vw, 30px); }
 .public-nav form { margin: 0; }
 .public-nav-group { position: relative; }
+.public-nav-group summary, .public-nav-toggle { -webkit-user-select: none; user-select: none; }
 .public-nav-group summary {
   display: inline-flex;
   align-items: center;
@@ -86,6 +87,7 @@ a { color: var(--accent); font-weight: 500; text-underline-offset: .2em; }
   left: -16px;
   display: grid;
   min-width: 190px;
+  margin-top: 8px;
   padding: 8px 16px;
   border: 1px solid var(--line);
   border-radius: var(--ui-radius);
@@ -105,8 +107,8 @@ a { color: var(--accent); font-weight: 500; text-underline-offset: .2em; }
   text-shadow: none;
 }
 .public-nav-dropdown form { width: 100%; }
-.public-nav-dropdown a:last-child { border-bottom: 0; }
-.account-nav .nav-button { border-bottom: 0; }
+.public-nav-group .public-nav-dropdown > :last-child,
+.public-nav-group .public-nav-dropdown > :last-child .nav-button { border-bottom: 0; }
 .public-nav a.nav-auth { padding: 8px 14px; border: 1px solid var(--accent); border-radius: var(--ui-radius); }
 .public-nav a.nav-auth-signup { background: var(--accent); color: #fff; }
 .public-nav a, .public-admin-link, .nav-button,
@@ -208,21 +210,6 @@ body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-pa
   box-shadow: none;
   color: var(--accent-dark);
 }
-body.home-page .flash-messages {
-  position: absolute;
-  z-index: 18;
-  top: 90px;
-  left: 50%;
-  width: min(1280px, calc(100% - 48px));
-  margin: 0;
-  transform: translateX(-50%);
-}
-.flash-messages.auto-dismiss {
-  pointer-events: none;
-  animation: dismiss-flash 0s 2s forwards;
-}
-@keyframes dismiss-flash { to { visibility: hidden; } }
-
 /* Common controls and content surfaces drive both public and admin pages. */
 .button, input[type="submit"] {
   min-height: 48px;
@@ -287,7 +274,7 @@ body.trips-index-page .trips-index-notices .calendar-subscription-notice {
 .calendar-subscription-notice p { margin: 0; color: var(--text); }
 .calendar-subscription-notice p + p { margin-top: 6px; }
 .public-beta-notice, .public-liability-warning, .empty-state,
-.form-errors, .flash, .user-form-section, .note,
+.form-errors, .user-form-section, .note,
 .trip-card, .archived-trip-row, .campsite-card, .admin-campsite-card {
   border-radius: var(--ui-radius);
   box-shadow: none;
@@ -321,13 +308,21 @@ body.trips-index-page .trips-index-notices .calendar-subscription-notice {
 .archived-trips-panel, .club-archive { position: relative; z-index: 2; }
 .club-archive { margin-top: 24px; }
 .club-archive > .muted { margin-bottom: 24px; }
-.club-report { padding: 20px 0; border-top: 1px solid var(--line); }
-.club-report h3 { margin: 0 0 8px; }
+.club-archive h1 { margin: 0 0 16px; }
+.club-report-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 32px; }
+.club-report { min-width: 0; padding-bottom: 24px; border-bottom: 1px solid var(--line); transform-origin: top left; }
+.club-report:has(.club-report-details[open]) { grid-column: 1 / -1; }
+.club-report:has(.club-report-details[open]) .club-report-gallery img { max-height: 360px; }
+.club-report h2 { margin: 16px 0 8px; font-size: 1.4rem; font-weight: 500; }
+.club-report-gallery a { display: block; border-radius: var(--ui-radius); overflow: hidden; }
+.club-report-gallery img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: contain; background: var(--line); }
+.club-report-gallery a:focus-visible { outline-offset: 4px; }
 .club-report-details { margin-top: 12px; }
-.club-report-details summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+.club-report-details summary { cursor: pointer; color: var(--accent); font-weight: 600; min-height: 44px; align-content: center; }
 .club-report-copy { max-width: 76ch; margin-top: 16px; line-height: 1.65; }
 .club-report-copy p { margin: 0 0 14px; }
 @media (max-width: 600px) {
+  .club-report-grid { grid-template-columns: 1fr; gap: 24px; }
   .club-timeline section { grid-template-columns: 1fr; gap: 0; }
   .club-form { height: 1900px; }
 }
@@ -440,15 +435,16 @@ table { max-width: 100%; }
     max-width: 100%;
     overflow-x: auto;
   }
-  .admin-body table.is-scrollable::before {
+  .admin-body table.is-scrollable::before,
+  .transaction-fee-table.is-scrollable::before {
     content: "Swipe for more columns →";
     display: block;
     padding: 8px 12px;
     color: var(--muted);
     font-size: .88rem;
   }
-  body.admin-body table.user-trip-history-table td:first-child,
-  body.profile-show-page table.user-trip-history-table td:first-child { min-width: 14rem; }
+  body.admin-body table.user-trip-history-table > tbody > tr > td:first-child,
+  body.profile-show-page table.user-trip-history-table > tbody > tr > td:first-child { min-width: 14rem; }
   body.admin-body table.participant-email-table,
   body.admin-body table.campsite-parking-table,
   body.admin-body .help-subscriber-table table,
@@ -481,7 +477,7 @@ table { max-width: 100%; }
 }
 
 @media (max-width: 760px) {
-  .public-header, .admin-header, .public-main, .flash-messages {
+  .public-header, .admin-header, .public-main {
     width: min(100% - 32px, 1280px);
   }
   .public-header { min-height: 76px; padding: 12px 0; }
@@ -560,13 +556,6 @@ table { max-width: 100%; }
     color: var(--text);
     text-shadow: none;
   }
-  body.home-page .flash-messages {
-    top: 82px;
-    left: 10px;
-    right: 10px;
-    width: auto;
-    transform: none;
-  }
   body.session-new-page .auth-panel .form-actions {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -582,20 +571,20 @@ table { max-width: 100%; }
   .home-destinations { font-size: 1rem; }
   .home-hero-caption, .trips-mobile-hero-caption,
   .public-mobile-hero-caption, .trip-show-mobile-hero-caption { font-size: .88rem; }
-  body.trip-show-page .confirmed-participants-table.public-card-table td::before { font-size: .75rem; }
+  body.trip-show-page .confirmed-participants-table.public-card-table > tbody > tr > td::before { font-size: .75rem; }
   .panel { padding: 20px; }
-  body:not(.admin-body) .public-card-table tr { border-radius: var(--ui-radius); background: var(--panel); }
+  body:not(.admin-body) .public-card-table > tbody > tr { border-radius: var(--ui-radius); background: var(--panel); }
   body.trip-show-page .confirmed-participants-table.public-card-table .public-party-primary-row,
   body.trip-show-page .confirmed-participants-table.public-card-table .public-party-last-row { border-radius: var(--ui-radius); }
   body.profile-show-page .public-card-table { display: grid; overflow: visible; }
-  body.profile-show-page .user-trip-history-table.public-card-table td > * { grid-column: 2; }
+  body.profile-show-page .user-trip-history-table.public-card-table > tbody > tr > td > * { grid-column: 2; }
   body.profile-show-page .user-trip-history-table.public-card-table .date-pair div {
     grid-template-columns: minmax(0, 1fr);
     gap: 2px;
   }
   .admin-body table :is(th, td) { min-width: 108px; }
   .admin-body table :is(th, td):first-child { min-width: 170px; }
-  body.profile-show-page table.user-trip-history-table.public-card-table td:first-child { min-width: 0; }
+  body.profile-show-page table.user-trip-history-table.public-card-table > tbody > tr > td:first-child { min-width: 0; }
 }
 
 .participant-emails-panel .panel-header,
@@ -609,8 +598,8 @@ table { max-width: 100%; }
   .details-list dt, .date-pair dt { white-space: normal; }
   .details-list dd, .date-pair dd { overflow-wrap: anywhere; }
   /* Stack profile cards so badges like "Confirmed" don't break mid-word. */
-  body.profile-show-page .public-card-table td { grid-template-columns: minmax(0, 1fr); gap: 4px; }
-  body.profile-show-page .user-trip-history-table.public-card-table td > * { grid-column: 1; }
+  body.profile-show-page .public-card-table > tbody > tr > td { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  body.profile-show-page .user-trip-history-table.public-card-table > tbody > tr > td > * { grid-column: 1; }
   .public-header { gap: 8px; }
   .public-brand { gap: 10px; }
   .site-name span { font-size: 1.28rem; }

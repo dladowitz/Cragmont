@@ -20,12 +20,10 @@
           %dt Roles
           %dd= @user.roles.order(:name).map(&:name).to_sentence.presence || "None"
     .actions
-      = link_to "Edit user", edit_admin_user_path(@user), class: "button secondary"
-      = button_to "Delete user",                                                        |
-        admin_user_path(@user),                                                         |
-        method: :delete,                                                                |
-        class: "button danger",                                                         |
-        form: { data: { turbo_confirm: "Are you sure you want to delete this user?" } } |
+      - if policy(@user).update?
+        = link_to "Edit user", edit_admin_user_path(@user), class: "button secondary"
+      - if policy(@user).destroy?
+        = button_to "Delete user", admin_user_path(@user), method: :delete, class: "button danger", form: { data: { turbo_confirm: "Are you sure you want to delete this user?" } }
 %section.panel
   .panel-header
     %div

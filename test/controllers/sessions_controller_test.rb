@@ -48,9 +48,22 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to root_url
     follow_redirect!
-    assert_select ".flash-messages.auto-dismiss", text: "You are logged out."
+    assert_select ".flash-messages[data-turbo-temporary] .flash.notice[data-controller='flash'][data-flash-duration-value='2000']" do
+      assert_select "[role='status'][aria-atomic='true']", text: "You are logged out."
+      assert_select "button[type='button'][aria-label='Dismiss notification'][data-action='flash#dismiss']"
+    end
     get profile_url
 
     assert_redirected_to new_session_url
+  end
+
+  test "login errors render an accessible dismissible notification with time to read" do
+    post session_url, params: { email: "sam@example.com", password: "wrong" }
+
+    assert_response :unprocessable_entity
+    assert_select ".flash.alert[data-flash-duration-value='8000']" do
+      assert_select "[role='alert']", text: "Email or password is incorrect."
+      assert_select "button[aria-label='Dismiss notification']"
+    end
   end
 end

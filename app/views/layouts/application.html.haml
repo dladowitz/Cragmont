@@ -35,11 +35,14 @@
   - body_class = body_classes.join(" ").presence
   %body{ class: body_class, data: { controller: ("table-scroll" if admin_body) } }
     - if notice.present? || alert.present?
-      .flash-messages{class: ("auto-dismiss" if notice == "You are logged out." && alert.blank?)}
-        - if notice.present?
-          %p.flash.notice= notice
-        - if alert.present?
-          %p.flash.alert= alert
+      .flash-messages{"data-turbo-temporary" => true}
+        - {notice: notice, alert: alert}.each do |type, message|
+          - next if message.blank?
+          - duration = type == :alert ? 8000 : (message == "You are logged out." ? 2000 : 5000)
+          .flash{class: type, data: {controller: "flash", flash_duration_value: duration, action: "pointerenter->flash#pause pointerleave->flash#resume focusin->flash#pause focusout->flash#resume"}}
+            %p.flash-text{role: (type == :alert ? "alert" : "status"), "aria-atomic" => "true"}= message
+            %button.flash-dismiss{type: "button", "aria-label" => "Dismiss notification", data: {action: "flash#dismiss"}}
+              %span{"aria-hidden" => "true"} ×
     = yield
     - if environment_name.present?
       %footer.environment-indicator{"aria-label" => "Environment indicator"}

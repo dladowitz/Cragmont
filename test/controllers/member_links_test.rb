@@ -1,6 +1,20 @@
 require "test_helper"
 
 class MemberLinksTest < ActionDispatch::IntegrationTest
+  test "trip actions preserve the originating page through login" do
+    get trip_url(trips(:yosemite))
+    login_path = new_session_path(return_to: trip_path(trips(:yosemite)))
+    assert_select "a[href='#{login_path}']", text: "Log in to sign up"
+    assert_select "a[href='#{login_path}']", text: "Log in to join the board"
+
+    %w[day_trip gym_outing class_trip].each do |type|
+      trip = create_trip(type)
+      get trip_url(trip)
+      label = type == "class_trip" ? "Log in to mark interest" : "Log in to sign up"
+      assert_select "a[href='#{new_session_path(return_to: trip_path(trip))}']", text: label
+    end
+  end
+
   test "all trip types reveal private resources and coordinator email only after login" do
     %w[camping day_trip class_trip].each do |type|
       trip = create_trip(type)
