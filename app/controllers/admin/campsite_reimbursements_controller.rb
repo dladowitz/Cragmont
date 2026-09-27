@@ -39,7 +39,7 @@ class Admin::CampsiteReimbursementsController < Admin::BaseController
   def selected_reimbursement_filters
     return [ "unreimbursed" ] if params[:filters].blank?
 
-    selected = Array(params[:reimbursement_status]).select { |status| status.in?(REIMBURSEMENT_FILTERS) }
+    selected = Array(params[:reimbursement_status]).flat_map { |status| status.to_s.split(",") }.select { |status| status.in?(REIMBURSEMENT_FILTERS) }.uniq
     selected.presence || [ "unreimbursed" ]
   end
 

@@ -798,8 +798,7 @@ body.trip-show-page .public-liability-warning {
 }
 
 .help-request-status-filters,
-.trip-status-filters,
-.campsite-reimbursement-filters {
+.trip-status-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
@@ -810,8 +809,7 @@ body.trip-show-page .public-liability-warning {
 }
 
 .help-request-status-filters legend,
-.trip-status-filters legend,
-.campsite-reimbursement-filters legend {
+.trip-status-filters legend {
   margin-right: 4px;
   color: var(--muted);
   font-size: 0.82rem;
@@ -819,9 +817,7 @@ body.trip-show-page .public-liability-warning {
   text-transform: uppercase;
 }
 
-.help-status-filter,
-.trip-status-filter,
-.campsite-reimbursement-filter {
+.help-status-filter {
   display: inline-flex;
   gap: 8px;
   align-items: center;
@@ -836,8 +832,7 @@ body.trip-show-page .public-liability-warning {
 }
 
 .help-status-filter input[type="checkbox"],
-.trip-status-filter input[type="checkbox"],
-.campsite-reimbursement-filter input[type="checkbox"] {
+.trip-status-filter input[type="checkbox"] {
   width: 18px;
   height: 18px;
   padding: 0;
@@ -847,13 +842,10 @@ body.trip-show-page .public-liability-warning {
 .campsite-reimbursement-filter-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 72px;
-  margin-left: 8px;
+  gap: 12px;
 }
 
-.trip-status-filter:has(input[type="checkbox"]:checked),
-.help-status-filter:has(input[type="checkbox"]:checked),
-.campsite-reimbursement-filter:has(input[type="checkbox"]:checked) {
+.help-status-filter:has(input[type="checkbox"]:checked) {
   border-color: var(--accent);
   background: #eaf6f1;
   box-shadow: inset 0 0 0 1px rgb(47 111 94 / 18%);
@@ -7126,6 +7118,10 @@ textarea {
     margin-bottom: 24px;
   }
 
+  body.trip-show-page .trip-overview {
+    padding-bottom: 10px;
+  }
+
   body.trip-show-page .trip-summary-copy > .trip-title-line,
   body.trip-show-page .trip-summary-copy > h2,
   body.trip-show-page .trip-summary-copy > p {
@@ -7164,9 +7160,7 @@ textarea {
     margin-bottom: 0;
   }
 
-  .class-trip-details-panel > h2,
-  body.day-trip-show-page .class-trip-participants-panel h2,
-  body.day-trip-show-page .class-reminder-panel h2 {
+  .class-trip-details-panel > h2 {
     margin-bottom: 4px;
   }
 
@@ -7192,10 +7186,6 @@ textarea {
     margin-bottom: 0;
   }
 
-  .class-trip-participants-panel > .muted {
-    margin-bottom: 18px;
-  }
-
   .class-participant-signup-action {
     gap: 6px;
     margin-top: 12px;
@@ -7207,11 +7197,6 @@ textarea {
 
   .class-reminder-panel .content-page-markdown h2 {
     margin-bottom: 4px;
-  }
-
-  .class-reminder-panel .content-page-markdown p {
-    margin-bottom: 6px;
-    line-height: 1.25;
   }
 
   body.day-trip-show-page .day-trip-description-panel,
@@ -7227,17 +7212,19 @@ textarea {
   body.day-trip-show-page .day-trip-participants-panel .panel-header,
   body.day-trip-show-page .day-trip-coordinator-panel .panel-header,
   body.day-trip-show-page .day-trip-safety-panel .panel-header {
-    margin-bottom: 2px;
+    margin-bottom: 0;
   }
 
-  body.day-trip-show-page .day-trip-participants-panel .panel-header {
-    margin-bottom: -8px;
+  body.day-trip-show-page :is(.day-trip-description-panel, .day-trip-safety-panel) .content-page-markdown p,
+  body.day-trip-show-page :is(.day-trip-participants-panel, .day-trip-coordinator-panel, .day-trip-safety-panel) > p {
+    margin: 0 0 14px;
+    color: var(--text);
+    font-size: 1rem;
+    line-height: 1.5;
   }
 
-  body.day-trip-show-page .day-trip-description-panel h2,
-  body.day-trip-show-page .day-trip-participants-panel h2,
-  body.day-trip-show-page .day-trip-coordinator-panel h2,
-  body.day-trip-show-page .day-trip-safety-panel h2 {
+  body.day-trip-show-page :is(.day-trip-description-panel, .day-trip-safety-panel) .content-page-markdown p:last-child,
+  body.day-trip-show-page :is(.day-trip-participants-panel, .day-trip-coordinator-panel, .day-trip-safety-panel) > p {
     margin-bottom: 0;
   }
 
@@ -7344,10 +7331,12 @@ textarea {
     margin-bottom: 10px;
   }
 
-  body.trip-show-page .public-main > .class-trip-participants-panel > h2,
-  body.trip-show-page .public-main > .class-reminder-panel > h2 {
-    margin-bottom: 2px;
-    line-height: 1;
+  body.day-trip-show-page .public-main .day-trip-description-panel h2,
+  body.day-trip-show-page .public-main .day-trip-participants-panel h2,
+  body.day-trip-show-page .public-main .day-trip-coordinator-panel h2,
+  body.day-trip-show-page .public-main .day-trip-safety-panel h2 {
+    margin-bottom: 8px;
+    line-height: 1.12;
   }
 
   body.trip-show-page .campsite-card-list {

@@ -2,6 +2,48 @@ require "application_system_test_case"
 
 class EditorialVisualTest < ApplicationSystemTestCase
   setup { LegacyTripReportImport.call }
+
+  test "mobile trip section paragraphs and empty states share typography and heading spacing" do
+    {
+      "day_trip" => { meeting_time: "08:30", meeting_location: "Parking lot", meeting_location_url: "https://maps.google.com/?q=Castle+Rock", late_arrival_instructions: "Meet at the main wall.", climbing_types: [ "sport" ] },
+      "gym_outing" => { meeting_time: "18:00" },
+      "class_trip" => { partner_company: partner_companies(:vertical_world), class_signup_url: "https://example.com/class", class_original_price: "250", weather_url: "https://example.com/weather" }
+    }.each do |type, attributes|
+      trip = Trip.create!(name: "Typography test", location: "Castle Rock", start_date: Date.new(2026, 9, 19),
+        status: "archived", trip_type: type, participant_capacity: 8,
+        description: "An outing with the club.\n\nBring your climbing gear.", **attributes)
+      visit trip_path(trip)
+      [ [ 1440, 1000 ], [ 760, 1024 ], [ 717, 512 ], [ 390, 844 ], [ 344, 882 ] ].each do |width, height|
+        page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: width <= 760)
+        if width > 760
+          assert_equal "rgba(88, 107, 101, 1)", find(".day-trip-participants-panel > p").native.css_value("color")
+          next
+        end
+
+        assert_in_delta 10, find(".trip-overview").evaluate_script("this.getBoundingClientRect().bottom - this.querySelector('.stats').getBoundingClientRect().bottom"), 0.5
+        sections = all(".day-trip-description-panel, .day-trip-participants-panel, .day-trip-coordinator-panel, .day-trip-safety-panel")
+        assert_equal(type == "class_trip" ? 3 : 4, sections.size)
+        sections.each do |section|
+          heading = section.first("h2")
+          paragraphs = section.all(":scope > p, .content-page-markdown p")
+          assert paragraphs.any?
+          paragraphs.each do |paragraph|
+            assert_equal [ "16px", "400", "24px", "rgba(32, 51, 48, 1)" ],
+              %w[font-size font-weight line-height color].map { |property| paragraph.native.css_value(property) }, "#{type} at #{width}px"
+          end
+          assert_in_delta 8, paragraphs.first.native.rect.y - heading.native.rect.y - heading.native.rect.height, 1, "#{type} #{heading.text} at #{width}px"
+          assert_equal "0px", paragraphs.last.native.css_value("margin-bottom")
+        end
+        assert_equal "14px", find(".day-trip-description-panel .content-page-markdown p:first-child").native.css_value("margin-bottom")
+        assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
+        sections.first.evaluate_script("this.scrollIntoView({block: 'start', behavior: 'instant'})")
+        save_screenshot(Rails.root.join("tmp/screenshots/trip-paragraphs-#{type}-#{width}.png"))
+      end
+    end
+  ensure
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
   test "trip and campsite counts use distinct outlined boxes at every screen size" do
     campsites(:yosemite_a).update!(participant_capacity: 2)
     campsites(:yosemite_b).update!(participant_capacity: 2)
@@ -20,6 +62,9 @@ class EditorialVisualTest < ApplicationSystemTestCase
       visit path
       [ [ 1440, 1000 ], [ 980, 900 ], [ 768, 1024 ], [ 717, 512 ], [ 390, 844 ], [ 344, 882 ] ].each do |width, height|
         page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: width <= 760)
+        if width <= 760 && !path.start_with?("/admin")
+          assert_in_delta 10, find(".trip-overview").evaluate_script("this.getBoundingClientRect().bottom - this.querySelector('.stats').getBoundingClientRect().bottom"), 0.5
+        end
         all(".stats").each do |group|
           assert_equal "0px", group.native.css_value("border-top-width")
           assert_equal "0px", group.native.css_value("border-bottom-width")

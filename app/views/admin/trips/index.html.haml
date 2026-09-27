@@ -6,13 +6,17 @@
       = link_to "Agent API docs", "/.well-known/openapi.json"
     - if policy(Trip).new?
       = link_to "New trip", new_admin_trip_path, class: "button"
-  = form_with url: admin_trips_path, method: :get, class: "trip-filter-form" do
-    = hidden_field_tag :filters, "1"
-    %fieldset.trip-status-filters
-      %legend View trips
-      - Admin::TripsController::TRIP_FILTER_STATUSES.each do |status|
-        %label.trip-status-filter
-          = check_box_tag "status[]", status, @selected_statuses.include?(status), id: "trip_status_#{status}"
-          %span= status.titleize
-      = submit_tag "Apply", class: "button secondary"
+  %details.trip-filter-disclosure
+    %summary
+      %strong Filters:
+      %span= @selected_statuses.any? ? @selected_statuses.map(&:titleize).join(", ") : "No statuses selected"
+    = form_with url: admin_trips_path, method: :get, class: "trip-filter-form" do
+      = hidden_field_tag :filters, "1"
+      %fieldset.trip-status-filters
+        %legend View trips (select all that apply)
+        - Admin::TripsController::TRIP_FILTER_STATUSES.each do |status|
+          %label.trip-status-filter
+            = check_box_tag "status[]", status, @selected_statuses.include?(status), id: "trip_status_#{status}"
+            %span= status.titleize
+      = submit_tag "Apply filters", class: "button"
   = render "table", trips: @trips
