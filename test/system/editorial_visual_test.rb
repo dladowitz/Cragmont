@@ -1,6 +1,41 @@
 require "application_system_test_case"
 
 class EditorialVisualTest < ApplicationSystemTestCase
+  test "auth forms keep compact headings and deliberate action rows across screen sizes" do
+    token = users(:alex).generate_password_reset_token!
+    [ new_session_path, new_password_reset_path, edit_password_reset_path(token), new_registration_path ].each do |path|
+      visit path
+      [ [ 1440, 900 ], [ 768, 1024 ], [ 717, 512 ], [ 390, 844 ], [ 344, 882 ] ].each do |width, height|
+        page.driver.browser.manage.window.resize_to(width, height)
+        assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
+        assert_selector "h1", count: 1
+        if width > 900 || path == edit_password_reset_path(token)
+          heading = find("main h1")
+          assert_equal "32px", heading.native.css_value("font-size")
+          assert_equal "0px", heading.native.css_value("margin-top")
+        end
+        next unless path == new_session_path
+
+        actions = all(".auth-panel .form-actions > *")
+        assert_equal actions[0].native.rect.y, actions[1].native.rect.y
+        if width > 600
+          assert_equal actions[0].native.rect.y, actions[2].native.rect.y
+        else
+          assert_operator actions[2].native.rect.y, :>, actions[0].native.rect.y
+        end
+        actions.each { |action| assert_operator action.native.rect.height, :>=, 44 }
+        if width > 900
+          assert_operator find(".auth-panel").native.rect.height, :<, 400
+        end
+        if width == 717
+          assert_operator actions[0].native.rect.y + actions[0].native.rect.height, :<=, height - 48
+        end
+      end
+    end
+  ensure
+    page.driver.browser.manage.window.resize_to(1400, 1000)
+  end
+
   test "expanded reports animate across the grid and restore their neighbors when collapsed" do
     page.driver.browser.manage.window.resize_to(1400, 1000)
     visit trip_reports_path
@@ -160,6 +195,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
     assert_selector ".flash.notice", text: "You are logged in."
 
     page.driver.browser.manage.window.resize_to(390, 844)
+    assert_operator find(".flash-messages").native.rect.y, :>=, find(".public-header").native.rect.height
     page.execute_script("document.querySelector('#public-nav-toggle').checked = true; document.querySelector('.account-nav').open = true")
     assert_selector ".account-nav[open] a[href='#{profile_path}']", text: "Profile"
     assert_button "Log out"
@@ -173,6 +209,8 @@ class EditorialVisualTest < ApplicationSystemTestCase
     page.execute_script("arguments[0].form.requestSubmit(arguments[0])", logout.native)
     assert_selector ".flash.notice", text: "You are logged out."
     assert_equal 0, page.evaluate_script("document.querySelector('.home-hero').getBoundingClientRect().top")
+    assert_operator find(".flash-messages").native.rect.y, :>=, find(".public-header").native.rect.height
+    assert_equal page.evaluate_script("getComputedStyle(document.body).color"), page.evaluate_script("getComputedStyle(document.querySelector('.flash-text')).color")
     assert_no_selector ".flash.notice", visible: true, wait: 3
   end
 end

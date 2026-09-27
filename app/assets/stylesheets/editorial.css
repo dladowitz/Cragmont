@@ -254,11 +254,32 @@ body:is(.home-page, .trips-index-page, .session-new-page, .password-reset-new-pa
   box-shadow: none;
 }
 .public-main { position: relative; z-index: 2; }
-body:is(.trips-index-page, .session-new-page, .password-reset-new-page,
-  .password-reset-edit-page, .not-found-page, .registration-new-page,
+body:is(.trips-index-page, .not-found-page,
   .trip-what-to-expect-page, .help-request-page, .trip-show-page,
   .profile-show-page, .profile-edit-page, .trip-safety-page, .profile-waiver-new-page)
   .panel { background: var(--panel); backdrop-filter: none; }
+.public-main > .auth-panel { max-width: 600px; padding: 32px; }
+.auth-panel > h1, body.registration-new-page .panel > h1 {
+  margin: 0 0 24px;
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+body.session-new-page .auth-panel .form-actions {
+  display: grid;
+  grid-template-columns: .9fr 1.1fr 1.25fr;
+}
+body.session-new-page .auth-panel .form-actions :is(.button, input[type="submit"]) {
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  padding-inline: 10px;
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  body.session-new-page .auth-panel .form-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.session-new-page .auth-panel .form-actions .button:last-child { grid-column: 1 / -1; }
+}
 .panel-header { align-items: baseline; }
 body.trips-index-page .trips-index-panel > .panel-header { flex-wrap: wrap; }
 body.trips-index-page .trips-index-panel .trips-index-notices { flex: 0 1 auto; width: 100%; margin-top: 0; }
@@ -556,15 +577,8 @@ table { max-width: 100%; }
     color: var(--text);
     text-shadow: none;
   }
-  body.session-new-page .auth-panel .form-actions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  body.session-new-page .auth-panel .form-actions :is(.button, input[type="submit"]) {
-    min-width: 0;
-    padding-inline: 10px;
-  }
-  body.session-new-page .auth-panel .form-actions .button:last-child { grid-column: 1 / -1; }
+  :is(.public-mobile-hero-session, .public-mobile-hero-password-reset, .public-mobile-hero-registration) { min-height: 180px; }
+  .public-main > .auth-panel { padding: 20px; }
   .home-hero-copy { width: min(100% - 32px, 1120px); padding-top: 150px; }
   .home-main { width: 100%; }
   .home-hero h1 { font-size: clamp(2.8rem, 11vw, 4.5rem); }

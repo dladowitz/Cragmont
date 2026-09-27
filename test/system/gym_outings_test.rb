@@ -33,9 +33,13 @@ class GymOutingsSystemTest < ApplicationSystemTestCase
     assert_selector ".trip-whatsapp-link[href='#{@trip.whatsapp_group}']", text: "Join the WhatsApp Group"
     assert_selector ".trip-photo-album-link[href='#{@trip.photo_album_url}']", text: "Photo Album"
 
-    find("button[aria-label='Dismiss notification']").click
+    notification = find(".flash.notice")
+    Selenium::WebDriver::Wait.new(timeout: 5).until do
+      page.evaluate_script("Boolean(window.Stimulus?.getControllerForElementAndIdentifier(arguments[0], 'flash'))", notification)
+    end
+    page.execute_script("arguments[0].click()", notification.find("button[aria-label='Dismiss notification']"))
     assert_no_selector ".flash.notice"
-    find(".account-nav summary").send_keys(:enter)
+    page.execute_script("arguments[0].click()", find(".account-nav summary"))
     logout = find_button("Log out")
     page.execute_script("arguments[0].form.requestSubmit(arguments[0])", logout)
     assert_current_path root_path

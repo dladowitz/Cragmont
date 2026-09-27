@@ -11,7 +11,7 @@ class ClubControllerTest < ActionDispatch::IntegrationTest
     assert_select "nav.public-nav details:first-child a[href='#{trips_path}']", "Trips"
     assert_select "nav.public-nav details:first-child a[href='#{past_trips_path}']", "Past Trips"
     assert_select "nav.public-nav details:first-child a[href='#{trip_reports_path}']", "Trip Reports"
-    assert_select "nav.public-nav details:first-child a[href='#{join_the_list_path}']", "Join the List"
+    assert_select "nav.public-nav details:first-child a[href='#{join_the_list_path}']", count: 0
     assert_select "nav.public-nav details:nth-child(2) summary", "Club"
     assert_select "nav.public-nav details:nth-child(2) a[href='#{membership_path}']", "Membership"
     assert_select "nav.public-nav details:nth-child(2) a[href='#{history_path}']", "History"

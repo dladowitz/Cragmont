@@ -6368,10 +6368,10 @@ textarea {
 .flash-messages {
   position: fixed;
   z-index: 100;
-  top: max(16px, env(safe-area-inset-top));
+  top: max(104px, env(safe-area-inset-top));
   right: max(16px, env(safe-area-inset-right));
   width: min(400px, calc(100% - 32px));
-  max-height: calc(100dvh - 32px - env(safe-area-inset-top));
+  max-height: calc(100dvh - 120px - env(safe-area-inset-top));
   overflow-y: auto;
   display: grid;
   gap: 10px;
@@ -6380,6 +6380,7 @@ textarea {
 
 .flash {
   display: flex;
+  color: var(--text);
   align-items: flex-start;
   gap: 8px;
   margin: 0;
@@ -6624,7 +6625,6 @@ textarea {
   }
 
   .flash-messages {
-    top: max(12px, env(safe-area-inset-top));
     left: max(12px, env(safe-area-inset-left));
     right: max(12px, env(safe-area-inset-right));
     width: auto;
