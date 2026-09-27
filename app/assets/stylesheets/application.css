@@ -1629,6 +1629,7 @@ body.trip-show-page .trip-resource-links {
 }
 
 .trip-title-line h1 {
+  flex-basis: 100%;
   margin: 0;
 }
 

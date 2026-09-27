@@ -38,15 +38,19 @@ class EditorialVisualTest < ApplicationSystemTestCase
     page.driver.browser.manage.window.resize_to(1400, 1000)
   end
 
-  test "trip headings are slightly smaller on desktop and unchanged on mobile" do
+  test "trip headings keep desktop and mobile sizes with badges on the next line" do
     page.driver.browser.manage.window.resize_to(1440, 900)
     visit trip_path(trips(:yosemite))
     assert_in_delta 58.29, find(".trip-summary-copy h1").native.css_value("font-size").to_f, 0.1
     assert_equal "32px", find(".trip-summary-copy > h2").native.css_value("font-size")
+    heading = find("h1").native.rect
+    assert_operator find(".trip-type-badge").native.rect.y, :>=, heading.y + heading.height
 
     page.driver.browser.manage.window.resize_to(390, 844)
     assert_equal "28px", find(".trip-show-mobile-hero h1").native.css_value("font-size")
     assert_equal "15.36px", find(".trip-show-mobile-location").native.css_value("font-size")
+    heading = find("h1").native.rect
+    assert_operator find(".trip-type-badge").native.rect.y, :>=, heading.y + heading.height
   ensure
     page.driver.browser.manage.window.resize_to(1400, 1000)
   end
