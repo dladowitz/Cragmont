@@ -641,6 +641,7 @@ table { max-width: 100%; }
   .admin-record-table .date-pair div { grid-template-columns: 1fr; gap: 0; }
   body.admin-body table.admin-record-table > tbody > tr > .table-actions {
     display: flex;
+    order: 1;
     flex-wrap: wrap;
     padding-top: 8px;
   }
@@ -701,6 +702,7 @@ table { max-width: 100%; }
 }
 
 @media (max-width: 760px) {
+  :is(.trip-card-meta, .archived-trip-meta) dd { min-width: 0; text-align: right; }
   .admin-trip-resources-panel .admin-resource-link { grid-template-columns: minmax(0, 1fr); }
   .admin-resource-link > dt, .admin-resource-link .resource-url { display: none; }
   .admin-resource-link .resource-name { display: inline; }

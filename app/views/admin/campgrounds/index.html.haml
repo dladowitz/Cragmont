@@ -6,20 +6,22 @@
       %p Manage the places used by trip campsite reservations.
     = link_to "New campground", new_admin_campground_path, class: "button"
   - if @campgrounds.any?
-    %table
+    %table.admin-record-table{role: "table", "aria-label" => "Campground directory"}
       %thead
         %tr
-          %th Name
-          %th Location
-          %th Website
-      %tbody
+          %th{scope: "col"} Name
+          %th{scope: "col"} Location
+          %th{scope: "col"} Website
+      %tbody{role: "rowgroup"}
         - @campgrounds.each do |campground|
-          %tr
-            %td= link_to campground.name, admin_campground_path(campground)
-            %td= campground.location
-            %td
+          %tr{role: "row"}
+            %td.admin-record-title{role: "cell"}= link_to campground.name, admin_campground_path(campground)
+            %td{role: "cell", "data-label" => "Location"}= campground.location
+            %td{role: "cell", "data-label" => "Website"}
               - if (website_url = campground_website_url(campground))
                 = link_to "Website", website_url, rel: "noopener", target: "_blank"
+              - else
+                %span.muted Not set
   - else
     .empty-state
       %p No campgrounds have been added yet.

@@ -3,6 +3,33 @@ require "application_system_test_case"
 class EditorialVisualTest < ApplicationSystemTestCase
   setup { LegacyTripReportImport.call }
 
+  test "mobile trip lists keep metadata labels left and values right" do
+    trips(:jtree).update!(status: "archived")
+    [ trips_path, past_trips_trips_path ].each do |path|
+      visit path
+      [ [ 1440, 1000 ], [ 760, 1024 ], [ 717, 512 ], [ 390, 844 ], [ 344, 882 ] ].each do |width, height|
+        page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: width <= 760)
+        rows = all(".trip-card-meta > div, .archived-trip-meta > div", minimum: 1)
+        rows.each do |row|
+          value = row.find("dd")
+          if width <= 760
+            assert_equal "right", value.native.css_value("text-align")
+            assert_in_delta row.native.rect.x, row.find("dt").native.rect.x, 1
+            assert_in_delta row.native.rect.x + row.native.rect.width, value.native.rect.x + value.native.rect.width, 1
+            assert_operator value.evaluate_script("this.scrollWidth - this.clientWidth"), :<=, 1
+          else
+            assert_not_equal "right", value.native.css_value("text-align")
+          end
+        end
+        assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
+        rows.first.evaluate_script("this.scrollIntoView({block: 'center', behavior: 'instant'})")
+        save_screenshot(Rails.root.join("tmp/screenshots/trip-list-spacing-#{path == trips_path ? 'current' : 'past'}-#{width}.png"))
+      end
+    end
+  ensure
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
   test "mobile trip section paragraphs and empty states share typography and heading spacing" do
     {
       "day_trip" => { meeting_time: "08:30", meeting_location: "Parking lot", meeting_location_url: "https://maps.google.com/?q=Castle+Rock", late_arrival_instructions: "Meet at the main wall.", climbing_types: [ "sport" ] },

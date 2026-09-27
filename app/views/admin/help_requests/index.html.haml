@@ -6,38 +6,43 @@
       %p.muted Review issues, questions, and trip help requests from participants.
     - if current_user.super_admin?
       = link_to "Update Who Gets Notified on Requests", admin_help_notification_subscribers_path, class: "button secondary"
-  = form_with url: admin_help_requests_path, method: :get, class: "help-request-filter-form" do
-    %fieldset.help-request-status-filters
-      %legend View requests
-      - HelpRequest::STATUSES.each do |status|
-        %label.help-status-filter
-          = check_box_tag "status[]", status, @selected_statuses.include?(status), id: "status_#{status}"
-          %span= status.titleize
+  %details.trip-filter-disclosure
+    %summary
+      %strong Filters:
+      %span= @selected_statuses.map(&:titleize).join(", ")
+    = form_with url: admin_help_requests_path, method: :get, class: "help-request-filter-form trip-filter-form" do
+      %fieldset.help-request-status-filters.trip-status-filters
+        %legend View requests (select all that apply)
+        - HelpRequest::STATUSES.each do |status|
+          %label.help-status-filter.trip-status-filter
+            = check_box_tag "status[]", status, @selected_statuses.include?(status), id: "status_#{status}"
+            %span= status.titleize
       = submit_tag "Apply", class: "button secondary"
   - if @help_requests.any?
     .table-wrapper
-      %table
+      %table.admin-record-table{role: "table", "aria-label" => "Help requests"}
         %thead
           %tr
-            %th View
-            %th Subject
-            %th Reason
-            %th From
-            %th Status
-            %th Received
-        %tbody
+            %th{scope: "col"} View
+            %th{scope: "col"} Subject
+            %th{scope: "col"} Reason
+            %th{scope: "col"} From
+            %th{scope: "col"} Status
+            %th{scope: "col"} Received
+        %tbody{role: "rowgroup"}
           - @help_requests.each do |help_request|
-            %tr
-              %td= link_to "View", admin_help_request_path(help_request), class: "button secondary admin-table-action-button"
-              %td= help_request.subject
-              %td= help_request.reason_label
-              %td
-                = help_request.name
-                %br/
-                = mail_to help_request.email
-              %td
+            %tr{role: "row"}
+              %td.table-actions{role: "cell"}= link_to "View", admin_help_request_path(help_request), class: "button secondary admin-table-action-button"
+              %td.admin-record-title{role: "cell"}= help_request.subject
+              %td{role: "cell", "data-label" => "Reason"}= help_request.reason_label
+              %td{role: "cell", "data-label" => "From"}
+                %div
+                  = help_request.name
+                  %br/
+                  = mail_to help_request.email
+              %td{role: "cell", "data-label" => "Status"}
                 = help_request_status_pill(help_request)
-              %td= help_request.created_at.to_fs(:long)
+              %td{role: "cell", "data-label" => "Received"}= help_request.created_at.to_fs(:long)
     - if @total_pages > 1
       %nav.pagination{aria: {label: "Help request pages"}}
         - pagination_params = { status: @selected_statuses }

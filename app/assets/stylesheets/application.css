@@ -3858,8 +3858,20 @@ dialog.signup-modal.refund-modal .form-actions {
   padding: 12px 48px 12px 16px;
   border-color: #cfd8d3;
   border-radius: 8px;
-  appearance: none;
   background-color: #fff;
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 650;
+  box-shadow: 0 1px 0 rgb(31 41 51 / 4%);
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    background-color 120ms ease;
+}
+
+:is(.admin-form, .admin-add-participant-fields, .campsite-reimbursement-filter-form) select {
+  appearance: none;
+  padding-right: 48px;
   background-image:
     linear-gradient(45deg, transparent 50%, var(--accent-dark) 50%),
     linear-gradient(135deg, var(--accent-dark) 50%, transparent 50%);
@@ -3870,14 +3882,6 @@ dialog.signup-modal.refund-modal .form-actions {
     8px 8px,
     8px 8px;
   background-repeat: no-repeat;
-  color: var(--text);
-  cursor: pointer;
-  font-weight: 650;
-  box-shadow: 0 1px 0 rgb(31 41 51 / 4%);
-  transition:
-    border-color 120ms ease,
-    box-shadow 120ms ease,
-    background-color 120ms ease;
 }
 
 .admin-add-participant-fields select:hover {
@@ -6077,18 +6081,7 @@ th {
   padding: 12px 48px 12px 16px;
   border-color: #cfd8d3;
   border-radius: 8px;
-  appearance: none;
   background-color: #fff;
-  background-image:
-    linear-gradient(45deg, transparent 50%, var(--accent-dark) 50%),
-    linear-gradient(135deg, var(--accent-dark) 50%, transparent 50%);
-  background-position:
-    calc(100% - 24px) 50%,
-    calc(100% - 17px) 50%;
-  background-size:
-    8px 8px,
-    8px 8px;
-  background-repeat: no-repeat;
   color: var(--text);
   cursor: pointer;
   font-weight: 650;

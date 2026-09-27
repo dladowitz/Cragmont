@@ -14,23 +14,23 @@
 %section.panel
   %h2 Assigned campsites
   - if @campsites.any?
-    %table
+    %table.admin-record-table{role: "table", "aria-label" => "Assigned campsites"}
       %thead
         %tr
-          %th Trip
-          %th Site
-          %th Dates
-          %th Participants
-          %th Cars
-      %tbody
+          %th{scope: "col"} Trip
+          %th{scope: "col"} Site
+          %th{scope: "col"} Dates
+          %th{scope: "col"} Participants
+          %th{scope: "col"} Cars
+      %tbody{role: "rowgroup"}
         - @campsites.each do |campsite|
-          %tr
-            %td= link_to campsite.trip.name, admin_trip_path(campsite.trip)
-            %td= campsite.site_number
-            %td
+          %tr{role: "row"}
+            %td.admin-record-title{role: "cell"}= link_to campsite.trip.name, admin_trip_path(campsite.trip)
+            %td{role: "cell", "data-label" => "Site"}= campsite.site_number
+            %td{role: "cell", "data-label" => "Dates"}
               = campsite.arrival_date.to_fs(:long)
               to #{campsite.checkout_date.to_fs(:long)}
-            %td= campsite.participant_capacity
-            %td= campsite.car_capacity
+            %td{role: "cell", "data-label" => "Participants"}= campsite.participant_capacity
+            %td{role: "cell", "data-label" => "Cars"}= campsite.car_capacity
   - else
     %p.muted No campsites use this campground yet.
