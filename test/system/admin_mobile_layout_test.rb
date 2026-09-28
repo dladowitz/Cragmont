@@ -138,6 +138,13 @@ class AdminMobileLayoutTest < ApplicationSystemTestCase
     find("#campsite-reimbursement-#{campsites(:yosemite_a).id}").click_button("Record Reimbursement")
     within "dialog[open]" do
       assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
+      [ 344, 390, 1440 ].each do |width|
+        page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: 900, deviceScaleFactor: 1, mobile: false)
+        all("label .required-marker", count: 3).each do |marker|
+          assert_equal "inline", marker.native.css_value("display")
+        end
+      end
+      page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: false)
       select users(:sam).full_name, from: "Reimbursed by"
       select "Venmo", from: "Reimbursement method"
       fill_in "Date of reimbursement", with: "2026-09-27"

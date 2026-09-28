@@ -56,6 +56,37 @@ class TripReportsTest < ApplicationSystemTestCase
     page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
   end
 
+  test "preview leaves clean reports unchanged and saves pending edits" do
+    report = TripReport.for_trip(@trip)
+    report.save_draft!({ body: "Original story." }, version: 0, actor: users(:alex))
+    visit edit_admin_trip_report_path(report)
+    page.driver.browser.manage.window.resize_to(390, 844)
+
+    original = report.attributes
+    click_button "Preview", exact: true
+    assert_selector ".report-preview", text: "Original story."
+    assert_selector "[data-report-editor-target='status']", text: "Drafts are private."
+    assert_equal original, report.reload.attributes
+
+    click_button "Write", exact: true
+    fill_in "Story (optional)", with: "New private draft."
+    click_button "Preview", exact: true
+    assert_selector ".report-preview", text: "New private draft."
+    assert_selector "[data-report-editor-target='status']", text: "Saved at"
+    assert_equal "New private draft.", report.reload.draft["body"]
+    assert_empty report.public_payload["body"]
+  end
+
+  test "preview initializes an untouched new linked report" do
+    page.driver.browser.manage.window.resize_to(390, 844)
+    assert_difference "TripReport.count", 1 do
+      click_button "Preview", exact: true
+      assert_selector ".report-preview", text: @trip.name
+      assert_selector "[data-report-editor-target='status']", text: "Saved at"
+    end
+    assert_current_path edit_admin_trip_report_path(TripReport.find_by!(trip: @trip))
+  end
+
   test "photo captions order and conflict handling preserve the editors work" do
     attach_file "Add photos", [
       Rails.root.join("app/assets/images/trip-reports/2026-08-14-tuolumne.jpg"),

@@ -169,7 +169,13 @@ export default class extends Controller {
     this.changed()
   }
   writeTab() { this.tab(false) }
-  previewTab() { this.enqueue(async () => { await this.save(); this.tab(true) }) }
+  previewTab() {
+    clearTimeout(this.timer)
+    this.enqueue(async () => {
+      if (this.dirty || !this.idValue) await this.save()
+      this.tab(true)
+    })
+  }
   tab(preview) {
     this.element.classList.toggle("show-preview", preview)
     this.writeTabTarget.setAttribute("aria-pressed", String(!preview))

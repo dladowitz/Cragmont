@@ -22,7 +22,7 @@
       - elsif policy(@report).link_trip?
         .field
           = form.label :trip_id, "Link an existing trip (optional)"
-          = form.select :trip_id, options_from_collection_for_select(@trips, :id, :name), include_blank: "Standalone historical report"
+          = form.select :trip_id, options_from_collection_for_select(@trips, :id, method(:report_trip_label)), include_blank: "Standalone historical report"
       .field
         = required_label form, :title
         = form.text_field :title, value: draft["title"], required: true, maxlength: 250

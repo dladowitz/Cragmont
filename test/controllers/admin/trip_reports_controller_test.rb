@@ -8,6 +8,21 @@ class Admin::TripReportsControllerTest < ActionDispatch::IntegrationTest
   end
   teardown { travel_back }
 
+  test "report trip selectors distinguish repeat destinations by date" do
+    log_in_as users(:alex)
+    other = trips(:jtree)
+    other.update!(name: @trip.name, end_date: other.start_date)
+
+    [ new_admin_trip_report_url, new_admin_trip_report_url(standalone: 1) ].each do |url|
+      get url
+      assert_response :success
+      assert_select "select[name='trip_report[trip_id]'] option[value='#{@trip.id}'], select[name='trip_id'] option[value='#{@trip.id}']",
+        text: "Yosemite Valley Spring (June 12, 2026 to June 15, 2026)"
+      assert_select "select[name='trip_report[trip_id]'] option[value='#{other.id}'], select[name='trip_id'] option[value='#{other.id}']",
+        text: "Yosemite Valley Spring (December 04, 2026)"
+    end
+  end
+
   test "coordinator can discover editor create and edit own trip report" do
     log_in_as users(:sam)
     get admin_trip_reports_url

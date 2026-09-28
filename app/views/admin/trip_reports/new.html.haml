@@ -9,7 +9,7 @@
       = form_with url: new_admin_trip_report_path, method: :get, class: "admin-form" do |form|
         .field
           = required_label form, :trip_id, "Trip"
-          = form.select :trip_id, options_from_collection_for_select(@trips, :id, :name), { include_blank: "Choose a trip" }, required: true
+          = form.select :trip_id, options_from_collection_for_select(@trips, :id, method(:report_trip_label)), { include_blank: "Choose a trip" }, required: true
         .form-actions
           = form.submit "Continue", class: "button"
           = link_to "Cancel", admin_trip_reports_path, class: "button secondary"

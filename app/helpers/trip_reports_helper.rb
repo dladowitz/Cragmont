@@ -1,4 +1,9 @@
 module TripReportsHelper
+  def report_trip_label(trip)
+    dates = [ trip.start_date, trip.end_date ].uniq.map { |date| date.to_fs(:long) }.join(" to ")
+    "#{trip.name} (#{dates})"
+  end
+
   def public_report_path(report)
     report.persisted? ? trip_report_path(report) : trip_trip_report_path(report.trip)
   end
