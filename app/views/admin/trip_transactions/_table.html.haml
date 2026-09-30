@@ -6,7 +6,7 @@
 - public_table = local_assigns.fetch(:public_table, false)
 
 - if ledger_entries.any?
-  %table.transactions-table{class: ("public-card-table" if public_table), "data-controller" => "transaction-anchor"}
+  %table.transactions-table{class: [("public-card-table" if public_table), ("admin-record-table" unless public_table)].compact, role: "table", "aria-label" => "Transactions", "data-controller" => "transaction-anchor"}
     %thead
       %tr
         - if show_trip
@@ -22,15 +22,15 @@
         - status_label = entry.status_label
         - status_class = entry.status_class
         - trip = payment.campsite_signup.trip
-        %tr{id: "transaction-payment-#{payment.id}"}
+        %tr{id: "transaction-payment-#{payment.id}", role: "row"}
           - if show_trip
             %td{"data-label" => "Trip"}= link_to trip.name, trip_path(trip)
-          %td{"data-label" => "Participant"}= entry.participant_name
-          %td{"data-label" => "Amount Paid"}= format_cents(entry.amount_cents)
-          %td{"data-label" => "Status"}
+          %td{role: "cell", class: ("admin-record-title" unless public_table), "data-label" => "Participant"}= entry.participant_name
+          %td{role: "cell", "data-label" => "Amount Paid"}= format_cents(entry.amount_cents)
+          %td{role: "cell", "data-label" => "Status"}
             %span.status.transaction-status{class: status_class}= status_label
-          %td{"data-label" => "Paid At"}= entry.occurred_at&.strftime("%-m/%-d/%y %l:%M %p") || "None"
-          %td{"data-label" => "Details"}
+          %td{role: "cell", "data-label" => "Paid At"}= entry.occurred_at&.strftime("%-m/%-d/%y %l:%M %p") || "None"
+          %td{role: "cell", class: ("table-actions" unless public_table), "data-label" => "Details"}
             = render "admin/trip_transactions/entry_details",
               entry: entry,
               show_trip: show_trip,

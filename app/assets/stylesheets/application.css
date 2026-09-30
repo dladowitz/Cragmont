@@ -2870,6 +2870,7 @@ body.trips-index-page .trips-index-panel .muted {
 
 .content-page-markdown {
   display: block;
+  overflow-wrap: anywhere;
 }
 
 .content-page-markdown h2 {
@@ -5797,6 +5798,7 @@ th {
 
 .markdown-formatting-guide,
 .content-page-preview-panel {
+  min-width: 0;
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -5940,10 +5942,12 @@ th {
 
 .trip-details-email-rendered,
 .trip-details-email-recipient-panel {
+  min-width: 0;
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fbfaf7;
+  overflow-wrap: anywhere;
 }
 
 .trip-details-email-subject-preview {
@@ -7578,12 +7582,12 @@ textarea {
   }
 
   .content-page-editor {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .trip-details-email-preview-layout,
   .trip-details-email-sent-summary {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .campsite-signup-action {

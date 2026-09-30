@@ -31,7 +31,7 @@
     .actions
       = render "waiver_request_modal", user: @user
   - if @waivers.any?
-    %table
+    %table.admin-record-table.admin-user-waivers-table{role: "table", "aria-label" => "Waivers"}
       %thead
         %tr
           %th Signed
@@ -43,12 +43,12 @@
       %tbody
         - @waivers.each do |waiver|
           %tr
-            %td= waiver.waiver_signed_at.to_fs(:long)
-            %td= waiver.waiver_year
-            %td= waiver.display_type
-            %td= waiver.trip&.name || "Standalone"
-            %td= waiver.minors_summary
-            %td= render "shared/waiver_modal", waiver: waiver, button_label: "View", modal_id: "admin-user-waiver-#{waiver.id}"
+            %td.admin-record-title{role: "cell"}= waiver.waiver_signed_at.to_fs(:long)
+            %td{role: "cell", "data-label" => "Year"}= waiver.waiver_year
+            %td{role: "cell", "data-label" => "Type"}= waiver.display_type
+            %td{role: "cell", "data-label" => "Trip"}= waiver.trip&.name || "Standalone"
+            %td{role: "cell", "data-label" => "Minors"}= waiver.minors_summary
+            %td.table-actions{role: "cell"}= render "shared/waiver_modal", waiver: waiver, button_label: "View", modal_id: "admin-user-waiver-#{waiver.id}"
   - else
     %p.muted No waivers signed yet.
 %section.panel

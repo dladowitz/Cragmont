@@ -3,7 +3,7 @@
 - empty_message = local_assigns.fetch(:empty_message, "No trip signups yet.")
 
 - if rows.any?
-  %table.user-trip-history-table{class: ("public-card-table" if public_table)}
+  %table.user-trip-history-table{class: (admin_view ? "admin-record-table admin-user-trip-history" : ("public-card-table" if public_table)), role: ("table" if admin_view), "aria-label" => ("Trips and transactions" if admin_view)}
     %thead
       %tr
         %th Trip
@@ -14,13 +14,13 @@
       - rows.each do |row|
         - trip = row.trip
         %tr
-          %td{"data-label" => "Trip"}
+          %td{class: ("admin-record-title" if admin_view), role: ("cell" if admin_view), "data-label" => ("Trip" unless admin_view)}
             - trip_link = admin_view ? admin_trip_path(trip) : trip_path(trip)
             = link_to trip.name, trip_link
             %span= trip.location
-          %td{"data-label" => "Signup"}
+          %td{role: ("cell" if admin_view), "data-label" => "Signup"}
             %span.status{class: row.status_class}= row.status_label
-          %td{"data-label" => "Dates"}
+          %td{role: ("cell" if admin_view), "data-label" => "Dates"}
             - if trip.start_date == trip.end_date
               = trip.start_date.strftime("%B %d, %Y")
             - else
@@ -31,7 +31,7 @@
                 %div
                   %dt Checkout
                   %dd= trip.end_date.strftime("%b %d, %Y")
-          %td.user-trip-transactions-cell{"data-label" => "Transactions"}
+          %td.user-trip-transactions-cell{role: ("cell" if admin_view), "data-label" => "Transactions"}
             - if row.ledger_entries.any?
               %ul.user-trip-transaction-list
                 - row.ledger_entries.each do |entry|

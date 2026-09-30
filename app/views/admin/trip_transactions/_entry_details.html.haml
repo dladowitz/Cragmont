@@ -115,7 +115,7 @@
                             = submit_tag "Issue Refund", class: "button danger"
       %fieldset.transaction-fee-details{data: {controller: "table-scroll"}}
         %legend Fee details
-        %table.transaction-fee-table{tabindex: "0", aria: {label: "Fee breakdown"}}
+        %table.transaction-fee-table.admin-record-table{role: "table", aria: {label: "Fee breakdown"}}
           %thead
             %tr
               %th Participant
@@ -124,19 +124,19 @@
               %th Total
           %tbody
             - payment_fee_table_rows(payment).each do |row|
-              %tr
-                %td= row[:label]
-                %td= row[:first_two_nights]
-                %td= row[:additional_nights]
-                %td= format_cents(row[:total_cents])
+              %tr{role: "row"}
+                %td.admin-record-title{role: "cell"}= row[:label]
+                %td{role: "cell", "data-label" => "First 2 nights"}= row[:first_two_nights]
+                %td{role: "cell", "data-label" => "Additional nights"}= row[:additional_nights]
+                %td{role: "cell", "data-label" => "Total"}= format_cents(row[:total_cents])
           %tfoot
             %tr
               %td{:colspan => 3}
-              %td.transaction-fee-total= format_cents(payment.amount_cents)
+              %td.transaction-fee-total{"data-label" => "Total"}= format_cents(payment.amount_cents)
       .transaction-refund-details
         %h3 Refunds
         - if entry.refunds.any?
-          %table.transaction-refunds-table
+          %table.transaction-refunds-table.admin-record-table{role: "table", "aria-label" => "Refunds"}
             %thead
               %tr
                 %th Amount
@@ -146,12 +146,12 @@
                 %th Reason
             %tbody
               - entry.refunds.each do |refund|
-                %tr
-                  %td= format_cents(refund.amount_cents)
-                  %td= refund.refunded_at&.strftime("%-m/%-d/%y %l:%M %p") || "None"
-                  %td= refund.refunded_by&.full_name || "None"
-                  %td= refund.refund_type_label
-                  %td= refund.reason.presence || "None"
+                %tr{role: "row"}
+                  %td.admin-record-title{role: "cell"}= format_cents(refund.amount_cents)
+                  %td{role: "cell", "data-label" => "Refunded At"}= refund.refunded_at&.strftime("%-m/%-d/%y %l:%M %p") || "None"
+                  %td{role: "cell", "data-label" => "Refunded By"}= refund.refunded_by&.full_name || "None"
+                  %td{role: "cell", "data-label" => "Type"}= refund.refund_type_label
+                  %td{role: "cell", "data-label" => "Reason"}= refund.reason.presence || "None"
         - else
           %p.muted No refunds recorded for this payment.
       .form-actions

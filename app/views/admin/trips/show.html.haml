@@ -220,7 +220,7 @@
       %div
         %h2 Participants
     - if @day_trip_signups.any?
-      %table
+      %table.admin-record-table{role: "table", "aria-label" => "Participants"}
         %thead
           %tr
             %th Participant
@@ -233,19 +233,19 @@
               %th Actions
         %tbody
           - @day_trip_signups.each do |signup|
-            %tr
-              %td= signup.user.full_name
+            %tr{role: "row"}
+              %td.admin-record-title{role: "cell"}= signup.user.full_name
               - unless @trip.gym_outing?
-                %td= signup.skill_level_label
-                %td= signup.shared_gear_summary
-              %td
+                %td{role: "cell", "data-label" => "Climbing Skills"}= signup.skill_level_label
+                %td{role: "cell", "data-label" => "Bringing Gear"}= signup.shared_gear_summary
+              %td{role: "cell", "data-label" => "Party"}
                 - party = []
                 - party << signup.guest_signups.map { |guest_signup| guest_signup.user.full_name }.to_sentence if signup.includes_guests?
                 - party << signup.day_trip_signup_minors.map(&:full_name).to_sentence if signup.includes_minors?
                 = party.reject(&:blank?).presence&.join(" + ") || "Solo"
-              %td= signup.waiver_signed? ? "Signed" : "Missing"
+              %td{role: "cell", "data-label" => "Waiver"}= signup.waiver_signed? ? "Signed" : "Missing"
               - if !@trip.deleted? && policy(@trip).manage_participants?
-                %td.table-actions.day-trip-admin-participant-actions
+                %td.table-actions.day-trip-admin-participant-actions{role: "cell"}
                   %div{"data-controller" => "modal"}
                     %button.button.secondary.admin-table-action-button{"data-action" => "modal#open", type: "button"} Move to Waitlist
                     %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
@@ -273,7 +273,7 @@
       .panel-header
         %div
           %h2 Trip waitlist
-      %table
+      %table.admin-record-table{role: "table", "aria-label" => "Trip waitlist"}
         %thead
           %tr
             %th Participant
@@ -285,18 +285,18 @@
               %th Actions
         %tbody
           - @day_trip_waitlisted_signups.each do |signup|
-            %tr
-              %td= signup.user.full_name
+            %tr{role: "row"}
+              %td.admin-record-title{role: "cell"}= signup.user.full_name
               - unless @trip.gym_outing?
-                %td= signup.skill_level_label
-                %td= signup.shared_gear_summary
-              %td
+                %td{role: "cell", "data-label" => "Climbing Skills"}= signup.skill_level_label
+                %td{role: "cell", "data-label" => "Bringing Gear"}= signup.shared_gear_summary
+              %td{role: "cell", "data-label" => "Party"}
                 - party = []
                 - party << signup.guest_signups.map { |guest_signup| guest_signup.user.full_name }.to_sentence if signup.includes_guests?
                 - party << signup.day_trip_signup_minors.map(&:full_name).to_sentence if signup.includes_minors?
                 = party.reject(&:blank?).presence&.join(" + ") || "Solo"
               - if !@trip.deleted? && policy(@trip).manage_participants?
-                %td.table-actions.day-trip-admin-participant-actions
+                %td.table-actions.day-trip-admin-participant-actions{role: "cell"}
                   %div{"data-controller" => "modal"}
                     %button.button.secondary.admin-table-action-button{"data-action" => "modal#open", type: "button"} Move onto Trip
                     %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
@@ -323,7 +323,7 @@
       %div
         %h2 Participants
     - if @class_signups.any?
-      %table
+      %table.admin-record-table{role: "table", "aria-label" => "Class participants"}
         %thead
           %tr
             %th Participant
@@ -332,11 +332,11 @@
               %th Actions
         %tbody
           - @class_signups.each do |signup|
-            %tr
-              %td= signup.user.full_name
-              %td= signup.user.email.presence || "None"
+            %tr{role: "row"}
+              %td.admin-record-title{role: "cell"}= signup.user.full_name
+              %td{role: "cell", "data-label" => "Email"}= signup.user.email.presence || "None"
               - if !@trip.deleted? && policy(@trip).manage_participants?
-                %td.table-actions.day-trip-admin-participant-actions
+                %td.table-actions.day-trip-admin-participant-actions{role: "cell"}
                   %div{"data-controller" => "modal"}
                     %button.button.danger.secondary.admin-table-action-button{"data-action" => "modal#open", type: "button"} Remove
                     %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
@@ -496,7 +496,7 @@
         %h2 Trip Expenses
         %p.muted Refunds marked as trip expenses, such as firewood or other shared campsite costs.
     - if @trip_expense_refunds.any?
-      %table
+      %table.admin-record-table{role: "table", "aria-label" => "Trip expenses"}
         %thead
           %tr
             %th Participant
@@ -509,13 +509,13 @@
           - @trip_expense_refunds.each do |refund|
             - payment = refund.campsite_signup_payment
             - signup = payment.campsite_signup
-            %tr
-              %td= signup.user.full_name
-              %td= format_cents(refund.amount_cents)
-              %td= refund.refunded_by&.full_name || "None"
-              %td= refund.reason.presence || "None"
-              %td= refund.refunded_at&.strftime("%-m/%-d/%y") || "None"
-              %td
+            %tr{role: "row"}
+              %td.admin-record-title{role: "cell"}= signup.user.full_name
+              %td{role: "cell", "data-label" => "Amount"}= format_cents(refund.amount_cents)
+              %td{role: "cell", "data-label" => "Refunded By"}= refund.refunded_by&.full_name || "None"
+              %td{role: "cell", "data-label" => "Reason"}= refund.reason.presence || "None"
+              %td{role: "cell", "data-label" => "Date of Refund"}= refund.refunded_at&.strftime("%-m/%-d/%y") || "None"
+              %td.table-actions{role: "cell"}
                 %div{"data-controller" => "payment-details-trigger", "data-payment-details-trigger-payment-id-value" => payment.id}
                   %button.button.secondary.admin-table-action-button{"data-action" => "payment-details-trigger#open", type: "button"} View
     - else

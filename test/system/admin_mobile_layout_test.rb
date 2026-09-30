@@ -160,4 +160,45 @@ class AdminMobileLayoutTest < ApplicationSystemTestCase
     assert_selector "#campsite-reimbursement-#{campsites(:yosemite_a).id}"
     assert_no_selector "#campsite-reimbursement-#{campsites(:yosemite_b).id}"
   end
+
+  test "trip details email template preview fits a phone viewport" do
+    TripDetailsEmailTemplate.ensure_defaults!
+    template = TripDetailsEmailTemplate.find_by!(area_key: "yosemite", name: "Yosemite")
+    visit edit_admin_trip_details_email_template_path(template)
+
+    [ 320, 390 ].each do |width|
+      page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: 844, deviceScaleFactor: 1, mobile: false)
+      assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0, "Page at #{width}px"
+      preview = find(".trip-details-email-preview-panel")
+      assert_operator preview.evaluate_script("this.scrollWidth - this.clientWidth"), :<=, 1, "Preview at #{width}px"
+    end
+  end
+
+  test "admin directories and user history show complete records without sideways scrolling" do
+    User.create!(first_name: "Alexandria", last_name: "Very-Long-Climbing-Partner-Name",
+      email: "alexandria.very-long-climbing-partner-name@example.com", password: "password")
+    attach_test_waiver_to(create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam)))
+    TripDetailsEmailTemplate.ensure_defaults!
+
+    {
+      "users" => admin_users_path,
+      "user detail" => admin_user_path(users(:sam)),
+      "partners" => admin_partner_companies_path,
+      "email templates" => admin_trip_details_email_templates_path
+    }.each do |name, path|
+      visit path
+      assert_selector ".admin-record-table tbody tr"
+      [ 320, 390 ].each do |width|
+        page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: 844, deviceScaleFactor: 1, mobile: false)
+        assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0, "#{name} page at #{width}px"
+        all(".admin-record-table").each do |table|
+          assert_equal "block", table.native.css_value("display"), "#{name} table at #{width}px"
+          assert_operator table.evaluate_script("this.scrollWidth - this.clientWidth"), :<=, 1, "#{name} table at #{width}px"
+          table.all(":scope > tbody > tr > td").each do |cell|
+            assert_operator cell.evaluate_script("this.scrollWidth - this.clientWidth"), :<=, 1, "#{name} cell #{cell.text} at #{width}px"
+          end
+        end
+      end
+    end
+  end
 end

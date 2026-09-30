@@ -589,7 +589,9 @@ table { max-width: 100%; }
     min-width: 0;
     overflow: visible;
   }
-  body.admin-body table.admin-record-table::before { display: none; }
+  body.admin-body .trip-details-email-recipient-panel table.trip-details-email-recipient-table.admin-record-table { display: block; }
+  body.admin-body table.admin-record-table::before,
+  body.admin-body table.admin-record-table.is-scrollable::before { display: none; }
   body.admin-body table.admin-record-table > thead {
     position: absolute;
     width: 1px;
@@ -649,6 +651,38 @@ table { max-width: 100%; }
   body.admin-body table.admin-record-table > tbody > tr > .table-actions:empty { display: none; }
   .admin-record-table .table-actions :is(a, form) { margin: 0; }
   .admin-record-table .reimbursement-status-link { min-height: 44px; text-align: left; }
+  body.admin-body table.admin-signups-table > tbody > tr > .admin-record-empty,
+  body.admin-body table.trip-revenue-table.admin-record-table > tbody > tr > td:empty { display: none; }
+  body.admin-body table.admin-signups-table > tbody > tr > td[data-label] { display: block; }
+  .admin-signups-table > tbody > tr > td[data-label]::before { display: block; margin-bottom: 4px; }
+  .admin-users-table .user-name-cell { grid-template-columns: 18px minmax(0, 1fr); max-width: 100%; }
+  .admin-users-table .user-name-cell a { overflow-wrap: anywhere; }
+  body.admin-body table.admin-user-trip-history > tbody > tr > td:first-child { min-width: 0; }
+  body.admin-body table.admin-user-trip-history > tbody > tr > .user-trip-transactions-cell { display: block; }
+  .admin-user-trip-history .user-trip-transactions-cell::before { display: block; margin-bottom: 8px; }
+  body.admin-body table.transaction-fee-table.admin-record-table > tfoot { display: block; }
+  body.admin-body table.transaction-fee-table.admin-record-table > tfoot > tr {
+    display: block;
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-top: 1px solid var(--line);
+  }
+  body.admin-body table.transaction-fee-table.admin-record-table > tfoot > tr > td { display: none; }
+  body.admin-body table.transaction-fee-table.admin-record-table > tfoot > tr > td:last-child {
+    display: grid;
+    grid-template-columns: 7rem minmax(0, 1fr);
+    gap: 8px;
+    width: auto;
+    min-width: 0;
+    padding: 0;
+    text-align: left;
+  }
+  .transaction-fee-table.admin-record-table > tfoot > tr > td:last-child::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: .9rem;
+    font-weight: 500;
+  }
   .campsite-reimbursement-status { align-items: start; flex-direction: column; gap: 0; }
   .admin-trips-table > tbody > tr { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .admin-trips-table > tbody > tr > td:nth-child(n + 2):nth-child(-n + 5) { text-align: right; }
