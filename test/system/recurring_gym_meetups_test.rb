@@ -19,11 +19,15 @@ class RecurringGymMeetupsSystemTest < ApplicationSystemTestCase
     select "Twice monthly — first and third week", from: "Repeat"
 
     fill_in "Repeat through", with: Date.new(2027, 2, 19)
+    find("#gym_meetup_schedule_ends_on").send_keys(:escape)
     fill_in "Gym outing name", with: "System recurring gym crew"
     fill_in "Number of participants", with: 10
     fill_in "trip_location", with: "Movement Sunnyvale"
     fill_in "Trip date", with: Date.new(2027, 1, 1)
+    # Native date popovers can otherwise intercept the next Selenium click.
+    find("#trip_start_date").send_keys(:escape)
     fill_in "Meeting time", with: Time.zone.local(2027, 1, 1, 13)
+    find("#trip_meeting_time").send_keys(:escape)
     select "Published", from: "Status"
     within ".coordinator-picker" do
       find("[role=combobox]").click
