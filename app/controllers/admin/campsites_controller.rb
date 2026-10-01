@@ -1,7 +1,7 @@
 class Admin::CampsitesController < Admin::BaseController
   before_action :set_trip
   before_action :ensure_trip_not_deleted
-  before_action :set_campsite, only: %i[edit update destroy record_registration_reimbursement]
+  before_action :set_campsite, only: %i[edit update destroy enable_direct_signups enable_waitlist_mode record_registration_reimbursement]
   before_action :set_campgrounds, only: %i[new create edit update]
   before_action :set_users, only: %i[new create edit update]
 
@@ -45,13 +45,37 @@ class Admin::CampsitesController < Admin::BaseController
     end
   end
 
+  def enable_direct_signups
+    authorize @trip, :manage_campsites?
+    @campsite.enable_direct_signups_until_full!
+
+    redirect_to campsite_redirect_path,
+      notice: "On belay! Direct signup will be open for #{campsite_name} until it fills again."
+  rescue ActiveRecord::RecordInvalid
+    redirect_to campsite_redirect_path,
+      alert: "Wow, that was a whipper. #{@campsite.errors.full_messages.to_sentence}",
+      status: :see_other
+  end
+
+  def enable_waitlist_mode
+    authorize @trip, :manage_campsites?
+    @campsite.enable_waitlist_mode!
+
+    redirect_to campsite_redirect_path,
+      notice: "On belay! #{campsite_name} is using the waitlist."
+  rescue ActiveRecord::RecordInvalid
+    redirect_to campsite_redirect_path,
+      alert: "Wow, that was a whipper. #{@campsite.errors.full_messages.to_sentence}",
+      status: :see_other
+  end
+
   def record_registration_reimbursement
     authorize @trip, :manage_payments?
 
     if @campsite.update(registration_reimbursement_params.merge(registration_reimbursement_recorded_by: current_user))
-      redirect_to admin_trip_path(@trip), notice: "On belay! Campsite reimbursement was recorded."
+      redirect_to registration_reimbursement_redirect_path, notice: "On belay! Campsite reimbursement was recorded."
     else
-      redirect_to admin_trip_path(@trip), alert: "Wow, that was a whipper. #{@campsite.errors.full_messages.to_sentence}", status: :see_other
+      redirect_to registration_reimbursement_redirect_path, alert: "Wow, that was a whipper. #{@campsite.errors.full_messages.to_sentence}", status: :see_other
     end
   end
 
@@ -101,5 +125,28 @@ class Admin::CampsitesController < Admin::BaseController
       :registration_reimbursement_method,
       :registration_reimbursement_notes
     )
+  end
+
+  def registration_reimbursement_redirect_path
+    return admin_trip_path(@trip) unless params[:return_to] == "campsite_reimbursements"
+
+    admin_campsite_reimbursements_path(
+      filters: "1",
+      reimbursement_status: selected_reimbursement_filters
+    )
+  end
+
+  def campsite_redirect_path
+    admin_trip_path(@trip, anchor: "admin-campsite-#{@campsite.id}")
+  end
+
+  def campsite_name
+    "#{@campsite.campground.name} site #{@campsite.site_number}"
+  end
+
+  def selected_reimbursement_filters
+    Array(params[:reimbursement_status]).select do |status|
+      status.in?(Admin::CampsiteReimbursementsController::REIMBURSEMENT_FILTERS)
+    end
   end
 end

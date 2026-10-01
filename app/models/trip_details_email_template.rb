@@ -75,9 +75,9 @@ class TripDetailsEmailTemplate < ApplicationRecord
     Double check the Trip page for the final Parking assignments.
     **Trip page:** [{{trip_page_url}}]({{trip_page_url}})
 
-    If your name says **Reserved Parking** you have a dedicated parking spot at the site.
-    If your name says **Open Spot** you can take one of the first come first serve spots. Usually there is one per site.
-    If your name says **Overflow Lot** don't park at the campsite except for loading.
+    If your public name is listed next to a campsite parking spot, that spot is yours.
+    If a spot says **First Come First Serve**, it can be claimed by whoever arrives at that campsite first.
+    If you are not listed in the Parking section, plan on alternate or overflow parking.
 
     Each site has two parking spots. **Do not park more than 2 cars at a site overnight**.
     We've had camp hosts wake people up to move a car.

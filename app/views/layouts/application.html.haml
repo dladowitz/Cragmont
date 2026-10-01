@@ -7,6 +7,8 @@
     %meta{:content => "yes", :name => "apple-mobile-web-app-capable"}/
     %meta{:content => "Cragmont", :name => "application-name"}/
     %meta{:content => "yes", :name => "mobile-web-app-capable"}/
+    - if user_signed_in?
+      %meta{name: "turbo-cache-control", content: "no-cache"}
     = csrf_meta_tags
     = csp_meta_tag
     = yield :head

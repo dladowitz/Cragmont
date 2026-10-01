@@ -1,0 +1,62 @@
+= render "admin/shared/header", title: "Campsite Reimbursements"
+
+%section.panel.campsite-reimbursements-panel
+  .panel-header
+    %div
+      %h2 Campsite Reimbursements
+    = link_to "Back to Finances", admin_finances_path, class: "button secondary"
+
+  = form_with url: admin_campsite_reimbursements_path, method: :get, class: "campsite-reimbursement-filter-form", data: { turbo: false } do
+    = hidden_field_tag :filters, "1"
+    %fieldset.campsite-reimbursement-filters
+      %legend View campsites
+      - Admin::CampsiteReimbursementsController::REIMBURSEMENT_FILTERS.each do |status|
+        %label.campsite-reimbursement-filter
+          = check_box_tag "reimbursement_status[]", status, @selected_reimbursement_filters.include?(status), id: "reimbursement_status_#{status}"
+          %span= status.titleize
+      .campsite-reimbursement-filter-actions
+        = submit_tag "Apply", class: "button secondary"
+        = button_tag "Download CSV Report", type: "submit", name: "format", value: "csv", class: "button secondary"
+
+  - if @campsites_by_trip.any?
+    .campsite-reimbursement-groups
+      - @campsites_by_trip.each do |trip, campsites|
+        %section.campsite-reimbursement-trip{id: "campsite-reimbursement-trip-#{trip.id}"}
+          .campsite-reimbursement-trip-heading
+            %div
+              %h3= trip.name
+              %p.muted= "#{trip.start_date.to_fs(:long)}–#{trip.end_date.to_fs(:long)} · #{trip.status.titleize}"
+            - if policy(trip).show?
+              = link_to "View Trip", admin_trip_path(trip), class: "button secondary admin-table-action-button"
+          .table-wrapper
+            %table.campsite-reimbursement-table
+              %thead
+                %tr
+                  %th Campground
+                  %th Site Number
+                  %th Registered by
+                  %th Fees paid
+                  %th Reimbursed
+                  %th Reimbursed On
+              %tbody
+                - campsites.each do |campsite|
+                  %tr{id: "campsite-reimbursement-#{campsite.id}"}
+                    %td= campsite.campground.name
+                    %td= campsite.site_number
+                    %td= campsite.registered_by&.full_name || "None"
+                    %td= format_cents(campsite.registration_fee_cents)
+                    %td
+                      - if campsite.registration_reimbursed?
+                        Yes
+                      - else
+                        .campsite-reimbursement-status
+                          %span No
+                          - if policy(trip).manage_payments?
+                            = render "admin/shared/campsite_reimbursement_form", trip: trip, campsite: campsite, users: @users, trigger_label: "Record Reimbursement", return_to: "campsite_reimbursements", reimbursement_filters: @selected_reimbursement_filters
+                    %td= campsite.registration_reimbursed_at&.strftime("%b %-d, %Y") || "—"
+  - else
+    .empty-state
+      - if @selected_reimbursement_filters == [ "unreimbursed" ]
+        %p On belay! Every campsite registration fee has been reimbursed.
+      - else
+        %p No campsites match the selected reimbursement filters.

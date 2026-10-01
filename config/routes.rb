@@ -28,11 +28,15 @@ Rails.application.routes.draw do
   get "payment_requests/:token", to: "trip_payment_requests#show", as: :trip_payment_request
 
   resources :trips, only: %i[index show] do
+    get "calendar", to: "trip_calendars#index", on: :collection, defaults: { format: :ics }
+    get "calendar", to: "trip_calendars#show", on: :member, defaults: { format: :ics }
     get "past-trips", to: "trips#past_trips", as: :past_trips, on: :collection
     get "what-to-expect", on: :collection
     get "day-trip-what-to-expect", to: "trips#day_trip_what_to_expect", as: :day_trip_what_to_expect, on: :collection
     get "how-to-think-about-safety", to: "trips#safety", as: :safety, on: :collection
     resource :day_trip_signup, only: %i[create destroy]
+    resource :class_signup, only: %i[create destroy]
+    resource :climbing_partner_request, only: %i[create destroy]
     post "guest_waiver_emails/:id", to: "guest_waiver_emails#create", as: :guest_waiver_email
     resources :campsites, only: [] do
       resource :campsite_signup, only: %i[create destroy] do
@@ -45,6 +49,8 @@ Rails.application.routes.draw do
   namespace :admin do
     root to: redirect("/admin/trips")
     get "content", to: "content#index", as: :content
+    get "finances", to: "finances#index", as: :finances
+    get "finances/campsite_reimbursements", to: "campsite_reimbursements#index", as: :campsite_reimbursements
     resource :settings, only: %i[show update]
     resources :site_content, path: "content/settings", param: :key, only: %i[edit update]
     resources :content_pages, param: :slug, only: %i[edit update] do
@@ -62,6 +68,7 @@ Rails.application.routes.draw do
       post :email_waiver_request, on: :member
     end
     resources :campgrounds
+    resources :partner_companies
     resources :trips do
       patch :restore, on: :member
       get "readiness", to: "trip_readiness#show", as: :readiness, on: :member
@@ -79,14 +86,16 @@ Rails.application.routes.draw do
         post :refund, on: :member
       end
       resources :campsites, except: %i[index show] do
+        patch :enable_direct_signups, on: :member
+        patch :enable_waitlist_mode, on: :member
         patch :record_registration_reimbursement, on: :member
       end
+      resources :campsite_parking_spots, only: :update
       resources :campsite_signups, only: %i[create] do
         patch :make_waitlist_eligible, on: :member
         patch :revoke_waitlist_eligibility, on: :member
         patch :move_to_campsite, on: :member
         patch :move_to_waitlist, on: :member
-        patch :update_parking_status, on: :member
         post :email_participant_link, on: :member
         delete :remove_from_campsite, on: :member
         delete :remove_from_waitlist, on: :member
@@ -94,6 +103,9 @@ Rails.application.routes.draw do
       resources :day_trip_signups, only: [] do
         patch :move_to_waitlist, on: :member
         patch :move_onto_trip, on: :member
+        delete :remove, on: :member
+      end
+      resources :class_signups, only: [] do
         delete :remove, on: :member
       end
       resources :trip_payment_requests, only: %i[create] do

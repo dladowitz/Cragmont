@@ -68,7 +68,7 @@ class TripRevenueSummaryTest < ActiveSupport::TestCase
     assert_equal [ 8_425, 9_250 ], summary.campsite_registration_fee_lines.map(&:fee_cents)
     assert_equal 17_000, summary.campsite_revenue_cents
     assert_equal 2_500, summary.one_time_payment_requests_cents
-    assert_equal 19_500, summary.total_revenue_cents
+    assert_equal 19_208, summary.total_revenue_cents
     assert_equal 1_000, summary.trip_expense_refund_cents
     assert_equal [ "Sam Lee" ], summary.trip_expense_lines.map(&:participant_name)
     assert_equal [ "Firewood" ], summary.trip_expense_lines.map(&:reason)
@@ -80,7 +80,7 @@ class TripRevenueSummaryTest < ActiveSupport::TestCase
     assert_equal [ 117, 175 ], summary.stripe_processing_fee_lines.map(&:fee_cents)
     assert_equal [ 9_883, 4_825 ], summary.stripe_processing_fee_lines.map(&:net_cents)
     assert_equal 292, summary.stripe_processing_fee_cents
-    assert_equal 18_967, summary.total_expense_cents
+    assert_equal 18_675, summary.total_expense_cents
     assert_equal 533, summary.final_total_cents
   end
 end

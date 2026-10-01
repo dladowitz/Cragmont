@@ -26,13 +26,13 @@ class Admin::DayTripSignupsController < Admin::BaseController
   def remove
     participant_name = @signup.user.full_name
     @signup.primary_signup.destroy!
-    redirect_to admin_trip_path(@trip), notice: "Off belay! #{participant_name} was removed from this day trip.", status: :see_other
+    redirect_to admin_trip_path(@trip), notice: "Off belay! #{participant_name} was removed from this #{@trip.trip_type_label.downcase}.", status: :see_other
   end
 
   private
 
   def set_trip
-    @trip = Trip.day_trip.find(params[:trip_id])
+    @trip = Trip.with_day_trip_signups.find(params[:trip_id])
   end
 
   def authorize_trip_participant_management

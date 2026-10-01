@@ -6,7 +6,6 @@
 - allowed_signup_tooltip = "Participants can sign themselves up from the waitlist"
 - add_campsite_tooltip = "Adds a participant directly to a campsite"
 - remove_waitlist_tooltip = "Removes Participant from Waitlist"
-- parking_tooltip = local_assigns.fetch(:parking_tooltip, "Reserved Spots are assigned to the person who registered the site. Then to the Campsite Coordinator. Then to club members.\n\nOther spots are set to Open and are first come, first serve.")
 - signups_by_primary_id = signups.group_by { |signup| signup.guest_of_signup_id || signup.id }
 - display_signups = waitlist ? signups : signups.reject(&:guest?).flat_map { |signup| [signup] + signups_by_primary_id.fetch(signup.id, []).select(&:guest?) }
 %table
@@ -18,11 +17,6 @@
         %th Minors
       - unless waitlist
         %th Dates
-        %th
-          %span.tooltip-heading.info-tooltip.parking-tooltip{aria: { label: parking_tooltip }, tabindex: "0"}
-            %span Parking
-            %span.info-tooltip-icon{aria: { hidden: "true" }} i
-            %span.info-tooltip-box{role: "tooltip"}= parking_tooltip
       - if waitlist && !read_only
         %th
           %span.tooltip-heading.info-tooltip{aria: { label: allowed_signup_tooltip }, tabindex: "0"}
@@ -125,12 +119,6 @@
               %span.missing-value Missing
             - else
               %button.missing-value.missing-link{"data-action" => "copyable-modal#open", type: "button"} Missing
-          %td
-            - if read_only
-              = signup.parking_status_label
-            - else
-              = form_with model: signup, url: update_parking_status_admin_trip_campsite_signup_path(signup_trip, signup), method: :patch, class: "admin-parking-status-form" do |form|
-                = form.select :parking_status, CampsiteSignup.parking_status_options, {}, onchange: "this.form.requestSubmit()"
         - if waitlist && !read_only
           %td.admin-self-signup-cell
             .admin-self-signup-control

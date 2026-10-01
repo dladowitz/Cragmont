@@ -27,17 +27,6 @@
         %td
         %td
         %td= format_cents(summary.one_time_payment_requests_cents)
-      %tr.trip-revenue-total
-        %td Total revenue
-        %td
-        %td
-        %td= format_cents(summary.total_revenue_cents)
-      - summary.trip_expense_lines.each do |line|
-        %tr.trip-revenue-expense
-          %td= link_to "Trip Expense", admin_trip_transactions_path(summary.trip, anchor: line.transaction_anchor), class: "trip-revenue-line-label"
-          %td= line.participant_name
-          %td= line.reason
-          %td= "-#{format_cents(line.amount_cents)}"
       - if summary.stripe_processing_fee_cents.positive?
         %tr.trip-revenue-expense
           %td
@@ -71,6 +60,17 @@
           %td
           %td
           %td= "-#{format_cents(summary.stripe_processing_fee_cents)}"
+      %tr.trip-revenue-total
+        %td Total revenue
+        %td
+        %td
+        %td= format_cents(summary.total_revenue_cents)
+      - summary.trip_expense_lines.each do |line|
+        %tr.trip-revenue-expense
+          %td= link_to "Trip Expense", admin_trip_transactions_path(summary.trip, anchor: line.transaction_anchor), class: "trip-revenue-line-label"
+          %td= line.participant_name
+          %td= line.reason
+          %td= "-#{format_cents(line.amount_cents)}"
       - summary.campsite_registration_fee_lines.each do |line|
         %tr.trip-revenue-expense
           %td

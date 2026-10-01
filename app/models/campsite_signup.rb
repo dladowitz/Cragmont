@@ -3,14 +3,6 @@ class CampsiteSignup < ApplicationRecord
   REFUND_CUTOFF_DAYS = 7
   STATUSES = %w[pending_payment confirmed waitlisted canceled].freeze
   CAPACITY_HOLDING_STATUSES = %w[pending_payment confirmed].freeze
-  PARKING_STATUSES = %w[unassigned reserved_spot first_come_first_serve overflow_parking day_use].freeze
-  PARKING_STATUS_LABELS = {
-    "unassigned" => "Unassigned",
-    "reserved_spot" => "Reserved Spot",
-    "first_come_first_serve" => "Open Spot",
-    "overflow_parking" => "Overflow Lot",
-    "day_use" => "Day Use"
-  }.freeze
 
   belongs_to :trip
   belongs_to :campsite, optional: true
@@ -31,18 +23,21 @@ class CampsiteSignup < ApplicationRecord
     class_name: "CampsiteSignupPayment",
     dependent: :destroy,
     inverse_of: :campsite_signup
+  has_one :assigned_parking_spot,
+    class_name: "CampsiteParkingSpot",
+    foreign_key: :assigned_campsite_signup_id,
+    dependent: :nullify,
+    inverse_of: :assigned_campsite_signup
   has_one_attached :waiver_document
   has_one_attached :waiver_signature_image
 
   enum :status, STATUSES.index_with(&:itself), default: "confirmed"
-  enum :parking_status, PARKING_STATUSES.index_with(&:itself), default: "unassigned"
   scope :primary, -> { where(guest_of_signup_id: nil) }
   scope :guests, -> { where.not(guest_of_signup_id: nil) }
   scope :capacity_holding, -> { where(status: CAPACITY_HOLDING_STATUSES) }
   scope :active, -> { where.not(status: "canceled") }
 
   validates :status, presence: true, inclusion: { in: STATUSES }
-  validates :parking_status, presence: true, inclusion: { in: PARKING_STATUSES }
   validates :campsite, presence: true, if: :capacity_holding?
   validates :user_id,
     uniqueness: {
@@ -58,11 +53,12 @@ class CampsiteSignup < ApplicationRecord
   validate :guest_limit_for_primary
   validate :campsite_belongs_to_trip
   validate :attendance_dates_within_campsite_dates, if: :capacity_holding?
-  validate :reserved_parking_within_campsite_capacity
 
   before_validation :assign_trip_from_campsite
   before_validation :assign_guest_trip
   before_validation :assign_capacity_status, on: :create
+  after_save :clear_assigned_parking_spot_if_not_confirmed
+  before_destroy :clear_assigned_parking_spot
 
   def guest?
     guest_of_signup_id.present?
@@ -139,14 +135,6 @@ class CampsiteSignup < ApplicationRecord
 
   def waitlist_eligible?
     waitlist_eligible_at.present?
-  end
-
-  def parking_status_label
-    PARKING_STATUS_LABELS.fetch(parking_status)
-  end
-
-  def self.parking_status_options
-    PARKING_STATUSES.map { |status| [ PARKING_STATUS_LABELS.fetch(status), status ] }
   end
 
   def capacity_holding?
@@ -278,20 +266,6 @@ class CampsiteSignup < ApplicationRecord
     errors.add(:campsite, "must belong to the selected trip")
   end
 
-  def reserved_parking_within_campsite_capacity
-    return unless reserved_spot?
-
-    if !confirmed? || campsite.blank?
-      errors.add(:parking_status, "can only reserve parking for confirmed campsite participants")
-      return
-    end
-
-    reserved_count = campsite.campsite_signups.confirmed.reserved_spot.where.not(id: id).count
-    return if reserved_count < campsite.car_capacity
-
-    errors.add(:parking_status, "cannot exceed the campsite parking spot count")
-  end
-
   def attendance_dates_within_campsite_dates
     return if campsite.blank? || arrival_date.blank? || checkout_date.blank?
 
@@ -322,5 +296,15 @@ class CampsiteSignup < ApplicationRecord
     return if pending_payment? || canceled?
 
     self.status = campsite.direct_signup_available? && campsite.available_participant_capacity >= capacity_count ? "confirmed" : "waitlisted"
+  end
+
+  def clear_assigned_parking_spot_if_not_confirmed
+    return if confirmed?
+
+    clear_assigned_parking_spot
+  end
+
+  def clear_assigned_parking_spot
+    assigned_parking_spot&.update!(status: "unassigned", assigned_campsite_signup: nil)
   end
 end

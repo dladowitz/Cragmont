@@ -7,11 +7,17 @@ class ApplicationController < ActionController::Base
   # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
 
+  after_action :prevent_authenticated_response_caching
+
   helper_method :current_user, :user_signed_in?
 
   rescue_from Pundit::NotAuthorizedError, with: :user_not_authorized
 
   private
+
+  def prevent_authenticated_response_caching
+    response.headers["Cache-Control"] = "private, no-store" if user_signed_in?
+  end
 
   def current_user
     return nil if session[:user_id].blank?
@@ -30,7 +36,11 @@ class ApplicationController < ActionController::Base
   end
 
   def user_not_authorized
-    redirect_back fallback_location: root_path,
-      alert: "Wow, that was a whipper. You do not have permission to access that page."
+    message = "Wow, that was a whipper. You do not have permission to access that page."
+
+    respond_to do |format|
+      format.html { redirect_back fallback_location: root_path, alert: message }
+      format.json { render json: { message: message }, status: :forbidden }
+    end
   end
 end

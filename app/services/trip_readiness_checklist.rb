@@ -64,6 +64,7 @@ class TripReadinessChecklist
     all_campsites_reimbursed
     send_collected_money_to_treasurer
   ].freeze
+  GYM_OUTING_EXCLUDED_TASKS = %w[weather_link_added mountain_project_link_added guide_book_link_added sun_exposure_added verify_enough_lead_climbers].freeze
   CAMPING_TRIP_EXCLUDED_TASKS = %w[
     mountain_project_link_added
     sun_exposure_added
@@ -87,7 +88,8 @@ class TripReadinessChecklist
 
   def self.completable_task_key?(task_key, trip: nil)
     task_key = task_key.to_s
-    return false if trip&.day_trip? && DAY_TRIP_EXCLUDED_TASKS.include?(task_key)
+    return false if trip&.uses_day_trip_signups? && DAY_TRIP_EXCLUDED_TASKS.include?(task_key)
+    return false if trip&.gym_outing? && GYM_OUTING_EXCLUDED_TASKS.include?(task_key)
     return false if trip&.camping? && CAMPING_TRIP_EXCLUDED_TASKS.include?(task_key)
     return false if task_key == "verify_enough_lead_climbers" && !trip_has_rope_climbing?(trip)
     return true if completable_task_keys.include?(task_key)
@@ -110,7 +112,7 @@ class TripReadinessChecklist
   end
 
   def self.trip_has_rope_climbing?(trip)
-    trip.present? && (trip.sport_climbing? || trip.trad_climbing?)
+    trip.present? && !trip.gym_outing? && (trip.sport_climbing? || trip.trad_climbing?)
   end
 
   def initialize(trip)
@@ -121,7 +123,7 @@ class TripReadinessChecklist
   def categories
     @categories ||= begin
       categories = [ Category.new(key: "trip", name: "Trip", tasks: trip_tasks) ]
-      unless trip.day_trip?
+      unless trip.uses_day_trip_signups?
         categories << Category.new(key: "campsites", name: "Campsites", tasks: campsite_tasks)
         categories << Category.new(key: "participant", name: "Participants", tasks: participant_tasks)
       end
@@ -244,8 +246,9 @@ class TripReadinessChecklist
     ]
 
     tasks.reject do |task|
-      (trip.day_trip? && DAY_TRIP_EXCLUDED_TASKS.include?(task.key)) ||
-        (trip.camping? && CAMPING_TRIP_EXCLUDED_TASKS.include?(task.key))
+      (trip.uses_day_trip_signups? && DAY_TRIP_EXCLUDED_TASKS.include?(task.key)) ||
+        (trip.camping? && CAMPING_TRIP_EXCLUDED_TASKS.include?(task.key)) ||
+        (trip.gym_outing? && GYM_OUTING_EXCLUDED_TASKS.include?(task.key))
     end
   end
 
@@ -280,9 +283,9 @@ class TripReadinessChecklist
       automatic_task(
         :all_confirmed_participants_assigned_parking,
         "Parking assigned",
-        confirmed_participants_ready? { |signup| !signup.unassigned? },
-        complete_detail: "Every confirmed participant has a parking status.",
-        incomplete_detail: missing_confirmed_participants_detail(->(signup) { !signup.unassigned? }, "parking")
+        parking_spots_configured?,
+        complete_detail: "Every campsite parking spot is assigned or first come first serve.",
+        incomplete_detail: missing_parking_spots_detail
       ),
       automatic_task(
         :send_trip_details_email,
@@ -344,7 +347,7 @@ class TripReadinessChecklist
       manual_task(:send_photo_upload_reminder, MANUAL_TASKS.fetch(:send_photo_upload_reminder))
     ]
 
-    tasks.reject { |task| trip.day_trip? && DAY_TRIP_EXCLUDED_TASKS.include?(task.key) }
+    tasks.reject { |task| trip.uses_day_trip_signups? && DAY_TRIP_EXCLUDED_TASKS.include?(task.key) }
   end
 
   def automatic_task(key, name, source_complete, update_label: nil, update_campsite: nil, complete_detail:, incomplete_detail:, detail_link_url: nil)
@@ -422,7 +425,26 @@ class TripReadinessChecklist
   end
 
   def campsites
-    @campsites ||= trip.campsites.includes(:campground, :registered_by).order(:arrival_date, :site_number).to_a
+    @campsites ||= trip.campsites.includes(:campground, :registered_by, :parking_spots).order(:arrival_date, :site_number).to_a
+  end
+
+  def parking_spots
+    @parking_spots ||= campsites.flat_map(&:parking_spots)
+  end
+
+  def parking_spots_configured?
+    parking_spots.any? && parking_spots.all? { |spot| !spot.unassigned? }
+  end
+
+  def missing_parking_spots_detail
+    return "No campsite parking spots yet." if parking_spots.empty?
+
+    missing_labels = campsites.flat_map do |campsite|
+      campsite.parking_spots.select(&:unassigned?).map { |spot| "#{campsite_name(campsite)} #{spot.spot_label}" }
+    end
+    return "Every campsite parking spot is assigned or first come first serve." if missing_labels.empty?
+
+    "Still needs parking: #{missing_labels.to_sentence}."
   end
 
   def reimbursable_campsites

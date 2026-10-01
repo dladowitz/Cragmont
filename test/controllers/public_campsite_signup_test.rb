@@ -26,6 +26,21 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "trips index shows published trips and hides unpublished trips" do
+    class_trip = create_class_trip!(name: "Intro to Anchors")
+    day_trip = Trip.create!(
+      trip_type: "day_trip",
+      name: "Castle Rock Day",
+      location: "Castle Rock, CA",
+      start_date: Date.new(2026, 9, 19),
+      status: "published",
+      meeting_time: "08:30",
+      meeting_location: "Castle Rock parking lot",
+      meeting_location_url: "https://maps.google.com/?q=Castle+Rock",
+      late_arrival_instructions: "If you are running late, meet us at the main wall.",
+      participant_capacity: 8,
+      climbing_types: [ "sport" ]
+    )
+
     get trips_url
 
     assert_response :success
@@ -34,6 +49,9 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] .date-range-mobile", text: /06\/12\/26\s*to 06\/15\/26/
     assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] .trip-card-meta", text: /Open Spaces\s*10 spaces/
     assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] .trip-card-meta", text: /Capacity/, count: 0
+    assert_select ".trip-card[href='#{trip_path(class_trip)}'] .trip-card-meta", text: /Open Spaces/, count: 0
+    assert_select ".trip-card[href='#{trip_path(class_trip)}'] .trip-type-badge.external-class-badge", text: "External Class"
+    assert_select ".trip-card[href='#{trip_path(day_trip)}'] .trip-type-badge.day-trip-badge", text: "Day Trip"
     assert_select ".trip-card[href='#{trip_path(trips(:jtree))}']", count: 0
     assert_select "a", text: "View trip", count: 0
     assert_select "a[href='#{past_trips_trips_path}']", text: "Past Trips"
@@ -74,6 +92,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public day trip detail renders mobile hero image block" do
+    log_in_as(users(:sam))
     trip = Trip.create!(
       trip_type: "day_trip",
       name: "Vent 5 Day",
@@ -99,6 +118,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     get trip_url(trip)
 
     assert_response :success
+    assert_select ".trip-type-badge.day-trip-badge", text: "Day Trip"
     assert_select ".trip-summary-header .trips-faq-callout", text: /day trip/
     assert_select ".trip-summary-header .trips-faq-callout a[href='#{day_trip_what_to_expect_trips_path}']", text: "here."
     assert_select ".trip-summary-copy .trip-title-line" do
@@ -134,6 +154,125 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_select ".details-list", text: /555-0100/, count: 0
     end
     assert_operator response.body.index("Trip Coordinator"), :<, response.body.index("Safety Reminder")
+  end
+
+  test "public class detail renders external event information" do
+    ContentPage.current!("class_reminder").update!(
+      title: "Class Reminder",
+      body: "## Class Details\n\nRegister with the guide company."
+    )
+    trip = create_class_trip!(
+      name: "Intro to Anchors",
+      description: "Learn **anchors** from certified guides.",
+      class_discount_code: "CRAG10",
+      class_discount_amount: "$25 off",
+      class_original_price: "250",
+      class_offers_discount: true,
+      class_discounted_price: "225",
+      whatsapp_group: "https://chat.whatsapp.com/class-public",
+      photo_album_url: "https://photos.app.goo.gl/class-public"
+    )
+    ClassSignup.create!(trip: trip, user: users(:sam))
+
+    get trip_url(trip)
+
+    assert_response :success
+    assert_select ".trip-type-badge.external-class-badge", text: "External Class"
+    assert_select ".trip-summary-header", text: /Taught by/
+    assert_select "a[href='https://example.com/vertical-world'][target='_blank'][rel='noopener']", text: "Vertical World Guides"
+    assert_select "a.button[href='https://example.com/classes/anchors'][target='_blank'][rel='noopener']", text: "Register with Vertical World Guides", count: 1
+    assert_select ".class-trip-description-panel a.button[href='https://example.com/classes/anchors'][target='_blank'][rel='noopener']", text: "Register with Vertical World Guides", count: 1
+    assert_select ".class-trip-description-panel .class-registration-card .day-trip-signup-action"
+    assert_select ".trip-resource-links a[href='https://example.com/classes/anchors']", count: 0
+    assert_select ".trip-mobile-resource-link[href='https://example.com/classes/anchors']", count: 0
+    assert_select ".class-trip-description-panel .class-registration-note", text: "You must register and pay on the guiding company's website to be officially signed up."
+    assert_select ".class-trip-details-panel .class-registration-note", count: 0
+    assert_select ".class-trip-details-panel h2", "Cost Details"
+    assert_select ".class-trip-details-panel", text: /Max class size/, count: 0
+    assert_select ".class-trip-details-panel", text: /Original price\s*\$250/
+    assert_select ".class-trip-details-panel", text: /Discount code\s*CRAG10/
+    assert_select ".class-trip-details-panel", text: /Discount amount\s*\$25 off/
+    assert_select ".class-trip-details-panel", text: /Discounted price\s*\$225/
+    assert_select ".class-trip-description-panel .content-page-markdown strong", "anchors"
+    assert_operator response.body.index("class-trip-description-panel"), :<, response.body.index("class-trip-details-panel")
+    assert_operator response.body.index("class-trip-description-panel"), :<, response.body.index("class-reminder-panel")
+    assert_operator response.body.index("class-reminder-panel"), :<, response.body.index("class-trip-details-panel")
+    assert_select ".class-trip-participants-panel td", text: "Sam L."
+    assert_select ".class-trip-overview .stats", text: /Open Spaces/, count: 0
+    assert_select ".class-trip-overview .danger-status", text: /Class Full/, count: 0
+    assert_select ".class-trip-participants-panel", text: /This indicates to other Cragmont participants you have signed up/
+    assert_select ".class-trip-participants-panel", text: /You must signup on Vertical World Guides' website to be enrolled\. This does not automatically sync with their signups\./
+    assert_select ".class-reminder-panel .content-page-markdown h2", count: 0
+    assert_select ".class-reminder-panel .content-page-markdown", text: /Class Details/, count: 0
+    assert_select ".class-reminder-panel .content-page-markdown", text: /Register with the guide company/
+    assert_select ".trips-faq-callout", count: 0
+    assert_select ".day-trip-safety-panel .content-page-markdown", text: /Climbing is dangerous/, count: 0
+    assert_select ".waiver-form", count: 0
+  end
+
+  test "public class detail hides discount fields when class does not offer a discount" do
+    trip = create_class_trip!(
+      class_original_price: "250",
+      class_discount_code: "CRAG10",
+      class_discount_amount: "$25 off",
+      class_discounted_price: "225"
+    )
+
+    get trip_url(trip)
+
+    assert_response :success
+    assert_select ".class-trip-details-panel", text: /Price\s*\$250/
+    assert_select ".class-trip-details-panel", text: /Original price/, count: 0
+    assert_select ".class-trip-details-panel", text: /Discount code/, count: 0
+    assert_select ".class-trip-details-panel", text: /Discount amount/, count: 0
+    assert_select ".class-trip-details-panel", text: /Discounted price/, count: 0
+  end
+
+  test "public class signup marks intent without waiver or payment" do
+    trip = create_class_trip!(participant_capacity: 2)
+    log_in_as(users(:sam))
+
+    get trip_url(trip)
+    assert_response :success
+    assert_select ".class-trip-participants-panel form[action='#{trip_class_signup_path(trip)}'][method='post'] button", text: "I've Signed Up"
+    assert_select ".class-trip-participants-panel", text: /This indicates to other Cragmont participants you have signed up/
+    assert_select ".class-trip-participants-panel", text: /You must signup on Vertical World Guides' website to be enrolled\. This does not automatically sync with their signups\./
+    assert_select "button", text: "I plan to register", count: 0
+
+    assert_difference "ClassSignup.count", 1 do
+      assert_no_difference "Waiver.count" do
+        assert_no_difference "CampsiteSignupPayment.count" do
+          post trip_class_signup_path(trip)
+        end
+      end
+    end
+
+    assert_redirected_to trip_url(trip)
+    assert_equal "On belay! You're marked as planning to register for this class.", flash[:notice]
+    signup = ClassSignup.find_by!(trip: trip, user: users(:sam))
+    assert signup.confirmed?
+
+    assert_no_difference "ClassSignup.count" do
+      post trip_class_signup_path(trip)
+    end
+    assert_equal "Wow, that was a whipper. You're already marked as interested in this class.", flash[:alert]
+
+    delete trip_class_signup_path(trip)
+    assert_redirected_to trip_url(trip)
+    assert signup.reload.canceled?
+  end
+
+  test "public class signup blocks full class" do
+    trip = create_class_trip!(participant_capacity: 1)
+    ClassSignup.create!(trip: trip, user: users(:alex))
+    log_in_as(users(:sam))
+
+    assert_no_difference "ClassSignup.count" do
+      post trip_class_signup_path(trip)
+    end
+
+    assert_redirected_to trip_url(trip)
+    assert_equal "Wow, that was a whipper. This class is full.", flash[:alert]
   end
 
   test "public day trip stats show simple capacity counts" do
@@ -209,7 +348,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
         assert_select "dialog.day-trip-signup-modal" do
           assert_select "h2", "Sign Up"
           assert_select "form.day-trip-signup-form[action='#{trip_day_trip_signup_path(trip)}']" do
-            assert_select ".capacity-warning[hidden]", text: "This trip is currently full. You can sign up for the waitlist"
+            assert_select ".capacity-warning[hidden]", text: "There aren’t enough spaces for your group. You can sign up for the waitlist"
             assert_select "legend", text: /Climbing ability/
             assert_select ".signup-field-subtext", text: "Select the type of climbing you are competent at"
             assert_select ".climbing-ability-options[data-climbing-ability-group='true']"
@@ -235,13 +374,14 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
               assert_select "input[name='day_trip_signup[day_trip_signup_minors_attributes][0][age]']"
               assert_select "input[name='day_trip_signup[day_trip_signup_minors_attributes][0][relationship]']"
             end
-            assert_select "legend", text: "Gear I can bring"
+            assert_select "legend", text: "Gear I plan to bring"
             assert_select "input[type='checkbox'][name='day_trip_signup[rope_60m]'][value='1']"
             assert_select "input[type='checkbox'][name='day_trip_signup[rope_70m]'][value='1']"
             assert_select "input[type='checkbox'][name='day_trip_signup[quickdraws_and_sport_anchor]'][value='1']"
             assert_select "input[type='checkbox'][name='day_trip_signup[clip_stick]'][value='1']"
             assert_select "input[type='checkbox'][name='day_trip_signup[cams_nuts_and_trad_anchor]'][value='1']"
             assert_select "input[name='day_trip_signup[crash_pad_count]']", count: 0
+            assert_select ".check-in-check-out-step", count: 0
           end
         end
       end
@@ -479,7 +619,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_select ".climbing-ability-definition", text: /We ask that at a minimum you feel competent Top Rope climbing\./, count: 0
       assert_select "input[type='checkbox'][name='day_trip_signup[with_guest]']", count: 0
       assert_select ".guest-fields", count: 0
-      assert_select "legend", text: "Gear I can bring"
+      assert_select "legend", text: "Gear I plan to bring"
       assert_select "input[type='checkbox'][name='day_trip_signup[rope_60m]']", count: 0
       assert_select "input[type='checkbox'][name='day_trip_signup[rope_70m]']", count: 0
       assert_select "input[type='checkbox'][name='day_trip_signup[quickdraws_and_sport_anchor]']", count: 0
@@ -758,6 +898,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public trip detail shows trip campsite and coordinator info" do
+    log_in_as(users(:sam))
     trips(:yosemite).update!(
       description: "**Yosemite** camping notes.\n\n## Parking\n\nArrive early and bring snacks.",
       whatsapp_group: "https://chat.whatsapp.com/yosemite-spring",
@@ -771,6 +912,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "h1", "Yosemite Valley Spring"
     assert_select "h2", "Yosemite Valley, CA"
     assert_select ".background-image-caption", "IRS Wall, Joshua Tree"
+    assert_select ".trip-show-mobile-hero .trip-type-badge", text: "Camping Trip"
     assert_select ".trip-show-mobile-hero .trip-whatsapp-mobile-link[href='https://chat.whatsapp.com/yosemite-spring'][target='_blank'][rel='noopener']", text: "Join the WhatsApp Group"
     assert_select ".trip-show-mobile-hero .trip-weather-mobile-link[href='https://forecast.weather.gov/yosemite-spring'][target='_blank'][rel='noopener']", text: "Weather"
     assert_select ".trip-show-mobile-hero .trip-photo-album-mobile-link[href='https://photos.app.goo.gl/yosemite-spring'][target='_blank'][rel='noopener']", text: "Photo Album"
@@ -799,11 +941,61 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "#campsite-#{campsites(:yosemite_a).id} .parking-stat" do
       assert_select "> span", text: "Parking"
       assert_select "> .parking-tooltip", count: 0
-      assert_select ".parking-breakdown-item", text: /Reserved/
+      assert_select ".parking-breakdown-item", text: /Assigned/
       assert_select ".parking-breakdown-item", text: /Open/
     end
     assert_select "#campsite-#{campsites(:yosemite_a).id} .campsite-stats", text: /Cars/, count: 0
     assert_select "#campsite-#{campsites(:yosemite_a).id}", text: /Close to bathrooms/
+  end
+
+  test "climbing partner board signup is separate from campsite signup" do
+    log_in_as(users(:sam))
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "form[action='#{signup_path_for}']" do
+      assert_select "input[name='campsite_signup[needs_climbing_partner]']", count: 0
+    end
+    assert_select "#climbing-partners" do
+      assert_select "p", text: /does not sign you up for the trip/
+      assert_select "form[action='#{trip_climbing_partner_request_path(trips(:yosemite))}'][method='post']" do
+        assert_select "button", "Add me to the board"
+      end
+      assert_select ".climbing-partner-self-service", text: /no campsite signup, dates, waiver, or payment required/
+    end
+  end
+
+  test "public climbing partner board shows trip level requests without requiring a campsite signup" do
+    log_in_as(users(:sam))
+    partner_user = User.create!(first_name: "Pia", last_name: "Partner", email: "pia-partner@example.com", phone: "555-0199", password: "password")
+    private_user = User.create!(first_name: "Nora", last_name: "NotLooking", email: "nora-private@example.com", password: "password")
+    other_trip_user = User.create!(first_name: "Joshua", last_name: "Tree", email: "joshua-trip@example.com", password: "password")
+    ClimbingPartnerRequest.create!(trip: trips(:yosemite), user: partner_user)
+    ClimbingPartnerRequest.create!(trip: trips(:jtree), user: other_trip_user)
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_nil CampsiteSignup.find_by(user: partner_user)
+    assert_operator response.body.index("campsites-panel"), :<, response.body.index("climbing-partners")
+    assert_select "#climbing-partners" do
+      assert_select "h2", "Climbing Partner Board"
+      assert_select ".climbing-partner-card", count: 1 do
+        assert_select "strong", "Pia P."
+        assert_select "button", "Show contact info"
+        assert_select "a[href^='mailto:']", count: 0
+        assert_select "dialog.climbing-partner-contact-modal" do
+          assert_select "h2", "Pia P. contact info"
+          assert_select ".climbing-partner-contact-details", text: /555-0199/
+          assert_select ".climbing-partner-contact-details", text: /pia-partner@example.com/
+        end
+        assert_select ".climbing-partner-details", text: /Looking for a climbing partner on this trip/
+      end
+      assert_select ".climbing-partner-privacy-note", count: 0
+      assert_select "a[href='mailto:nora-private@example.com']", count: 0
+      assert_select "a[href='mailto:joshua-trip@example.com']", count: 0
+    end
   end
 
   test "archived public trip detail is viewable but closed to new participants" do
@@ -962,6 +1154,52 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert signup.waiver_acknowledged_at.present?
     assert_equal TripSignupWaiver.acknowledgement_text, signup.waiver_acknowledgement_text
     assert_equal TripSignupWaiver.text, signup.waiver_text
+  end
+
+  test "non-participant can add and remove a climbing partner request without waiver dates or payment" do
+    log_in_as(users(:sam))
+    request_path = trip_climbing_partner_request_path(trips(:yosemite))
+
+    assert_difference "ClimbingPartnerRequest.count", 1 do
+      assert_no_difference [ "CampsiteSignup.count", "Waiver.count", "CampsiteSignupPayment.count" ] do
+        post request_path
+      end
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite), anchor: "climbing-partners")
+    partner_request = ClimbingPartnerRequest.find_by!(trip: trips(:yosemite), user: users(:sam))
+    assert_equal "On belay! You're now on the Climbing Partner Board.", flash[:notice]
+
+    assert_difference "ClimbingPartnerRequest.count", -1 do
+      delete request_path
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite), anchor: "climbing-partners")
+    assert_not ClimbingPartnerRequest.exists?(partner_request.id)
+    assert_equal "On belay! Your climbing partner request is off the board.", flash[:notice]
+  end
+
+  test "creating the same climbing partner request twice is idempotent" do
+    log_in_as(users(:sam))
+    request_path = trip_climbing_partner_request_path(trips(:yosemite))
+
+    assert_difference "ClimbingPartnerRequest.count", 1 do
+      post request_path
+    end
+    assert_no_difference "ClimbingPartnerRequest.count" do
+      post request_path
+    end
+
+    assert_redirected_to trip_url(trips(:yosemite), anchor: "climbing-partners")
+    assert_equal "You're already on the Climbing Partner Board.", flash[:notice]
+  end
+
+  test "logged out visitor must log in before joining the climbing partner board" do
+    assert_no_difference "ClimbingPartnerRequest.count" do
+      post trip_climbing_partner_request_path(trips(:yosemite))
+    end
+
+    assert_redirected_to new_session_url
   end
 
   test "current annual waiver skips signature for adult only trip signup" do
@@ -1742,7 +1980,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "input[type='checkbox'][name='campsite_signup[with_minors]'][value='1']"
     assert_select "input[type='checkbox'][name='campsite_signup[with_guests]'][value='1']"
     assert_select "input[type='date'][name='campsite_signup[arrival_date]'][required]"
-    assert_select "input[type='date'][name='campsite_signup[arrival_date]'][min='2026-06-12'][max='2026-06-14']"
+    assert_select "input[type='date'][name='campsite_signup[arrival_date]'][value='2026-06-12'][min='2026-06-12'][max='2026-06-14']"
     assert_select "input[type='date'][name='campsite_signup[arrival_date]'][data-action*='click->signature#showDatePicker'][data-action*='focus->signature#showDatePicker']"
     assert_select "input[type='date'][name='campsite_signup[checkout_date]'][required]"
     assert_select "input[type='date'][name='campsite_signup[checkout_date]'][min='2026-06-13'][max='2026-06-15']"
@@ -1777,6 +2015,19 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".minor-fields .minor-field-row[hidden]", count: 2
     assert_select ".minor-fields button.add-person-link", text: "Add another minor"
     assert_select "button", text: "Next"
+    assert_select ".check-in-check-out-step[data-signature-target='checkInStep'][hidden]" do
+      assert_select "h2", text: "Check-In and Check-Out"
+      assert_select ".check-in-check-out-copy > p", count: 10
+      assert_select "p", text: /Climbing is a team effort/
+      assert_select "p", text: /rangers may give the campsite away/
+      assert_select "p", text: /Once you’re signed up for this trip, you’ll be able to view the contact information for other confirmed participants\./
+      assert_select "p", text: /WhatsApp group using the link at the top of the trip page/
+      assert_select "p", text: /Plans change—we get it!/
+      assert_select "p", text: /Participants at another Cragmont campsite may be able to help with check-in/
+      assert_select "p", text: /Thanks for looking out for your fellow climbers and helping the whole trip run smoothly\./
+      assert_select "p", text: /Most importantly make sure to have a good time and meet potential climbing partners for this trip or the next!/
+      assert_select "button[data-action='signature#acceptCheckInAgreement']", text: "I agree to communicate with others in my site"
+    end
     assert_select ".waiver-intro", text: /not a teaching or instructional organization/
     assert_select "button", text: "Agree and Sign Waiver"
     assert_select ".waiver-text", text: /READ THIS DOCUMENT CAREFULLY BEFORE SIGNING/
@@ -1804,6 +2055,19 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_select ".fee-rate", text: /Additional nights\s+\$5\.00/
     end
     assert_select "form[action='#{signup_path_for}'][method='post']", text: /Pay Now and Sign Up/
+  end
+
+  test "check in and check out step is hidden outside Yosemite National Park" do
+    trip = trips(:jtree)
+    trip.update!(status: "published")
+    log_in_as(users(:sam))
+
+    get trip_url(trip)
+
+    assert_response :success
+    assert_select "button", text: "Sign up for this campsite"
+    assert_select ".check-in-check-out-step", count: 0
+    assert_select "button[data-action='signature#acceptCheckInAgreement']", count: 0
   end
 
   test "shared details link opens completion modal for signed in participant" do
@@ -2402,6 +2666,56 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "admin can pre-open a full campsite until the next signup fills it" do
+    campsite = campsites(:yosemite_a)
+    fill_campsite_capacity(campsite, "pre-open-full")
+    canceling_signup = campsite.campsite_signups.confirmed.first
+    campsite.lock_signups!
+    campsite.enable_direct_signups_until_full!
+
+    log_in_as(users(:sam))
+    post signup_url_for(campsite), params: waitlist_signup_params
+
+    waitlisted_signup = CampsiteSignup.find_by!(trip: trips(:yosemite), user: users(:sam))
+    assert waitlisted_signup.waitlisted?
+    assert campsite.reload.direct_signups_enabled_until_full?
+    assert_not campsite.signups_locked?
+
+    delete session_url
+    log_in_as(canceling_signup.user)
+    delete signup_url_for(campsite)
+
+    assert campsite.reload.direct_signups_enabled_until_full?
+    assert_not campsite.signups_locked?
+    assert_equal 1, campsite.available_participant_capacity
+
+    delete session_url
+    log_in_as(users(:sam))
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "#campsite-#{campsite.id}" do
+      assert_select "button", text: "Confirm your spot"
+      assert_select "input[type='hidden'][name='campsite_signup[intent]'][value='confirm_waitlist']"
+    end
+
+    delete session_url
+    log_in_as(users(:alex))
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select "#campsite-#{campsite.id}" do
+      assert_select "button", text: "Sign up for this campsite"
+    end
+
+    post signup_url_for(campsite), params: waiver_signature_params
+
+    assert CampsiteSignup.find_by!(trip: trips(:yosemite), user: users(:alex)).confirmed?
+    assert campsite.reload.capacity_full?
+    assert_not campsite.direct_signups_enabled_until_full?
+    assert campsite.signups_locked?
+  end
+
   test "eligible waitlisted participant can confirm an open locked campsite spot" do
     campsite = campsites(:yosemite_a)
     campsite.update!(signups_locked_at: Time.current)
@@ -2575,20 +2889,28 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "#campsite-#{campsites(:yosemite_a).id}" do
       assert_select ".participant-list", count: 0
       assert_select "table.confirmed-participants-table"
-      assert_equal [ "Participant", "Dates", "Parking", "Waiver", "Member", "Minors" ], css_select(".confirmed-participants-table th").map { |header| header.at_css(".tooltip-heading > span:first-child")&.text&.strip || header.text.strip }
-      assert_select ".confirmed-participants-table th .parking-tooltip" do
+      assert_equal [ "Participant", "Dates", "Waiver", "Member", "Minors" ], css_select(".confirmed-participants-table th").map { |header| header.at_css(".tooltip-heading > span:first-child")&.text&.strip || header.text.strip }
+      participant_groups = css_select(".campsite-participant-groups").first.to_html
+      assert_operator participant_groups.index("Confirmed participants"), :<, participant_groups.index("Parking Spots: 2")
+      assert_select ".public-campsite-parking-section" do
+        assert_select "h4", "Parking Spots: 2"
         assert_select ".info-tooltip-icon", text: "i"
-        assert_select ".info-tooltip-box", text: /Reserved Spots are assigned to the person who registered the site/
-        assert_select ".info-tooltip-box", text: /Other spots are set to Open and are first come, first serve/
+        assert_select ".info-tooltip-box", text: /Parking is assigned prior to the trip in this order:/
+        assert_select ".info-tooltip-box", text: /1\. The person who reserved the campsite/
+        assert_select ".info-tooltip-box", text: /Please don't park in an assigned spot\./
+        assert_select ".campsite-parking-table tbody tr", count: 2
+        assert_select "td", text: "Spot 1"
+        assert_select "td", text: "TBD"
       end
       assert_select ".confirmed-participants-table tbody tr", count: 1
       assert_select ".confirmed-participants-table tbody tr" do
-        assert_select "td", text: "Sam L."
+        assert_select ".public-party-participant-name", text: "Sam L."
         assert_select "td", text: "No"
-        assert_select "td", text: "Jun 13-Jun 15"
+        assert_select "td[data-label='Dates'] > span:first-child", text: "Jun 13-Jun 15"
+        assert_select "td[data-label='Participant'] .public-participant-mobile-status-line", text: /Non-Member/
+        assert_select "td[data-label='Participant'] .public-participant-mobile-status-line", text: /Waiver Missing/
         assert_select "td", text: "Missing"
         assert_select "td", text: "None", count: 0
-        assert_select "td", text: "Unassigned"
         assert_select "td .parking-status-with-tooltip", count: 0
       end
       assert_select ".parking-status-groups", count: 0
@@ -2599,34 +2921,85 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "public confirmed participants table shows parking statuses without separate parking section" do
-    primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:alex), parking_status: "reserved_spot")
+  test "confirmed participant can open contact info for other confirmed participants" do
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    other_participant = User.create!(
+      first_name: "Piper",
+      last_name: "Peak",
+      email: "piper-participant@example.com",
+      phone: "555-0142",
+      password: "password"
+    )
+    create_campsite_signup!(campsite: campsites(:yosemite_b), user: other_participant)
+    log_in_as(users(:sam))
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select ".confirmed-participants-table th", text: "Contact", count: 2
+    assert_select ".participant-contact-control", count: 1 do
+      assert_select "button[data-action='modal#open']", text: "Contact Info"
+      assert_select "dialog.participant-contact-modal" do
+        assert_select "h2", text: "Piper P. contact info"
+        assert_select ".participant-contact-privacy-note", text: "Only confirmed participants can see this contact info"
+        assert_select "dt", text: "Phone"
+        assert_select "dd", text: "555-0142"
+        assert_select "dt", text: "Email"
+        assert_select "dd", text: "piper-participant@example.com"
+      end
+    end
+    assert_select ".participant-contact-modal", text: /sam@example.com/, count: 0
+  end
+
+  test "waitlisted participant cannot see confirmed participant contact info" do
+    confirmed_user = User.create!(
+      first_name: "Piper",
+      last_name: "Peak",
+      email: "private-confirmed@example.com",
+      phone: "555-0143",
+      password: "password"
+    )
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: confirmed_user)
+    create_waitlisted_signup!(trip: trips(:yosemite), user: users(:sam))
+    log_in_as(users(:sam))
+
+    get trip_url(trips(:yosemite))
+
+    assert_response :success
+    assert_select ".confirmed-participants-table th", text: "Contact", count: 0
+    assert_select ".participant-contact-control", count: 0
+    assert_select ".participant-contact-modal", count: 0
+    assert_select ".confirmed-participants-table", text: /private-confirmed@example.com/, count: 0
+    assert_select ".confirmed-participants-table", text: /555-0143/, count: 0
+  end
+
+  test "public parking section shows campsite spot assignments" do
+    primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:alex))
     open_spot_user = User.create!(first_name: "Opal", last_name: "Open", email: "public-open-parking@example.com", password: "password")
-    create_campsite_signup!(campsite: campsites(:yosemite_a), user: open_spot_user, parking_status: "first_come_first_serve")
-    overflow_user = User.create!(first_name: "Omar", last_name: "Overflow", email: "public-overflow@example.com", password: "password")
-    create_campsite_signup!(campsite: campsites(:yosemite_a), user: overflow_user, parking_status: "overflow_parking")
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: open_spot_user)
     guest_user = User.create!(first_name: "Gina", last_name: "Guest", email: "public-parking-guest@example.com", password: "password")
     create_campsite_signup!(
       campsite: campsites(:yosemite_a),
       user: guest_user,
       guest_of_signup: primary_signup,
-      guest_position: 1,
-      parking_status: "day_use"
+      guest_position: 1
     )
+    campsite_parking_spots(:yosemite_a_1).update!(status: "assigned", assigned_campsite_signup: primary_signup)
+    campsite_parking_spots(:yosemite_a_2).update!(status: "first_come_first_serve")
 
     get trip_url(trips(:yosemite))
 
     assert_response :success
-    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table", text: /Reserved Spot/
-    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table", text: /Open Spot/
-    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table .parking-status-with-tooltip" do
+    assert_select "#campsite-#{campsites(:yosemite_a).id} .public-campsite-parking-section" do
+      assert_select "td", text: "Spot 1"
+      assert_select "td", text: "Alex R."
+      assert_select "td", text: "Spot 2"
+      assert_select "td", text: "First Come First Serve"
       assert_select ".info-tooltip-icon", text: "i"
-      assert_select ".info-tooltip-box", text: /Open Spots are first come, first serve/
-      assert_select ".info-tooltip-box", text: /Whoever arrives at the campsite first can claim for the weekend/
+      assert_select ".info-tooltip-box", text: /After that parking spots are First Come First Serve\./
     end
-    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table", text: /Overflow Lot/
-    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table", text: /Day Use/
-    assert_select "#campsite-#{campsites(:yosemite_a).id} .parking-status-groups", count: 0
+    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table", text: /Reserved Spot/, count: 0
+    assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table", text: /Open Spot/, count: 0
   end
 
   test "public confirmed participants table links missing waiver only for the signed in participant" do
@@ -2740,8 +3113,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table tbody tr" do
-      assert_select "td", text: "Sam L."
-      assert_select "td", text: "Jun 12-Jun 15"
+      assert_select ".public-party-participant-name", text: "Sam L."
+      assert_select "td[data-label='Dates'] > span:first-child", text: "Jun 12-Jun 15"
       assert_select "td", text: "1 under 10yrs"
     end
     assert_select "#campsite-#{campsites(:yosemite_a).id} .confirmed-participants-table", text: /Mika/, count: 0
@@ -2791,7 +3164,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
       assert_includes rows.last["class"], "public-party-guest-row"
       assert_includes rows.last["class"], "public-party-last-row"
       assert_select ".confirmed-participants-table tbody tr:first-child" do
-        assert_select "td", text: "Alex R."
+        assert_select ".public-party-participant-name", text: "Alex R."
         assert_select "td", text: "Yes"
         assert_select ".public-added-by", count: 0
       end
@@ -2922,6 +3295,24 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
         signup_kind: "self"
       }
     }
+  end
+
+  def create_class_trip!(attributes = {})
+    defaults = {
+      trip_type: "class_trip",
+      name: "Intro to Anchors",
+      location: "Castle Rock, CA",
+      start_date: Date.new(2026, 10, 12),
+      status: "published",
+      participant_capacity: 10,
+      partner_company: partner_companies(:vertical_world),
+      class_signup_url: "https://example.com/classes/anchors",
+      class_original_price: "250",
+      weather_url: "https://forecast.weather.gov/castle-rock",
+      description: "Learn anchors."
+    }
+
+    Trip.create!(defaults.merge(attributes))
   end
 
   def stripe_checkout_event(type, payment, payment_intent: nil)

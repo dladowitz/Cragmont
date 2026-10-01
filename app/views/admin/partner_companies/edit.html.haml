@@ -1,0 +1,6 @@
+= render "admin/shared/header", title: @partner_company.name
+%section.panel
+  .panel-header
+    %div
+      %h2 Edit partner company
+  = render "form", partner_company: @partner_company

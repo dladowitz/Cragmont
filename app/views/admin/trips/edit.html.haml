@@ -1,3 +1,8 @@
 = render "admin/shared/header", title: "Edit trip"
 %section.panel
+  .panel-header
+    %div
+      %h2 Edit #{@trip.name}
+    .actions
+      %button.button{form: "admin-trip-form", type: "submit"} Update Trip
   = render "form", trip: @trip

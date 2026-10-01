@@ -1,17 +1,16 @@
 - content_for :body_class, "trip-show-page"
-- parking_policy_tooltip = "Reserved Spots are assigned to the person who registered the site. Then to the Campsite Coordinator. Then to club members.\n\nOther spots are set to Open and are first come, first serve."
-- open_spot_tooltip = "Open Spots are first come, first serve.\nWhoever arrives at the campsite first can claim for the weekend"
 - uncounted_minor_tooltip = "Children under 10 don't count against Total Capacity"
 = render "shared/public_header"
 .trip-show-mobile-hero
   .trip-show-mobile-hero-copy
     .trip-title-line
-      %h1= @trip.name
+      %h1= public_member_text(@trip.name)
+      %span.status.trip-type-badge{class: public_trip_type_badge_class(@trip)}= public_trip_type_label(@trip)
       - if @trip.capacity_full?
         %span.status.danger-status Trip Full
       - elsif @trip.almost_full?
         %span.status.warning-status Almost Full
-    %p.trip-show-mobile-location= @trip.location
+    %p.trip-show-mobile-location= public_member_text(@trip.location)
     %p.trip-show-mobile-dates
       = @trip.start_date.to_fs(:long)
       to #{@trip.end_date.to_fs(:long)}
@@ -19,23 +18,24 @@
     - weather_url = safe_external_url(@trip.weather_url)
     - photo_album_url = safe_external_url(@trip.photo_album_url)
     - if whatsapp_group_url.present?
-      = link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link trip-mobile-resource-link trip-whatsapp-mobile-link", target: "_blank", rel: "noopener"
+      = member_link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link trip-mobile-resource-link trip-whatsapp-mobile-link", target: "_blank", rel: "noopener"
     - if weather_url.present?
-      = link_to "Weather", weather_url, class: "trip-resource-link trip-mobile-resource-link trip-weather-mobile-link", target: "_blank", rel: "noopener"
+      = public_external_link_to "Weather", weather_url, class: "trip-resource-link trip-mobile-resource-link trip-weather-mobile-link", target: "_blank", rel: "noopener"
     - if photo_album_url.present?
-      = link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-mobile-resource-link trip-photo-album-mobile-link", target: "_blank", rel: "noopener"
+      = member_link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-mobile-resource-link trip-photo-album-mobile-link", target: "_blank", rel: "noopener"
   %span.trip-show-mobile-hero-caption IRS Wall, Joshua Tree
 %main.public-main
   %section.panel.trip-overview
     .panel-header.trip-summary-header
       .trip-summary-copy
         .trip-title-line
-          %h1= @trip.name
+          %h1= public_member_text(@trip.name)
+          %span.status.trip-type-badge{class: public_trip_type_badge_class(@trip)}= public_trip_type_label(@trip)
           - if @trip.capacity_full?
             %span.status.danger-status Trip Full
           - elsif @trip.almost_full?
             %span.status.warning-status Almost Full
-        %h2= @trip.location
+        %h2= public_member_text(@trip.location)
         %p
           = @trip.start_date.to_fs(:long)
           to #{@trip.end_date.to_fs(:long)}
@@ -52,15 +52,16 @@
         - if whatsapp_group_url.present? || weather_url.present? || photo_album_url.present?
           .trip-resource-links
             - if whatsapp_group_url.present?
-              = link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link trip-whatsapp-link", target: "_blank", rel: "noopener"
+              = member_link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link trip-whatsapp-link", target: "_blank", rel: "noopener"
             - if weather_url.present?
-              = link_to "Weather", weather_url, class: "trip-resource-link trip-weather-link", target: "_blank", rel: "noopener"
+              = public_external_link_to "Weather", weather_url, class: "trip-resource-link trip-weather-link", target: "_blank", rel: "noopener"
             - if photo_album_url.present?
-              = link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-photo-album-link", target: "_blank", rel: "noopener"
+              = member_link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-photo-album-link", target: "_blank", rel: "noopener"
         .public-beta-notice.site-feedback-callout
           %span
             This site is still getting dialed in. If you find issues
             = link_to "let us know.", new_help_request_path
+    = render "calendar_download", trip: @trip
     .stats
       - if @trip.confirmed_uncounted_minor_count.positive?
         .split-signup-stat
@@ -104,9 +105,9 @@
             .campsite-card-header
               .campsite-card-summary
                 %h3
-                  = campsite.campground.name
+                  = public_member_text(campsite.campground.name)
                   site #{campsite.site_number}
-                %p= campsite.campground.location
+                %p= public_member_text(campsite.campground.location)
                 %dl.date-pair
                   %div
                     %dt Arrival
@@ -138,7 +139,7 @@
                             %div
                               %h2= remove_title
                               %p
-                                = campsite.campground.name
+                                = public_member_text(campsite.campground.name)
                                 site #{campsite.site_number}
                               - unless @current_signup.waitlisted?
                                 .cancellation-policy-details
@@ -210,15 +211,15 @@
                   %span Parking
                   .parking-breakdown
                     .parking-breakdown-item
-                      %strong= campsite.reserved_parking_count
-                      %span Reserved
+                      %strong= campsite.assigned_parking_spot_count
+                      %span Assigned
                     .parking-breakdown-item
                       %strong= campsite.first_come_first_serve_parking_spot_count
                       %span Open
               - if campsite.notes.present?
                 %p.campsite-notes
                   %strong Notes:
-                  = campsite.notes
+                  = public_member_text(campsite.notes)
             .campsite-participant-groups
               .confirmed-signups-section
                 %h4 Confirmed participants
@@ -228,14 +229,11 @@
                       %tr
                         %th Participant
                         %th Dates
-                        %th
-                          %span.tooltip-heading.info-tooltip.parking-tooltip{aria: { label: parking_policy_tooltip }, tabindex: "0"}
-                            %span Parking
-                            %span.info-tooltip-icon{aria: { hidden: "true" }} i
-                            %span.info-tooltip-box{role: "tooltip"}= parking_policy_tooltip
                         %th Waiver
                         %th Member
                         %th Minors
+                        - if @confirmed_participant
+                          %th Contact
                     - signups_by_primary_id = campsite.confirmed_signups.group_by { |signup| signup.guest_of_signup_id || signup.id }
                     - display_signups = campsite.confirmed_signups.reject(&:guest?).flat_map { |signup| [signup] + signups_by_primary_id.fetch(signup.id, []).select(&:guest?) }
                     %tbody
@@ -246,17 +244,12 @@
                         - party_last = party_guest && (!next_signup&.guest? || next_signup.guest_of_signup_id != signup.guest_of_signup_id)
                         %tr{class: [("public-party-primary-row" if party_primary), ("public-party-guest-row" if party_guest), ("public-party-last-row" if party_last)].compact}
                           %td{"data-label" => "Participant"}
-                            %span.public-party-participant-name= signup.user.public_name
-                          %td{"data-label" => "Dates"}= signup.attendance_date_range
-                          %td{"data-label" => "Parking"}
-                            - if signup.first_come_first_serve?
-                              %span.parking-status-with-tooltip
-                                %span.parking-status-label= signup.parking_status_label
-                                %span.info-tooltip.parking-tooltip{aria: { label: open_spot_tooltip }, tabindex: "0"}
-                                  %span.info-tooltip-icon{aria: { hidden: "true" }} i
-                                  %span.info-tooltip-box{role: "tooltip"}= open_spot_tooltip
-                            - else
-                              = signup.parking_status_label
+                            %span.public-party-participant-name= public_member_text(signup.user.public_name)
+                            %span.public-participant-mobile-status-line
+                              %span= signup.user.member? ? "Member" : "Non-Member"
+                              %span= signup.waiver_signed? ? "Waiver Signed" : "Waiver Missing"
+                          %td{"data-label" => "Dates"}
+                            %span= signup.attendance_date_range
                           %td{"data-label" => "Waiver"}
                             - waiver_missing = !signup.waiver_signed?
                             - if waiver_missing
@@ -289,8 +282,29 @@
                           %td{class: ("public-empty-value" if minor_age_summary == "None"), "data-label" => "Minors"}
                             - unless minor_age_summary == "None"
                               = minor_age_summary
+                          - if @confirmed_participant
+                            %td{"data-label" => "Contact"}
+                              - unless signup.user_id == current_user.id
+                                - contact_modal_title_id = "participant-contact-title-#{signup.id}"
+                                %div.participant-contact-control{"data-controller" => "modal"}
+                                  %button.button.secondary{"data-action" => "modal#open", type: "button"} Contact Info
+                                  %dialog.signup-modal.participant-contact-modal{"aria-labelledby" => contact_modal_title_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                                    .signup-modal-content
+                                      %div
+                                        %h2{id: contact_modal_title_id} #{signup.user.public_name} contact info
+                                        %p.participant-contact-privacy-note Only confirmed participants can see this contact info
+                                        %dl.details-list.participant-contact-details
+                                          %div
+                                            %dt Phone
+                                            %dd= signup.user.phone.presence || "Not provided"
+                                          %div
+                                            %dt Email
+                                            %dd= signup.user.email.presence || "Not provided"
+                                      .form-actions
+                                        %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
                 - else
                   %p.muted No confirmed participants yet.
+              = render "parking_spots", campsite: campsite
       - if @waitlisted_signups.any?
         .waitlisted-signups-section.trip-waitlist-section
           .trip-waitlist-heading
@@ -313,7 +327,7 @@
                 - signup_available_from_cards = signup_confirmation_campsites.any? || direct_signup_available
                 %tr
                   %td.waitlist-priority-column{"data-label" => "Priority"}= index + 1
-                  %td{"data-label" => "Participant"}= signup.public_waitlist_name
+                  %td{"data-label" => "Participant"}= public_member_text(signup.public_waitlist_name)
                   %td{"data-label" => "Member"}= signup.user.member? ? "Member" : "Non-member"
                   %td{"data-label" => "Joined"}= signup.created_at.in_time_zone.strftime("%-m/%-d/%y %-l:%M%P")
                   %td{"data-label" => "Self Signup"}= signup.waitlist_eligible? ? "Enabled" : "Disabled"
@@ -331,16 +345,71 @@
                               = button_to "Remove Me", trip_campsite_campsite_signup_path(@trip, @campsites.first), method: :delete, class: "button danger"
     - else
       %p.muted No campsite reservations have been added yet.
-  %section.panel
+  %section.panel.climbing-partner-panel{id: "climbing-partners"}
+    .panel-header.climbing-partner-header
+      %div
+        %h2 Climbing Partner Board
+        %p.muted Find someone to climb with. Joining this board does not sign you up for the trip.
+    - if @climbing_partner_requests.any?
+      .climbing-partner-list
+        - @climbing_partner_requests.each do |partner_request|
+          - contact_modal_title_id = "climbing-partner-contact-title-#{partner_request.id}"
+          %article.climbing-partner-card
+            .climbing-partner-details
+              %strong= public_member_text(partner_request.user.public_name)
+              %span Looking for a climbing partner on this trip
+            - if user_signed_in?
+              .climbing-partner-contact-control{"data-controller" => "modal"}
+                %button.button.secondary{"data-action" => "modal#open", type: "button"} Show contact info
+                %dialog.signup-modal.climbing-partner-contact-modal{"aria-labelledby" => contact_modal_title_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                  .signup-modal-content
+                    %div
+                      %h2{id: contact_modal_title_id} #{partner_request.user.public_name} contact info
+                      %dl.details-list.climbing-partner-contact-details
+                        %div
+                          %dt Phone
+                          %dd= partner_request.user.phone.presence || "Not provided"
+                        %div
+                          %dt Email
+                          %dd= partner_request.user.email.presence || "Not provided"
+                    .form-actions
+                      %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+            - else
+              = link_to "Log in to reveal contact details", member_links_login_path, class: "button secondary"
+    - else
+      %p.muted.climbing-partner-empty-state No climbers are looking for a partner yet.
+    - if @current_climbing_partner_request.present?
+      .climbing-partner-self-service
+        %p Found your partner? Take your request off the board.
+        = button_to "I found a partner",
+          trip_climbing_partner_request_path(@trip),
+          method: :delete,
+          class: "button secondary"
+    - elsif !@trip.archived?
+      .climbing-partner-self-service
+        - if user_signed_in?
+          %p Add your name and contact info—no campsite signup, dates, waiver, or payment required.
+          = button_to "Add me to the board",
+            trip_climbing_partner_request_path(@trip),
+            method: :post,
+            class: "button"
+        - else
+          %p Log in to add your name—no campsite signup, dates, waiver, or payment required.
+          = link_to "Log in to join the board", new_session_path, class: "button"
+  %section.panel.trip-coordinator-panel
     %h2 Trip Coordinator
     - if @trip.campsite_coordinator.present?
       %dl.details-list
         %div
           %dt Name
-          %dd= @trip.campsite_coordinator.full_name
+          %dd= public_member_text(@trip.campsite_coordinator.full_name)
         %div
           %dt Email
-          %dd= mail_to @trip.campsite_coordinator.email if @trip.campsite_coordinator.email.present?
+          %dd
+            - if user_signed_in?
+              = mail_to @trip.campsite_coordinator.email if @trip.campsite_coordinator.email.present?
+            - else
+              = link_to "Log in to reveal contact details", member_links_login_path
     - else
       %p.muted Not yet set
   = render "shared/liability_warning"

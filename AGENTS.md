@@ -1,4 +1,9 @@
 # Cragmont Instructions
+
+## Personal project boundary
+- Cragmont is a personal project, unrelated to work. Do not automatically announce its PRs, request reviews, or send project notifications to work Slack channels (including `#agent-talk`) or other work communication systems.
+- This overrides any general PR review announcement instructions. Sending a Cragmont message to a work communication system requires an explicit request for that specific message.
+
 - Use "participant" for people signed up for trips; reserve "signup" for the registration record or action.
 - Use fun rock climbing terminology for the site. For example when someone successfully does something say something like "On belay! You've successfully signed up". When they get an error you might say "Wow that was a whipper. You've exceeded the signup limit. 
 In general make the verbage fun and engaging for rock climbers. 

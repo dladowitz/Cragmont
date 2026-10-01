@@ -41,6 +41,7 @@ gem "thruster", require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 2.0"
+gem "ruby-vips", "~> 2.0"
 
 # Store Active Storage uploads in Bucketeer/S3 on Heroku.
 gem "aws-sdk-s3", "~> 1.225"
@@ -50,6 +51,9 @@ gem "haml-rails", "~> 3.1"
 
 # Render admin-managed Markdown content pages.
 gem "commonmarker", "~> 2.0"
+
+# Generate downloadable CSV reports.
+gem "csv"
 
 # Authorize admin actions with small, explicit policy classes.
 gem "pundit", "~> 2.5"

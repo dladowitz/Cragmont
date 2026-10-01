@@ -199,6 +199,76 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
     assert_nil campsites(:yosemite_a).reload.registered_by
   end
 
+  test "can allow direct signup until a campsite fills again" do
+    campsite = campsites(:yosemite_a)
+    campsite.lock_signups!
+
+    patch enable_direct_signups_admin_trip_campsite_url(trips(:yosemite), campsite)
+
+    assert_redirected_to admin_trip_url(trips(:yosemite), anchor: "admin-campsite-#{campsite.id}")
+    assert_equal "On belay! Direct signup will be open for Upper Pines site A12 until it fills again.", flash[:notice]
+    assert campsite.reload.direct_signups_enabled_until_full?
+    assert_not campsite.signups_locked?
+  end
+
+  test "can put a campsite into waitlist mode" do
+    campsite = campsites(:yosemite_a)
+    campsite.enable_direct_signups_until_full!
+
+    patch enable_waitlist_mode_admin_trip_campsite_url(trips(:yosemite), campsite)
+
+    assert_redirected_to admin_trip_url(trips(:yosemite), anchor: "admin-campsite-#{campsite.id}")
+    assert_equal "On belay! Upper Pines site A12 is using the waitlist.", flash[:notice]
+    assert_not campsite.reload.direct_signups_enabled_until_full?
+    assert campsite.signups_locked?
+  end
+
+  test "assigned campsite coordinator can change campsite signup mode" do
+    coordinator = users(:sam)
+    trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+    trip.update!(campsite_coordinator: coordinator)
+    campsite.lock_signups!
+    delete session_url
+    log_in_as(coordinator)
+
+    patch enable_direct_signups_admin_trip_campsite_url(trip, campsite)
+
+    assert_redirected_to admin_trip_url(trip, anchor: "admin-campsite-#{campsite.id}")
+    assert campsite.reload.direct_signups_enabled_until_full?
+  end
+
+  test "finance admin cannot change campsite signup mode" do
+    finance_user = users(:sam)
+    trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+    assign_role(finance_user, :finance_admin)
+    campsite.lock_signups!
+    delete session_url
+    log_in_as(finance_user)
+
+    patch enable_direct_signups_admin_trip_campsite_url(trip, campsite)
+
+    assert_redirected_to root_url
+    assert_equal "Wow, that was a whipper. You do not have permission to access that page.", flash[:alert]
+    assert_not campsite.reload.direct_signups_enabled_until_full?
+    assert campsite.signups_locked?
+  end
+
+  test "deleted trip cannot change campsite signup mode" do
+    trip = trips(:yosemite)
+    campsite = campsites(:yosemite_a)
+    campsite.lock_signups!
+    trip.update_columns(deleted_at: Time.current)
+
+    patch enable_direct_signups_admin_trip_campsite_url(trip, campsite)
+
+    assert_redirected_to admin_trip_url(trip)
+    assert_equal "Restore this trip before making changes.", flash[:alert]
+    assert_not campsite.reload.direct_signups_enabled_until_full?
+    assert campsite.signups_locked?
+  end
+
   test "can delete campsite" do
     assert_difference "Campsite.count", -1 do
       delete admin_trip_campsite_url(trips(:yosemite), campsites(:yosemite_a))

@@ -1,5 +1,4 @@
 = render "admin/shared/header", title: @trip.name
-- parking_policy_tooltip = "Reserved Spots are assigned to the person who registered the site. Then to the Campsite Coordinator. Then to club members.\n\nOther spots are set to Open and are first come, first serve."
 - uncounted_minor_tooltip = "Children under 10 don't count against Total Capacity"
 - whatsapp_group_url = safe_external_url(@trip.whatsapp_group)
 - weather_url = safe_external_url(@trip.weather_url)
@@ -7,17 +6,19 @@
 - guide_book_url = safe_external_url(@trip.guide_book_url)
 - photo_album_url = safe_external_url(@trip.photo_album_url)
 - reimbursable_campsites_count = @reimbursable_campsites.size
-- if reimbursable_campsites_count.zero? || @reimbursed_campsites_count == reimbursable_campsites_count
-  - reimbursement_status_class = "success-status"
-- elsif @reimbursed_campsites_count.zero?
-  - reimbursement_status_class = "danger-status"
-- else
-  - reimbursement_status_class = "warning-status"
-- readiness_completed_count = @trip_readiness_checklist.completed_count_for(@trip_readiness_categories)
-- readiness_total_count = @trip_readiness_checklist.total_count_for(@trip_readiness_categories)
-- post_trip_category = @trip_readiness_checklist.post_trip_category
+- if !@trip.single_day_event?
+  - if reimbursable_campsites_count.zero? || @reimbursed_campsites_count == reimbursable_campsites_count
+    - reimbursement_status_class = "success-status"
+  - elsif @reimbursed_campsites_count.zero?
+    - reimbursement_status_class = "danger-status"
+  - else
+    - reimbursement_status_class = "warning-status"
+- if @trip_readiness_checklist.present?
+  - readiness_completed_count = @trip_readiness_checklist.completed_count_for(@trip_readiness_categories)
+  - readiness_total_count = @trip_readiness_checklist.total_count_for(@trip_readiness_categories)
+  - post_trip_category = @trip_readiness_checklist.post_trip_category
 - can_access_trip_details_email = @trip_details_email&.sent? ? policy(@trip).view_trip_details_email? : (!@trip.deleted? && policy(@trip).manage_trip_details_email?)
-- show_trip_details_email_button = !@trip.day_trip? && can_access_trip_details_email
+- show_trip_details_email_button = @trip.camping? && can_access_trip_details_email
 - if @participant_link_signup.present?
   = render "participant_link_modal", trip: @trip, signup: @participant_link_signup
 %section.panel.trip-overview
@@ -37,20 +38,21 @@
           %span.trip-title-location= @trip.location
           %span.trip-title-date
             = @trip.start_date.to_fs(:long)
-            - unless @trip.day_trip?
+            - unless @trip.single_day_event?
               to #{@trip.end_date.to_fs(:long)}
-          %span= @trip.day_trip? ? "Day trip" : "Camping trip"
-        .coordinator-summary.trip-title-coordinator
-          %strong Trip Coordinator:
-          - if @trip.campsite_coordinator.present?
-            .coordinator-contact
-              %span= link_to @trip.campsite_coordinator.full_name, admin_user_path(@trip.campsite_coordinator)
-          - else
-            .coordinator-contact
-              %span.muted Not set yet
-              - if policy(@trip).assign_coordinator?
-                = link_to "Update", edit_admin_trip_path(@trip)
-      - if @trip.description.present? && !@trip.day_trip?
+          %span= @trip.trip_type_label
+        - unless @trip.class_trip?
+          .coordinator-summary.trip-title-coordinator
+            %strong Trip Coordinator:
+            - if @trip.campsite_coordinator.present?
+              .coordinator-contact
+                %span= link_to @trip.campsite_coordinator.full_name, admin_user_path(@trip.campsite_coordinator)
+            - else
+              .coordinator-contact
+                %span.muted Not set yet
+                - if policy(@trip).assign_coordinator?
+                  = link_to "Update", edit_admin_trip_path(@trip)
+      - if @trip.description.present? && @trip.camping?
         .description
           %strong Notes:
           .content-page-markdown
@@ -82,7 +84,7 @@
     %div
       %span Total Capacity
       %strong= @trip.total_participant_capacity
-    - unless @trip.day_trip?
+    - unless @trip.single_day_event?
       %div
         %span Campsites
         %strong= @trip.campsite_count
@@ -92,28 +94,29 @@
       %h2 Manage
   .trip-management-content
     .actions.trip-management-actions
-      = link_to readiness_admin_trip_path(@trip), class: "button secondary trip-readiness-summary-button" do
-        %span Trip Readiness
-        %span.status.trip-readiness-summary-button-count{class: (readiness_completed_count == readiness_total_count ? "success-status" : "warning-status")}
-          = "#{readiness_completed_count} of #{readiness_total_count}"
-      = link_to post_trip_admin_trip_path(@trip), class: "button secondary trip-readiness-summary-button" do
-        %span Post Trip
-        %span.status.trip-readiness-summary-button-count{class: (post_trip_category.completed_count == post_trip_category.total_count ? "success-status" : "warning-status")}
-          = "#{post_trip_category.completed_count} of #{post_trip_category.total_count}"
+      - if @trip_readiness_checklist.present?
+        = link_to readiness_admin_trip_path(@trip), class: "button secondary trip-readiness-summary-button" do
+          %span Trip Readiness
+          %span.status.trip-readiness-summary-button-count{class: (readiness_completed_count == readiness_total_count ? "success-status" : "warning-status")}
+            = "#{readiness_completed_count} of #{readiness_total_count}"
+        = link_to post_trip_admin_trip_path(@trip), class: "button secondary trip-readiness-summary-button" do
+          %span Post Trip
+          %span.status.trip-readiness-summary-button-count{class: (post_trip_category.completed_count == post_trip_category.total_count ? "success-status" : "warning-status")}
+            = "#{post_trip_category.completed_count} of #{post_trip_category.total_count}"
       = link_to "Participant Emails", participant_emails_admin_trip_path(@trip), class: "button secondary"
       - if show_trip_details_email_button
         = link_to "Trip Details Email", admin_trip_trip_details_email_path(@trip), class: "button secondary"
-      - if !@trip.day_trip? && policy(@trip).manage_payments?
+      - if @trip.camping? && policy(@trip).manage_payments?
         = link_to "Transactions", admin_trip_transactions_path(@trip), class: "button secondary"
-    - unless @trip.day_trip?
+    - if @trip.camping?
       .trip-reimbursement-summary.trip-management-reimbursement
         %strong Campsite Fees Reimbursed:
         %span.status{class: reimbursement_status_class}= "#{@reimbursed_campsites_count} of #{reimbursable_campsites_count}"
-- if @trip.day_trip?
+- if @trip.uses_day_trip_signups?
   %section.panel.day-trip-admin-details
     .panel-header
       %div
-        %h2 Crag Plan
+        %h2= @trip.gym_outing? ? "Gym Plan" : "Crag Plan"
     %dl.details-list
       %div
         %dt Meeting time
@@ -128,10 +131,11 @@
           - if @trip.meeting_location.present? && meeting_location_url.present?
             = link_to @trip.meeting_location, meeting_location_url, target: "_blank", rel: "noopener"
           - else
-            = @trip.meeting_location.presence || "Not set"
-      %div
-        %dt Types of Climbing
-        %dd= @trip.climbing_type_labels.presence&.to_sentence || "Not set"
+            = @trip.meeting_location.presence || (@trip.gym_outing? ? @trip.location : "Not set")
+      - unless @trip.gym_outing?
+        %div
+          %dt Types of Climbing
+          %dd= @trip.climbing_type_labels.presence&.to_sentence || "Not set"
       %div
         %dt Cost
         %dd= format_trip_cost(@trip.cost_cents)
@@ -143,6 +147,41 @@
           .location-image-modal-content
             %button.modal-close-button{"aria-label" => "Close image", "data-action" => "modal#close", type: "button"} ×
             = image_tag @trip.day_trip_image, alt: "#{@trip.name} location image"
+  - if @trip.description.present?
+    %section.panel.admin-day-trip-description-panel
+      .panel-header
+        %div
+          %h2 Description
+      .description
+        .content-page-markdown
+          = render_content_page_markdown(@trip.description)
+- if @trip.class_trip?
+  %section.panel.day-trip-admin-details.class-trip-admin-details
+    .panel-header
+      %div
+        %h2 Cost Details
+    %dl.details-list
+      %div
+        %dt Signup link
+        %dd
+          - class_signup_url = safe_external_url(@trip.class_signup_url)
+          - if class_signup_url.present?
+            = link_to @trip.class_signup_url, class_signup_url, target: "_blank", rel: "noopener"
+          - else
+            = @trip.class_signup_url.presence || "Not set"
+      %div
+        %dt Original price
+        %dd= format_class_price(@trip.class_original_price) || "Not set"
+      - if @trip.class_offers_discount?
+        %div
+          %dt Discount code
+          %dd= @trip.class_discount_code.presence || "None"
+        %div
+          %dt Discount amount
+          %dd= @trip.class_discount_amount.presence || "None"
+        %div
+          %dt Discounted price
+          %dd= format_class_price(@trip.class_discounted_price) || "None"
   - if @trip.description.present?
     %section.panel.admin-day-trip-description-panel
       .panel-header
@@ -201,7 +240,7 @@
               = link_to @trip.photo_album_url, photo_album_url, target: "_blank", rel: "noopener"
             - else
               = @trip.photo_album_url
-- if @trip.day_trip?
+- if @trip.uses_day_trip_signups?
   %section.panel.day-trip-participants-panel
     .panel-header
       %div
@@ -211,8 +250,9 @@
         %thead
           %tr
             %th Participant
-            %th Climbing Skills
-            %th Bringing Gear
+            - unless @trip.gym_outing?
+              %th Climbing Skills
+              %th Bringing Gear
             %th Party
             %th Waiver
             - if !@trip.deleted? && policy(@trip).manage_participants?
@@ -221,8 +261,9 @@
           - @day_trip_signups.each do |signup|
             %tr
               %td= signup.user.full_name
-              %td= signup.skill_level_label
-              %td= signup.shared_gear_summary
+              - unless @trip.gym_outing?
+                %td= signup.skill_level_label
+                %td= signup.shared_gear_summary
               %td
                 - party = []
                 - party << signup.guest_signups.map { |guest_signup| guest_signup.user.full_name }.to_sentence if signup.includes_guests?
@@ -246,8 +287,8 @@
                     %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                       .confirmation-modal-content
                         %div
-                          %h2 Remove #{signup.user.full_name} from this day trip?
-                          %p This removes the participant from the day trip roster.
+                          %h2 Remove #{signup.user.full_name} from this #{@trip.trip_type_label.downcase}?
+                          %p This removes the participant from the trip roster.
                         .form-actions
                           %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
                           = button_to "Remove", remove_admin_trip_day_trip_signup_path(@trip, signup), method: :delete, class: "button danger"
@@ -262,8 +303,9 @@
         %thead
           %tr
             %th Participant
-            %th Climbing Skills
-            %th Bringing Gear
+            - unless @trip.gym_outing?
+              %th Climbing Skills
+              %th Bringing Gear
             %th Party
             - if !@trip.deleted? && policy(@trip).manage_participants?
               %th Actions
@@ -271,8 +313,9 @@
           - @day_trip_waitlisted_signups.each do |signup|
             %tr
               %td= signup.user.full_name
-              %td= signup.skill_level_label
-              %td= signup.shared_gear_summary
+              - unless @trip.gym_outing?
+                %td= signup.skill_level_label
+                %td= signup.shared_gear_summary
               %td
                 - party = []
                 - party << signup.guest_signups.map { |guest_signup| guest_signup.user.full_name }.to_sentence if signup.includes_guests?
@@ -296,10 +339,42 @@
                       .confirmation-modal-content
                         %div
                           %h2 Remove #{signup.user.full_name} from the waitlist?
-                          %p This removes the participant from the day trip waitlist.
+                          %p This removes the participant from the trip waitlist.
                         .form-actions
                           %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
                           = button_to "Remove", remove_admin_trip_day_trip_signup_path(@trip, signup), method: :delete, class: "button danger"
+- elsif @trip.class_trip?
+  %section.panel.day-trip-participants-panel.class-trip-participants-panel
+    .panel-header
+      %div
+        %h2 Participants
+    - if @class_signups.any?
+      %table
+        %thead
+          %tr
+            %th Participant
+            %th Email
+            - if !@trip.deleted? && policy(@trip).manage_participants?
+              %th Actions
+        %tbody
+          - @class_signups.each do |signup|
+            %tr
+              %td= signup.user.full_name
+              %td= signup.user.email.presence || "None"
+              - if !@trip.deleted? && policy(@trip).manage_participants?
+                %td.table-actions.day-trip-admin-participant-actions
+                  %div{"data-controller" => "modal"}
+                    %button.button.danger.secondary.admin-table-action-button{"data-action" => "modal#open", type: "button"} Remove
+                    %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                      .confirmation-modal-content
+                        %div
+                          %h2 Remove #{signup.user.full_name} from this class?
+                          %p This removes the participant from the class intent roster.
+                        .form-actions
+                          %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
+                          = button_to "Remove", remove_admin_trip_class_signup_path(@trip, signup), method: :delete, class: "button danger"
+    - else
+      %p.muted No participants have signed up yet.
 - else
   %section.panel.campsites-panel
     .panel-header.campsites-panel-header
@@ -310,7 +385,7 @@
     - if @campsites.any?
       .admin-campsite-list
         - @campsites.each do |campsite|
-          %section.admin-campsite-card{id: "admin-campsite-#{campsite.id}"}
+          %section.admin-campsite-card{id: "admin-campsite-#{campsite.id}", data: { parking_campsite_id: campsite.id }}
             .admin-campsite-card-header
               .campsite-card-summary
                 .campsite-heading-line
@@ -347,6 +422,39 @@
                   - else
                     None
               .campsite-card-actions
+                .campsite-signup-mode
+                  %p
+                    %strong Signup mode:
+                    - if campsite.signups_locked?
+                      %span.status.warning-status Waitlist mode
+                    - elsif campsite.capacity_full? && campsite.direct_signups_enabled_until_full?
+                      %span.status.success-status Direct signup when space opens
+                    - else
+                      %span.status.success-status Direct signup until full
+                  - if !@trip.deleted? && policy(@trip).manage_campsites?
+                    %div{"data-controller" => "modal"}
+                      - if campsite.signups_locked?
+                        %button.button.secondary.campsite-signup-mode-button{"data-action" => "modal#open", type: "button"} Disable Waitlist Mode
+                        %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                          .confirmation-modal-content
+                            %div
+                              %h2 Disable Waitlist Mode for #{campsite.campground.name} site #{campsite.site_number}?
+                              %p New participants or participants already on the trip waitlist will be able to claim open spaces directly.
+                              %p The campsite will automatically return to waitlist mode when it fills again.
+                            .form-actions
+                              %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
+                              = button_to "Disable Waitlist Mode", enable_direct_signups_admin_trip_campsite_path(@trip, campsite), method: :patch, class: "button"
+                      - else
+                        %button.button.secondary.campsite-signup-mode-button{"data-action" => "modal#open", type: "button"} Use Waitlist Mode
+                        %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
+                          .confirmation-modal-content
+                            %div
+                              %h2 Use waitlist mode for #{campsite.campground.name} site #{campsite.site_number}?
+                              %p Participants will need to join the trip waitlist instead of claiming open spaces directly.
+                              %p Existing waitlist participants and their eligibility will not change.
+                            .form-actions
+                              %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
+                              = button_to "Use Waitlist Mode", enable_waitlist_mode_admin_trip_campsite_path(@trip, campsite), method: :patch, class: "button"
                 .table-actions.campsite-action-buttons
                   - if !@trip.deleted? && policy(@trip).manage_participants?
                     = render "add_participant_modal", trip: @trip, campsite: campsite, users: @users, trip_participant_user_ids: @trip_participant_user_ids
@@ -382,10 +490,10 @@
                 %span Parking
                 .parking-breakdown
                   .parking-breakdown-item
-                    %strong= campsite.reserved_parking_count
-                    %span Reserved
+                    %strong{"data-parking-assigned-count" => true}= campsite.assigned_parking_spot_count
+                    %span Assigned
                   .parking-breakdown-item
-                    %strong= campsite.first_come_first_serve_parking_spot_count
+                    %strong{"data-parking-fcfs-count" => true}= campsite.first_come_first_serve_parking_spot_count
                     %span Open
             - if campsite.notes.present?
               %p.campsite-notes
@@ -395,9 +503,10 @@
               .confirmed-signups-section
                 %h4 Confirmed participants
                 - if campsite.confirmed_signups.any?
-                  = render "signup_table", signups: campsite.confirmed_signups, trip: @trip, campsites: @campsites, read_only: @trip.deleted? || !policy(@trip).manage_participants?, payment_read_only: @trip.deleted? || !policy(@trip).manage_payments?, parking_tooltip: parking_policy_tooltip
+                  = render "signup_table", signups: campsite.confirmed_signups, trip: @trip, campsites: @campsites, read_only: @trip.deleted? || !policy(@trip).manage_participants?, payment_read_only: @trip.deleted? || !policy(@trip).manage_payments?
                 - else
                   %p.muted No confirmed participants yet.
+              = render "parking_spots", trip: @trip, campsite: campsite, assignment_signups: @parking_assignment_signups, read_only: @trip.deleted? || !policy(@trip).manage_participants?
     - else
       .empty-state
         %p No campsites have been added to this trip yet.
@@ -405,7 +514,7 @@
       .waitlisted-signups-section.trip-waitlist-section
         %h3 Trip waitlist
         = render "signup_table", signups: @waitlisted_signups, waitlist: true, trip: @trip, campsites: @campsites, read_only: @trip.deleted? || !policy(@trip).manage_participants?
-- if !@trip.day_trip? && policy(@trip).manage_payments?
+- if @trip.camping? && policy(@trip).manage_payments?
   = render "payment_requests_panel", trip: @trip, payment_requests: @trip_payment_requests, modal_payment_request: @trip_payment_request
   %section.panel.trip-expenses-panel
     .panel-header

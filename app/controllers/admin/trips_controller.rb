@@ -5,21 +5,29 @@ class Admin::TripsController < Admin::BaseController
   before_action :set_trip, only: %i[show edit update destroy restore]
   before_action :ensure_trip_not_deleted, only: %i[edit update destroy]
   before_action :set_users, only: %i[show new create edit update]
+  before_action :set_partner_companies, only: %i[new create edit update]
 
   def index
     authorize Trip
     @selected_statuses = selected_trip_statuses
     trips_scope = filtered_trips_scope(policy_scope(Trip))
-    @trips = trips_scope.includes(:campsite_coordinator, { campsite_signups: :campsite_signup_minors }, campsites: :campground).order(start_date: :asc, name: :asc)
+    @trips = trips_scope.includes(:campsite_coordinator, :partner_company, :class_signups, { campsite_signups: :campsite_signup_minors }, campsites: :campground).order(start_date: :asc, name: :asc)
   end
 
   def show
     authorize @trip
-    if @trip.day_trip?
+    if @trip.uses_day_trip_signups?
       @campsites = []
       @waitlisted_signups = []
       @day_trip_signups = @trip.day_trip_signups.confirmed.primary.includes(:user, :day_trip_signup_minors, guest_signups: :user).order(:created_at)
       @day_trip_waitlisted_signups = @trip.day_trip_signups.waitlisted.primary.includes(:user, :day_trip_signup_minors, guest_signups: :user).order(:created_at)
+      @class_signups = []
+    elsif @trip.class_trip?
+      @campsites = []
+      @waitlisted_signups = []
+      @day_trip_signups = []
+      @day_trip_waitlisted_signups = []
+      @class_signups = @trip.class_signups.confirmed.includes(:user).order(:created_at)
     else
       @campsites = @trip.campsites
         .includes(
@@ -27,32 +35,47 @@ class Admin::TripsController < Admin::BaseController
           :registered_by,
           :registration_reimbursed_by,
           :registration_reimbursement_recorded_by,
+          { parking_spots: { assigned_campsite_signup: [ :user, { campsite: :campground } ] } },
           campsite_signups: [ { payments: { refunds: :refunded_by } }, :user, :campsite_signup_minors, { guest_of_signup: :user } ]
         )
         .order(:arrival_date, :site_number)
+      @parking_assignment_signups = @trip.campsite_signups.confirmed.includes(:user, campsite: :campground).order(:created_at)
       @waitlisted_signups = @trip.waitlisted_signups
       @day_trip_signups = []
       @day_trip_waitlisted_signups = []
+      @class_signups = []
     end
-    @trip_participant_user_ids = if @trip.day_trip?
+    @trip_participant_user_ids = if @trip.uses_day_trip_signups?
       @trip.day_trip_signups.active.distinct.pluck(:user_id)
+    elsif @trip.class_trip?
+      @trip.class_signups.active.distinct.pluck(:user_id)
     else
       @trip.campsite_signups.active.distinct.pluck(:user_id)
     end
     @participant_link_signup = participant_link_signup
-    @trip_payment_requests = @trip.trip_payment_requests.order(created_at: :desc)
-    @trip_payment_request = trip_payment_request
-    @trip_details_email = @trip.trip_details_email
-    @trip_revenue_summary = TripRevenueSummary.call(@trip)
-    @trip_readiness_checklist = TripReadinessChecklist.new(@trip)
-    @trip_readiness_categories = @trip_readiness_checklist.readiness_categories
-    @reimbursable_campsites = @campsites.select { |campsite| campsite.registration_fee_cents.positive? }
-    @reimbursed_campsites_count = @reimbursable_campsites.count(&:registration_reimbursed?)
-    @trip_expense_refunds = CampsiteSignupPaymentRefund.trip_expense_refund_type
-      .joins(campsite_signup_payment: :campsite_signup)
-      .where(campsite_signups: { trip_id: @trip.id })
-      .includes(:refunded_by, campsite_signup_payment: { campsite_signup: :user })
-      .order(refunded_at: :desc, created_at: :desc)
+    @parking_assignment_signups ||= []
+    unless @trip.class_trip?
+      @trip_readiness_checklist = TripReadinessChecklist.new(@trip)
+      @trip_readiness_categories = @trip_readiness_checklist.readiness_categories
+    end
+    unless @trip.single_day_event?
+      @trip_payment_requests = @trip.trip_payment_requests.order(created_at: :desc)
+      @trip_payment_request = trip_payment_request
+      @trip_details_email = @trip.trip_details_email
+      @trip_revenue_summary = TripRevenueSummary.call(@trip)
+      @reimbursable_campsites = @campsites.select { |campsite| campsite.registration_fee_cents.positive? }
+      @reimbursed_campsites_count = @reimbursable_campsites.count(&:registration_reimbursed?)
+      @trip_expense_refunds = CampsiteSignupPaymentRefund.trip_expense_refund_type
+        .joins(campsite_signup_payment: :campsite_signup)
+        .where(campsite_signups: { trip_id: @trip.id })
+        .includes(:refunded_by, campsite_signup_payment: { campsite_signup: :user })
+        .order(refunded_at: :desc, created_at: :desc)
+    else
+      @trip_payment_requests = []
+      @trip_expense_refunds = []
+      @reimbursable_campsites = []
+      @reimbursed_campsites_count = 0
+    end
   end
 
   def new
@@ -65,7 +88,6 @@ class Admin::TripsController < Admin::BaseController
 
     @trip = Trip.new(
       trip_type: selected_new_trip_type,
-      late_arrival_instructions: Trip::DEFAULT_LATE_ARRIVAL_INSTRUCTIONS,
       cost_cents: 0
     )
     authorize @trip
@@ -78,9 +100,20 @@ class Admin::TripsController < Admin::BaseController
   def create
     @trip = Trip.new(trip_params)
     authorize @trip
+    @gym_meetup_schedule = GymMeetupSchedule.new(gym_meetup_schedule_params.merge(trip: @trip))
 
-    if @trip.save
-      redirect_to admin_trip_path(@trip), notice: "Trip was created."
+    if params[:preview_meetups].present?
+      trip_valid = @trip.valid?
+      schedule_valid = @gym_meetup_schedule.valid?
+      @preview_dates = @gym_meetup_schedule.dates if trip_valid && schedule_valid
+      render :new, status: @preview_dates ? :ok : :unprocessable_entity
+      return
+    end
+
+    if @gym_meetup_schedule.save
+      count = @gym_meetup_schedule.created_trips.size
+      notice = @gym_meetup_schedule.repeating? ? "On belay! #{count} gym meetups were created. Each date has its own participants and can be edited separately." : "Trip was created."
+      redirect_to admin_trip_path(@trip), notice: notice
     else
       render :new, status: :unprocessable_entity
     end
@@ -149,12 +182,22 @@ class Admin::TripsController < Admin::BaseController
     params.require(:trip).permit(policy(@trip || Trip).permitted_attributes)
   end
 
+  def gym_meetup_schedule_params
+    return {} unless params.key?(:gym_meetup_schedule)
+
+    params.expect(gym_meetup_schedule: [ :frequency, :ends_on ])
+  end
+
   def selected_new_trip_type
     params[:trip_type].presence_in(Trip::TRIP_TYPES) || "camping"
   end
 
   def set_users
     @users = User.order(:first_name, :last_name)
+  end
+
+  def set_partner_companies
+    @partner_companies = PartnerCompany.order(:name)
   end
 
   def selected_trip_statuses

@@ -3,6 +3,7 @@
     %thead
       %tr
         %th Trip
+        %th Type
         %th Coordinator
         %th Status
         %th Dates
@@ -17,7 +18,13 @@
             = link_to trip.name, admin_trip_path(trip)
             %span= trip.location
           %td
-            - if trip.campsite_coordinator.present?
+            %span.status.trip-type-badge= trip.trip_type_label
+          %td
+            - if trip.class_trip? && trip.partner_company.present?
+              = link_to trip.partner_company.name, admin_partner_company_path(trip.partner_company)
+            - elsif trip.class_trip?
+              %span.muted Not set yet
+            - elsif trip.campsite_coordinator.present?
               = trip.campsite_coordinator.full_name
             - else
               .coordinator-contact
@@ -33,15 +40,16 @@
               %div
                 %dt Arrival
                 %dd= trip.start_date.strftime("%b %d, %Y")
-              %div
-                %dt Checkout
-                %dd= trip.end_date.strftime("%b %d, %Y")
+              - unless trip.single_day_event?
+                %div
+                  %dt Checkout
+                  %dd= trip.end_date.strftime("%b %d, %Y")
           %td= trip.confirmed_signup_count
           - open_spaces_class = trip.capacity_full? ? "danger-stat" : (trip.almost_full? ? "warning-stat" : "success-stat")
           %td.admin-open-spaces-cell{class: open_spaces_class}= trip.available_participant_capacity
           %td= trip.total_participant_capacity
           %td.table-actions
-            - if policy(trip).manage_payments?
+            - if trip.camping? && policy(trip).manage_payments?
               = link_to "Transactions", admin_trip_transactions_path(trip), class: "button secondary admin-table-action-button"
             - if trip.deleted? && policy(trip).restore?
               = button_to "Restore", restore_admin_trip_path(trip), method: :patch, class: "button admin-table-action-button"

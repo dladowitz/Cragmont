@@ -1,0 +1,31 @@
+- read_only = local_assigns.fetch(:read_only, false)
+- assignment_signups = Array(local_assigns[:assignment_signups])
+%section.campsite-parking-section.admin-campsite-parking-section
+  .campsite-section-heading
+    %h4= "Parking Spots: #{campsite.parking_spots.size}"
+  - if campsite.parking_spots.any?
+    %table.campsite-parking-table
+      %thead
+        %tr
+          %th Spot
+          %th Assignment
+      %tbody
+        - campsite.parking_spots.each do |spot|
+          - current_value = spot.assigned? && spot.assigned_campsite_signup_id.present? ? "signup_#{spot.assigned_campsite_signup_id}" : spot.status
+          - assignment_options = [["Unassigned", "unassigned"], ["First Come First Serve", "first_come_first_serve"]]
+          - participant_options = assignment_signups.map do |signup|
+            - campsite_label = signup.campsite.present? ? "#{signup.campsite.campground.name} site #{signup.campsite.site_number}" : "No campsite"
+            - label = signup.campsite_id == campsite.id ? signup.user.full_name : "#{signup.user.full_name} (#{campsite_label})"
+            - [label, "signup_#{signup.id}"]
+          - assignment_options += participant_options
+          %tr
+            %td= spot.spot_label
+            %td
+              - if read_only
+                = spot.public_assignment_label
+              - else
+                = form_with model: spot, url: admin_trip_campsite_parking_spot_path(trip, spot), method: :patch, class: "admin-parking-spot-form", data: { controller: "parking-spot", action: "submit->parking-spot#submit", turbo: false } do |form|
+                  = form.select :assignment, options_for_select(assignment_options, current_value), {}, onchange: "this.form.requestSubmit()", data: { parking_spot_target: "select" }
+                  %span.admin-parking-spot-save-status{hidden: true, data: { parking_spot_target: "status" }}
+  - else
+    %p.muted No parking spots for this campsite.

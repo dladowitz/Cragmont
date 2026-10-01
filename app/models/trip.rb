@@ -1,6 +1,12 @@
 class Trip < ApplicationRecord
   STATUSES = %w[draft published archived].freeze
-  TRIP_TYPES = %w[camping day_trip].freeze
+  TRIP_TYPES = %w[camping day_trip gym_outing class_trip].freeze
+  TRIP_TYPE_LABELS = {
+    "camping" => "Camping Trip",
+    "day_trip" => "Day Trip",
+    "gym_outing" => "Gym Outing",
+    "class_trip" => "Class"
+  }.freeze
   CLIMBING_TYPES = %w[sport trad bouldering].freeze
   CLIMBING_TYPE_LABELS = {
     "sport" => "Sport",
@@ -21,22 +27,28 @@ class Trip < ApplicationRecord
     class_name: "Campsite",
     optional: true,
     inverse_of: :group_campfire_trip
+  belongs_to :partner_company, optional: true
   has_many :campsites, dependent: :destroy
   has_many :campsite_signups, dependent: :destroy
   has_many :participants, through: :campsite_signups, source: :user
+  has_many :climbing_partner_requests, dependent: :destroy
   has_many :day_trip_signups, dependent: :destroy
   has_many :day_trip_participants, through: :day_trip_signups, source: :user
+  has_many :class_signups, dependent: :destroy
+  has_many :class_participants, through: :class_signups, source: :user
   has_many :trip_payment_requests, dependent: :destroy
   has_many :trip_readiness_completions, dependent: :destroy
   has_one :trip_details_email, dependent: :destroy
   has_one_attached :day_trip_image
 
   before_validation :normalize_climbing_types
-  before_validation :sync_day_trip_end_date
+  before_validation :sync_single_day_end_date
   before_destroy :ensure_no_active_signups, prepend: true
 
   enum :status, STATUSES.index_with(&:itself), default: "draft"
   enum :trip_type, TRIP_TYPES.index_with(&:itself), default: "camping"
+
+  scope :with_day_trip_signups, -> { where(trip_type: %w[day_trip gym_outing]) }
 
   scope :active, -> { where(deleted_at: nil) }
   scope :deleted, -> { where.not(deleted_at: nil) }
@@ -50,20 +62,24 @@ class Trip < ApplicationRecord
   validates :cost_cents, :participant_capacity, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :group_fire_night, inclusion: { in: GROUP_FIRE_NIGHTS }, allow_blank: true
   validates :meeting_time, :meeting_location, :meeting_location_url, :late_arrival_instructions, presence: true, if: :day_trip?
-  validate :day_trip_dates_match
+  validates :meeting_time, presence: true, if: :gym_outing?
+  validates :participant_capacity, numericality: { greater_than: 0 }, if: :gym_outing?
+  validates :partner_company, :class_signup_url, :class_original_price, :weather_url, presence: true, if: :class_trip?
+  validate :single_day_dates_match
   validate :climbing_types_are_known
   validate :day_trip_climbing_types_present
+  validate :class_capacity_present
   validate :end_date_after_start_date
   validate :group_campfire_campsite_belongs_to_trip
 
   def campsite_count
-    return 0 if day_trip?
+    return 0 if single_day_event?
 
     campsites.size
   end
 
   def total_participant_capacity
-    return participant_capacity if day_trip?
+    return participant_capacity if single_day_event?
 
     campsites.loaded? ? campsites.sum(&:participant_capacity) : campsites.sum(:participant_capacity)
   end
@@ -77,13 +93,14 @@ class Trip < ApplicationRecord
   end
 
   def confirmed_capacity_count
-    return confirmed_day_trip_signups_with_guests.sum(&:party_capacity_count) if day_trip?
+    return confirmed_day_trip_signups_with_guests.sum(&:party_capacity_count) if uses_day_trip_signups?
+    return confirmed_class_signups.size if class_trip?
 
     confirmed_signups_with_minors.sum(&:capacity_count)
   end
 
   def confirmed_uncounted_minor_count
-    return 0 if day_trip?
+    return 0 if single_day_event?
 
     confirmed_signups_with_minors.sum(&:uncounted_minor_count)
   end
@@ -97,7 +114,8 @@ class Trip < ApplicationRecord
   end
 
   def held_capacity_count
-    return confirmed_day_trip_signups_with_guests.sum(&:party_capacity_count) if day_trip?
+    return confirmed_day_trip_signups_with_guests.sum(&:party_capacity_count) if uses_day_trip_signups?
+    return confirmed_class_signups.size if class_trip?
 
     capacity_holding_signups_with_minors.sum(&:capacity_count)
   end
@@ -120,7 +138,7 @@ class Trip < ApplicationRecord
   end
 
   def delete_blocked_by_participants?
-    campsite_signups.active.exists? || day_trip_signups.active.exists?
+    campsite_signups.active.exists? || day_trip_signups.active.exists? || class_signups.active.exists?
   end
 
   def deleted?
@@ -159,6 +177,22 @@ class Trip < ApplicationRecord
 
   def camping?
     trip_type == "camping"
+  end
+
+  def class_trip?
+    trip_type == "class_trip"
+  end
+
+  def trip_type_label
+    TRIP_TYPE_LABELS.fetch(trip_type)
+  end
+
+  def uses_day_trip_signups?
+    day_trip? || gym_outing?
+  end
+
+  def single_day_event?
+    uses_day_trip_signups? || class_trip?
   end
 
   def climbing_types
@@ -222,10 +256,14 @@ class Trip < ApplicationRecord
   end
 
   def available_for_day_trip_party?(lead_count:, top_rope_count:)
-    return false unless day_trip?
+    return false unless uses_day_trip_signups?
 
     party_count = lead_count.to_i + top_rope_count.to_i
     party_count.positive? && party_count <= available_participant_capacity
+  end
+
+  def available_for_class_signup?
+    class_trip? && available_participant_capacity.positive?
   end
 
   def group_campfire_ready?
@@ -281,6 +319,12 @@ class Trip < ApplicationRecord
     confirmed_day_trip_signups.reject(&:guest?)
   end
 
+  def confirmed_class_signups
+    return class_signups.select(&:confirmed?) if class_signups.loaded?
+
+    class_signups.confirmed.includes(:user)
+  end
+
   def normalize_climbing_types
     self.climbing_types = climbing_types
   end
@@ -302,15 +346,22 @@ class Trip < ApplicationRecord
     errors.add(:base, "Choose at least one type of climbing for this day trip.")
   end
 
-  def sync_day_trip_end_date
-    self.end_date = start_date if day_trip? && start_date.present?
+  def class_capacity_present
+    return unless class_trip?
+    return if participant_capacity.to_i.positive?
+
+    errors.add(:participant_capacity, "must be greater than 0 for classes")
   end
 
-  def day_trip_dates_match
-    return unless day_trip?
+  def sync_single_day_end_date
+    self.end_date = start_date if single_day_event? && start_date.present?
+  end
+
+  def single_day_dates_match
+    return unless single_day_event?
     return if start_date.blank? || end_date.blank? || start_date == end_date
 
-    errors.add(:end_date, "must match the trip date for day trips")
+    errors.add(:end_date, "must match the trip date for #{class_trip? ? 'classes' : 'day trips'}")
   end
 
   def end_date_after_start_date

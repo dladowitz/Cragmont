@@ -56,6 +56,21 @@ class Admin::TripParticipantEmailsControllerTest < ActionDispatch::IntegrationTe
     assert_select ".participant-email-name", text: "Willa Wait"
   end
 
+  test "class page shows confirmed email list and empty waitlist" do
+    trip = class_trip!
+    ClassSignup.create!(trip: trip, user: user!("Clara", "Class", "clara-copy@example.com"))
+
+    get participant_emails_admin_trip_url(trip)
+
+    assert_response :success
+    assert_equal "clara-copy@example.com",
+      css_select("textarea#confirmed-participants-email-addresses").first.text
+    assert_equal "",
+      css_select("textarea#waitlist-email-addresses").first.text
+    assert_select ".participant-email-name", text: "Clara Class"
+    assert_select ".participant-email-section", text: /No one is on the waitlist yet/
+  end
+
   private
 
   def user!(first_name, last_name, email)
@@ -77,6 +92,21 @@ class Admin::TripParticipantEmailsControllerTest < ActionDispatch::IntegrationTe
       late_arrival_instructions: "If you are running late, hike toward the main wall.",
       participant_capacity: 6,
       climbing_types: [ "sport" ]
+    )
+  end
+
+  def class_trip!
+    Trip.create!(
+      trip_type: "class_trip",
+      name: "Intro to Anchors",
+      location: "Castle Rock, CA",
+      start_date: Date.new(2026, 10, 12),
+      status: "published",
+      participant_capacity: 8,
+      partner_company: partner_companies(:vertical_world),
+      class_signup_url: "https://example.com/classes/anchors",
+      class_original_price: "$250",
+      weather_url: "https://forecast.weather.gov/castle-rock"
     )
   end
 end

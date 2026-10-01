@@ -99,6 +99,51 @@ class TripTest < ActiveSupport::TestCase
     assert trip.bouldering?
   end
 
+  test "class trips sync end date and count class signups for capacity" do
+    trip = Trip.create!(
+      trip_type: "class_trip",
+      name: "Intro to Anchors",
+      location: "Castle Rock, CA",
+      start_date: Date.new(2026, 10, 12),
+      end_date: Date.new(2026, 10, 15),
+      status: "published",
+      participant_capacity: 2,
+      partner_company: partner_companies(:vertical_world),
+      class_signup_url: "https://example.com/classes/anchors",
+      class_original_price: "$200",
+      weather_url: "https://forecast.weather.gov/castle-rock"
+    )
+
+    assert trip.class_trip?
+    assert_equal trip.start_date, trip.end_date
+    assert_equal "Class", trip.trip_type_label
+    assert_equal 2, trip.total_participant_capacity
+    assert_equal 2, trip.available_participant_capacity
+
+    ClassSignup.create!(trip: trip, user: users(:sam))
+
+    assert_equal 1, trip.reload.confirmed_signup_count
+    assert_equal 1, trip.available_participant_capacity
+  end
+
+  test "class trips require external class details" do
+    trip = Trip.new(
+      trip_type: "class_trip",
+      name: "Missing Class Details",
+      location: "Castle Rock, CA",
+      start_date: Date.new(2026, 10, 12),
+      status: "published",
+      participant_capacity: 0
+    )
+
+    assert_not trip.valid?
+    assert_includes trip.errors[:partner_company], "can't be blank"
+    assert_includes trip.errors[:class_signup_url], "can't be blank"
+    assert_includes trip.errors[:class_original_price], "can't be blank"
+    assert_includes trip.errors[:weather_url], "can't be blank"
+    assert_includes trip.errors[:participant_capacity], "must be greater than 0 for classes"
+  end
+
   test "capacity count includes minors at the age limit and excludes younger minors" do
     trip = trips(:yosemite)
     signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))

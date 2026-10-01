@@ -146,9 +146,9 @@ class DayTripSignup < ApplicationRecord
   end
 
   def trip_is_day_trip
-    return if trip&.day_trip?
+    return if trip&.uses_day_trip_signups?
 
-    errors.add(:trip, "must be a day trip")
+    errors.add(:trip, "must be a day trip or gym outing")
   end
 
   def guest_link_is_valid
