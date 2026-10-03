@@ -100,6 +100,7 @@
               = label_tag "day_trip_signup_crash_pad_count", "How many"
               = number_field_tag "day_trip_signup[crash_pad_count]", "", id: "day_trip_signup_crash_pad_count", min: 0, max: 99, inputmode: "numeric"
     .form-actions
+      %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
       %button.button{"data-action" => "signature#continueSignup", "data-signature-target" => "signupStepSubmit", type: "button"} Next
   %section.waiver-intro{"data-signature-target" => "intro", hidden: true}
     .waiver-intro-copy

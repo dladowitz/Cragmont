@@ -18,6 +18,8 @@
             - label = signup.campsite_id == campsite.id ? signup.user.full_name : "#{signup.user.full_name} (#{campsite_label})"
             - [label, "signup_#{signup.id}"]
           - assignment_options += participant_options
+          - assignment_label = "Parking assignment for #{spot.spot_label}"
+          - assignment_label += ", currently #{spot.assigned_campsite_signup.user.full_name}" if spot.assigned_campsite_signup.present?
           %tr
             %td= spot.spot_label
             %td
@@ -25,7 +27,7 @@
                 = spot.public_assignment_label
               - else
                 = form_with model: spot, url: admin_trip_campsite_parking_spot_path(trip, spot), method: :patch, class: "admin-parking-spot-form", data: { controller: "parking-spot", action: "submit->parking-spot#submit", turbo: false } do |form|
-                  = form.select :assignment, options_for_select(assignment_options, current_value), {}, onchange: "this.form.requestSubmit()", data: { parking_spot_target: "select" }
+                  = form.select(:assignment, options_for_select(assignment_options, current_value), {}, { onchange: "this.form.requestSubmit()", aria: { label: assignment_label }, data: { parking_spot_target: "select" } })
                   %span.admin-parking-spot-save-status{hidden: true, data: { parking_spot_target: "status" }}
   - else
     %p.muted No parking spots for this campsite.

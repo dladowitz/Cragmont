@@ -8,7 +8,7 @@
 - remove_waitlist_tooltip = "Removes Participant from Waitlist"
 - signups_by_primary_id = signups.group_by { |signup| signup.guest_of_signup_id || signup.id }
 - display_signups = waitlist ? signups : signups.reject(&:guest?).flat_map { |signup| [signup] + signups_by_primary_id.fetch(signup.id, []).select(&:guest?) }
-%table
+%table.admin-signups-table.admin-record-table{class: ("admin-confirmed-participants-table" unless waitlist), role: "table", "aria-label" => (waitlist ? "Trip waitlist" : "Confirmed participants")}
   %thead
     %tr
       %th Participant
@@ -70,8 +70,8 @@
       - party_guest = !waitlist && signup.guest?
       - next_signup = display_signups[index + 1]
       - party_last = party_guest && (!next_signup&.guest? || next_signup.guest_of_signup_id != signup.guest_of_signup_id)
-      %tr{class: [("admin-party-primary-row" if party_primary), ("admin-party-guest-row" if party_guest), ("admin-party-last-row" if party_last)].compact, data: (waitlist ? {} : { controller: "copyable-modal" })}
-        %td
+      %tr{class: [("admin-party-primary-row" if party_primary), ("admin-party-guest-row" if party_guest), ("admin-party-last-row" if party_last)].compact, role: "row", data: (waitlist ? {} : { controller: "copyable-modal" })}
+        %td.admin-record-title{role: "cell"}
           - if party_guest
             %span.admin-party-guest-name= signup.user.full_name
           - else
@@ -104,13 +104,13 @@
                 .form-actions
                   %button.button.secondary{"data-action" => "copyable-modal#close", type: "button"} Close
         - if waitlist
-          %td
+          %td{role: "cell", "data-label" => "Member"}
             - member_status_text = signup.user.member? ? "Yes" : "No"
             - member_status_class = signup.user.member? ? "status member-status" : "muted"
             %span.admin-member-status{class: member_status_class}= member_status_text
           = render "signup_minors_cell", signup: signup, party_guest: party_guest
         - unless waitlist
-          %td
+          %td{role: "cell", "data-label" => "Dates", class: ("admin-record-empty" if party_guest)}
             - if party_guest
               %span.admin-party-empty-cell{"aria-hidden" => "true"}
             - elsif !missing_dates
@@ -120,7 +120,7 @@
             - else
               %button.missing-value.missing-link{"data-action" => "copyable-modal#open", type: "button"} Missing
         - if waitlist && !read_only
-          %td.admin-self-signup-cell
+          %td.admin-self-signup-cell{role: "cell", "data-label" => "Self Signup"}
             .admin-self-signup-control
               - if signup.waitlist_eligible?
                 %span.status.admin-self-signup-status Enabled
@@ -128,7 +128,7 @@
               - else
                 %span.status.danger-status.admin-self-signup-status Disabled
                 = button_to "Enable", make_waitlist_eligible_admin_trip_campsite_signup_path(trip, signup), method: :patch, class: "button secondary admin-table-action-button"
-          %td
+          %td{role: "cell", "data-label" => "Campsite"}
             - preview_campsite = campsites.first
             %div.admin-waitlist-campsite-control{"data-controller" => "modal"}
               - if preview_campsite.present?
@@ -190,7 +190,7 @@
                     .form-actions
                       %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
                       = submit_tag "Add", class: "button"
-          %td
+          %td.table-actions{role: "cell"}
             %div{"data-controller" => "modal"}
               %button.button.danger.secondary.admin-table-action-button{"data-action" => "modal#open", :type => "button"} Remove
               %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
@@ -202,12 +202,12 @@
                     %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
                     = button_to "Remove", remove_from_waitlist_admin_trip_campsite_signup_path(trip, signup), method: :delete, class: "button danger"
         - elsif !waitlist
-          %td
+          %td{role: "cell", "data-label" => "Payment", class: ("admin-record-empty" if party_guest)}
             - if party_guest
               %span.admin-party-empty-cell{"aria-hidden" => "true"}
             - else
               = render "payment_controls", signup: signup, trip: signup_trip, missing_dates: missing_dates, missing_waiver: missing_waiver, participant_details_link: participant_details_link, read_only: payment_read_only
-          %td
+          %td{role: "cell", "data-label" => "Waiver"}
             - if signup.waiver_signed?
               = link_to admin_user_path(signup.user), class: "waiver-check-link", aria: { label: "View #{signup.user.full_name}'s waivers" } do
                 %svg.waiver-check-icon{ aria: { hidden: "true" }, fill: "none", height: "18", viewbox: "0 0 24 24", width: "18", xmlns: "http://www.w3.org/2000/svg" }
@@ -217,7 +217,7 @@
                 %span.missing-value Missing
               - else
                 %button.missing-value.missing-link{"data-action" => "copyable-modal#open", type: "button"} Missing
-          %td
+          %td{role: "cell", "data-label" => "Info"}
             - participant_info_modal_id = "participant-info-#{signup.id}"
             %div.participant-info-control{"data-controller" => "modal"}
               %button.info-link-button{"aria-controls" => participant_info_modal_id, "data-action" => "modal#open", type: "button"} View
@@ -240,7 +240,7 @@
                     %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
           = render "signup_minors_cell", signup: signup, party_guest: party_guest
           - unless read_only
-            %td
+            %td.table-actions{role: "cell"}
               - if signup.guest?
                 %div{"data-controller" => "modal"}
                   %button.button.danger.secondary.admin-confirmed-signup-action-button{"data-action" => "modal#open", :type => "button"} Remove

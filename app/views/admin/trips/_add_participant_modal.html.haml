@@ -47,7 +47,7 @@
                 %span{"data-participant-picker-target" => "label"} Choose a participant
                 %span.participant-picker-chevron{"aria-hidden" => "true"}
               .participant-picker-panel{hidden: true, data: { participant_picker_target: "panel" }}
-                = search_field_tag nil, "", class: "participant-picker-search", placeholder: "Search by name or email", autocomplete: "off", data: { participant_picker_target: "search", action: "input->participant-picker#filter" }
+                = search_field_tag nil, "", class: "participant-picker-search", placeholder: "Search by name or email", aria: { label: "Search by name or email" }, autocomplete: "off", data: { participant_picker_target: "search", action: "input->participant-picker#filter" }
                 %ul.participant-picker-list{id: "#{user_select_id}-list", role: "listbox"}
                   - user_picker_options.each do |option|
                     %li

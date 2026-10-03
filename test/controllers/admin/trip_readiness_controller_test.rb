@@ -28,6 +28,7 @@ class Admin::TripReadinessControllerTest < ActionDispatch::IntegrationTest
     assert_select "#readiness-trip", text: /Guide Book link added/
     assert_select "#readiness-trip", text: /Create Google Photo Album/
     assert_select "#readiness-trip", text: /Group campfire site and night set/
+    assert_select "#readiness-trip .trip-readiness-group-check h3", text: "Trip Coordinator assigned"
     assert_select "#readiness-trip", text: /Mountain Project link added/, count: 0
     assert_select "#readiness-trip", text: /Sun Exposure added/, count: 0
     assert_select "#readiness-trip [data-readiness-task-key='add_photo_album_to_older_website'] .trip-readiness-task-subtext a[href='https://www.cragmontclimbingclub.org/past-trips'][target='_blank'][rel='noopener']",

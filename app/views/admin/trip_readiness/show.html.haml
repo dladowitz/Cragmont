@@ -60,7 +60,7 @@
                     %span.trip-readiness-open-circle
                 .trip-readiness-task-copy
                   .trip-readiness-task-title-row
-                    %h4= task.name
+                    %h3= task.name
                     - if task.automatic? && task.source_complete?
                       %span.trip-readiness-auto-badge auto calc
                   - if task.detail.present?

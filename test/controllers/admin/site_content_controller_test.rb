@@ -9,7 +9,7 @@ class Admin::SiteContentControllerTest < ActionDispatch::IntegrationTest
     get edit_admin_site_content_url("liability_warning")
 
     assert_response :success
-    assert_select "h1", "Admin Dashboard"
+    assert_select "h1.visually-hidden"
     assert_select "h2", "Edit Liability Warning"
     assert_select "a[href='#{admin_content_path}']", text: "Back to Content"
     assert_select "label[for='site_setting_liability_warning'] .required-marker", text: "*"
@@ -32,7 +32,7 @@ class Admin::SiteContentControllerTest < ActionDispatch::IntegrationTest
     get edit_admin_site_content_url("day_trip_safety_reminder")
 
     assert_response :success
-    assert_select "h1", "Admin Dashboard"
+    assert_select "h1.visually-hidden"
     assert_select "h2", "Edit Day Trip Safety Reminder"
     assert_select "a[href='#{admin_content_path}']", text: "Back to Content"
     assert_select "label[for='site_setting_day_trip_safety_reminder'] .required-marker", text: "*"

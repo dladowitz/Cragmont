@@ -9,7 +9,7 @@ class Admin::PartnerCompaniesControllerTest < ActionDispatch::IntegrationTest
     get admin_partner_companies_url
 
     assert_response :success
-    assert_select "h1", "Admin Dashboard"
+    assert_select "h1.visually-hidden"
     assert_select ".admin-nav a[href='#{admin_partner_companies_path}']", text: "Partners"
     assert_select "h2", "Partner companies"
     assert_select "td", text: "Vertical World Guides"

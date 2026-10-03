@@ -7,10 +7,9 @@
   %section#archived-trips.panel.archived-trips-panel
     .panel-header
       .trips-index-copy
-        .trips-index-title-row
-          %h1 Past Trips
-          = link_to "Current Trips", trips_path
+        %h1 Past Trips
     - if @archived_trips.any?
+      %h2.visually-hidden Recent trips
       .archived-trip-list
         - @archived_trips.each do |trip|
           = link_to trip_path(trip), class: "archived-trip-row", aria: { label: "View #{public_member_text(trip.name, trip: trip)}" } do
@@ -18,7 +17,7 @@
               %h3= public_member_text(trip.name, trip: trip)
               .trip-card-title-line
                 %p= public_member_text(trip.location, trip: trip)
-                %span.status.trip-type-badge= trip.trip_type_label
+                %span.status.trip-type-badge{class: public_trip_type_badge_class(trip)}= public_trip_type_label(trip)
             %dl.archived-trip-meta
               %div
                 %dt Dates
@@ -34,6 +33,9 @@
               %div
                 %dt= trip.single_day_event? ? "Participants" : "Sites"
                 %dd= trip.single_day_event? ? trip.confirmed_signup_count : trip.campsite_count
+          - report = TripReport.for_trip(trip)
+          - if report.public_payload
+            %p.archived-report-link= link_to "Read report: #{public_member_text(trip.name, trip: trip)}", public_report_path(report)
       - if @archived_total_pages > 1
         %nav.pagination{aria: {label: "Past trip pages"}}
           - if @archived_current_page > 1
@@ -42,6 +44,6 @@
           - if @archived_current_page < @archived_total_pages
             = link_to "Next", past_trips_trips_path(archived_page: @archived_current_page + 1, anchor: "archived-trips"), class: "button secondary"
     - else
-      %p.muted No past trips are available right now.
+      %p.muted.trip-list-empty No trips from this site's calendar have been archived yet.
   = render "shared/liability_warning"
 %p.background-image-caption Regular Northwest Face, Half Dome

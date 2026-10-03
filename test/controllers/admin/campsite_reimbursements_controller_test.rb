@@ -14,6 +14,21 @@ class Admin::CampsiteReimbursementsControllerTest < ActionDispatch::IntegrationT
     log_in_as(users(:alex))
   end
 
+  test "each reimbursement form has unique controls and matching labels" do
+    campsites(:yosemite_b).update!(registration_fee: "25")
+    get admin_campsite_reimbursements_url
+
+    forms = css_select(".campsite-registration-reimbursement-modal form")
+    assert_equal 2, forms.size
+    ids = forms.flat_map { |form| form.css("[id]").map { |input| input["id"] } }
+    assert_equal ids.uniq, ids
+    forms.each do |form|
+      form.css("label[for]").each do |label|
+        assert_equal 1, form.css("[id='#{label['for']}']").size
+      end
+    end
+  end
+
   test "defaults to positive-fee unreimbursed campsites" do
     excluded_day_trip_campsite = create_excluded_campsite!("Day Trip Site", "day_trip")
     excluded_class_campsite = create_excluded_campsite!("Class Trip Site", "class_trip")
@@ -23,12 +38,12 @@ class Admin::CampsiteReimbursementsControllerTest < ActionDispatch::IntegrationT
 
     assert_response :success
     assert_select "form.campsite-reimbursement-filter-form[data-turbo='false']", count: 1
-    assert_select "input[name='reimbursement_status[]'][value='unreimbursed'][checked]"
-    assert_select "input[name='reimbursement_status[]'][value='reimbursed']:not([checked])"
-    assert_select "input[name='reimbursement_status[]'][value='all']:not([checked])"
-    assert_select ".campsite-reimbursement-filter span", text: "Unreimbursed", count: 1
-    assert_select ".campsite-reimbursement-filter span", text: "Reimbursed", count: 1
-    assert_select ".campsite-reimbursement-filter span", text: "All", count: 1
+    assert_select "label[for='reimbursement_status']", text: "View campsites"
+    assert_select "select[name='reimbursement_status[]']" do
+      assert_select "option[value='unreimbursed'][selected]"
+      assert_select "option[value='reimbursed']:not([selected])"
+      assert_select "option[value='all']:not([selected])", text: "All campsites"
+    end
     assert_select ".campsite-reimbursement-filter-actions input[type='submit'][value='Apply']", count: 1
     assert_select ".campsite-reimbursement-filter-actions button[type='submit'][name='format'][value='csv']", text: "Download CSV Report", count: 1
     assert_select "#campsite-reimbursement-#{campsites(:yosemite_a).id}", count: 1
@@ -45,7 +60,7 @@ class Admin::CampsiteReimbursementsControllerTest < ActionDispatch::IntegrationT
     get admin_campsite_reimbursements_url, params: { filters: "1", reimbursement_status: [ "all" ] }
 
     assert_response :success
-    assert_select "input[name='reimbursement_status[]'][value='all'][checked]"
+    assert_select "select option[value='all'][selected]"
     assert_select "table.campsite-reimbursement-table", count: 2
     assert_select "th", text: "Campground", count: 2
     assert_select "th", text: "Site Number", count: 2
@@ -77,10 +92,26 @@ class Admin::CampsiteReimbursementsControllerTest < ActionDispatch::IntegrationT
     get admin_campsite_reimbursements_url, params: { filters: "1", reimbursement_status: [ "reimbursed" ] }
 
     assert_response :success
-    assert_select "input[name='reimbursement_status[]'][value='reimbursed'][checked]"
+    assert_select "select option[value='reimbursed'][selected]"
     assert_select "#campsite-reimbursement-#{campsites(:jtree_a).id}", count: 1
     assert_select "#campsite-reimbursement-#{campsites(:yosemite_a).id}", count: 0
     assert_select "#campsite-reimbursement-#{campsites(:yosemite_b).id}", count: 0
+  end
+
+  test "legacy combined selection can be reapplied or exported from the dropdown" do
+    [ :html, :csv ].each do |format|
+      get admin_campsite_reimbursements_url(format: format), params: {
+        filters: "1", reimbursement_status: [ "reimbursed,unreimbursed" ]
+      }
+
+      assert_response :success
+      if format == :html
+        assert_select "select option[value='reimbursed,unreimbursed'][selected]"
+        assert_select "#campsite-reimbursement-#{campsites(:yosemite_b).id}", count: 0
+      else
+        assert_equal %w[A12 H4], CSV.parse(response.body, headers: true).map { |row| row["Site Number"] }
+      end
+    end
   end
 
   test "multiple reimbursement filters combine their results" do
@@ -90,6 +121,7 @@ class Admin::CampsiteReimbursementsControllerTest < ActionDispatch::IntegrationT
     }
 
     assert_response :success
+    assert_select "select option[value='reimbursed,unreimbursed'][selected]"
     assert_select "#campsite-reimbursement-#{campsites(:yosemite_a).id}", count: 1
     assert_select "#campsite-reimbursement-#{campsites(:jtree_a).id}", count: 1
     assert_select "#campsite-reimbursement-#{campsites(:yosemite_b).id}", count: 0

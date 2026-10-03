@@ -12,7 +12,8 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
     get new_admin_trip_campsite_url(trips(:yosemite))
 
     assert_response :success
-    assert_select "h1", "Admin Dashboard"
+    assert_select "h1.visually-hidden"
+    assert_select ".panel-header .eyebrow", text: "Add campsite"
     assert_select ".panel-header", text: /Yosemite Valley Spring/
     assert_select ".registered-by-picker[data-controller='participant-picker']"
     assert_select "input[type='hidden'][name='campsite[registered_by_id]'][data-participant-picker-target='input'][value='']"
@@ -78,7 +79,7 @@ class Admin::CampsitesControllerTest < ActionDispatch::IntegrationTest
     get edit_admin_trip_campsite_url(trips(:yosemite), campsites(:yosemite_a))
 
     assert_response :success
-    assert_select "h1", "Admin Dashboard"
+    assert_select "h1.visually-hidden"
     assert_select ".panel-header", text: /Yosemite Valley Spring/
     assert_select ".form-actions input[type='submit']"
     assert_select ".registered-by-picker[data-controller='participant-picker']"

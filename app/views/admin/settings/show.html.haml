@@ -29,5 +29,5 @@
           %span{"aria-hidden" => "true"} $
           = form.number_field :minor_extra_night_fee, min: 0, step: 0.01, value: number_with_precision(@site_setting.minor_extra_night_fee, precision: 2)
     %p.muted Fees are entered in dollars and stored in cents.
-  .form-actions
-    = form.submit "Save settings", class: "button"
+    .form-actions
+      = form.submit "Save settings", class: "button"

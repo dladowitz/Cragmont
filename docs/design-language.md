@@ -1,0 +1,106 @@
+# Cragmont design language
+
+Use this guide when adding or changing a page. It records the choices already expressed in the site, not a second set of CSS tokens. The working sources are [`application.css`](../app/assets/stylesheets/application.css), [`editorial.css`](../app/assets/stylesheets/editorial.css), the [public header](../app/views/shared/_public_header.html.haml), and the [admin header](../app/views/admin/shared/_header.html.haml). Inspect those before adding a new pattern.
+
+## What the site should feel like
+
+Cragmont is a real climbing club, not a booking marketplace. Pages should feel outdoorsy, welcoming, trustworthy, and useful. Let climbing photography and specific destinations supply the personality; keep the interface restrained enough that trip details, safety information, and next actions remain easy to scan.
+
+- Lead with the answer to a visitor's question. Use a clear page title, a short lead, then the details and one obvious next action.
+- Prefer concrete club language over marketing claims. Explain what the club does and what a participant needs to know without implying that Cragmont provides instruction or certifies climbing ability.
+- Use climbing language in feedback where it helps, especially successes and recoverable errors. Keep labels, instructions, money, dates, and safety copy literal. Say **participant** for a person on a trip; use **signup** for the registration action or record.
+- Keep public pages warm and editorial; keep admin pages compact and task-focused. Do not make a safety warning, payment error, or destructive action playful.
+
+## Visual rules
+
+| Element | Established choice | Why |
+| --- | --- | --- |
+| Type | One sans-serif family; regular-weight, tight-tracked headings; readable body text | Photography and content do the expressive work. |
+| Palette | Warm off-white background, near-white panels, deep green text/actions, muted green-gray metadata | Feels outdoorsy without competing with photos. Use the CSS custom properties; do not copy hex values into a new page. |
+| Surfaces | Thin borders, small radius, little or no shadow | Group content without making every section look like a floating card. |
+| Width | Shared `public-main`/`panel` rhythm; narrower `club-main` and readable `club-copy` for long prose | Wide for trip browsing, comfortable line lengths for reading. |
+| Photography | A relevant climbing image where it adds context; overlay or panel for text; location caption | A photo is not a substitute for a heading or legible copy. |
+| Actions | Filled green primary button; outlined secondary; danger style only for destructive actions | The next step should be unmistakable. |
+| Badges | Compact text **and** color. Camping/default is green, day trip is blue, gym outing is orange, external class is amber; operational statuses retain their own semantic colors | The type/status must remain understandable without color. Preserve these distinctions when making pages. |
+
+The current public examples are [home](../app/views/home/index.html.haml), [trips](../app/views/trips/index.html.haml), [membership](../app/views/club/membership.html.haml), and [history](../app/views/club/history.html.haml). Reuse their HAML structure and existing classes before inventing a new component. `editorial.css` carries the newer visual treatment; check `application.css` for the original component and responsive rules before editing either file. Avoid stacking a page-specific override on a shared style unless the page genuinely differs.
+
+## Page patterns and decisions
+
+1. **Navigation is grouped by intent.** The public header has Trips first (Trips, Past Trips, Trip Reports), then Club (Membership, History, About, Join the List, Get Help). Keep Get Help last in Club. Past Trips is the calendar archive; Trip Reports is the separate photo/report gallery, retaining full-album links. Logged-in people have a name menu with Profile and Log out; signed-out people see distinct Login and Signup buttons. Preserve the same destinations and hierarchy on mobile. Use the top navigation to switch between these pages: do not repeat page-switching links beside titles, in local button rows, or in club-page footers. Preserve task actions, related-trip links, pagination, and the homepage's primary View trips action.
+2. **A page has one primary job.** Trip index helps someone find an outing; trip detail helps them decide and act; club pages explain the organization and point toward trips or the email list. Do not give three competing primary CTAs.
+3. **Use the right content container.** A photo-led page needs readable contrast over its image and an explicit mobile composition. A text-heavy club page uses an eyebrow, H1, lead, section headings, and restrained panel. Admin pages use the existing header, panels, tables/forms, and direct labels.
+   Public club pages and individual trip reports use `club-page` for the existing Fairview Dome background, photo-header navigation, and location caption. Keep their reading panels opaque; the background stays viewport-sized even on long articles. Do not replace the photo with a flat page background on phones. Admin pages retain their shared task-focused styling.
+4. **Trip metadata stays visible.** Type badge, dates, location, and available space are scan-first information. Distinguish draft/published/archived and trip types in words as well as color. Do not hide a critical fact behind hover, a disclosure, or an image.
+   Desktop trip titles and location subtitles use the slightly smaller trip-summary scale (up to 3.68rem and 2rem). Leave the mobile photo-header typography unchanged. On desktop trip detail pages, type and capacity badges sit beside the title when space permits; mobile keeps badges on the next row.
+   Keep the all-events calendar subscription on the trips index. Do not show misleading single-trip `(Calendar)` downloads.
+   On mobile Trips and Past Trips cards, keep metadata labels at the left edge and dates, availability, participant counts, or site counts at the right edge. Leave spare space between the columns, not after the values.
+   Show summary counts in individually outlined stat boxes with small gaps, not a continuous ruled strip. Trip totals and nested campsite counts are separate groups, not aligned table columns. Use the same boxes in admin; preserve green/amber/red availability fills and readable parking/minor breakdowns on narrow screens.
+   Mobile trip sections use consistent body paragraphs, including empty participant/coordinator states: 1rem text, 1.5 line height, the normal text color, and an 8px gap below the heading. Do not pull empty states upward with negative margins; reserve muted styling for secondary helper text.
+   On phones (760px and below), trip detail content sits on one continuous warm off-white background, not alternating white panels. Use bold (700) trip titles and section headings, without increasing their size, and the shared 24px section margin, keeping outlined stats and campsite records distinct. This 24px/8px section-to-content hierarchy follows [Carbon's spacing scale and grouping guidance](https://carbondesignsystem.com/elements/spacing/overview/); it is a design-system-informed choice, not a measured optimum. Desktop retains its panels and regular-weight headings.
+5. **Forms are honest.** Mark every required field with the red `*` via `required_label`/`required_label_tag`, pair it with the actual `required` input attribute when applicable, and put useful errors near the form. Group related fields with headings/fieldsets. After a successful action, show what happened and the next step; after failure, preserve entered data where possible.
+   Auth forms use compact 2rem semibold headings with explicit margins, not the large editorial page-title scale. Keep the photo-backed auth panels softly translucent. Login actions fit one row on desktop/tablet and two deliberate rows on phones; never leave an accidentally wrapped, lone button. Keep mobile auth photo headers compact so the form remains easy to reach on short foldable screens.
+6. **Links navigate; buttons act.** Keep external links identifiable and safe. Separate joining the email list from creating a site account; they are different actions. Preserve member-only link privacy rather than exposing URLs in public copy.
+   In admin trip Additional Resources, mobile shows underlined resource names as links with 44px tap targets, not raw URLs. Desktop keeps labelled URLs for inspection. Keep non-link information such as Sun Exposure readable; never turn invalid URLs into clickable links.
+   The public Admin link matches other navigation. Admin pages clearly display Admin Dashboard and replace the Admin link with Public View beside the brand.
+   Keep the compact rectangular logo and mode-switch link together. If desktop navigation cannot fit beside them, move the whole navigation to its own row; use the compact Menu at 980px and below. Check the full super-admin navigation, not only a coordinator's shorter menu. Report-list actions keep a consistent column while long titles wrap.
+7. **Feedback uses the shared toast, not a page-wide banner.** Notifications float top-right on desktop and across the top on mobile, below the navigation and without shifting page content. Keep dark text on their opaque light surface so a photo header cannot wash out the message or navigation. Each has an accessible X button, a live status/alert message, and a short entrance/exit animation (disabled for reduced motion). Notices dismiss after 5 seconds, logout after 2, and errors after 8; hovering or focusing pauses dismissal. Keep field-level validation inline too. Do not restore the obsolete “site is still getting dialed in” banner.
+8. **Report images must belong to the report.** Keep original album links and use only authorized photo sources, never unrelated stock imagery as a trip photo. The 22 archive thumbnails were copied anonymously from the published [club archive](https://www.cragmontclimbingclub.org/past-trips) on September 26, 2026 into `app/assets/images/trip-reports/`, named by outing and date. Serve these optimized local assets: Google Sites image URLs are temporary and must not be hard-coded. Keep fixed dimensions, lazy loading, descriptive alt text, and an album link on the cover. Show a separate album link only when the cover does not already link to it. Do not import images from a signed-in private album without approval.
+9. **Mobile admin is record-first.** At 980px and below, trips, campsite reimbursements, help requests, campground directories, and assigned campsites become labelled, lightly outlined records using `admin-record-table`. Keep every field and permitted action visible, preserve accessible table headers, and scope cell rules to direct children so reimbursement dialogs are unaffected. Campground and site identify the record; trip counts stay in a compact row of outlined boxes. Record actions follow their details on mobile, even when the desktop table puts actions first. Desktop retains its tables. Reserve horizontal scrolling for dense comparisons, not these record lists.
+   In mobile trip records, align metadata labels to the left edge and their values to the right edge, leaving flexible space between them. Keep the title, actions, and stats boxes in their existing alignment; let long values wrap within their column.
+   Manage destinations become full-width navigation rows with aligned progress badges, chevrons, and at least 48px tap targets. Reimbursement totals remain non-interactive. Trip and help-request status filters use a native disclosure with an always-visible summary of the applied selections, checkboxes, and one Apply button. Campsite reimbursement filtering uses a labelled native select with the shared inset chevron and reserved right padding; preserve filters through recording and CSV export, including bookmarked legacy combinations. Do not replace these controls with a custom menu library.
+
+## Trip-report publishing and editing
+
+- New public trips with a Google Photos album link automatically appear in Trip Reports after the trip ends. Use the end date, not the start date, in the club's local time; honor overnight outings. No written report or manual archive action is required. Draft and deleted trips stay excluded.
+- Show the trip title, dates, type, and full-album link. Use authorized thumbnails when available; a missing preview must not prevent the album link from working or leave a broken gallery placeholder. For editors, place Edit report before the Read trip report disclosure.
+- Keep one entry per trip. A coordinator can later add a story or album link to that entry without creating a duplicate. An unpublished story draft remains private even when the photo-only entry is visible.
+- Explain beside the album field on new trips that the link will become public in Trip Reports after the trip ends. This prospective behavior must not silently publish existing member-only album links or access private Google Photos albums.
+- Admin → Trip Reports is the shared workspace. Global trip admins can manage every report and create standalone historical reports; assigned coordinators only manage their own linked trips. Offer Write/Edit report from trip detail and the Post Trip checklist, and Read report from past trips.
+- Prefill linked-trip metadata. Keep story and byline optional; an album or uploaded photo is enough to publish. Use the existing Markdown renderer, not a new rich-text dependency. Preserve imported text, attribution, album links, and local archive images.
+- In both report trip selectors, include the trip's date or date range beside its name so repeated destinations are distinguishable.
+- Autosave private edits after a short pause. Show saving/saved/error status beside the editor heading. Save draft never changes a published story or its photos. Publishing copies the draft to the public snapshot and opens the public report so completion is visible; hiding suppresses automatic entries too, until explicitly republished.
+- Previewing an unchanged saved report must not save it or change editing metadata. Save pending edits or initialize a new draft before previewing.
+- Desktop shows form and preview side by side; tablet, phone, and folded/unfolded screens use Write/Preview controls. Do not cover fields with sticky mobile action bars. New photos belong in the Google Photos album. Existing attachments retain captions and cover/reorder/remove controls with 44px touch targets. Do not offer new direct uploads.
+- On network, validation, or edit-conflict errors, retain the editor's text. A stale version must never overwrite another editor. Announce the conflict and stop writes until the person resolves it against the latest report in another tab.
+- Use authorized image endpoints for drafts and published-photo membership for public images. Strip metadata from served variants. Never expose private original-file URLs or scrape Google Photos as a fallback. The retired upload endpoint rejects new files; existing attachments remain available under the same authorization rules.
+
+Deployment and session-API details are in [trip reports](trip-reports.md).
+
+## Accessibility and responsive acceptance
+
+Before calling a new page finished, check it at approximately **360px, 760px, and desktop width**, plus keyboard navigation and folded/unfolded screens. The existing design uses 44px-or-larger navigation targets, a visible focus ring, mobile menus, responsive record lists, and horizontal scrolling only for dense comparison tables. Confirm:
+
+- No horizontal page overflow, clipped controls, unreadable photo text, or CTA hidden below an oversized hero on narrow screens.
+- One H1, meaningful heading order, explicit form labels, useful image alt text (or empty alt for decorative images), and captions for meaningful climbing photography.
+- Menus, disclosures, forms, and dialogs work with keyboard and have visible focus; meaning does not depend on color alone. Navigation closes on outside click/tap. Escape closes the open submenu and returns focus to its heading; a second Escape closes the mobile menu and returns focus to Menu. Keep menu labels non-selectable, an 8px gap above expanded menus, and no divider after the last item.
+- Loading, empty, validation, success, and permission states make sense. Realistic long names, missing optional data, and zero available spaces do not break the layout.
+- Scope responsive table rules to the table's own sections, rows, and cells; dialogs may contain nested tables. Keep fee headers readable and use the existing `table-scroll` hint only where scrolling is still needed. Record lists must show all fields without swiping.
+- Give repeated model forms a record-specific `namespace:` so every label targets its own input. Every dialog step needs an explicit Cancel or Close button, including on touch screens.
+- Preserve the selected trip through login using `member_links_login_path`. Hide admin actions when their policy denies them. Date previews validate schedule inputs; saving still validates the entire event.
+- Earlier or equal end times mean an overnight outing, as in the calendar feed. Use `formatted_trip_end_time` to show “next day” and explain this beside the admin input.
+- Expanded trip reports span the whole gallery row and move their former neighbor below, including when expanding the right-hand card. Animate the reflow when supported, respect reduced motion, retain keyboard focus, and restore the card's position when collapsed. Keep photos bounded and report text at a readable line length.
+- Trip/privacy/safety language remains accurate for signed-out and signed-in visitors. Do not use a static screenshot as proof of an interactive flow.
+
+## First-pass workflow for a new page
+
+1. Write its one-sentence job and intended audience (visitor, participant, or admin). Identify the primary CTA and the facts needed before that action.
+2. Start from the closest existing HAML page and shared header. Reuse tokens, components, badge helpers, and copy patterns. Add CSS only for a real new layout or state.
+3. Put realistic content in every state, including long text and empty data. Review desktop and narrow screens, then keyboard and form errors before declaring the design done.
+4. Run relevant tests and the full Rails suite before pushing. A page is ready when the visible result and its behavior both match this guide, not merely when it compiles.
+
+## October club review
+
+Keep trip-list badges and admin table badges/actions subordinate to trip names. Label availability Open Spaces. Campsite cards retain their green left border and a right inset on mobile. Report covers use a light gray background and no duplicate View photos link. Report titles provide the edit link in the admin list; Cancel and historical-report actions use secondary buttons. Place robot API documentation below the trip table. Preserve the original About text (without the outdated member count), the complete Steve Roper History reprint and all four archive photos, and the supplied Membership wording.
+
+On mobile trip lists, keep the outer section transparent. Empty-state notes use inset white cards with the same rounded corners, padding, and side alignment as the liability card. Keep Open Spaces on one line with enough label-column width.
+
+Keep the two logo lines separated with a full line height and a small gap. Center desktop trip badges against the title’s visible capital-letter height. Report cards use one compact thumbnail each, with a scenic sample thumbnail when no photo exists; full report galleries use evenly sized tiles. On mobile, campsite, partner-board, and coordinator cards share a 1px outline with a 4px colored left accent.
+
+Keep table action links as flex buttons so labels center vertically. Trip-list actions are compact on desktop (36px minimum height) and fill the mobile card width with a 44px minimum tap target. On mobile, report-editor navigation and Write/Preview controls use two equal columns aligned with the form fields.
+
+On mobile, confirmed-participant admin cards pair labels and values on compact rows, omit empty minors rows, and use full-width reservation actions. Keep report editor save/publish/hide/cancel actions and trip Read/Edit report links in equal-width columns aligned to their containing panel. On every screen size, campsite controls use a signup-mode action spanning the action area above an equal-width Add Participant / Edit Campsite row.
+
+Center button labels in both directions, including wrapped labels. Report forms use the shared 18px grid gap without additional field margins. Hidden dialog containers must not reserve blank rows in participant cards. Desktop gallery cards stretch to the same row height so their bottom borders align even when titles wrap.
+
+On phones, top-level admin form footers use equal-width Save/Cancel columns and a separate full-width destructive action when present. Confirmation dialog buttons keep matching widths even when an action is wrapped in its own form. Place the automatic report-publication checkbox beside the first line of its label, with explanatory text aligned beneath the label.

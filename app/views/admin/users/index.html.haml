@@ -5,7 +5,7 @@
       %h2 User directory
     = link_to "New user", new_admin_user_path, class: "button"
   - if @users.any?
-    %table
+    %table.admin-record-table.admin-users-table{role: "table", "aria-label" => "User directory"}
       %thead
         %tr
           %th Name
@@ -17,7 +17,7 @@
       %tbody
         - @users.each do |user|
           %tr
-            %td
+            %td.admin-record-title{role: "cell"}
               .user-name-cell
                 - if user.member?
                   %span.member-icon{"aria-label" => "Club member", :title => "Club member"}
@@ -27,11 +27,11 @@
                 - else
                   %span.member-icon-placeholder{"aria-hidden" => "true"}
                 = link_to user.full_name, admin_user_path(user)
-            %td= user.email.presence || tag.span("None")
-            %td= user.phone.presence || tag.span("None")
-            %td= user.member? ? "Yes" : "No"
-            %td= user.roles.order(:name).map(&:name).to_sentence.presence || "None"
-            %td= user.default_password? ? "Yes" : "No"
+            %td{role: "cell", "data-label" => "Email"}= user.email.presence || tag.span("None")
+            %td.admin-user-phone{role: "cell", "data-label" => "Phone"}= user.phone.presence || tag.span("None")
+            %td{role: "cell", "data-label" => "Member"}= user.member? ? "Yes" : "No"
+            %td{role: "cell", "data-label" => "Roles"}= user.roles.order(:name).map(&:name).to_sentence.presence || "None"
+            %td{role: "cell", "data-label" => "Default Password"}= user.default_password? ? "Yes" : "No"
   - else
     .empty-state
       %p No users have been added yet.

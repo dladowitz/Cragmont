@@ -28,7 +28,7 @@
       %h2 Recipients
       %p.muted= pluralize(@recipients.size, "participant")
   - if @recipients.any?
-    %table.trip-details-email-recipient-table
+    %table.trip-details-email-recipient-table.admin-record-table{role: "table", "aria-label" => "Trip details email recipients"}
       %thead
         %tr
           %th Participant
@@ -37,15 +37,15 @@
           %th Delivered
       %tbody
         - @recipients.each do |recipient|
-          %tr
-            %td.trip-details-email-recipient-contact
+          %tr{role: "row"}
+            %td.trip-details-email-recipient-contact.admin-record-title{role: "cell"}
               %span.trip-details-email-recipient-name= recipient.recipient_name
               = mail_to recipient.email, recipient.email, class: "trip-details-email-recipient-email"
-            %td= recipient.campsite_label
-            %td
+            %td{role: "cell", "data-label" => "Campsite"}= recipient.campsite_label
+            %td{role: "cell", "data-label" => "Status"}
               - status_class = recipient.delivered? ? "success-status" : (recipient.failed? ? "danger-status" : "warning-status")
               %span.status{class: status_class}= recipient.delivery_status.titleize
-            %td= recipient.delivered_at&.strftime("%b %-d, %Y %-l:%M %p") || "Not delivered"
+            %td{role: "cell", "data-label" => "Delivered"}= recipient.delivered_at&.strftime("%b %-d, %Y %-l:%M %p") || "Not delivered"
   - else
     %p.muted No recipients were recorded.
 

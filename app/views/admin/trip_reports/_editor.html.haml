@@ -1,0 +1,74 @@
+- draft = @report.draft
+%section.panel.report-editor{data: {controller: "report-editor", report_editor_id_value: @report.id, report_editor_version_value: @report.lock_version, action: "beforeunload@window->report-editor#beforeLeave"}}
+  .panel-header
+    %div
+      %h2= @report.persisted? ? "Edit trip report" : "Write trip report"
+      %p.muted{data: {report_editor_target: "publication"}}= @report.display_status
+      %p{role: "status", "aria-live" => "polite", data: {report_editor_target: "status"}} Drafts are private. Publishing makes your story and album link public.
+    .actions.report-editor-navigation
+      - if @report.public_payload
+        = link_to "View public report", public_report_path(@report), class: "button secondary"
+      = link_to "Back to reports", admin_trip_reports_path, class: "button secondary"
+  - if @report.errors.any?
+    = render "admin/shared/errors", record: @report
+  .report-editor-tabs{role: "group", aria: {label: "Editor view"}}
+    %button.button.secondary{type: "button", "aria-pressed" => "true", data: {action: "report-editor#writeTab", report_editor_target: "writeTab"}} Write
+    %button.button.secondary{type: "button", "aria-pressed" => "false", data: {action: "report-editor#previewTab", report_editor_target: "previewTab"}} Preview
+  .report-editor-columns
+    = form_with scope: :trip_report, url: (@report.persisted? ? admin_trip_report_path(@report) : admin_trip_reports_path), method: (@report.persisted? ? :patch : :post), class: "admin-form report-write", data: {report_editor_target: "form", action: "input->report-editor#changed change->report-editor#changed submit->report-editor#submit", turbo: false} do |form|
+      = form.hidden_field :lock_version, value: @report.lock_version
+      - if @report.trip
+        = form.hidden_field :trip_id, value: @report.trip_id
+        %p
+          Trip:
+          = link_to @report.trip.name, admin_trip_path(@report.trip)
+      - elsif policy(@report).link_trip?
+        .field
+          = form.label :trip_id, "Link an existing trip (optional)"
+          = form.select :trip_id, options_from_collection_for_select(@trips, :id, method(:report_trip_label)), include_blank: "Standalone historical report"
+      .field
+        = required_label form, :title
+        = form.text_field :title, value: draft["title"], required: true, maxlength: 250
+      .form-grid
+        .field
+          = required_label form, :start_date, "Trip date"
+          = form.date_field :start_date, value: draft["start_date"], required: true
+        .field
+          = required_label form, :end_date, "End date"
+          = form.date_field :end_date, value: draft["end_date"], required: true
+        .field
+          = form.label :location
+          = form.text_field :location, value: draft["location"], maxlength: 250
+        .field
+          = required_label form, :trip_type, "Trip type"
+          = form.select :trip_type, options_for_select(Trip::TRIP_TYPE_LABELS.map { |key, label| [label, key] }, draft["trip_type"]), {}, required: true
+      .field
+        = form.label :body, "Story (optional)"
+        .report-formatting{role: "group", aria: {label: "Text formatting"}}
+          - [["Bold", "**"], ["Italic", "*"], ["Heading", "## "], ["List", "- "]].each do |label, marker|
+            %button.button.secondary{type: "button", data: {action: "report-editor#format", marker: marker}}= label
+        = form.text_area :body, value: draft["body"], rows: 14, maxlength: 100000, placeholder: "Highlights, conditions, and anything useful for next time. Markdown is supported."
+      .field
+        = form.label :byline, "Written by (optional)"
+        = form.text_field :byline, value: draft["byline"], maxlength: 250
+      .field
+        = form.label :album_url, "Google Photos album link (optional)"
+        = form.url_field :album_url, value: draft["album_url"]
+        %p.muted Use an album you have permission to share publicly. No private album access is required.
+      - if Array(draft["photos"]).any?
+        %fieldset
+          %legend Existing photos
+          %p.muted Keep new photos together in the Google Photos album. You can still manage photos previously added to this report.
+          .report-edit-photos{data: {report_editor_target: "photos"}}
+            = render "photos", report: @report
+      .form-actions.report-editor-actions
+        = form.submit "Save draft", class: "button secondary", data: {report_editor_target: "saveButton"}
+        %button.button{type: "submit", name: "intent", value: "publish", data: {report_editor_target: "publishButton"}}= @report.published.present? ? "Publish changes" : "Publish report"
+        %button.button.secondary{type: "button", hidden: @report.new_record?, data: {action: "report-editor#hide", report_editor_target: "hideButton"}} Hide report
+        = link_to "Cancel", admin_trip_reports_path, class: "button secondary"
+    %aside.report-preview{data: {report_editor_target: "preview"}, aria: {label: "Report preview"}}
+      %h3 Public preview
+      %p.muted Only published content is visible to visitors.
+      %div{data: {report_editor_target: "previewContent"}}
+        - if @report.valid?
+          = render "trip_reports/report", report: @report, payload: draft, preview: true, expanded: true

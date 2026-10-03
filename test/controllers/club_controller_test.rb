@@ -1,0 +1,106 @@
+require "test_helper"
+
+class ClubControllerTest < ActionDispatch::IntegrationTest
+  setup { LegacyTripReportImport.call }
+  test "club pages are public and linked from navigation" do
+    get about_url
+    assert_response :success
+    assert_select "h1", "About the Club"
+    assert_select "nav.public-nav details[open]", count: 0
+    assert_select "nav.public-nav details", count: 2
+    assert_select "nav.public-nav details:first-child summary", "Trips"
+    assert_select "nav.public-nav details:first-child a[href='#{trips_path}']", "Trips"
+    assert_select "nav.public-nav details:first-child a[href='#{past_trips_path}']", "Past Trips"
+    assert_select "nav.public-nav details:first-child a[href='#{trip_reports_path}']", "Trip Reports"
+    assert_select "nav.public-nav details:first-child a[href='#{join_the_list_path}']", count: 0
+    assert_select "nav.public-nav details:nth-child(2) summary", "Club"
+    assert_select "nav.public-nav details:nth-child(2) a[href='#{membership_path}']", "Membership"
+    assert_select "nav.public-nav details:nth-child(2) a[href='#{history_path}']", "History"
+    assert_select "nav.public-nav details:nth-child(2) a[href='#{new_help_request_path}']", "Get Help"
+    assert_select "nav.public-nav details:nth-child(2) a[href='#{about_path}']", "About"
+    assert_select "nav.public-nav details:nth-child(2) a" do |links|
+      assert_equal [ "Membership", "History", "About", "Join the List", "Get Help" ], links.map(&:text)
+    end
+    assert_select "nav.public-nav a.nav-auth-login[href='#{new_session_path}']", "Log in"
+    assert_select "nav.public-nav a.nav-auth-signup[href='#{new_registration_path}']", "Signup"
+    assert_select "nav.club-subnav", count: 0
+
+    get membership_url
+    assert_response :success
+    assert_select "h1", "Membership"
+    assert_select ".club-requirements li", count: 4
+    assert_select "nav.club-subnav", count: 0
+
+    get history_url
+    assert_response :success
+    assert_select "h1", "History"
+    assert_select ".club-copy p", "by Steve Roper (reprinted with permission)"
+    assert_select ".club-copy p", /They are the first modern-day climbing heroes of Yosemite/
+    assert_select ".club-history-photos img", count: 4
+    assert_select ".club-timeline", count: 0
+  end
+
+  test "past trips has a public top-level page" do
+    get past_trips_url
+    assert_response :success
+    assert_select "h1", "Past Trips"
+    assert_select ".club-report", count: 0
+    assert_select "nav.public-nav a[href='#{trip_reports_path}']", count: 1
+  end
+
+  test "trip reports have their own public gallery with album links and full reports" do
+    get trip_reports_url
+    assert_response :success
+    assert_select "h1", "Trip Reports"
+    assert_select ".club-report", count: 22
+    assert_select ".club-report-gallery img[loading='lazy'][width][height]", count: 22
+    assert_select ".club-report-gallery img[src^='/assets/trip-reports/']", count: 22
+    assert_select ".club-report-gallery-placeholder", count: 0
+    thumbnails = Rails.root.glob("app/assets/images/trip-reports/*.jpg")
+    assert_equal 22, thumbnails.size
+    thumbnails.each do |file|
+      assert_equal "\xFF\xD8".b, File.binread(file, 2), "#{file.basename} must be a JPEG, not an error response"
+      path = ActionController::Base.helpers.asset_path("trip-reports/#{file.basename}")
+      assert_select ".club-report-gallery img[src='#{path}']", count: 1
+    end
+    assert_select ".club-report h2", "Yosemite Valley - Sept 18th, 2026"
+    assert_select ".club-report-gallery a[href='https://photos.app.goo.gl/eomxL1uoWFnRjkkJ6']", count: 1
+    assert_select ".club-report a", text: "View photos", count: 0
+    assert_select ".club-report-details p", /Vertical Pursuits/
+  end
+
+  test "page switching stays in the top navigation rather than page content" do
+    destinations = [ trips_path, past_trips_path, past_trips_trips_path, trip_reports_path,
+      about_path, membership_path, history_path, join_the_list_path ]
+    (destinations.uniq + [ trip_report_path(TripReport.first!) ]).each do |path|
+      get path
+      assert_response :success
+      assert_select "nav.public-nav a[href='#{trips_path}']", count: 1
+      assert_select "nav.public-nav a[href='#{membership_path}']", count: 1
+      destinations.each do |destination|
+        next if path == membership_path && destination == join_the_list_path
+        assert_select "main a[href='#{destination}']", count: 0
+      end
+      assert_select "main nav.club-subnav", count: 0
+    end
+  end
+
+  test "public pages do not show the obsolete site beta banner" do
+    [ root_url, trips_url, past_trips_url, trip_reports_url, about_url, membership_url,
+      history_url, join_the_list_url, new_session_url, new_registration_url,
+      new_help_request_url, trip_url(trips(:yosemite)) ].each do |url|
+      get url
+      assert_response :success
+      assert_no_match(/still getting dialed in/i, response.body, url)
+    end
+  end
+
+  test "join page embeds the existing Google Form with an accessible fallback" do
+    get join_the_list_url
+    assert_response :success
+    form_url = "https://docs.google.com/forms/d/e/1FAIpQLSdGYS2L_RzoxMxIVP9vM51bdzqy9ivHLbizCE6aS_6FigywXQ/viewform"
+    assert_select "iframe.club-form[src='#{form_url}?embedded=true'][title='Join the Cragmont Climbing Club email list']"
+    assert_select "a[href='#{form_url}'][target='_blank']", "Open the form in a new tab"
+    assert_select "nav.club-subnav", count: 0
+  end
+end

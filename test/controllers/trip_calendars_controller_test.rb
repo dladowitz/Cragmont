@@ -61,7 +61,7 @@ class TripCalendarsControllerTest < ActionDispatch::IntegrationTest
     Rails.application.env_config["action_dispatch.show_detailed_exceptions"] = original
   end
 
-  test "index offers subscription and feed URL and event page offers single download" do
+  test "index offers calendar subscription without misleading individual downloads" do
     get trips_url
     assert_response :success
     assert_select "a[href='#{calendar_trips_url(format: :ics, protocol: 'webcal')}']", text: "Subscribe to all events"
@@ -69,6 +69,11 @@ class TripCalendarsControllerTest < ActionDispatch::IntegrationTest
 
     get trip_url(trips(:yosemite))
     assert_response :success
-    assert_select "a[href='#{calendar_trip_path(trips(:yosemite), format: :ics)}']", text: "Add to calendar (.ics)"
+    assert_select "a.trip-calendar-download", count: 0
+    assert_no_match(/One-time download|For updates|subscribe to all events/, response.body)
+
+    log_in_as(users(:alex))
+    get trip_url(trips(:yosemite))
+    assert_select ".trip-report-actions", count: 1
   end
 end

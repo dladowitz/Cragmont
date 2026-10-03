@@ -13,7 +13,7 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     get admin_users_url
 
     assert_response :success
-    assert_select "h1", "Admin Dashboard"
+    assert_select "h1.visually-hidden"
     assert_select "h2", "User directory"
     assert_select "th", text: "Default Password"
     assert_select "a", text: "Alex Rivera"
@@ -59,7 +59,7 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     get admin_user_url(users(:alex))
 
     assert_response :success
-    assert_select "h1", "Admin Dashboard"
+    assert_select "h1.visually-hidden"
     assert_select ".panel-header", text: /Alex Rivera/
     assert_select ".details-list dt", text: "Club member"
     assert_select ".details-list dd", text: "Yes"
@@ -78,6 +78,16 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_select "section.panel", text: /No waivers signed yet/
     assert_select "form[data-turbo-confirm='Are you sure you want to delete this user?']"
     assert_select "a", text: "Yosemite Valley Spring"
+  end
+
+  test "trip admins can view users without being offered super admin actions" do
+    users(:sam).roles << roles(:trip_admin)
+    log_in_as(users(:sam))
+    get admin_user_url(users(:alex))
+
+    assert_response :success
+    assert_select "a[href='#{edit_admin_user_path(users(:alex))}']", count: 0
+    assert_select "button", text: "Delete user", count: 0
   end
 
   test "user details show signed up trips with transactions" do

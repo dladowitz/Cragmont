@@ -35,7 +35,7 @@
                 %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
                 = form.submit "Create payment request", class: "button"
   - if payment_requests.any?
-    %table.trip-payment-requests-table
+    %table.trip-payment-requests-table.admin-record-table{role: "table", "aria-label" => "Extra payments"}
       %thead
         %tr
           %th Recipient
@@ -47,17 +47,17 @@
       %tbody
         - payment_requests.each do |payment_request|
           - payment_url = trip_payment_request_url(payment_request.public_token)
-          %tr
-            %td
+          %tr{role: "row"}
+            %td.admin-record-title{role: "cell"}
               %strong= payment_request.full_name
               %span= mail_to payment_request.email
-            %td= format_cents(payment_request.amount_cents)
-            %td= payment_request.reason
-            %td
+            %td{role: "cell", "data-label" => "Amount"}= format_cents(payment_request.amount_cents)
+            %td{role: "cell", "data-label" => "Reason"}= payment_request.reason
+            %td{role: "cell", "data-label" => "Status"}
               - status_class = payment_request.pending? ? "warning-status" : (payment_request.canceled? ? "danger-status" : nil)
               %span.status{class: status_class}= payment_request.status.titleize
-            %td= payment_request.created_at.strftime("%-m/%-d/%y")
-            %td
+            %td{role: "cell", "data-label" => "Created"}= payment_request.created_at.strftime("%-m/%-d/%y")
+            %td.table-actions{role: "cell"}
               - if payment_request.pending?
                 .trip-payment-request-actions
                   %span{"data-controller" => "copy-link", "data-copy-link-url-value" => payment_url}

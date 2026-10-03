@@ -94,6 +94,9 @@
       %h2 Manage
   .trip-management-content
     .actions.trip-management-actions
+      - report = TripReport.for_trip(@trip)
+      - if policy(report).update?
+        = link_to(report.persisted? ? "Edit trip report" : "Write trip report", report_edit_path(report), class: "button secondary")
       - if @trip_readiness_checklist.present?
         = link_to readiness_admin_trip_path(@trip), class: "button secondary trip-readiness-summary-button" do
           %span Trip Readiness
@@ -123,7 +126,7 @@
         %dd= @trip.meeting_time&.strftime("%-l:%M%P") || "Not set"
       %div
         %dt End time
-        %dd= @trip.end_time&.strftime("%-l:%M%P") || "None"
+        %dd= formatted_trip_end_time(@trip) || "None"
       %div
         %dt Meeting location
         %dd
@@ -200,53 +203,24 @@
         %div
           %dt Sun Exposure
           %dd= @trip.sun_exposure
-      - if @trip.whatsapp_group.present?
-        %div
-          %dt WhatsApp Group
-          %dd
-            - if whatsapp_group_url.present?
-              = link_to @trip.whatsapp_group, whatsapp_group_url, target: "_blank", rel: "noopener"
-            - else
-              = @trip.whatsapp_group
-      - if @trip.weather_url.present?
-        %div
-          %dt Weather
-          %dd
-            - if weather_url.present?
-              = link_to @trip.weather_url, weather_url, target: "_blank", rel: "noopener"
-            - else
-              = @trip.weather_url
-      - if @trip.mountain_project_url.present?
-        %div
-          %dt Mountain Project
-          %dd
-            - if mountain_project_url.present?
-              = link_to @trip.mountain_project_url, mountain_project_url, target: "_blank", rel: "noopener"
-            - else
-              = @trip.mountain_project_url
-      - if @trip.guide_book_url.present?
-        %div
-          %dt Guide Book
-          %dd
-            - if guide_book_url.present?
-              = link_to @trip.guide_book_url, guide_book_url, target: "_blank", rel: "noopener"
-            - else
-              = @trip.guide_book_url
-      - if @trip.photo_album_url.present?
-        %div
-          %dt Google Photo Album
-          %dd
-            - if photo_album_url.present?
-              = link_to @trip.photo_album_url, photo_album_url, target: "_blank", rel: "noopener"
-            - else
-              = @trip.photo_album_url
+      - [["WhatsApp Group", @trip.whatsapp_group, whatsapp_group_url], ["Weather", @trip.weather_url, weather_url], ["Mountain Project", @trip.mountain_project_url, mountain_project_url], ["Guide Book", @trip.guide_book_url, guide_book_url], ["Google Photo Album", @trip.photo_album_url, photo_album_url]].each do |label, value, url|
+        - if value.present?
+          %div{class: ("admin-resource-link" if url.present?)}
+            %dt= label
+            %dd
+              - if url.present?
+                = link_to url, target: "_blank", rel: "noopener" do
+                  %span.resource-name= label
+                  %span.resource-url= value
+              - else
+                = value
 - if @trip.uses_day_trip_signups?
   %section.panel.day-trip-participants-panel
     .panel-header
       %div
         %h2 Participants
     - if @day_trip_signups.any?
-      %table
+      %table.admin-record-table{role: "table", "aria-label" => "Participants"}
         %thead
           %tr
             %th Participant
@@ -259,19 +233,19 @@
               %th Actions
         %tbody
           - @day_trip_signups.each do |signup|
-            %tr
-              %td= signup.user.full_name
+            %tr{role: "row"}
+              %td.admin-record-title{role: "cell"}= signup.user.full_name
               - unless @trip.gym_outing?
-                %td= signup.skill_level_label
-                %td= signup.shared_gear_summary
-              %td
+                %td{role: "cell", "data-label" => "Climbing Skills"}= signup.skill_level_label
+                %td{role: "cell", "data-label" => "Bringing Gear"}= signup.shared_gear_summary
+              %td{role: "cell", "data-label" => "Party"}
                 - party = []
                 - party << signup.guest_signups.map { |guest_signup| guest_signup.user.full_name }.to_sentence if signup.includes_guests?
                 - party << signup.day_trip_signup_minors.map(&:full_name).to_sentence if signup.includes_minors?
                 = party.reject(&:blank?).presence&.join(" + ") || "Solo"
-              %td= signup.waiver_signed? ? "Signed" : "Missing"
+              %td{role: "cell", "data-label" => "Waiver"}= signup.waiver_signed? ? "Signed" : "Missing"
               - if !@trip.deleted? && policy(@trip).manage_participants?
-                %td.table-actions.day-trip-admin-participant-actions
+                %td.table-actions.day-trip-admin-participant-actions{role: "cell"}
                   %div{"data-controller" => "modal"}
                     %button.button.secondary.admin-table-action-button{"data-action" => "modal#open", type: "button"} Move to Waitlist
                     %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
@@ -299,7 +273,7 @@
       .panel-header
         %div
           %h2 Trip waitlist
-      %table
+      %table.admin-record-table{role: "table", "aria-label" => "Trip waitlist"}
         %thead
           %tr
             %th Participant
@@ -311,18 +285,18 @@
               %th Actions
         %tbody
           - @day_trip_waitlisted_signups.each do |signup|
-            %tr
-              %td= signup.user.full_name
+            %tr{role: "row"}
+              %td.admin-record-title{role: "cell"}= signup.user.full_name
               - unless @trip.gym_outing?
-                %td= signup.skill_level_label
-                %td= signup.shared_gear_summary
-              %td
+                %td{role: "cell", "data-label" => "Climbing Skills"}= signup.skill_level_label
+                %td{role: "cell", "data-label" => "Bringing Gear"}= signup.shared_gear_summary
+              %td{role: "cell", "data-label" => "Party"}
                 - party = []
                 - party << signup.guest_signups.map { |guest_signup| guest_signup.user.full_name }.to_sentence if signup.includes_guests?
                 - party << signup.day_trip_signup_minors.map(&:full_name).to_sentence if signup.includes_minors?
                 = party.reject(&:blank?).presence&.join(" + ") || "Solo"
               - if !@trip.deleted? && policy(@trip).manage_participants?
-                %td.table-actions.day-trip-admin-participant-actions
+                %td.table-actions.day-trip-admin-participant-actions{role: "cell"}
                   %div{"data-controller" => "modal"}
                     %button.button.secondary.admin-table-action-button{"data-action" => "modal#open", type: "button"} Move onto Trip
                     %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
@@ -349,7 +323,7 @@
       %div
         %h2 Participants
     - if @class_signups.any?
-      %table
+      %table.admin-record-table{role: "table", "aria-label" => "Class participants"}
         %thead
           %tr
             %th Participant
@@ -358,11 +332,11 @@
               %th Actions
         %tbody
           - @class_signups.each do |signup|
-            %tr
-              %td= signup.user.full_name
-              %td= signup.user.email.presence || "None"
+            %tr{role: "row"}
+              %td.admin-record-title{role: "cell"}= signup.user.full_name
+              %td{role: "cell", "data-label" => "Email"}= signup.user.email.presence || "None"
               - if !@trip.deleted? && policy(@trip).manage_participants?
-                %td.table-actions.day-trip-admin-participant-actions
+                %td.table-actions.day-trip-admin-participant-actions{role: "cell"}
                   %div{"data-controller" => "modal"}
                     %button.button.danger.secondary.admin-table-action-button{"data-action" => "modal#open", type: "button"} Remove
                     %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
@@ -389,7 +363,7 @@
             .admin-campsite-card-header
               .campsite-card-summary
                 .campsite-heading-line
-                  %h4
+                  %h3
                     = campsite.campground.name
                     site #{campsite.site_number}
                   %p= campsite.campground.location
@@ -522,7 +496,7 @@
         %h2 Trip Expenses
         %p.muted Refunds marked as trip expenses, such as firewood or other shared campsite costs.
     - if @trip_expense_refunds.any?
-      %table
+      %table.admin-record-table{role: "table", "aria-label" => "Trip expenses"}
         %thead
           %tr
             %th Participant
@@ -535,13 +509,13 @@
           - @trip_expense_refunds.each do |refund|
             - payment = refund.campsite_signup_payment
             - signup = payment.campsite_signup
-            %tr
-              %td= signup.user.full_name
-              %td= format_cents(refund.amount_cents)
-              %td= refund.refunded_by&.full_name || "None"
-              %td= refund.reason.presence || "None"
-              %td= refund.refunded_at&.strftime("%-m/%-d/%y") || "None"
-              %td
+            %tr{role: "row"}
+              %td.admin-record-title{role: "cell"}= signup.user.full_name
+              %td{role: "cell", "data-label" => "Amount"}= format_cents(refund.amount_cents)
+              %td{role: "cell", "data-label" => "Refunded By"}= refund.refunded_by&.full_name || "None"
+              %td{role: "cell", "data-label" => "Reason"}= refund.reason.presence || "None"
+              %td{role: "cell", "data-label" => "Date of Refund"}= refund.refunded_at&.strftime("%-m/%-d/%y") || "None"
+              %td.table-actions{role: "cell"}
                 %div{"data-controller" => "payment-details-trigger", "data-payment-details-trigger-payment-id-value" => payment.id}
                   %button.button.secondary.admin-table-action-button{"data-action" => "payment-details-trigger#open", type: "button"} View
     - else

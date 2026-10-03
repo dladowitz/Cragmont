@@ -2,12 +2,16 @@
 - editable_readiness = policy(@trip).update? && !@trip.deleted?
 %section.panel.trip-readiness-overview
   .panel-header.trip-readiness-header
-    .trip-readiness-category-title-row
+    .trip-readiness-category-title-row.has-trip-heading
       %h2 Post Trip
+      %span.trip-readiness-trip-heading= @trip.name
       %span.status{class: (@category.completed_count == @category.total_count ? "success-status" : "warning-status"), data: { readiness_count_key: "overall" }}
         = "#{@category.completed_count} of #{@category.total_count}"
     .trip-readiness-summary
       = link_to "Back to trip", admin_trip_path(@trip), class: "button secondary"
+      - report = TripReport.for_trip(@trip)
+      - if policy(report).update?
+        = link_to(report.persisted? ? "Edit trip report" : "Write trip report", report_edit_path(report), class: "button")
   - if @trip.deleted?
     .deleted-trip-banner
       %strong This trip has been deleted.

@@ -9,7 +9,7 @@
       = link_to "Back to Content", admin_content_path, class: "button secondary"
 
   - if @templates.any?
-    %table
+    %table.admin-record-table.admin-email-templates-table{role: "table", "aria-label" => "Trip details email templates"}
       %thead
         %tr
           %th Template
@@ -19,11 +19,11 @@
       %tbody
         - @templates.each do |template|
           %tr
-            %td= template.name
-            %td= template.area_key
-            %td
+            %td.admin-record-title{role: "cell"}= template.name
+            %td{role: "cell", "data-label" => "Area"}= template.area_key
+            %td{role: "cell", "data-label" => "Status"}
               - status_class = template.active? ? "success-status" : "warning-status"
               %span.status{class: status_class}= template.active? ? "Active" : "Inactive"
-            %td= link_to "Edit", edit_admin_trip_details_email_template_path(template), class: "button secondary admin-table-action-button"
+            %td.table-actions{role: "cell"}= link_to "Edit", edit_admin_trip_details_email_template_path(template), class: "button secondary admin-table-action-button"
   - else
     %p.muted No trip details email templates yet.

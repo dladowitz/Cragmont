@@ -12,6 +12,8 @@ class GymOutingsTest < ActionDispatch::IntegrationTest
 
   test "admins can choose create and edit a gym outing without outdoor fields" do
     log_in_as(users(:alex))
+    get admin_trips_url
+    assert_select ".admin-trips-table .trip-type-badge.gym-outing-badge", text: "Gym Outing"
     get new_admin_trip_url
     assert_select "a[href='#{new_admin_trip_path(trip_type: 'gym_outing')}']", text: "Gym outing"
 
@@ -50,14 +52,15 @@ class GymOutingsTest < ActionDispatch::IntegrationTest
 
   test "gym outing appears publicly with its schedule and gym specific registration" do
     get trips_url
-    assert_select ".trip-card[href='#{trip_path(@trip)}'] .trip-type-badge", text: "Gym Outing"
+    assert_select ".trip-card[href='#{trip_path(@trip)}'] .trip-type-badge.gym-outing-badge", text: "Gym Outing"
     get trip_url(@trip)
     assert_response :success
+    assert_select ".trip-type-badge.gym-outing-badge", count: 2
     assert_select "h2", text: "Gym Plan"
     assert_select "dd", text: "Movement, San Francisco"
     assert_select "dd", text: "6:00pm"
     assert_select "dd", text: "8:00pm"
-    assert_select "a", text: "Log in to sign up"
+    assert_select "a[href='#{new_session_path(return_to: trip_path(@trip))}']", text: "Log in to sign up"
     assert_select ".trips-faq-callout", count: 0
     assert_select "dt", text: "Types of climbing", count: 0
     assert_select "dt", text: "If you are running late", count: 0
@@ -70,6 +73,20 @@ class GymOutingsTest < ActionDispatch::IntegrationTest
     assert_select "input[name='day_trip_signup[with_minor]']"
     assert_select "[data-climbing-ability-group]", count: 0
     assert_select "legend", text: "Gear I plan to bring", count: 0
+    assert_select "[data-signature-target='signupStep'] button[type='button'][data-action='modal#close']", text: "Cancel"
+  end
+
+  test "overnight end times are explicit on public and admin trip details" do
+    @trip.update!(end_time: "01:00")
+    get trip_url(@trip)
+    assert_select "dd", text: "1:00am (next day)"
+
+    log_in_as(users(:alex))
+    get admin_trip_url(@trip)
+    assert_select "dd", text: "1:00am (next day)"
+    get edit_admin_trip_url(@trip)
+    assert_select "input[name='trip[end_time]'][aria-describedby='trip-end-time-hint']"
+    assert_select "#trip-end-time-hint", text: /ends the next day/
   end
 
   test "gym signup requires login and waiver then counts a minor and waitlists overflow" do
@@ -170,7 +187,7 @@ class GymOutingsTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "gym-private-invite"
     assert_not_includes response.body, "gym-private-album"
     assert_select "a[href='#{new_session_path(return_to: trip_path(@trip))}']", text: /log in to reveal/
-    assert_select "a[href='#{calendar_trip_path(@trip, format: :ics)}']"
+    assert_select "a[href='#{calendar_trip_path(@trip, format: :ics)}']", count: 0
 
     get calendar_trips_url(format: :ics)
     assert_response :success

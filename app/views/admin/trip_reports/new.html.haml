@@ -1,0 +1,18 @@
+= render "admin/shared/header", title: "New Trip Report"
+%main
+  - if @report.trip || (params[:standalone] == "1" && policy(@report).link_trip?) || params[:trip_report].present?
+    = render "editor"
+  - else
+    %section.panel
+      %h2 New Trip Report
+      %p.muted Choose a trip. If a report already exists, you’ll continue editing it.
+      = form_with url: new_admin_trip_report_path, method: :get, class: "admin-form" do |form|
+        .field
+          = required_label form, :trip_id, "Trip"
+          = form.select :trip_id, options_from_collection_for_select(@trips, :id, method(:report_trip_label)), { include_blank: "Choose a trip" }, required: true
+        .form-actions
+          = form.submit "Continue", class: "button"
+          = link_to "Cancel", admin_trip_reports_path, class: "button secondary"
+      - if policy(@report).link_trip?
+        %hr.report-section-divider
+        = link_to "Add a historical report without a trip", new_admin_trip_report_path(standalone: 1), class: "button secondary"

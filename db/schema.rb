@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_14_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_27_010100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -561,7 +561,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_090000) do
     t.index ["trip_id"], name: "index_trip_readiness_completions_on_trip_id"
   end
 
+  create_table "trip_reports", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "draft", default: {}, null: false
+    t.boolean "hidden", default: false, null: false
+    t.bigint "last_edited_by_id"
+    t.string "legacy_key"
+    t.integer "lock_version", default: 0, null: false
+    t.jsonb "published", default: {}, null: false
+    t.datetime "published_at"
+    t.bigint "trip_id"
+    t.datetime "updated_at", null: false
+    t.index ["last_edited_by_id"], name: "index_trip_reports_on_last_edited_by_id"
+    t.index ["legacy_key"], name: "index_trip_reports_on_legacy_key", unique: true
+    t.index ["trip_id"], name: "index_trip_reports_on_trip_id", unique: true
+  end
+
   create_table "trips", force: :cascade do |t|
+    t.boolean "auto_trip_report", default: true, null: false
     t.bigint "campsite_coordinator_id"
     t.text "carpool_meeting_spot"
     t.string "class_discount_amount"
@@ -719,6 +736,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_090000) do
   add_foreign_key "trip_payment_requests", "users", column: "created_by_id"
   add_foreign_key "trip_readiness_completions", "trips"
   add_foreign_key "trip_readiness_completions", "users", column: "completed_by_id"
+  add_foreign_key "trip_reports", "trips"
+  add_foreign_key "trip_reports", "users", column: "last_edited_by_id"
   add_foreign_key "trips", "campsites", column: "group_campfire_campsite_id"
   add_foreign_key "trips", "partner_companies"
   add_foreign_key "trips", "users", column: "campsite_coordinator_id"

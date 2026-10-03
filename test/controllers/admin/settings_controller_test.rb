@@ -11,7 +11,7 @@ class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
     get admin_settings_url
 
     assert_response :success
-    assert_select "h1", "Admin Dashboard"
+    assert_select "h1.visually-hidden"
     assert_select "h2", "Camping Trip Settings"
     assert_select ".admin-nav a[href='#{admin_content_path}']", text: "Content"
     assert_select "h2", text: "Content", count: 0

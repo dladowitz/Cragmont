@@ -9,7 +9,7 @@ class Admin::ContentPagesControllerTest < ActionDispatch::IntegrationTest
     get edit_admin_content_page_url("what_to_expect")
 
     assert_response :success
-    assert_select "h1", "Admin Dashboard"
+    assert_select "h1.visually-hidden"
     assert_select ".admin-nav a[href='#{edit_admin_content_page_path("what_to_expect")}']", count: 0
     assert_select "h2", "Edit What to Expect on a Camping Trip"
     assert_select "label[for='content_page_title'] .required-marker", text: "*"
@@ -28,7 +28,7 @@ class Admin::ContentPagesControllerTest < ActionDispatch::IntegrationTest
     get edit_admin_content_page_url("day_trip_what_to_expect")
 
     assert_response :success
-    assert_select "h1", "Admin Dashboard"
+    assert_select "h1.visually-hidden"
     assert_select "h2", "Edit What to Expect on a Day Trip"
     assert_select "label[for='content_page_title'] .required-marker", text: "*"
     assert_select "input[name='content_page[title]'][required]"
@@ -41,7 +41,7 @@ class Admin::ContentPagesControllerTest < ActionDispatch::IntegrationTest
     get edit_admin_content_page_url("how_to_think_about_safety")
 
     assert_response :success
-    assert_select "h1", "Admin Dashboard"
+    assert_select "h1.visually-hidden"
     assert_select "h2", "Edit How to think about safety on trips"
     assert_select "label[for='content_page_title'] .required-marker", text: "*"
     assert_select "input[name='content_page[title]'][required]"

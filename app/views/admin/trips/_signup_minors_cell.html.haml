@@ -1,5 +1,5 @@
 - party_guest = local_assigns.fetch(:party_guest, false)
-%td
+%td{role: "cell", "data-label" => "Minors", class: ("admin-record-empty" if party_guest || signup.campsite_signup_minors.empty?)}
   - if party_guest
     %span.admin-party-empty-cell{"aria-hidden" => "true"}
   - elsif signup.campsite_signup_minors.any?

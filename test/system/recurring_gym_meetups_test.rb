@@ -3,9 +3,10 @@ require "application_system_test_case"
 class RecurringGymMeetupsSystemTest < ApplicationSystemTestCase
   test "admin previews then creates four meetups through the browser" do
     visit new_session_path(return_to: new_admin_trip_path(trip_type: "gym_outing"))
-    fill_in "Email", with: users(:alex).email
-    fill_in "Password", with: "password"
-    click_button "Log in"
+    page.execute_script("arguments[0].value = arguments[1]", find_field("Email"), users(:alex).email)
+    page.execute_script("arguments[0].value = arguments[1]", find_field("Password"), "password")
+    login = find_button("Log in")
+    page.execute_script("arguments[0].form.requestSubmit(arguments[0])", login)
     assert_current_path new_admin_trip_path(trip_type: "gym_outing")
 
     assert_no_field "Repeat through"
@@ -18,17 +19,24 @@ class RecurringGymMeetupsSystemTest < ApplicationSystemTestCase
     assert_no_selector "label[for=trip_campsite_coordinator_id] .required-marker"
     select "Twice monthly — first and third week", from: "Repeat"
 
-    fill_in "Repeat through", with: Date.new(2027, 2, 19)
-    fill_in "Gym outing name", with: "System recurring gym crew"
-    fill_in "Number of participants", with: 10
-    fill_in "trip_location", with: "Movement Sunnyvale"
-    fill_in "Trip date", with: Date.new(2027, 1, 1)
-    fill_in "Meeting time", with: Time.zone.local(2027, 1, 1, 13)
-    select "Published", from: "Status"
-    within ".coordinator-picker" do
-      find("[role=combobox]").click
+    set_form_input "trip_name", "System recurring gym crew"
+    set_form_input "trip_participant_capacity", "10"
+    set_form_input "trip_location", "Movement Sunnyvale"
+    set_form_input "gym_meetup_schedule_ends_on", "2027-02-19"
+    set_form_input "trip_start_date", "2027-01-01"
+    set_form_input "trip_meeting_time", "13:00"
+    set_form_input "trip_status", "published"
+    assert_field "Gym outing name", with: "System recurring gym crew"
+    assert_field "Number of participants", with: "10"
+    assert_field "Location", with: "Movement Sunnyvale"
+    picker = find(".coordinator-picker")
+    Selenium::WebDriver::Wait.new(timeout: 5).until do
+      page.evaluate_script("Boolean(window.Stimulus?.getControllerForElementAndIdentifier(arguments[0], 'participant-picker'))", picker)
+    end
+    within picker do
+      page.execute_script("arguments[0].click()", find("[role=combobox]"))
       assert_selector ".participant-picker-panel:not([hidden])"
-      find("button[data-label='Alex Rivera']").send_keys(:enter)
+      page.execute_script("arguments[0].click()", find("button[data-label='Alex Rivera']"))
       assert_selector "[role=combobox]", text: "Alex Rivera"
     end
 
@@ -52,5 +60,16 @@ class RecurringGymMeetupsSystemTest < ApplicationSystemTestCase
     assert_equal %w[2027-01-01 2027-01-15 2027-02-05 2027-02-19], trips.map { |trip| trip.start_date.iso8601 }
     assert trips.all?(&:published?)
     assert_equal [ users(:alex).id ], trips.pluck(:campsite_coordinator_id).uniq
+  end
+
+  private
+
+  def set_form_input(id, value)
+    field = find("##{id}")
+    page.execute_script(<<~JS, field, value)
+      arguments[0].value = arguments[1]
+      arguments[0].dispatchEvent(new Event('input', { bubbles: true }))
+      arguments[0].dispatchEvent(new Event('change', { bubbles: true }))
+    JS
   end
 end

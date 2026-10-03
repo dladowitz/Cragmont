@@ -30,7 +30,7 @@
             An Event Coordinator is required to host the meetups. Confirm their availability before publishing.
           %p All dates start at the same gym and time. Changes to an outing affect only that date; the schedule ends on your chosen date.
           %p Preview clears file selections. Choose your location image after previewing the dates.
-          = button_tag "Preview meetup dates", name: "preview_meetups", value: "1", class: "button secondary"
+          = button_tag "Preview meetup dates", name: "preview_meetups", value: "1", class: "button secondary", formnovalidate: true
       - if @preview_dates
         %div{role: "status"}
           %h3= "#{@preview_dates.size} meetup dates"
@@ -143,7 +143,7 @@
               %span{"data-participant-picker-target" => "label"}= selected_coordinator_label
               %span.participant-picker-chevron{"aria-hidden" => "true"}
             .participant-picker-panel{hidden: true, data: { participant_picker_target: "panel" }}
-              = search_field_tag nil, "", class: "participant-picker-search", placeholder: "Search coordinators", autocomplete: "off", data: { participant_picker_target: "search", action: "input->participant-picker#filter" }
+              = search_field_tag nil, "", class: "participant-picker-search", placeholder: "Search coordinators", aria: { label: "Search coordinators" }, autocomplete: "off", data: { participant_picker_target: "search", action: "input->participant-picker#filter" }
               %ul.participant-picker-list{id: "#{coordinator_field_id}-list", role: "listbox"}
                 - coordinator_options.each do |option|
                   - selected_option = option[:value].to_s == selected_coordinator_value
@@ -168,7 +168,8 @@
           = form.time_field :meeting_time, required: true
         .field
           = form.label :end_time, "End time"
-          = form.time_field :end_time
+          = form.time_field :end_time, aria: { describedby: "trip-end-time-hint" }
+          %p.field-hint#trip-end-time-hint An end time at or before the meeting time means the outing ends the next day.
         .field
           = trip.gym_outing? ? form.label(:meeting_location, "Meeting spot (optional)") : required_label(form, :meeting_location)
           = form.text_field :meeting_location
@@ -216,6 +217,7 @@
         .field
           = form.label :sun_exposure, "Sun Exposure"
           = form.text_field :sun_exposure, placeholder: "Sun in the morning. Shade in the afternoon"
+  = render "admin/trips/report_setting", form: form
   .form-actions
     = form.submit
     = link_to "Cancel", trip.persisted? ? admin_trip_path(trip) : admin_trips_path, class: "button secondary"

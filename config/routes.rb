@@ -1,5 +1,31 @@
 Rails.application.routes.draw do
   root "home#index"
+  get "about", to: "club#about", as: :about
+  get "membership", to: "club#membership", as: :membership
+  get "history", to: "club#history", as: :history
+  get "join-the-list", to: "club#join_the_list", as: :join_the_list
+  get "past-trips", to: "trips#past_trips", as: :past_trips
+  get "trip-reports", to: "club#trip_reports", as: :trip_reports
+  get "trip-reports/:id", to: "trip_reports#show", as: :trip_report
+  get "trip-reports/:id/photos/:photo_id", to: "trip_reports#photo", as: :photo_trip_report
+  get "trips/:trip_id/report", to: "trip_reports#show", as: :trip_trip_report
+  scope "/api/v1", module: "admin", as: "api_v1", defaults: { format: :json } do
+    resources :trip_reports, only: %i[index show create update] do
+      patch :publish, on: :member
+      patch :hide, on: :member
+      post :photos, on: :member
+    end
+  end
+  get "/.well-known/openapi.json", to: redirect("/openapi.json")
+
+  namespace :api, defaults: { format: :json } do
+    namespace :v1 do
+      resources :campgrounds, only: %i[index create]
+      resources :trips, only: %i[index show create update] do
+        resources :campsites, only: %i[index create update]
+      end
+    end
+  end
 
   if Rails.env.development? || Rails.env.staging?
     letter_opener_access = lambda do |request|
@@ -47,6 +73,13 @@ Rails.application.routes.draw do
   end
 
   namespace :admin do
+    resources :trip_reports, except: :destroy do
+      patch :publish, on: :member
+      patch :hide, on: :member
+      post :photos, on: :member
+      get :preview, on: :member
+      get "photos/:photo_id", action: :photo, on: :member, as: :photo
+    end
     root to: redirect("/admin/trips")
     get "content", to: "content#index", as: :content
     get "finances", to: "finances#index", as: :finances
