@@ -373,7 +373,13 @@ body.trips-index-page .trips-index-notices .calendar-subscription-notice {
 .report-editor [role="alert"] { color: var(--danger); }
 @media (max-width: 900px) {
   .report-editor-columns { display: block; }
-  .report-editor .report-editor-tabs { display: flex; gap: 10px; margin: 16px 0; }
+  .report-editor > .panel-header { display: block; }
+  .report-editor .report-editor-navigation,
+  .report-editor .report-editor-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 10px; width: 100%; }
+  .report-editor .report-editor-tabs { margin: 16px 0; }
+  .report-editor-navigation .button,
+  .report-editor-tabs .button { min-width: 0; justify-content: center; text-align: center; padding-inline: 12px; white-space: normal; }
+  .report-editor-navigation > .button:only-child { grid-column: 1 / -1; }
   .report-editor .report-editor-tabs .button[aria-pressed="true"] { background: var(--accent); color: white; }
   .report-editor:not(.show-preview) .report-preview, .report-editor.show-preview .report-write { display: none; }
   .report-management-row { flex-direction: column; align-items: stretch; gap: 12px; }
@@ -872,6 +878,9 @@ table { max-width: 100%; }
 }
 @media (max-width: 980px) {
   .admin-trips-table .admin-table-action-button { min-height: 44px; }
+  .admin-trips-table .table-actions { gap: 8px; }
+  .admin-trips-table .table-actions > :is(.button, form),
+  .admin-trips-table .table-actions form .button { width: 100%; }
   .admin-mode-label { flex-basis: 100%; order: 3; font-size: .95rem; }
   .admin-brand { gap: 16px; }
 }

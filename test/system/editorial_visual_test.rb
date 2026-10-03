@@ -295,6 +295,11 @@ class EditorialVisualTest < ApplicationSystemTestCase
         assert_in_delta(width > 980 ? 36 : 44, button.native.rect.height, 1)
         assert_includes %w[flex inline-flex], button.native.css_value("display")
         assert_equal "center", button.native.css_value("align-items")
+        if width <= 980
+          cell = button.find(:xpath, "..").native.rect
+          assert_in_delta cell.x, button.native.rect.x, 1
+          assert_in_delta cell.width, button.native.rect.width, 1
+        end
       end
       buttons.first.evaluate_script("this.scrollIntoView({block: 'center', behavior: 'instant'})")
       save_screenshot(Rails.root.join("tmp/screenshots/transactions-buttons-#{width}.png"))

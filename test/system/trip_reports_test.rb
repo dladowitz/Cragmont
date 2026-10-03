@@ -32,6 +32,17 @@ class TripReportsTest < ApplicationSystemTestCase
       page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: width < 901)
       assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
       if width <= 900
+        field = find_field("Title").native.rect
+        [ ".report-editor-navigation", ".report-editor-tabs" ].each do |selector|
+          row = find(selector)
+          buttons = row.all(".button", count: 2)
+          assert_in_delta field.x, buttons.first.native.rect.x, 1
+          assert_in_delta field.x + field.width, buttons.last.native.rect.x + buttons.last.native.rect.width, 1
+          assert_in_delta buttons.first.native.rect.width, buttons.last.native.rect.width, 1
+          assert_in_delta buttons.first.native.rect.y, buttons.last.native.rect.y, 1
+        end
+        find(".report-editor").evaluate_script("this.scrollIntoView({block: 'start', behavior: 'instant'})")
+        save_screenshot(Rails.root.join("tmp/screenshots/report-editor-buttons-#{width}.png"))
         find_button("Preview", exact: true).send_keys(:enter)
         assert_selector ".report-preview", text: "A brilliant day on granite.", wait: 5
         assert_no_selector ".report-write"

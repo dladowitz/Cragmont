@@ -5,7 +5,7 @@
       %h2= @report.persisted? ? "Edit trip report" : "Write trip report"
       %p.muted{data: {report_editor_target: "publication"}}= @report.display_status
       %p{role: "status", "aria-live" => "polite", data: {report_editor_target: "status"}} Drafts are private. Publishing makes your story and album link public.
-    .actions
+    .actions.report-editor-navigation
       - if @report.public_payload
         = link_to "View public report", public_report_path(@report), class: "button secondary"
       = link_to "Back to reports", admin_trip_reports_path, class: "button secondary"

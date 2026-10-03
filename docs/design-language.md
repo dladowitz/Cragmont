@@ -97,4 +97,4 @@ On mobile trip lists, keep the outer section transparent. Empty-state notes use 
 
 Keep the two logo lines separated with a full line height and a small gap. Center desktop trip badges against the title’s visible capital-letter height. Report cards use one compact thumbnail each, with a scenic sample thumbnail when no photo exists; full report galleries use evenly sized tiles. On mobile, campsite, partner-board, and coordinator cards share a 1px outline with a 4px colored left accent.
 
-Keep table action links as flex buttons so labels center vertically. Trip-list actions are compact on desktop (36px minimum height) and retain a 44px tap target on mobile.
+Keep table action links as flex buttons so labels center vertically. Trip-list actions are compact on desktop (36px minimum height) and fill the mobile card width with a 44px minimum tap target. On mobile, report-editor navigation and Write/Preview controls use two equal columns aligned with the form fields.
