@@ -103,7 +103,7 @@ class TripReportsTest < ApplicationSystemTestCase
     first_id = rows.first["data-photo-id"]
     second_id = rows.last["data-photo-id"]
     rows.last.fill_in "Caption / image description", with: "Granite slabs"
-    rows.last.find_button("Make cover", exact: true).send_keys(:enter)
+    rows.last.find_button("Move to first", exact: true).send_keys(:enter)
     assert_selector ".report-edit-photo:first-child[data-photo-id='#{second_id}']"
     click_button "Save draft", exact: true
     assert_selector "[data-report-editor-target='status']", text: "Saved at", wait: 5

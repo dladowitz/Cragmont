@@ -60,7 +60,7 @@ a { color: var(--accent); font-weight: 500; text-underline-offset: .2em; }
   align-items: center;
 }
 .public-brand { gap: 28px; flex-wrap: nowrap; }
-.site-name { gap: 0; line-height: .85; }
+.site-name { gap: 2px; line-height: 1; }
 .site-name span { font-size: 1.65rem; font-weight: 800; letter-spacing: 0; }
 .site-name small { font-size: 1rem; font-weight: 800; letter-spacing: 0; }
 .public-nav { gap: clamp(14px, 2vw, 30px); }
@@ -334,18 +334,17 @@ body.trips-index-page .trips-index-notices .calendar-subscription-notice {
 .club-report-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 32px; }
 .club-report { min-width: 0; padding-bottom: 24px; border-bottom: 1px solid var(--line); transform-origin: top left; }
 .club-report:has(.club-report-details[open]) { grid-column: 1 / -1; }
-.club-report:has(.club-report-details[open]) .club-report-gallery img { max-height: 360px; }
 .club-report h2 { margin: 16px 0 8px; font-size: 1.4rem; font-weight: 500; }
 .club-report-gallery a { display: block; border-radius: var(--ui-radius); overflow: hidden; }
-.club-report-gallery img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: contain; background: #d5ddd73b; }
+.club-report-gallery img { display: block; width: 100%; height: auto; max-height: 280px; aspect-ratio: 3 / 2; object-fit: contain; background: #d5ddd73b; }
+.club-report-gallery-placeholder img { object-fit: cover; border-radius: var(--ui-radius); }
 .club-report-gallery a:focus-visible { outline-offset: 4px; }
 .club-report-details { margin-top: 12px; }
 .club-report-details summary { cursor: pointer; color: var(--accent); font-weight: 600; min-height: 44px; align-content: center; }
 .club-report-copy { max-width: 76ch; margin-top: 16px; line-height: 1.65; }
 .club-report-copy p { margin: 0 0 14px; }
 .report-page-title { font-size: clamp(1.8rem, 3vw, 2.6rem); margin: 24px 0; }
-.report-photo-gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.report-photo-gallery figure:first-child { grid-column: 1 / -1; }
+.report-photo-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 10px; }
 .club-report-gallery figure { margin: 0; min-width: 0; }
 .club-report-gallery figcaption { font-size: .85rem; margin-top: 6px; overflow-wrap: anywhere; }
 .report-album-card { display: block; background: #e7f1ed; padding: 24px; margin: 16px 0; border-radius: var(--ui-radius); }
@@ -865,7 +864,9 @@ table { max-width: 100%; }
 .club-history-photos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin: 28px 0; }
 .club-history-photos img { width: auto; max-width: 100%; height: auto; justify-self: center; align-self: center; }
 @media (min-width: 901px) {
-  .trip-summary-copy .trip-title-line h1 { flex-basis: auto; }
+  .trip-summary-copy .trip-title-line { align-items: center; }
+  .trip-summary-copy .trip-title-line h1 { flex-basis: auto; text-box-trim: trim-both; text-box-edge: cap alphabetic; }
+  .trip-summary-copy .trip-title-line > .status { align-self: center; margin-block: 0; }
 }
 @media (max-width: 980px) {
   .admin-mode-label { flex-basis: 100%; order: 3; font-size: .95rem; }

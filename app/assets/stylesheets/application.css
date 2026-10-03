@@ -7095,7 +7095,7 @@ textarea {
     width: calc(100% - 20px);
     margin-inline: auto;
     padding: 14px;
-    border: 3px solid var(--line);
+    border: 1px solid var(--line);
     border-left: 4px solid #1d4ed8;
     border-radius: 8px;
     background: #fff;
@@ -7105,7 +7105,7 @@ textarea {
     width: calc(100% - 20px);
     margin-inline: auto;
     padding: 14px;
-    border: 3px solid var(--line);
+    border: 1px solid var(--line);
     border-left: 4px solid #7c3aed;
     border-radius: 8px;
     background: #fff;

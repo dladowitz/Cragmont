@@ -2,6 +2,7 @@
   - album = safe_external_url(payload["album_url"])
   - legacy_image = report_legacy_image(payload)
   - report_photos = Array(payload["photos"])
+  - report_photos = legacy_image ? [] : report_photos.first(1) if local_assigns[:compact]
   - if legacy_image || report_photos.any?
     .club-report-gallery{class: ("report-photo-gallery" if report_photos.size + (legacy_image ? 1 : 0) > 1)}
       - report_photos.each do |photo|
@@ -13,6 +14,9 @@
       - if legacy_image
         = link_to album || "#", target: "_blank", rel: "noopener", aria: {label: "View photos from #{payload['title']} (opens in a new tab)"} do
           = image_tag legacy_image, alt: "Photo from #{payload['title']}", loading: "lazy", decoding: "async", width: 960, height: 720
+  - else
+    .club-report-gallery.club-report-gallery-placeholder
+      = image_tag "backgrounds/tuolumne-meadows-fairview-dome.jpg", alt: "Fairview Dome — sample trip report thumbnail", loading: "lazy", decoding: "async", width: 960, height: 640
   - unless local_assigns[:hide_heading]
     %h2= payload["title"]
   - unless report.legacy_key.present?

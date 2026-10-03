@@ -3,6 +3,42 @@ require "application_system_test_case"
 class EditorialVisualTest < ApplicationSystemTestCase
   setup { LegacyTripReportImport.call }
 
+  test "report galleries keep photos compact and provide a thumbnail when empty" do
+    report = TripReport.find_by!(legacy_key: "2026-08-22-snowshed-tahoe")
+    uploads = %w[2026-08-14-tuolumne.jpg 2026-08-22-snowshed-tahoe.jpg].map do |name|
+      Rack::Test::UploadedFile.new(Rails.root.join("app/assets/images/trip-reports", name), "image/jpeg")
+    end
+    report.add_photos!(uploads, version: report.lock_version, actor: users(:alex))
+    report.publish!(version: report.lock_version, actor: users(:alex))
+    empty = TripReport.find_by!(legacy_key: "2026-09-18-yosemite-valley")
+    empty.update!(published: empty.published.except("legacy_image"))
+
+    [ trip_reports_path, trip_report_path(report) ].each do |path|
+      visit path
+      [ 1440, 390, 344 ].each do |width|
+        page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: 1000, deviceScaleFactor: 1, mobile: width <= 760)
+        photos = all("#report-#{report.id} .club-report-gallery img", count: path == trip_reports_path ? 1 : 3)
+        photos.each do |photo|
+          assert_operator photo.native.rect.height, :<=, 280
+          assert_in_delta photos.first.native.rect.width, photo.native.rect.width, 1
+          assert_in_delta photos.first.native.rect.height, photo.native.rect.height, 1
+        end
+        if path == trip_reports_path
+          assert_selector "#report-#{empty.id} .club-report-gallery-placeholder img[alt*='sample']"
+          assert_in_delta photos.first.native.rect.height, find("#report-#{empty.id} .club-report-gallery img").native.rect.height, 1
+          assert_link "View photos", href: empty.published["album_url"]
+          find("#report-#{empty.id}").evaluate_script("this.scrollIntoView({block: 'start', behavior: 'instant'})")
+          save_screenshot(Rails.root.join("tmp/screenshots/report-fallback-#{width}.png"))
+        end
+        assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
+        find("#report-#{report.id}").evaluate_script("this.scrollIntoView({block: 'start', behavior: 'instant'})")
+        save_screenshot(Rails.root.join("tmp/screenshots/report-gallery-#{path == trip_reports_path ? 'list' : 'detail'}-#{width}.png"))
+      end
+    end
+  ensure
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
   test "mobile trip lists keep metadata labels left and values right" do
     trips(:jtree).update!(status: "archived")
     [ trips_path, past_trips_trips_path ].each do |path|
@@ -150,6 +186,12 @@ class EditorialVisualTest < ApplicationSystemTestCase
           assert_equal "700", find(".trip-show-mobile-hero h1").native.css_value("font-weight")
           all(".public-main > .panel").each { |section| assert_equal "rgba(0, 0, 0, 0)", section.native.css_value("background-color") }
           assert_in_delta 10, find(".trip-overview").evaluate_script("this.getBoundingClientRect().bottom - this.querySelector('.stats').getBoundingClientRect().bottom"), 0.5
+          all(".campsite-card, .climbing-partner-panel, .trip-coordinator-panel", minimum: 3).each do |card|
+            %w[top right bottom].each { |side| assert_equal "1px", card.native.css_value("border-#{side}-width") }
+            assert_equal "4px", card.native.css_value("border-left-width")
+          end
+          find(".climbing-partner-panel").evaluate_script("this.scrollIntoView({block: 'start', behavior: 'instant'})")
+          save_screenshot(Rails.root.join("tmp/screenshots/mobile-card-borders-#{width}.png"))
         end
         all(".stats").each do |group|
           assert_equal "0px", group.native.css_value("border-top-width")
@@ -185,6 +227,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
         assert_includes find("body").native.css_value("background-image"), "tuolumne-meadows-fairview-dome"
         assert_equal "fixed", find("body").native.css_value("background-attachment").split(", ").last
         assert_equal "rgba(255, 255, 255, 1)", find(".site-name").native.css_value("color")
+        assert_logo_lines_separated
         assert_equal "rgba(255, 254, 250, 1)", first(".panel").native.css_value("background-color")
         assert_selector ".background-image-caption", text: "Fairview Dome, Tuolumne Meadows, Yosemite"
         assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
@@ -214,6 +257,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
     [ 1440, 1280, 1176, 1024, 981, 980, 840, 768, 717, 390, 344 ].each do |width|
       page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: 900, deviceScaleFactor: 1, mobile: width <= 760)
       brand = find(".admin-brand .site-name").native.rect
+      assert_logo_lines_separated
       admin = find_link("Public View", exact: true).native.rect
       assert_in_delta brand.y + brand.height / 2.0, admin.y + admin.height / 2.0, 1, "Brand alignment at #{width}px"
       assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
@@ -314,6 +358,11 @@ class EditorialVisualTest < ApplicationSystemTestCase
     assert_equal "32px", find(".trip-summary-copy > h2").native.css_value("font-size")
     heading = find("h1").native.rect
     assert_operator find(".trip-type-badge").native.rect.x, :>=, heading.x + heading.width
+    all(".trip-summary-copy .trip-title-line > .status").each do |badge|
+      rect = badge.native.rect
+      assert_in_delta heading.y + heading.height / 2.0, rect.y + rect.height / 2.0, 1
+    end
+    save_screenshot(Rails.root.join("tmp/screenshots/trip-title-badges-desktop.png"))
 
     page.driver.browser.manage.window.resize_to(390, 844)
     assert_equal "28px", find(".trip-show-mobile-hero h1").native.css_value("font-size")
@@ -523,5 +572,16 @@ class EditorialVisualTest < ApplicationSystemTestCase
     assert_operator find(".flash-messages").native.rect.y, :>=, find(".public-header").native.rect.height
     assert_equal page.evaluate_script("getComputedStyle(document.body).color"), page.evaluate_script("getComputedStyle(document.querySelector('.flash-text')).color")
     assert_no_selector ".flash.notice", visible: true, wait: 3
+  end
+
+  private
+
+  def assert_logo_lines_separated
+    top = find(".site-name span")
+    bottom = find(".site-name small")
+    [ top, bottom ].each do |line|
+      assert_operator line.native.css_value("line-height").to_f, :>=, line.native.css_value("font-size").to_f
+    end
+    assert_operator bottom.native.rect.y - (top.native.rect.y + top.native.rect.height), :>=, 1
   end
 end

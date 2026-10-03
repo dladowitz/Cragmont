@@ -12,6 +12,6 @@
         = link_to "Manage reports", admin_trip_reports_path, class: "button secondary"
     .club-report-grid{data: {controller: "report-grid", action: "click->report-grid#toggle turbo:before-cache@document->report-grid#reset"}}
       - @reports.each do |report|
-        = render "trip_reports/report", report: report, payload: report.public_payload, preview: false
+        = render "trip_reports/report", report: report, payload: report.public_payload, preview: false, compact: true
     - if @reports.empty?
       %p.muted No trip reports yet. Photos and stories will appear here after club outings.
