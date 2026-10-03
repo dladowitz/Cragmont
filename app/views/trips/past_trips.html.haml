@@ -44,6 +44,6 @@
           - if @archived_current_page < @archived_total_pages
             = link_to "Next", past_trips_trips_path(archived_page: @archived_current_page + 1, anchor: "archived-trips"), class: "button secondary"
     - else
-      %p.muted No trips from this site's calendar have been archived yet.
+      %p.muted.trip-list-empty No trips from this site's calendar have been archived yet.
   = render "shared/liability_warning"
 %p.background-image-caption Regular Northwest Face, Half Dome

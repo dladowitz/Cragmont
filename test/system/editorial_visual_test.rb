@@ -30,6 +30,29 @@ class EditorialVisualTest < ApplicationSystemTestCase
     page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
   end
 
+  test "empty trip lists use inset rounded cards on mobile" do
+    Trip.update_all(status: "draft")
+    [ trips_path, past_trips_path ].each do |path|
+      visit path
+      [ 344, 390, 760 ].each do |width|
+        page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: 900, deviceScaleFactor: 1, mobile: true)
+        card = find(".trip-list-empty")
+        warning = find(".public-liability-warning")
+        assert_equal warning.native.css_value("background-color"), card.native.css_value("background-color")
+        assert_equal warning.native.css_value("border-radius"), card.native.css_value("border-radius")
+        assert_operator card.native.css_value("border-radius").to_f, :>, 0
+        assert_in_delta warning.native.rect.x, card.native.rect.x, 1
+        assert_in_delta warning.native.rect.width, card.native.rect.width, 1
+        assert_operator card.native.rect.x, :>, 0
+        assert_equal "rgba(0, 0, 0, 0)", find(".public-main > .panel").native.css_value("background-color")
+        assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
+        save_screenshot(Rails.root.join("tmp/screenshots/empty-#{path == trips_path ? 'trips' : 'past-trips'}-#{width}.png"))
+      end
+    end
+  ensure
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
   test "mobile trip section paragraphs and empty states share typography and heading spacing" do
     {
       "day_trip" => { meeting_time: "08:30", meeting_location: "Parking lot", meeting_location_url: "https://maps.google.com/?q=Castle+Rock", late_arrival_instructions: "Meet at the main wall.", climbing_types: [ "sport" ] },
@@ -422,7 +445,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
 
   test "long history reads without horizontal scrolling on a phone" do
     visit history_path
-    assert_selector ".club-copy h2", text: "History of the Cragmont Climbing Club"
+    assert_selector ".club-copy h2", text: "The Early History of the Cragmont Climbing Club from Camp 4"
 
     browser = page.driver.browser
     browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)

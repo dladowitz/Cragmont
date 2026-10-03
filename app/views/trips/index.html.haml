@@ -49,6 +49,6 @@
                     %span.status{class: (trip.capacity_full? ? "danger-status" : (trip.almost_full? ? "warning-status" : "success-status"))}
                       = trip.capacity_full? ? "Full, waitlist open" : pluralize(trip.available_participant_capacity, "space")
     - else
-      %p.muted No published trips are available right now.
+      %p.muted.trip-list-empty No published trips are available right now.
   = render "shared/liability_warning"
 %p.background-image-caption Regular Northwest Face, Half Dome

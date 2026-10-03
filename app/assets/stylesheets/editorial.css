@@ -856,6 +856,7 @@ table { max-width: 100%; }
 .public-admin-link { display: inline-flex; align-items: center; }
 .admin-mode-label { margin: 0; font-size: 1.1rem; font-weight: 700; }
 .admin-api-note { margin-top: 32px; font-size: .85rem; }
+.trip-card-meta div { grid-template-columns: 100px minmax(0, 1fr); }
 .trips-index-page .trip-card .status,
 .admin-trips-table .status { font-size: .72rem; letter-spacing: .035em; padding: 3px 7px; }
 .admin-trips-table .admin-table-action-button { font-size: .8rem; padding: 8px 10px; min-height: 44px; }
@@ -876,4 +877,16 @@ table { max-width: 100%; }
 }
 @media (max-width: 600px) {
   .club-history-photos { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 760px) {
+  body.trips-index-page :is(.trips-index-panel, .archived-trips-panel) { background: transparent; }
+  body.trips-index-page .archived-trips-panel > .panel-header { margin-bottom: 0; }
+  .trip-list-empty {
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid rgb(255 255 255 / 44%);
+    border-radius: var(--ui-radius);
+    background: var(--panel);
+  }
 }
