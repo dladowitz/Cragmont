@@ -8,7 +8,7 @@
 - missing_payment = !covered_by_primary && !signup.payment_paid_or_settled?
 .admin-payment-control
   - if payment.present?
-    %span.status.admin-payment-status{class: payment_status_class}= payment_label
+    = ui_badge((payment_label), class: ["admin-payment-status", payment_status_class])
   - elsif missing_payment
     - if read_only
       %span.missing-value Missing
@@ -29,7 +29,7 @@
               %div
                 %dt Status
                 %dd
-                  %span.status.transaction-status{class: payment_status_class}= payment_label
+                  = ui_badge((payment_label), class: ["transaction-status", payment_status_class])
               %div
                 %dt Paid at
                 %dd= payment.paid_at&.strftime("%-m/%-d/%y %l:%M %p") || "None"
@@ -84,7 +84,7 @@
                     %div{"data-controller" => "modal", "data-modal-disable-autofocus-value" => "true"}
                       - refund_disabled = payment.remaining_refundable_amount_cents.zero? || !payment.stripe_source?
                       - refund_title = payment.remaining_refundable_amount_cents.zero? ? "There is nothing left to refund." : ("Only Stripe transactions can be refunded here." unless payment.stripe_source?)
-                      %button.button.danger.secondary.admin-table-action-button{"data-action" => ("modal#open" unless refund_disabled), disabled: refund_disabled, title: refund_title, type: "button"} Issue Refund
+                      = ui_button("Issue Refund", variant: :danger_secondary, class: "admin-table-action-button", "data-action" => ("modal#open" unless refund_disabled), disabled: refund_disabled, title: refund_title, type: "button")
                       - unless refund_disabled
                         %dialog.signup-modal.refund-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                           .signup-modal-content
@@ -110,9 +110,9 @@
                               %label.checkbox-field.refund-trip-expense-field{for: "refund_#{payment.id}_trip_expense"}
                                 = check_box_tag "refund[trip_expense]", "1", false, id: "refund_#{payment.id}_trip_expense"
                                 %span This was for a trip expense (ex: firewood)
-                              .form-actions
-                                %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
-                                = submit_tag "Issue Refund", class: "button danger"
+                              = ui_actions(kind: :form) do
+                                = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", type: "button")
+                                = ui_submit_tag "Issue Refund", variant: :danger
           %fieldset.transaction-fee-details{data: {controller: "table-scroll"}}
             %legend Fee details
             %table.transaction-fee-table.admin-record-table{role: "table", aria: {label: "Fee breakdown"}}
@@ -155,8 +155,8 @@
                       %td{role: "cell", "data-label" => "Reason"}= refund.reason.presence || "None"
             - else
               %p.muted No refunds recorded for this payment.
-          .form-actions
-            %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+          = ui_actions(kind: :form) do
+            = ui_button("Close", variant: :secondary, "data-action" => "modal#close", type: "button")
   - if covered_by_primary
     - covered_by_text = payment&.paid? ? "By #{payment_signup.user.public_name}" : "Follows primary"
     %span.muted.admin-payment-covered-by= covered_by_text

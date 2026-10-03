@@ -99,16 +99,16 @@
             %span.gear-number-field
               = label_tag "day_trip_signup_crash_pad_count", "How many"
               = number_field_tag "day_trip_signup[crash_pad_count]", "", id: "day_trip_signup_crash_pad_count", min: 0, max: 99, inputmode: "numeric"
-    .form-actions
-      %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
-      %button.button{"data-action" => "signature#continueSignup", "data-signature-target" => "signupStepSubmit", type: "button"} Next
+    = ui_actions(kind: :form) do
+      = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", type: "button")
+      = ui_button("Next", variant: :primary, "data-action" => "signature#continueSignup", "data-signature-target" => "signupStepSubmit", type: "button")
   %section.waiver-intro{"data-signature-target" => "intro", hidden: true}
     .waiver-intro-copy
       - TripSignupWaiver.acknowledgement_blocks.each do |block|
         %p= block
-    .form-actions
-      %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
-      %button.button{"data-action" => "signature#showWaiver", type: "button"} Agree and Sign Waiver
+    = ui_actions(kind: :form) do
+      = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", type: "button")
+      = ui_button("Agree and Sign Waiver", variant: :primary, "data-action" => "signature#showWaiver", type: "button")
   %div{"data-signature-target" => "waiverStep", hidden: true}
     %section.waiver-text{"data-action" => "scroll->signature#checkWaiverScroll", "data-signature-target" => "waiver"}
       .waiver-document
@@ -130,7 +130,7 @@
       %canvas.signature-pad{id: signature_id, "data-signature-target" => "canvas", height: "120", width: "560"}
       = hidden_field_tag "day_trip_signup[waiver_signature_data]", "", data: { signature_target: "input" }
       = hidden_field_tag "day_trip_signup[waiver_acknowledged_at]", "", data: { signature_target: "acknowledgementInput" }
-    .form-actions.waiver-signature-actions
-      %button.button.secondary{"data-action" => "signature#clear", type: "button"} Clear signature
+    = ui_actions(kind: :form, class: "waiver-signature-actions") do
+      = ui_button("Clear signature", variant: :secondary, "data-action" => "signature#clear", type: "button")
       .waiver-signature-submit-actions
-        = button_tag "Sign Up", type: :submit, class: "button", data: { signature_target: "submit" }, disabled: true
+        = ui_button "Sign Up", type: :submit, variant: :primary, data: { signature_target: "submit" }, disabled: true

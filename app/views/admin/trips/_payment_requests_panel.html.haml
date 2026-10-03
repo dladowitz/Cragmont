@@ -1,12 +1,12 @@
 - new_payment_request = TripPaymentRequest.new
-%section.panel.trip-payment-requests-panel#trip-payment-requests
+= ui_panel(class: "trip-payment-requests-panel", id: "trip-payment-requests") do
   .panel-header
     %div
       %h2 Extra Payments
       %p.muted Create one-off payment links for participants outside the campsite signup flow.
     - unless trip.deleted?
       %div{"data-controller" => "modal", "data-modal-disable-autofocus-value" => "true"}
-        %button.button{"data-action" => "modal#open", type: "button"} Create payment request
+        = ui_button("Create payment request", variant: :primary, "data-action" => "modal#open", type: "button")
         %dialog.signup-modal.trip-payment-request-form-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
           .signup-modal-content
             %div
@@ -31,9 +31,9 @@
               .field
                 = required_label form, :reason
                 = form.text_area :reason, rows: 4, required: true
-              .form-actions
-                %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
-                = form.submit "Create payment request", class: "button"
+              = ui_actions(kind: :form) do
+                = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", type: "button")
+                = ui_submit form, "Create payment request", variant: :primary
   - if payment_requests.any?
     %table.trip-payment-requests-table.admin-record-table{role: "table", "aria-label" => "Extra payments"}
       %thead
@@ -55,13 +55,13 @@
             %td{role: "cell", "data-label" => "Reason"}= payment_request.reason
             %td{role: "cell", "data-label" => "Status"}
               - status_class = payment_request.pending? ? "warning-status" : (payment_request.canceled? ? "danger-status" : nil)
-              %span.status{class: status_class}= payment_request.status.titleize
+              = ui_badge((payment_request.status.titleize), class: status_class)
             %td{role: "cell", "data-label" => "Created"}= payment_request.created_at.strftime("%-m/%-d/%y")
-            %td.table-actions{role: "cell"}
+            = ui_actions(tag: :td, kind: :table, role: "cell") do
               - if payment_request.pending?
                 .trip-payment-request-actions
                   %span{"data-controller" => "copy-link", "data-copy-link-url-value" => payment_url}
-                    %button.button.secondary.copy-link-button.admin-table-action-button{"data-action" => "copy-link#copy", type: "button"}
+                    = ui_button(variant: :secondary, class: "copy-link-button admin-table-action-button", "data-action" => "copy-link#copy", type: "button") do
                       %span.copy-link-icon.copy-icon{aria: { hidden: "true" }}
                         %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
                           %rect{height: "12", rx: "2", stroke: "currentColor", "stroke-width" => "2", width: "12", x: "8", y: "8"}
@@ -70,17 +70,17 @@
                         %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
                           %path{d: "M20 6 9 17l-5-5", stroke: "currentColor", "stroke-linecap" => "round", "stroke-linejoin" => "round", "stroke-width" => "2.5"}
                       %span Copy Link
-                  = button_to "Email Link", email_admin_trip_trip_payment_request_path(trip, payment_request), method: :post, class: "button secondary admin-table-action-button", form: { data: { controller: "email-link", action: "submit->email-link#send" } }
+                  = ui_button_to "Email Link", email_admin_trip_trip_payment_request_path(trip, payment_request), method: :post, variant: :secondary, class: "admin-table-action-button", form: { data: { controller: "email-link", action: "submit->email-link#send" } }
                   %div{"data-controller" => "modal"}
-                    %button.button.danger.secondary.admin-table-action-button{"data-action" => "modal#open", type: "button"} Cancel
+                    = ui_button("Cancel", variant: :danger_secondary, class: "admin-table-action-button", "data-action" => "modal#open", type: "button")
                     %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                       .confirmation-modal-content
                         %div
                           %h2 Cancel payment request?
                           %p This will turn off the payment link for #{payment_request.full_name}.
-                        .form-actions
-                          %button.button.secondary{"data-action" => "modal#close", type: "button"} Keep request
-                          = button_to "Cancel request", cancel_admin_trip_trip_payment_request_path(trip, payment_request), method: :patch, class: "button danger"
+                        = ui_actions(kind: :form) do
+                          = ui_button("Keep request", variant: :secondary, "data-action" => "modal#close", type: "button")
+                          = ui_button_to "Cancel request", cancel_admin_trip_trip_payment_request_path(trip, payment_request), method: :patch, variant: :danger
               - else
                 %span.muted No actions
   - else
@@ -98,7 +98,7 @@
           = link_to "Payment request link", modal_payment_url, class: "missing-details-link"
           .admin-participant-link-actions
             %span{"data-controller" => "copy-link", "data-copy-link-url-value" => modal_payment_url}
-              %button.button.secondary.copy-link-button.admin-participant-link-action{"data-action" => "copy-link#copy", type: "button"}
+              = ui_button(variant: :secondary, class: "copy-link-button admin-participant-link-action", "data-action" => "copy-link#copy", type: "button") do
                 %span.copy-link-icon.copy-icon{aria: { hidden: "true" }}
                   %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
                     %rect{height: "12", rx: "2", stroke: "currentColor", "stroke-width" => "2", width: "12", x: "8", y: "8"}
@@ -107,6 +107,6 @@
                   %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
                     %path{d: "M20 6 9 17l-5-5", stroke: "currentColor", "stroke-linecap" => "round", "stroke-linejoin" => "round", "stroke-width" => "2.5"}
                 %span Copy Link
-            = button_to "Email link to participant", email_admin_trip_trip_payment_request_path(trip, modal_payment_request), method: :post, class: "button secondary admin-participant-link-action", form: { class: "admin-participant-link-action-form", data: { controller: "email-link", action: "submit->email-link#send" } }
-        .form-actions
-          %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+            = ui_button_to "Email link to participant", email_admin_trip_trip_payment_request_path(trip, modal_payment_request), method: :post, variant: :secondary, class: "admin-participant-link-action", form: { class: "admin-participant-link-action-form", data: { controller: "email-link", action: "submit->email-link#send" } }
+        = ui_actions(kind: :form) do
+          = ui_button("Close", variant: :secondary, "data-action" => "modal#close", type: "button")

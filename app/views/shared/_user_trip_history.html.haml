@@ -19,7 +19,7 @@
             = link_to trip.name, trip_link
             %span= trip.location
           %td{role: ("cell" if admin_view), "data-label" => "Signup"}
-            %span.status{class: row.status_class}= row.status_label
+            = ui_badge((row.status_label), class: row.status_class)
           %td{role: ("cell" if admin_view), "data-label" => "Dates"}
             - if trip.start_date == trip.end_date
               = trip.start_date.strftime("%B %d, %Y")
@@ -39,7 +39,7 @@
                   %li.user-trip-transaction-item
                     .user-trip-transaction-summary
                       %strong= format_cents(entry.amount_cents)
-                      %span.status.transaction-status{class: entry.status_class}= entry.status_label
+                      = ui_badge((entry.status_label), class: ["transaction-status", entry.status_class])
                       %span.muted= entry.occurred_at&.strftime("%-m/%-d/%y %l:%M %p") || "No date"
                     = render "admin/trip_transactions/entry_details",
                       entry: entry,

@@ -26,5 +26,5 @@
           %p We'll be sending you more info as the date gets closer.
           %br
           %p If you need to cancel, make sure to do it at least seven days before the start of the trip for a refund.
-      .form-actions
-        %button.button{"data-action" => "modal#close", type: "button"} Let's Go
+      = ui_actions(kind: :form) do
+        = ui_button("Let's Go", variant: :primary, "data-action" => "modal#close", type: "button")

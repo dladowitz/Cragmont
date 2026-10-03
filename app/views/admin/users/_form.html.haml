@@ -40,6 +40,6 @@
         %label.user-role-option
           = role_field.check_box(class: "user-role-checkbox")
           %span= role_field.text
-  .form-actions
+  = ui_actions(kind: :form) do
     = form.submit
-    = link_to "Cancel", user.persisted? ? admin_user_path(user) : admin_users_path, class: "button secondary"
+    = ui_link "Cancel", user.persisted? ? admin_user_path(user) : admin_users_path, variant: :secondary

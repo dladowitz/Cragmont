@@ -3,7 +3,7 @@
 - form_url = "https://docs.google.com/forms/d/e/1FAIpQLSdGYS2L_RzoxMxIVP9vM51bdzqy9ivHLbizCE6aS_6FigywXQ/viewform"
 = render "shared/public_header"
 %main.public-main.club-main
-  %article.panel.club-panel
+  = ui_panel(tag: :article, class: "club-panel") do
     %p.eyebrow Cragmont Climbing Club
     %h1 Join the List
     .club-copy.content-page-markdown

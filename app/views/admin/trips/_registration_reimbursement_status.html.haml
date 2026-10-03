@@ -45,8 +45,8 @@
             %div
               %dt Notes
               %dd= campsite.registration_reimbursement_notes.presence || "None"
-          .form-actions
-            %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+          = ui_actions(kind: :form) do
+            = ui_button("Close", variant: :secondary, "data-action" => "modal#close", type: "button")
   - elsif !trip.deleted?
     = render "admin/shared/campsite_reimbursement_form", trip: trip, campsite: campsite, users: users, trigger_label: "Record Now", return_to: nil, reimbursement_filters: []
   - else

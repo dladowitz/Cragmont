@@ -1,8 +1,8 @@
 = render "admin/shared/header", title: "Edit trip"
-%section.panel
+= ui_panel do
   .panel-header
     %div
       %h2 Edit #{@trip.name}
-    .actions
-      %button.button{form: "admin-trip-form", type: "submit"} Update Trip
+    = ui_actions do
+      = ui_button("Update Trip", variant: :primary, form: "admin-trip-form", type: "submit")
   = render "form", trip: @trip

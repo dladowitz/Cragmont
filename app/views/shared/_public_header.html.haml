@@ -1,8 +1,6 @@
 %header.public-header
   .public-brand
-    = link_to root_path, class: "site-name" do
-      %span Cragmont
-      %small Climbing Club
+    = ui_brand
     - if current_user&.admin_access?
       = link_to "Admin", admin_root_path, class: "public-admin-link"
   .public-nav-shell{data: {controller: "navigation", action: "click@window->navigation#closeOutside keydown.esc@window->navigation#closeOnEscape"}}

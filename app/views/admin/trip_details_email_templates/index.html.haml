@@ -1,12 +1,12 @@
 = render "admin/shared/header", title: "Trip Details Email Templates"
 
-%section.panel.trip-details-email-panel
+= ui_panel(class: "trip-details-email-panel") do
   .panel-header
     %div
       %h2 Trip Details Email Templates
       %p.muted Templates are used as starting points for new trip details email drafts.
-    .actions
-      = link_to "Back to Content", admin_content_path, class: "button secondary"
+    = ui_actions do
+      = ui_link "Back to Content", admin_content_path, variant: :secondary
 
   - if @templates.any?
     %table.admin-record-table.admin-email-templates-table{role: "table", "aria-label" => "Trip details email templates"}
@@ -23,7 +23,8 @@
             %td{role: "cell", "data-label" => "Area"}= template.area_key
             %td{role: "cell", "data-label" => "Status"}
               - status_class = template.active? ? "success-status" : "warning-status"
-              %span.status{class: status_class}= template.active? ? "Active" : "Inactive"
-            %td.table-actions{role: "cell"}= link_to "Edit", edit_admin_trip_details_email_template_path(template), class: "button secondary admin-table-action-button"
+              = ui_badge((template.active? ? "Active" : "Inactive"), class: status_class)
+            = ui_actions(tag: :td, kind: :table, role: "cell") do
+              = ui_link "Edit", edit_admin_trip_details_email_template_path(template), variant: :secondary, class: "admin-table-action-button"
   - else
     %p.muted No trip details email templates yet.

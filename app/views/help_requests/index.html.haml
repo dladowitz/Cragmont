@@ -2,12 +2,12 @@
 = render "shared/public_header"
 
 %main.public-main
-  %section.panel
+  = ui_panel do
     .panel-header
       %div
         %h1 My Help Requests
         %p.muted Track your messages with the Cragmont admins.
-      = link_to "New request", new_help_request_path, class: "button"
+      = ui_link "New request", new_help_request_path, variant: :primary
     - if @help_requests.any?
       .table-wrapper
         %table.public-card-table
@@ -21,7 +21,7 @@
           %tbody
             - @help_requests.each do |help_request|
               %tr
-                %td{"data-label" => "View"}= link_to "View", help_request_path(help_request), class: "button secondary admin-table-action-button"
+                %td{"data-label" => "View"}= ui_link "View", help_request_path(help_request), variant: :secondary, class: "admin-table-action-button"
                 %td{"data-label" => "Subject"}= help_request.subject
                 %td{"data-label" => "Status"}
                   = help_request_status_pill(help_request)

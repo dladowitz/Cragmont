@@ -2,7 +2,7 @@
 = render "shared/public_header"
 
 %main.public-main.error-main
-  %section.panel.error-panel
+  = ui_panel(class: "error-panel") do
     %h1 Off route!
     %p That page doesn't exist
 

@@ -90,7 +90,7 @@
                 .admin-participant-link-share
                   = link_to missing_details_link_text, participant_details_link, class: "missing-details-link", "data-copyable-modal-target" => "source"
                   .admin-participant-link-actions
-                    %button.button.secondary.copy-link-button.admin-participant-link-action{"data-action" => "copyable-modal#copy", type: "button"}
+                    = ui_button(variant: :secondary, class: "copy-link-button admin-participant-link-action", "data-action" => "copyable-modal#copy", type: "button") do
                       %span.copy-link-icon.copy-icon{aria: { hidden: "true" }}
                         %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
                           %rect{height: "12", rx: "2", stroke: "currentColor", "stroke-width" => "2", width: "12", x: "8", y: "8"}
@@ -100,9 +100,9 @@
                           %path{d: "M20 6 9 17l-5-5", stroke: "currentColor", "stroke-linecap" => "round", "stroke-linejoin" => "round", "stroke-width" => "2.5"}
                       %span Copy Link
                     - if signup.user.email.present?
-                      = button_to missing_details_email_text, email_participant_link_admin_trip_campsite_signup_path(signup_trip, signup), method: :post, class: "button secondary admin-participant-link-action", form: { class: "admin-participant-link-action-form", data: { controller: "email-link", action: "submit->email-link#send" } }
-                .form-actions
-                  %button.button.secondary{"data-action" => "copyable-modal#close", type: "button"} Close
+                      = ui_button_to missing_details_email_text, email_participant_link_admin_trip_campsite_signup_path(signup_trip, signup), method: :post, variant: :secondary, class: "admin-participant-link-action", form: { class: "admin-participant-link-action-form", data: { controller: "email-link", action: "submit->email-link#send" } }
+                = ui_actions(kind: :form) do
+                  = ui_button("Close", variant: :secondary, "data-action" => "copyable-modal#close", type: "button")
         - if waitlist
           %td{role: "cell", "data-label" => "Member"}
             - member_status_text = signup.user.member? ? "Yes" : "No"
@@ -123,11 +123,11 @@
           %td.admin-self-signup-cell{role: "cell", "data-label" => "Self Signup"}
             .admin-self-signup-control
               - if signup.waitlist_eligible?
-                %span.status.admin-self-signup-status Enabled
-                = button_to "Disable", revoke_waitlist_eligibility_admin_trip_campsite_signup_path(trip, signup), method: :patch, class: "button secondary admin-table-action-button"
+                = ui_badge("Enabled", class: "admin-self-signup-status")
+                = ui_button_to "Disable", revoke_waitlist_eligibility_admin_trip_campsite_signup_path(trip, signup), method: :patch, variant: :secondary, class: "admin-table-action-button"
               - else
-                %span.status.danger-status.admin-self-signup-status Disabled
-                = button_to "Enable", make_waitlist_eligible_admin_trip_campsite_signup_path(trip, signup), method: :patch, class: "button secondary admin-table-action-button"
+                = ui_badge("Disabled", tone: :danger, class: "admin-self-signup-status")
+                = ui_button_to "Enable", make_waitlist_eligible_admin_trip_campsite_signup_path(trip, signup), method: :patch, variant: :secondary, class: "admin-table-action-button"
           %td{role: "cell", "data-label" => "Campsite"}
             - preview_campsite = campsites.first
             %div.admin-waitlist-campsite-control{"data-controller" => "modal"}
@@ -137,7 +137,7 @@
                   = preview_campsite.site_number
               - else
                 %span.muted.admin-waitlist-campsite-name No campsite
-              %button.button.secondary.admin-table-action-button{"data-action" => "modal#open", :type => "button"} Add
+              = ui_button("Add", variant: :secondary, class: "admin-table-action-button", "data-action" => "modal#open", :type => "button")
               %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                 .signup-modal-content
                   %div
@@ -187,20 +187,20 @@
                             .field.admin-waitlist-other-waive-reason-field{hidden: true}
                               = required_label_tag other_waive_reason_id, "Other reason"
                               = text_area_tag "campsite_signup[waived_reason]", "", id: other_waive_reason_id, rows: 2, disabled: true
-                    .form-actions
-                      %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
-                      = submit_tag "Add", class: "button"
-          %td.table-actions{role: "cell"}
+                    = ui_actions(kind: :form) do
+                      = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", :type => "button")
+                      = ui_submit_tag "Add", variant: :primary
+          = ui_actions(tag: :td, kind: :table, role: "cell") do
             %div{"data-controller" => "modal"}
-              %button.button.danger.secondary.admin-table-action-button{"data-action" => "modal#open", :type => "button"} Remove
+              = ui_button("Remove", variant: :danger_secondary, class: "admin-table-action-button", "data-action" => "modal#open", :type => "button")
               %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                 .confirmation-modal-content
                   %div
                     %h2 Remove #{signup.user.full_name} from the waitlist?
                     %p This will remove their signup from the trip.
-                  .form-actions
-                    %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
-                    = button_to "Remove", remove_from_waitlist_admin_trip_campsite_signup_path(trip, signup), method: :delete, class: "button danger"
+                  = ui_actions(kind: :form) do
+                    = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", :type => "button")
+                    = ui_button_to "Remove", remove_from_waitlist_admin_trip_campsite_signup_path(trip, signup), method: :delete, variant: :danger
         - elsif !waitlist
           %td{role: "cell", "data-label" => "Payment", class: ("admin-record-empty" if party_guest)}
             - if party_guest
@@ -236,14 +236,14 @@
                     %div
                       %dt Membership
                       %dd= signup.user.member? ? "Member" : "Non-member"
-                  .form-actions
-                    %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+                  = ui_actions(kind: :form) do
+                    = ui_button("Close", variant: :secondary, "data-action" => "modal#close", type: "button")
           = render "signup_minors_cell", signup: signup, party_guest: party_guest
           - unless read_only
-            %td.table-actions{role: "cell"}
+            = ui_actions(tag: :td, kind: :table, role: "cell") do
               - if signup.guest?
                 %div{"data-controller" => "modal"}
-                  %button.button.danger.secondary.admin-confirmed-signup-action-button{"data-action" => "modal#open", :type => "button"} Remove
+                  = ui_button("Remove", variant: :danger_secondary, class: "admin-confirmed-signup-action-button", "data-action" => "modal#open", :type => "button")
                   %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                     .confirmation-modal-content
                       %div
@@ -270,15 +270,15 @@
                               %strong
                                 #{signup.primary_signup.user.full_name} paid for #{signup.user.full_name}:
                               = format_cents(refund_amount_cents)
-                      .form-actions
-                        %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
+                      = ui_actions(kind: :form) do
+                        = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", :type => "button")
                         - if refund_amount_cents.positive?
-                          - no_refund_button_class = signup.refund_eligible? ? "button danger secondary" : "button danger"
-                          - refund_button_class = signup.refund_eligible? ? "button danger" : "button danger secondary"
-                          = button_to "Remove without refund", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, params: { payment: { issue_refund: "0" } }, class: no_refund_button_class
-                          = button_to "Remove and issue refund", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, params: { payment: { issue_refund: "1" } }, class: refund_button_class
+                          - no_refund_variant = signup.refund_eligible? ? :danger_secondary : :danger
+                          - refund_variant = signup.refund_eligible? ? :danger : :danger_secondary
+                          = ui_button_to "Remove without refund", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, params: { payment: { issue_refund: "0" } }, variant: no_refund_variant
+                          = ui_button_to "Remove and issue refund", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, params: { payment: { issue_refund: "1" } }, variant: refund_variant
                         - else
-                          = button_to "Remove without refund", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, params: { payment: { issue_refund: "0" } }, class: "button danger"
+                          = ui_button_to "Remove without refund", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, params: { payment: { issue_refund: "0" } }, variant: :danger
               - else
                 - other_campsites = campsites.reject { |campsite| campsite.id == signup.campsite_id }
                 - change_modal_id = "reservation-change-#{signup.id}"
@@ -286,7 +286,7 @@
                 - waitlist_modal_id = "reservation-waitlist-#{signup.id}"
                 - remove_modal_id = "reservation-remove-#{signup.id}"
                 %div{"data-controller" => "modal"}
-                  %button.button.secondary.admin-confirmed-signup-action-button{"data-action" => "modal#open", :type => "button"} Change
+                  = ui_button("Change", variant: :secondary, class: "admin-confirmed-signup-action-button", "data-action" => "modal#open", :type => "button")
                   %dialog.signup-modal{id: change_modal_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                     .signup-modal-content
                       %div
@@ -294,11 +294,11 @@
                         %p.muted Choose what needs to happen with this campsite reservation.
                       .admin-reservation-change-actions
                         - if other_campsites.any?
-                          %button.button.secondary{"data-action" => "modal#open_dialog", "data-modal-dialog-id-param" => move_modal_id, type: "button"} Move to a Different Campsite
-                        %button.button.secondary{"data-action" => "modal#open_dialog", "data-modal-dialog-id-param" => waitlist_modal_id, type: "button"} Move to Waitlist
-                        %button.button.danger.secondary{"data-action" => "modal#open_dialog", "data-modal-dialog-id-param" => remove_modal_id, type: "button"} Remove Reservation
-                      .form-actions
-                        %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
+                          = ui_button("Move to a Different Campsite", variant: :secondary, "data-action" => "modal#open_dialog", "data-modal-dialog-id-param" => move_modal_id, type: "button")
+                        = ui_button("Move to Waitlist", variant: :secondary, "data-action" => "modal#open_dialog", "data-modal-dialog-id-param" => waitlist_modal_id, type: "button")
+                        = ui_button("Remove Reservation", variant: :danger_secondary, "data-action" => "modal#open_dialog", "data-modal-dialog-id-param" => remove_modal_id, type: "button")
+                      = ui_actions(kind: :form) do
+                        = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", :type => "button")
                 - if other_campsites.any?
                   %div{"data-controller" => "modal"}
                     %dialog.signup-modal{id: move_modal_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
@@ -331,9 +331,9 @@
                                   %span
                                     %strong= campsite.available_participant_capacity
                                     open
-                          .form-actions
-                            %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
-                            = submit_tag "Move Site", class: "button"
+                          = ui_actions(kind: :form) do
+                            = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", :type => "button")
+                            = ui_submit_tag "Move Site", variant: :primary
                 %div{"data-controller" => "modal"}
                   %dialog.confirmation-modal{id: waitlist_modal_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                     .confirmation-modal-content
@@ -364,15 +364,15 @@
                                 - else
                                   Amount paid:
                               = format_cents(refund_amount_cents)
-                      .form-actions
-                        %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
+                      = ui_actions(kind: :form) do
+                        = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", :type => "button")
                         - if refund_amount_cents.positive?
-                          - no_refund_button_class = signup.refund_eligible? ? "button danger secondary" : "button danger"
-                          - refund_button_class = signup.refund_eligible? ? "button danger" : "button danger secondary"
-                          = button_to "Move without refund", move_to_waitlist_admin_trip_campsite_signup_path(signup_trip, signup), method: :patch, params: { payment: { issue_refund: "0" } }, class: no_refund_button_class
-                          = button_to "Move and issue refund", move_to_waitlist_admin_trip_campsite_signup_path(signup_trip, signup), method: :patch, params: { payment: { issue_refund: "1" } }, class: refund_button_class
+                          - no_refund_variant = signup.refund_eligible? ? :danger_secondary : :danger
+                          - refund_variant = signup.refund_eligible? ? :danger : :danger_secondary
+                          = ui_button_to "Move without refund", move_to_waitlist_admin_trip_campsite_signup_path(signup_trip, signup), method: :patch, params: { payment: { issue_refund: "0" } }, variant: no_refund_variant
+                          = ui_button_to "Move and issue refund", move_to_waitlist_admin_trip_campsite_signup_path(signup_trip, signup), method: :patch, params: { payment: { issue_refund: "1" } }, variant: refund_variant
                         - else
-                          = button_to "Move without refund", move_to_waitlist_admin_trip_campsite_signup_path(signup_trip, signup), method: :patch, params: { payment: { issue_refund: "0" } }, class: "button secondary"
+                          = ui_button_to "Move without refund", move_to_waitlist_admin_trip_campsite_signup_path(signup_trip, signup), method: :patch, params: { payment: { issue_refund: "0" } }, variant: :secondary
                 %div{"data-controller" => "modal"}
                   %dialog.confirmation-modal{id: remove_modal_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                     .confirmation-modal-content
@@ -403,12 +403,12 @@
                                 - else
                                   Amount paid:
                               = format_cents(refund_amount_cents)
-                      .form-actions
-                        %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
+                      = ui_actions(kind: :form) do
+                        = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", :type => "button")
                         - if refund_amount_cents.positive?
-                          - no_refund_button_class = signup.refund_eligible? ? "button danger secondary" : "button danger"
-                          - refund_button_class = signup.refund_eligible? ? "button danger" : "button danger secondary"
-                          = button_to "Remove without refund", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, params: { payment: { issue_refund: "0" } }, class: no_refund_button_class
-                          = button_to "Remove and issue refund", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, params: { payment: { issue_refund: "1" } }, class: refund_button_class
+                          - no_refund_variant = signup.refund_eligible? ? :danger_secondary : :danger
+                          - refund_variant = signup.refund_eligible? ? :danger : :danger_secondary
+                          = ui_button_to "Remove without refund", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, params: { payment: { issue_refund: "0" } }, variant: no_refund_variant
+                          = ui_button_to "Remove and issue refund", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, params: { payment: { issue_refund: "1" } }, variant: refund_variant
                         - else
-                          = button_to "Remove without refund", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, params: { payment: { issue_refund: "0" } }, class: "button danger"
+                          = ui_button_to "Remove without refund", remove_from_campsite_admin_trip_campsite_signup_path(signup_trip, signup), method: :delete, params: { payment: { issue_refund: "0" } }, variant: :danger

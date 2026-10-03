@@ -35,6 +35,6 @@
         .form-field
           = form.label :registration_reimbursement_notes, "Confirmation number or notes"
           = form.text_area :registration_reimbursement_notes, rows: 3
-        .form-actions
-          %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
-          = form.submit "Record Reimbursement", class: "button"
+        = ui_actions(kind: :form) do
+          = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", type: "button")
+          = ui_submit form, "Record Reimbursement", variant: :primary

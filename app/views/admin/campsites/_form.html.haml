@@ -58,29 +58,29 @@
         .field
           = form.label :notes
           = form.text_area :notes, rows: 5
-    .form-actions
+    = ui_actions(kind: :form) do
       = form.submit
-      = link_to "Cancel", admin_trip_path(trip), class: "button secondary"
+      = ui_link "Cancel", admin_trip_path(trip), variant: :secondary
       - if campsite.persisted?
         - delete_blocked_message = "Cannot delete campsite with participants signed up. Remove them or move to the waitlist first"
         .danger-form-action
           - if campsite.delete_blocked_by_participants?
             %span.disabled-tooltip{aria: { label: delete_blocked_message }, tabindex: "0", title: delete_blocked_message}
-              %button.button.danger.secondary{disabled: true, type: "button"} Delete campsite
+              = ui_button("Delete campsite", variant: :danger_secondary, disabled: true, type: "button")
           - else
             %div{"data-controller" => "modal"}
-              %button.button.danger.secondary{"data-action" => "modal#open", type: "button"} Delete campsite
+              = ui_button("Delete campsite", variant: :danger_secondary, "data-action" => "modal#open", type: "button")
               %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                 .confirmation-modal-content
                   %div
                     %h2 Delete campsite?
-                  .form-actions
-                    %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
-                    %button.button.danger{form: "delete-campsite-#{campsite.id}", type: "submit"} Delete campsite
+                  = ui_actions(kind: :form) do
+                    = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", type: "button")
+                    = ui_button("Delete campsite", variant: :danger, form: "delete-campsite-#{campsite.id}", type: "submit")
   - else
     .empty-state
       %p Create a campground before adding campsites to this trip.
-      = link_to "Add campground", new_admin_campground_path, class: "button"
+      = ui_link "Add campground", new_admin_campground_path, variant: :primary
 
 - if campsite.persisted?
   = form_with url: admin_trip_campsite_path(trip, campsite), method: :delete, html: { id: "delete-campsite-#{campsite.id}", class: "hidden-delete-form" } do

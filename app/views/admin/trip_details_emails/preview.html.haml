@@ -1,15 +1,15 @@
 = render "admin/shared/header", title: "#{@trip.name} trip details email preview"
 
-%section.panel.trip-details-email-panel
+= ui_panel(class: "trip-details-email-panel") do
   .panel-header
     %div
       %h2 Preview Trip Details Email
       %p.muted Review the final email and confirmed recipients before sending.
-    .actions
-      = link_to "Edit draft", edit_admin_trip_trip_details_email_path(@trip), class: "button secondary"
-      = link_to "Back to trip", admin_trip_path(@trip), class: "button secondary"
+    = ui_actions do
+      = ui_link "Edit draft", edit_admin_trip_trip_details_email_path(@trip), variant: :secondary
+      = ui_link "Back to trip", admin_trip_path(@trip), variant: :secondary
       - if @blocking_issues.empty?
-        = button_to "Send trip details email", deliver_admin_trip_trip_details_email_path(@trip), method: :post, class: "button"
+        = ui_button_to "Send trip details email", deliver_admin_trip_trip_details_email_path(@trip), method: :post, variant: :primary
 
   - if @blocking_issues.any?
     .trip-details-email-blockers
@@ -49,9 +49,9 @@
       - else
         %p.muted No confirmed participants yet.
 
-  .form-actions
-    = link_to "Keep editing", edit_admin_trip_trip_details_email_path(@trip), class: "button secondary"
+  = ui_actions(kind: :form) do
+    = ui_link "Keep editing", edit_admin_trip_trip_details_email_path(@trip), variant: :secondary
     - if @blocking_issues.empty?
-      = button_to "Send trip details email", deliver_admin_trip_trip_details_email_path(@trip), method: :post, class: "button"
+      = ui_button_to "Send trip details email", deliver_admin_trip_trip_details_email_path(@trip), method: :post, variant: :primary
     - else
-      %button.button{type: "button", disabled: true} Send trip details email
+      = ui_button("Send trip details email", variant: :primary, type: "button", disabled: true)

@@ -1,15 +1,15 @@
 = render "admin/shared/header", title: "Edit #{@template.name} template"
 
-%section.panel.trip-details-email-panel
+= ui_panel(class: "trip-details-email-panel") do
   .panel-header
     %div
       %h2 Edit #{@template.name} Template
       %p.muted
         This template becomes the starting point for future trip details email drafts.
         Existing trip drafts and sent emails keep their own copies.
-    .actions
-      = link_to "All templates", admin_trip_details_email_templates_path, class: "button secondary"
-      = link_to "Back to Content", admin_content_path, class: "button secondary"
+    = ui_actions do
+      = ui_link "All templates", admin_trip_details_email_templates_path, variant: :secondary
+      = ui_link "Back to Content", admin_content_path, variant: :secondary
 
   = form_with model: [:admin, @template],
     url: admin_trip_details_email_template_path(@template),
@@ -68,5 +68,5 @@
               %p.muted Placeholders render when a trip draft is created.
             .content-page-markdown.trip-details-email-markdown{data: { markdown_preview_target: "preview" }}
               = render_trip_details_email_markdown(@template.body_markdown)
-    .form-actions
-      = form.submit "Save template", class: "button"
+    = ui_actions(kind: :form) do
+      = ui_submit form, "Save template", variant: :primary

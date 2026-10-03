@@ -4,7 +4,7 @@
   %h1.trips-mobile-hero-title= title
   %span.trips-mobile-hero-caption Regular Northwest Face, Half Dome
 %main.public-main
-  %section.panel.trips-index-panel{id: ("archived-trips" if archived)}
+  = ui_panel(class: "trips-index-panel", id: ("archived-trips" if archived)) do
     .panel-header
       .trips-index-copy
         %h1= title
@@ -35,10 +35,10 @@
       - if archived && @archived_total_pages > 1
         %nav.pagination{aria: {label: "Past trip pages"}}
           - if @archived_current_page > 1
-            = link_to "Previous", past_trips_trips_path(archived_page: @archived_current_page - 1, anchor: "archived-trips"), class: "button secondary"
+            = ui_link "Previous", past_trips_trips_path(archived_page: @archived_current_page - 1, anchor: "archived-trips"), variant: :secondary
           %span.pagination-summary Page #{@archived_current_page} of #{@archived_total_pages}
           - if @archived_current_page < @archived_total_pages
-            = link_to "Next", past_trips_trips_path(archived_page: @archived_current_page + 1, anchor: "archived-trips"), class: "button secondary"
+            = ui_link "Next", past_trips_trips_path(archived_page: @archived_current_page + 1, anchor: "archived-trips"), variant: :secondary
     - else
       %p.muted.trip-list-empty= archived ? "No trips from this site's calendar have been archived yet." : "No published trips are available right now."
   = render "shared/liability_warning"

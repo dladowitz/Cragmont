@@ -1,8 +1,6 @@
 %header.admin-header
   .admin-brand
-    = link_to root_path, class: "site-name" do
-      %span Cragmont
-      %small Climbing Club
+    = ui_brand
     = link_to "Public View", root_path, class: "admin-public-link"
   %p.admin-mode-label Admin Dashboard
   %h1.visually-hidden= title
@@ -25,4 +23,4 @@
         = link_to "Users", admin_users_path
       - if policy(SiteSetting.current).show?
         = link_to "Settings", admin_settings_path
-      = button_to "Logout", session_path, method: :delete, class: "button secondary"
+      = ui_button_to "Logout", session_path, method: :delete, variant: :secondary

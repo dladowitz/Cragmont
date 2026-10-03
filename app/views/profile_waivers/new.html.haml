@@ -1,7 +1,7 @@
 - content_for :body_class, "profile-waiver-new-page"
 = render "shared/public_header"
 %main.public-main
-  %section.panel
+  = ui_panel do
     .panel-header
       %div
         %h1 Current Waiver
@@ -31,9 +31,9 @@
         %canvas.signature-pad#profile-waiver-signature{"data-waiver-signature-target" => "canvas", height: "120", width: "560"}
         = hidden_field_tag "waiver[waiver_signature_data]", "", data: { waiver_signature_target: "input" }
         = hidden_field_tag "waiver[waiver_acknowledged_at]", "", data: { waiver_signature_target: "acknowledgementInput" }
-      .form-actions.waiver-signature-actions
-        %button.button.secondary{"data-action" => "waiver-signature#clear", type: "button"} Clear signature
+      = ui_actions(kind: :form, class: "waiver-signature-actions") do
+        = ui_button("Clear signature", variant: :secondary, "data-action" => "waiver-signature#clear", type: "button")
         .waiver-signature-submit-actions
-          = link_to "Cancel", profile_path, class: "button secondary"
-          = button_tag "Submit Waiver", type: :submit, class: "button", data: { waiver_signature_target: "submit" }, disabled: true
+          = ui_link "Cancel", profile_path, variant: :secondary
+          = ui_button "Submit Waiver", type: :submit, variant: :primary, data: { waiver_signature_target: "submit" }, disabled: true
 %p.background-image-caption Castle Valley, UT. Castleton Tower.

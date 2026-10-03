@@ -2,6 +2,6 @@
 - if report.public_payload || policy(report).update?
   .trip-report-actions
     - if report.public_payload
-      = link_to "Read report", public_report_path(report), class: "button secondary"
+      = ui_link "Read report", public_report_path(report), variant: :secondary
     - if policy(report).update?
-      = link_to(report.persisted? ? "Edit trip report" : "Write trip report", report_edit_path(report), class: "button secondary")
+      = ui_link(report.persisted? ? "Edit trip report" : "Write trip report", report_edit_path(report), variant: :secondary)

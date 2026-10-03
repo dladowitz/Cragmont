@@ -14,9 +14,9 @@
       %h1= public_member_text(@trip.name)
       = trip_type_badge(@trip)
       - if @trip.capacity_full?
-        %span.status.danger-status Trip Full
+        = ui_badge("Trip Full", tone: :danger)
       - elsif @trip.almost_full?
-        %span.status.warning-status Almost Full
+        = ui_badge("Almost Full", tone: :warning)
     %p.trip-show-mobile-location= public_member_text(@trip.location)
     %p.trip-show-mobile-dates
       = @trip.start_date.to_fs(:long)
@@ -34,16 +34,16 @@
       = member_link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-mobile-resource-link trip-photo-album-mobile-link", target: "_blank", rel: "noopener"
   %span.trip-show-mobile-hero-caption IRS Wall, Joshua Tree
 %main.public-main
-  %section.panel.trip-overview.day-trip-overview
+  = ui_panel(class: "trip-overview day-trip-overview") do
     .panel-header.trip-summary-header
       .trip-summary-copy
         .trip-title-line
           %h1= public_member_text(@trip.name)
           = trip_type_badge(@trip)
           - if @trip.capacity_full?
-            %span.status.danger-status Trip Full
+            = ui_badge("Trip Full", tone: :danger)
           - elsif @trip.almost_full?
-            %span.status.warning-status Almost Full
+            = ui_badge("Almost Full", tone: :warning)
         %h2= public_member_text(@trip.location)
         %p
           = @trip.start_date.to_fs(:long)
@@ -63,18 +63,12 @@
             - if photo_album_url.present?
               = member_link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-photo-album-link", target: "_blank", rel: "noopener"
     = render "report_links", trip: @trip
-    .stats
-      %div
-        %span Signed up
-        %strong= @trip.confirmed_signup_count
-      %div{:class => "availability-stat #{@trip.capacity_full? ? "danger-stat" : (@trip.almost_full? ? "warning-stat" : "success-stat")}"}
-        %span Open Spaces
-        %strong= @trip.available_participant_capacity
-      %div
-        %span Total Capacity
-        %strong= @trip.total_participant_capacity
+    = ui_stats do
+      = ui_stat(label: "Signed up", value: @trip.confirmed_signup_count)
+      = ui_stat(label: "Open Spaces", value: @trip.available_participant_capacity, tone: (@trip.capacity_full? ? :danger : (@trip.almost_full? ? :warning : :success)))
+      = ui_stat(label: "Total Capacity", value: @trip.total_participant_capacity)
 
-  %section.panel.day-trip-details-panel
+  = ui_panel(class: "day-trip-details-panel") do
     .day-trip-plan-layout
       .day-trip-plan-main
         %h2= @trip.gym_outing? ? "Gym Plan" : "Crag Plan"
@@ -124,17 +118,17 @@
             %strong You are #{@current_day_trip_signup.status} for this #{@trip.trip_type_label.downcase}.
           - unless @current_day_trip_signup.guest?
             %div{"data-controller" => "modal"}
-              %button.button.danger{"data-action" => "modal#open", type: "button"} Remove me from this #{@trip.trip_type_label.downcase}
+              = ui_button("Remove me from this #{@trip.trip_type_label.downcase}", variant: :danger, "data-action" => "modal#open", type: "button")
               %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                 .signup-modal-content
                   %div
                     %h2 Remove yourself from this #{@trip.trip_type_label.downcase}?
-                  .form-actions
-                    %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
-                    = button_to "Remove Me", trip_day_trip_signup_path(@trip), method: :delete, class: "button danger"
+                  = ui_actions(kind: :form) do
+                    = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", type: "button")
+                    = ui_button_to "Remove Me", trip_day_trip_signup_path(@trip), method: :delete, variant: :danger
         - elsif user_signed_in?
           %div{"data-controller" => "modal"}
-            %button.button.day-trip-signup-button{class: ("is-waitlist" if @trip.capacity_full?), "data-action" => "modal#open", type: "button"}= day_trip_signup_button_text
+            = ui_button((day_trip_signup_button_text), variant: :primary, class: ["day-trip-signup-button", ("is-waitlist" if @trip.capacity_full?)], "data-action" => "modal#open", type: "button")
             %dialog.signup-modal.day-trip-signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
               .signup-modal-content
                 .signup-modal-title-line
@@ -142,7 +136,7 @@
                   %p= public_member_text(@trip.name)
                 = render "day_trip_signup_form", trip: @trip, current_annual_waiver_available: current_annual_waiver_available
         - else
-          = link_to "Log in to sign up", member_links_login_path, class: "button day-trip-signup-button"
+          = ui_link "Log in to sign up", member_links_login_path, variant: :primary, class: "day-trip-signup-button"
     - if @trip.day_trip_image.attached?
       .day-trip-location-image{"data-controller" => "modal", "data-modal-disable-autofocus-value" => "true"}
         %button.day-trip-location-image-button{"aria-label" => "Expand #{public_member_text(@trip.name)} location image", "data-action" => "modal#open", type: "button"}
@@ -153,14 +147,14 @@
             = image_tag @trip.day_trip_image, alt: "#{public_member_text(@trip.name)} location image"
 
   - if @trip.description.present?
-    %section.panel.day-trip-description-panel
+    = ui_panel(class: "day-trip-description-panel") do
       .panel-header
         %div
           %h2 Description
       .content-page-markdown
         = render_content_page_markdown(@trip.description)
 
-  %section.panel.day-trip-participants-panel
+  = ui_panel(class: "day-trip-participants-panel") do
     .panel-header
       %div
         %h2 Participants
@@ -183,7 +177,7 @@
       %p.muted No participants yet.
 
   - if @day_trip_waitlisted_signups.any?
-    %section.panel.day-trip-participants-panel.day-trip-waitlist-panel
+    = ui_panel(class: "day-trip-participants-panel day-trip-waitlist-panel") do
       .panel-header
         %div
           %h2 Trip waitlist
@@ -202,7 +196,7 @@
                 %td{"data-label" => "Climbing Skills"}= signup.skill_level_label
                 %td{"data-label" => "Bringing Gear"}= signup.shared_gear_summary
 
-  %section.panel.day-trip-coordinator-panel
+  = ui_panel(class: "day-trip-coordinator-panel") do
     .panel-header
       %div
         %h2 Trip Coordinator
@@ -222,11 +216,11 @@
       %p.muted Not yet set
 
   - if @trip.gym_outing?
-    %section.panel.day-trip-safety-panel
+    = ui_panel(class: "day-trip-safety-panel") do
       %h2 Before you climb
       %p On belay! Check the gym’s admission, waiver, orientation, and belay requirements. Signing up here reserves a place with the group; arrange gym admission directly with the gym.
   - else
-    %section.panel.day-trip-safety-panel
+    = ui_panel(class: "day-trip-safety-panel") do
       .panel-header
         %div
           %h2 Safety Reminder

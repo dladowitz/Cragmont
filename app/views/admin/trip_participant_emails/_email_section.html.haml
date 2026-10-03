@@ -1,7 +1,7 @@
 - email_address_text = email_addresses.join(", ")
 - section_id = title.parameterize
 
-%section.panel.participant-email-section{data: { controller: "copy-text" }}
+= ui_panel(class: "participant-email-section", data: { controller: "copy-text" }) do
   .panel-header.participant-email-section-header
     %div
       %h2= title
@@ -9,8 +9,8 @@
         = pluralize(participants.size, "participant")
         |
         = pluralize(email_addresses.size, "email address")
-    .actions
-      %button.button.secondary.copy-link-button.participant-email-copy-button{"data-action" => "copy-text#copy", disabled: email_addresses.empty?, type: "button"}
+    = ui_actions do
+      = ui_button(variant: :secondary, class: "copy-link-button participant-email-copy-button", "data-action" => "copy-text#copy", disabled: email_addresses.empty?, type: "button") do
         %span.copy-link-icon.copy-icon{aria: { hidden: "true" }}
           %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
             %rect{height: "12", rx: "2", stroke: "currentColor", "stroke-width" => "2", width: "12", x: "8", y: "8"}

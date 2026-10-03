@@ -1,18 +1,18 @@
 - content_for :body_class, "profile-edit-page"
 = render "shared/public_header"
 %main.public-main
-  %section.panel
+  = ui_panel do
     .panel-header
       %div
         %h1 Edit profile
     = render "form", user: @user
-  %section.panel
+  = ui_panel do
     .panel-header
       %div
         %h2 Account
         %p.muted Delete your account if you are done with Cragmont.
       %div{"data-controller" => "modal"}
-        %button.button.danger.secondary{"data-action" => "modal#open", type: "button"} Delete account
+        = ui_button("Delete account", variant: :danger_secondary, "data-action" => "modal#open", type: "button")
         %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
           .confirmation-modal-content
             %div
@@ -22,7 +22,7 @@
               .field
                 = required_label_tag :confirmation_text, "Type Delete Me to Confirm"
                 = text_field_tag :confirmation_text, "", required: true, data: { confirmation_text_target: "input", action: "input->confirmation-text#update" }, autocomplete: "off"
-              .form-actions.delete-account-actions
-                %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
-                = submit_tag "Delete account", class: "button danger", disabled: true, data: { confirmation_text_target: "submit" }
+              = ui_actions(kind: :form, class: "delete-account-actions") do
+                = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", type: "button")
+                = ui_submit_tag "Delete account", variant: :danger, disabled: true, data: { confirmation_text_target: "submit" }
 %p.background-image-caption Castle Valley, UT. Castleton Tower.

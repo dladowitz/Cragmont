@@ -2,7 +2,7 @@
 = render "shared/public_header"
 
 %main.public-main
-  %section.panel
+  = ui_panel do
     - if @payment_request.paid?
       %h1 On belay! Payment received.
       %p Thanks for paying for #{@payment_request.trip.name}. You're all clipped in.
@@ -18,4 +18,4 @@
     - else
       %h1 Payment not completed.
       %p No worries. You can still use this link to pay for #{@payment_request.trip.name}.
-      = link_to "Try payment again", trip_payment_request_path(@payment_request.public_token), class: "button"
+      = ui_link "Try payment again", trip_payment_request_path(@payment_request.public_token), variant: :primary

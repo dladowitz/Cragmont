@@ -1,11 +1,11 @@
 = render "admin/shared/header", title: "Help"
-%section.panel
+= ui_panel do
   .panel-header
     %div
       %h2 Help requests
       %p.muted Review issues, questions, and trip help requests from participants.
     - if current_user.super_admin?
-      = link_to "Update Who Gets Notified on Requests", admin_help_notification_subscribers_path, class: "button secondary"
+      = ui_link "Update Who Gets Notified on Requests", admin_help_notification_subscribers_path, variant: :secondary
   %details.trip-filter-disclosure
     %summary
       %strong Filters:
@@ -17,7 +17,7 @@
           %label.help-status-filter.trip-status-filter
             = check_box_tag "status[]", status, @selected_statuses.include?(status), id: "status_#{status}"
             %span= status.titleize
-      = submit_tag "Apply", class: "button secondary"
+      = ui_submit_tag "Apply", variant: :secondary
   - if @help_requests.any?
     .table-wrapper
       %table.admin-record-table{role: "table", "aria-label" => "Help requests"}
@@ -32,7 +32,8 @@
         %tbody{role: "rowgroup"}
           - @help_requests.each do |help_request|
             %tr{role: "row"}
-              %td.table-actions{role: "cell"}= link_to "View", admin_help_request_path(help_request), class: "button secondary admin-table-action-button"
+              = ui_actions(tag: :td, kind: :table, role: "cell") do
+                = ui_link "View", admin_help_request_path(help_request), variant: :secondary, class: "admin-table-action-button"
               %td.admin-record-title{role: "cell"}= help_request.subject
               %td{role: "cell", "data-label" => "Reason"}= help_request.reason_label
               %td{role: "cell", "data-label" => "From"}
@@ -47,9 +48,9 @@
       %nav.pagination{aria: {label: "Help request pages"}}
         - pagination_params = { status: @selected_statuses }
         - if @current_page > 1
-          = link_to "Previous", admin_help_requests_path(pagination_params.merge(page: @current_page - 1)), class: "button secondary"
+          = ui_link "Previous", admin_help_requests_path(pagination_params.merge(page: @current_page - 1)), variant: :secondary
         %span.pagination-summary Page #{@current_page} of #{@total_pages}
         - if @current_page < @total_pages
-          = link_to "Next", admin_help_requests_path(pagination_params.merge(page: @current_page + 1)), class: "button secondary"
+          = ui_link "Next", admin_help_requests_path(pagination_params.merge(page: @current_page + 1)), variant: :secondary
   - else
     %p.muted No help requests yet. A quiet wall is a happy wall.

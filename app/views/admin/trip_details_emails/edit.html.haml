@@ -1,20 +1,20 @@
 = render "admin/shared/header", title: "#{@trip.name} trip details email"
 
-%section.panel.trip-details-email-panel
+= ui_panel(class: "trip-details-email-panel") do
   .panel-header
     %div
       %h2 Edit Trip Details Email
       %p.muted This draft uses Markdown and trip placeholders. Preview before sending.
-    .actions
-      = link_to "Back to trip", admin_trip_path(@trip), class: "button secondary"
-      = button_to "Start over from template",
+    = ui_actions do
+      = ui_link "Back to trip", admin_trip_path(@trip), variant: :secondary
+      = ui_button_to "Start over from template",
         reset_from_template_admin_trip_trip_details_email_path(@trip),
         method: :patch,
-        class: "button danger secondary",
+        variant: :danger_secondary,
         form: { data: { turbo_confirm: "Throw away this draft and start over from the #{@trip_details_email.trip_details_email_template.name} template?" } }
-      = button_tag "Preview",
+      = ui_button "Preview",
         type: "submit",
-        class: "button secondary",
+        variant: :secondary,
         form: "trip-details-email-form",
         formaction: preview_admin_trip_trip_details_email_path(@trip)
 
@@ -68,9 +68,9 @@
         %ul
           - @blocking_issues.each do |issue|
             %li= issue
-    .form-actions
-      = form.submit "Save draft", class: "button secondary"
-      = button_tag "Preview and confirm",
+    = ui_actions(kind: :form) do
+      = ui_submit form, "Save draft", variant: :secondary
+      = ui_button "Preview and confirm",
         type: "submit",
-        class: "button",
+        variant: :primary,
         formaction: preview_admin_trip_trip_details_email_path(@trip)

@@ -1,6 +1,6 @@
 - modal_id = "campsite-waitlist-#{campsite.id}"
 %div{"data-controller" => "modal"}
-  %button.button{"data-action" => "modal#open", :type => "button"} Join waitlist
+  = ui_button("Join waitlist", variant: :primary, "data-action" => "modal#open", :type => "button")
   %dialog.signup-modal{"aria-labelledby" => modal_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
     .signup-modal-content
       %div
@@ -59,6 +59,6 @@
                 = text_field_tag "campsite_signup[campsite_signup_minors_attributes][#{index}][relationship]", "", id: "campsite_#{campsite.id}_waitlist_minor_#{index}_relationship", placeholder: "Parent, Guardian, Uncle, etc", data: { required_for_minor: "true" }
             - if index.zero?
               %button.add-person-link{"data-action" => "waitlist-form#revealPartyRow", "data-add-party-row" => "", type: "button"} Add another minor
-        .form-actions
-          %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
-          = button_tag "Join waitlist", type: :submit, class: "button"
+        = ui_actions(kind: :form) do
+          = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", :type => "button")
+          = ui_button "Join waitlist", type: :submit, variant: :primary

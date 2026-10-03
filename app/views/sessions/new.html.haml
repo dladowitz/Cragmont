@@ -4,7 +4,7 @@
   %h1.public-mobile-hero-title Log in to Cragmont
   %span.public-mobile-hero-caption Super Crack, Indian Creek
 %main.public-main
-  %section.panel.auth-panel
+  = ui_panel(class: "auth-panel") do
     %h1 Log in to Cragmont
     = form_with url: session_path, class: "admin-form" do |form|
       = form.hidden_field :return_to, value: params[:return_to]
@@ -14,8 +14,8 @@
       .field
         = required_label form, :password
         = form.password_field :password, required: true, autocomplete: "current-password"
-      .form-actions
+      = ui_actions(kind: :form) do
         = form.submit "Log in", class: "auth-primary-action"
-        = link_to "Create account", new_registration_path, class: "button secondary"
-        = link_to "Forgot password?", new_password_reset_path, class: "button secondary"
+        = ui_link "Create account", new_registration_path, variant: :secondary
+        = ui_link "Forgot password?", new_password_reset_path, variant: :secondary
 %p.background-image-caption Super Crack, Indian Creek

@@ -21,7 +21,7 @@
 - show_trip_details_email_button = @trip.camping? && can_access_trip_details_email
 - if @participant_link_signup.present?
   = render "participant_link_modal", trip: @trip, signup: @participant_link_signup
-%section.panel.trip-overview
+= ui_panel(class: "trip-overview") do
   .panel-header.trip-summary-header
     .trip-summary-copy
       .trip-title-line.trip-admin-title-line
@@ -31,9 +31,9 @@
         .trip-title-actions
           - if @trip.deleted?
             - if policy(@trip).restore?
-              = button_to "Restore trip", restore_admin_trip_path(@trip), method: :patch, class: "button"
+              = ui_button_to "Restore trip", restore_admin_trip_path(@trip), method: :patch, variant: :primary
           - elsif policy(@trip).edit?
-            = link_to "Edit trip", edit_admin_trip_path(@trip), class: "button secondary"
+            = ui_link "Edit trip", edit_admin_trip_path(@trip), variant: :secondary
         .trip-title-meta
           %span.trip-title-location= @trip.location
           %span.trip-title-date
@@ -61,7 +61,7 @@
     .deleted-trip-banner
       %strong This trip has been deleted.
       %p Its campsites, participants, payments, refunds, and transaction history are preserved. Restore the trip before making changes.
-  .stats
+  = ui_stats do
     - if @trip.confirmed_uncounted_minor_count.positive?
       .split-signup-stat
         %section
@@ -75,48 +75,40 @@
               %span.info-tooltip-box{role: "tooltip"}= uncounted_minor_tooltip
           %strong= @trip.confirmed_uncounted_minor_count
     - else
-      %div
-        %span Signed up
-        %strong= @trip.confirmed_signup_count
-    %div{:class => "availability-stat #{@trip.capacity_full? ? "danger-stat" : (@trip.almost_full? ? "warning-stat" : "success-stat")}"}
-      %span Open Spaces
-      %strong= @trip.available_participant_capacity
-    %div
-      %span Total Capacity
-      %strong= @trip.total_participant_capacity
+      = ui_stat(label: "Signed up", value: @trip.confirmed_signup_count)
+    = ui_stat(label: "Open Spaces", value: @trip.available_participant_capacity, tone: (@trip.capacity_full? ? :danger : (@trip.almost_full? ? :warning : :success)))
+    = ui_stat(label: "Total Capacity", value: @trip.total_participant_capacity)
     - unless @trip.single_day_event?
-      %div
-        %span Campsites
-        %strong= @trip.campsite_count
-%section.panel.trip-management-panel
+      = ui_stat(label: "Campsites", value: @trip.campsite_count)
+= ui_panel(class: "trip-management-panel") do
   .panel-header.trip-management-header
     %div
       %h2 Manage
   .trip-management-content
-    .actions.trip-management-actions
+    = ui_actions(class: "trip-management-actions") do
       - report = TripReport.for_trip(@trip)
       - if policy(report).update?
-        = link_to(report.persisted? ? "Edit trip report" : "Write trip report", report_edit_path(report), class: "button secondary")
+        = ui_link(report.persisted? ? "Edit trip report" : "Write trip report", report_edit_path(report), variant: :secondary)
       - if @trip_readiness_checklist.present?
-        = link_to readiness_admin_trip_path(@trip), class: "button secondary trip-readiness-summary-button" do
+        = ui_link readiness_admin_trip_path(@trip), variant: :secondary, class: "trip-readiness-summary-button" do
           %span Trip Readiness
-          %span.status.trip-readiness-summary-button-count{class: (readiness_completed_count == readiness_total_count ? "success-status" : "warning-status")}
+          = ui_badge(class: ["trip-readiness-summary-button-count", (readiness_completed_count == readiness_total_count ? "success-status" : "warning-status")]) do
             = "#{readiness_completed_count} of #{readiness_total_count}"
-        = link_to post_trip_admin_trip_path(@trip), class: "button secondary trip-readiness-summary-button" do
+        = ui_link post_trip_admin_trip_path(@trip), variant: :secondary, class: "trip-readiness-summary-button" do
           %span Post Trip
-          %span.status.trip-readiness-summary-button-count{class: (post_trip_category.completed_count == post_trip_category.total_count ? "success-status" : "warning-status")}
+          = ui_badge(class: ["trip-readiness-summary-button-count", (post_trip_category.completed_count == post_trip_category.total_count ? "success-status" : "warning-status")]) do
             = "#{post_trip_category.completed_count} of #{post_trip_category.total_count}"
-      = link_to "Participant Emails", participant_emails_admin_trip_path(@trip), class: "button secondary"
+      = ui_link "Participant Emails", participant_emails_admin_trip_path(@trip), variant: :secondary
       - if show_trip_details_email_button
-        = link_to "Trip Details Email", admin_trip_trip_details_email_path(@trip), class: "button secondary"
+        = ui_link "Trip Details Email", admin_trip_trip_details_email_path(@trip), variant: :secondary
       - if @trip.camping? && policy(@trip).manage_payments?
-        = link_to "Transactions", admin_trip_transactions_path(@trip), class: "button secondary"
+        = ui_link "Transactions", admin_trip_transactions_path(@trip), variant: :secondary
     - if @trip.camping?
       .trip-reimbursement-summary.trip-management-reimbursement
         %strong Campsite Fees Reimbursed:
-        %span.status{class: reimbursement_status_class}= "#{@reimbursed_campsites_count} of #{reimbursable_campsites_count}"
+        = ui_badge(("#{@reimbursed_campsites_count} of #{reimbursable_campsites_count}"), class: reimbursement_status_class)
 - if @trip.uses_day_trip_signups?
-  %section.panel.day-trip-admin-details
+  = ui_panel(class: "day-trip-admin-details") do
     .panel-header
       %div
         %h2= @trip.gym_outing? ? "Gym Plan" : "Crag Plan"
@@ -151,7 +143,7 @@
             %button.modal-close-button{"aria-label" => "Close image", "data-action" => "modal#close", type: "button"} ×
             = image_tag @trip.day_trip_image, alt: "#{@trip.name} location image"
   - if @trip.description.present?
-    %section.panel.admin-day-trip-description-panel
+    = ui_panel(class: "admin-day-trip-description-panel") do
       .panel-header
         %div
           %h2 Description
@@ -159,7 +151,7 @@
         .content-page-markdown
           = render_content_page_markdown(@trip.description)
 - if @trip.class_trip?
-  %section.panel.day-trip-admin-details.class-trip-admin-details
+  = ui_panel(class: "day-trip-admin-details class-trip-admin-details") do
     .panel-header
       %div
         %h2 Cost Details
@@ -186,7 +178,7 @@
           %dt Discounted price
           %dd= format_class_price(@trip.class_discounted_price) || "None"
   - if @trip.description.present?
-    %section.panel.admin-day-trip-description-panel
+    = ui_panel(class: "admin-day-trip-description-panel") do
       .panel-header
         %div
           %h2 Description
@@ -194,7 +186,7 @@
         .content-page-markdown
           = render_content_page_markdown(@trip.description)
 - if @trip.whatsapp_group.present? || @trip.weather_url.present? || @trip.mountain_project_url.present? || @trip.guide_book_url.present? || @trip.photo_album_url.present? || @trip.sun_exposure.present?
-  %section.panel.admin-trip-resources-panel
+  = ui_panel(class: "admin-trip-resources-panel") do
     .panel-header
       %div
         %h2 Additional Resources
@@ -215,7 +207,7 @@
               - else
                 = value
 - if @trip.uses_day_trip_signups?
-  %section.panel.day-trip-participants-panel
+  = ui_panel(class: "day-trip-participants-panel") do
     .panel-header
       %div
         %h2 Participants
@@ -245,31 +237,31 @@
                 = party.reject(&:blank?).presence&.join(" + ") || "Solo"
               %td{role: "cell", "data-label" => "Waiver"}= signup.waiver_signed? ? "Signed" : "Missing"
               - if !@trip.deleted? && policy(@trip).manage_participants?
-                %td.table-actions.day-trip-admin-participant-actions{role: "cell"}
+                = ui_actions(tag: :td, kind: :table, class: "day-trip-admin-participant-actions", role: "cell") do
                   %div{"data-controller" => "modal"}
-                    %button.button.secondary.admin-table-action-button{"data-action" => "modal#open", type: "button"} Move to Waitlist
+                    = ui_button("Move to Waitlist", variant: :secondary, class: "admin-table-action-button", "data-action" => "modal#open", type: "button")
                     %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                       .confirmation-modal-content
                         %div
                           %h2 Move #{signup.user.full_name} to the waitlist?
                           %p This will free up their confirmed spot and keep them on the trip waitlist.
-                        .form-actions
-                          %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
-                          = button_to "Move to Waitlist", move_to_waitlist_admin_trip_day_trip_signup_path(@trip, signup), method: :patch, class: "button secondary"
+                        = ui_actions(kind: :form) do
+                          = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", type: "button")
+                          = ui_button_to "Move to Waitlist", move_to_waitlist_admin_trip_day_trip_signup_path(@trip, signup), method: :patch, variant: :secondary
                   %div{"data-controller" => "modal"}
-                    %button.button.danger.secondary.admin-table-action-button{"data-action" => "modal#open", type: "button"} Remove
+                    = ui_button("Remove", variant: :danger_secondary, class: "admin-table-action-button", "data-action" => "modal#open", type: "button")
                     %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                       .confirmation-modal-content
                         %div
                           %h2 Remove #{signup.user.full_name} from this #{@trip.trip_type_label.downcase}?
                           %p This removes the participant from the trip roster.
-                        .form-actions
-                          %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
-                          = button_to "Remove", remove_admin_trip_day_trip_signup_path(@trip, signup), method: :delete, class: "button danger"
+                        = ui_actions(kind: :form) do
+                          = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", type: "button")
+                          = ui_button_to "Remove", remove_admin_trip_day_trip_signup_path(@trip, signup), method: :delete, variant: :danger
     - else
       %p.muted No participants have signed up yet.
   - if @day_trip_waitlisted_signups.any?
-    %section.panel.day-trip-participants-panel.day-trip-waitlist-panel
+    = ui_panel(class: "day-trip-participants-panel day-trip-waitlist-panel") do
       .panel-header
         %div
           %h2 Trip waitlist
@@ -296,29 +288,29 @@
                 - party << signup.day_trip_signup_minors.map(&:full_name).to_sentence if signup.includes_minors?
                 = party.reject(&:blank?).presence&.join(" + ") || "Solo"
               - if !@trip.deleted? && policy(@trip).manage_participants?
-                %td.table-actions.day-trip-admin-participant-actions{role: "cell"}
+                = ui_actions(tag: :td, kind: :table, class: "day-trip-admin-participant-actions", role: "cell") do
                   %div{"data-controller" => "modal"}
-                    %button.button.secondary.admin-table-action-button{"data-action" => "modal#open", type: "button"} Move onto Trip
+                    = ui_button("Move onto Trip", variant: :secondary, class: "admin-table-action-button", "data-action" => "modal#open", type: "button")
                     %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                       .confirmation-modal-content
                         %div
                           %h2 Move #{signup.user.full_name} onto the trip?
                           %p This will confirm their spot, even if the trip is currently full.
-                        .form-actions
-                          %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
-                          = button_to "Move onto Trip", move_onto_trip_admin_trip_day_trip_signup_path(@trip, signup), method: :patch, class: "button secondary"
+                        = ui_actions(kind: :form) do
+                          = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", type: "button")
+                          = ui_button_to "Move onto Trip", move_onto_trip_admin_trip_day_trip_signup_path(@trip, signup), method: :patch, variant: :secondary
                   %div{"data-controller" => "modal"}
-                    %button.button.danger.secondary.admin-table-action-button{"data-action" => "modal#open", type: "button"} Remove
+                    = ui_button("Remove", variant: :danger_secondary, class: "admin-table-action-button", "data-action" => "modal#open", type: "button")
                     %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                       .confirmation-modal-content
                         %div
                           %h2 Remove #{signup.user.full_name} from the waitlist?
                           %p This removes the participant from the trip waitlist.
-                        .form-actions
-                          %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
-                          = button_to "Remove", remove_admin_trip_day_trip_signup_path(@trip, signup), method: :delete, class: "button danger"
+                        = ui_actions(kind: :form) do
+                          = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", type: "button")
+                          = ui_button_to "Remove", remove_admin_trip_day_trip_signup_path(@trip, signup), method: :delete, variant: :danger
 - elsif @trip.class_trip?
-  %section.panel.day-trip-participants-panel.class-trip-participants-panel
+  = ui_panel(class: "day-trip-participants-panel class-trip-participants-panel") do
     .panel-header
       %div
         %h2 Participants
@@ -336,26 +328,26 @@
               %td.admin-record-title{role: "cell"}= signup.user.full_name
               %td{role: "cell", "data-label" => "Email"}= signup.user.email.presence || "None"
               - if !@trip.deleted? && policy(@trip).manage_participants?
-                %td.table-actions.day-trip-admin-participant-actions{role: "cell"}
+                = ui_actions(tag: :td, kind: :table, class: "day-trip-admin-participant-actions", role: "cell") do
                   %div{"data-controller" => "modal"}
-                    %button.button.danger.secondary.admin-table-action-button{"data-action" => "modal#open", type: "button"} Remove
+                    = ui_button("Remove", variant: :danger_secondary, class: "admin-table-action-button", "data-action" => "modal#open", type: "button")
                     %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                       .confirmation-modal-content
                         %div
                           %h2 Remove #{signup.user.full_name} from this class?
                           %p This removes the participant from the class intent roster.
-                        .form-actions
-                          %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
-                          = button_to "Remove", remove_admin_trip_class_signup_path(@trip, signup), method: :delete, class: "button danger"
+                        = ui_actions(kind: :form) do
+                          = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", type: "button")
+                          = ui_button_to "Remove", remove_admin_trip_class_signup_path(@trip, signup), method: :delete, variant: :danger
     - else
       %p.muted No participants have signed up yet.
 - else
-  %section.panel.campsites-panel
+  = ui_panel(class: "campsites-panel") do
     .panel-header.campsites-panel-header
       %div
         %h2 Campsites
       - if !@trip.deleted? && policy(@trip).manage_campsites?
-        = link_to "Add campsite", new_admin_trip_campsite_path(@trip), class: "button secondary"
+        = ui_link "Add campsite", new_admin_trip_campsite_path(@trip), variant: :secondary
     - if @campsites.any?
       .admin-campsite-list
         - @campsites.each do |campsite|
@@ -400,44 +392,44 @@
                   %p
                     %strong Signup mode:
                     - if campsite.signups_locked?
-                      %span.status.warning-status Waitlist mode
+                      = ui_badge("Waitlist mode", tone: :warning)
                     - elsif campsite.capacity_full? && campsite.direct_signups_enabled_until_full?
-                      %span.status.success-status Direct signup when space opens
+                      = ui_badge("Direct signup when space opens", tone: :success)
                     - else
-                      %span.status.success-status Direct signup until full
+                      = ui_badge("Direct signup until full", tone: :success)
                   - if !@trip.deleted? && policy(@trip).manage_campsites?
                     %div{"data-controller" => "modal"}
                       - if campsite.signups_locked?
-                        %button.button.secondary.campsite-signup-mode-button{"data-action" => "modal#open", type: "button"} Disable Waitlist Mode
+                        = ui_button("Disable Waitlist Mode", variant: :secondary, class: "campsite-signup-mode-button", "data-action" => "modal#open", type: "button")
                         %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                           .confirmation-modal-content
                             %div
                               %h2 Disable Waitlist Mode for #{campsite.campground.name} site #{campsite.site_number}?
                               %p New participants or participants already on the trip waitlist will be able to claim open spaces directly.
                               %p The campsite will automatically return to waitlist mode when it fills again.
-                            .form-actions
-                              %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
-                              = button_to "Disable Waitlist Mode", enable_direct_signups_admin_trip_campsite_path(@trip, campsite), method: :patch, class: "button"
+                            = ui_actions(kind: :form) do
+                              = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", type: "button")
+                              = ui_button_to "Disable Waitlist Mode", enable_direct_signups_admin_trip_campsite_path(@trip, campsite), method: :patch, variant: :primary
                       - else
-                        %button.button.secondary.campsite-signup-mode-button{"data-action" => "modal#open", type: "button"} Use Waitlist Mode
+                        = ui_button("Use Waitlist Mode", variant: :secondary, class: "campsite-signup-mode-button", "data-action" => "modal#open", type: "button")
                         %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                           .confirmation-modal-content
                             %div
                               %h2 Use waitlist mode for #{campsite.campground.name} site #{campsite.site_number}?
                               %p Participants will need to join the trip waitlist instead of claiming open spaces directly.
                               %p Existing waitlist participants and their eligibility will not change.
-                            .form-actions
-                              %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
-                              = button_to "Use Waitlist Mode", enable_waitlist_mode_admin_trip_campsite_path(@trip, campsite), method: :patch, class: "button"
-                .table-actions.campsite-action-buttons
+                            = ui_actions(kind: :form) do
+                              = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", type: "button")
+                              = ui_button_to "Use Waitlist Mode", enable_waitlist_mode_admin_trip_campsite_path(@trip, campsite), method: :patch, variant: :primary
+                = ui_actions(kind: :table, class: "campsite-action-buttons") do
                   - if !@trip.deleted? && policy(@trip).manage_participants?
                     = render "add_participant_modal", trip: @trip, campsite: campsite, users: @users, trip_participant_user_ids: @trip_participant_user_ids
                   - if !@trip.deleted? && policy(@trip).manage_campsites?
-                    = link_to "Edit Campsite", edit_admin_trip_campsite_path(@trip, campsite), class: "button secondary"
+                    = ui_link "Edit Campsite", edit_admin_trip_campsite_path(@trip, campsite), variant: :secondary
               - if policy(@trip).manage_payments?
                 .campsite-fee-summary
                   = render "registration_reimbursement_status", trip: @trip, campsite: campsite, users: @users
-            .stats.campsite-stats
+            = ui_stats(class: "campsite-stats") do
               - if campsite.confirmed_uncounted_minor_count.positive?
                 .split-signup-stat
                   %section
@@ -451,15 +443,9 @@
                         %span.info-tooltip-box{role: "tooltip"}= uncounted_minor_tooltip
                     %strong= campsite.confirmed_uncounted_minor_count
               - else
-                %div
-                  %span Signed up
-                  %strong= campsite.confirmed_signup_count
-              %div{:class => "availability-stat #{campsite.capacity_full? ? "danger-stat" : "success-stat"}"}
-                %span Open Spaces
-                %strong= campsite.available_participant_capacity
-              %div
-                %span Total Capacity
-                %strong= campsite.participant_capacity
+                = ui_stat(label: "Signed up", value: campsite.confirmed_signup_count)
+              = ui_stat(label: "Open Spaces", value: campsite.available_participant_capacity, tone: (campsite.capacity_full? ? :danger : :success))
+              = ui_stat(label: "Total Capacity", value: campsite.participant_capacity)
               .parking-stat
                 %span Parking
                 .parking-breakdown
@@ -490,7 +476,7 @@
         = render "signup_table", signups: @waitlisted_signups, waitlist: true, trip: @trip, campsites: @campsites, read_only: @trip.deleted? || !policy(@trip).manage_participants?
 - if @trip.camping? && policy(@trip).manage_payments?
   = render "payment_requests_panel", trip: @trip, payment_requests: @trip_payment_requests, modal_payment_request: @trip_payment_request
-  %section.panel.trip-expenses-panel
+  = ui_panel(class: "trip-expenses-panel") do
     .panel-header
       %div
         %h2 Trip Expenses
@@ -515,9 +501,9 @@
               %td{role: "cell", "data-label" => "Refunded By"}= refund.refunded_by&.full_name || "None"
               %td{role: "cell", "data-label" => "Reason"}= refund.reason.presence || "None"
               %td{role: "cell", "data-label" => "Date of Refund"}= refund.refunded_at&.strftime("%-m/%-d/%y") || "None"
-              %td.table-actions{role: "cell"}
+              = ui_actions(tag: :td, kind: :table, role: "cell") do
                 %div{"data-controller" => "payment-details-trigger", "data-payment-details-trigger-payment-id-value" => payment.id}
-                  %button.button.secondary.admin-table-action-button{"data-action" => "payment-details-trigger#open", type: "button"} View
+                  = ui_button("View", variant: :secondary, class: "admin-table-action-button", "data-action" => "payment-details-trigger#open", type: "button")
     - else
       %p.muted No trip expenses recorded yet.
   = render "trip_revenue_panel", summary: @trip_revenue_summary

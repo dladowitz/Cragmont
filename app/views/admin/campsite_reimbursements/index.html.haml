@@ -1,10 +1,10 @@
 = render "admin/shared/header", title: "Campsite Reimbursements"
 
-%section.panel.campsite-reimbursements-panel
+= ui_panel(class: "campsite-reimbursements-panel") do
   .panel-header
     %div
       %h2 Campsite Reimbursements
-    = link_to "Back to Finances", admin_finances_path, class: "button secondary"
+    = ui_link "Back to Finances", admin_finances_path, variant: :secondary
 
   = form_with url: admin_campsite_reimbursements_path, method: :get, class: "campsite-reimbursement-filter-form", data: { turbo: false } do
     = hidden_field_tag :filters, "1"
@@ -15,8 +15,8 @@
       - filter_options << ["Unreimbursed or reimbursed", selected_filter] if selected_filter.include?(",")
       = select_tag "reimbursement_status[]", options_for_select(filter_options, selected_filter), id: "reimbursement_status"
     .campsite-reimbursement-filter-actions
-      = submit_tag "Apply", class: "button"
-      = button_tag "Download CSV Report", type: "submit", name: "format", value: "csv", class: "button secondary"
+      = ui_submit_tag "Apply", variant: :primary
+      = ui_button "Download CSV Report", type: "submit", name: "format", value: "csv", variant: :secondary
 
   - if @campsites_by_trip.any?
     .campsite-reimbursement-groups
@@ -27,7 +27,7 @@
               %h3= trip.name
               %p.muted= "#{trip.start_date.to_fs(:long)}–#{trip.end_date.to_fs(:long)} · #{trip.status.titleize}"
             - if policy(trip).show?
-              = link_to "View Trip", admin_trip_path(trip), class: "button secondary admin-table-action-button"
+              = ui_link "View Trip", admin_trip_path(trip), variant: :secondary, class: "admin-table-action-button"
           .table-wrapper
             %table.campsite-reimbursement-table.admin-record-table{role: "table", "aria-label" => "#{trip.name} campsite reimbursements"}
               %thead

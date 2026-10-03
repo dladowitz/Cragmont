@@ -1,12 +1,12 @@
 = render "admin/shared/header", title: "Finances"
 
-%section.panel
+= ui_panel do
   .panel-header
     %div
       %h2 Finances
       %p.muted Pick the financial task you want to tackle.
 
   .content-action-list.finance-action-list
-    = link_to "Campsite Reimbursements", admin_campsite_reimbursements_path, class: "button secondary"
-    %button.button.secondary{type: "button", disabled: true} Trip Profitability — Coming soon
-    %button.button.secondary{type: "button", disabled: true} TBD — Coming soon
+    = ui_link "Campsite Reimbursements", admin_campsite_reimbursements_path, variant: :secondary
+    = ui_button("Trip Profitability — Coming soon", variant: :secondary, type: "button", disabled: true)
+    = ui_button("TBD — Coming soon", variant: :secondary, type: "button", disabled: true)

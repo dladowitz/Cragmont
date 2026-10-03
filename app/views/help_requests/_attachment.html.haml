@@ -7,7 +7,7 @@
         .panel-header
           %div
             %h2= filename
-          %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+          = ui_button("Close", variant: :secondary, "data-action" => "modal#close", type: "button")
         = image_tag attachment, alt: filename
 - else
   = link_to filename, url_for(attachment), target: "_blank", rel: "noopener"

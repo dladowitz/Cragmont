@@ -1,12 +1,12 @@
 = render "admin/shared/header", title: "Content"
 
-%section.panel
+= ui_panel do
   .panel-header
     %div
       %h2= "Edit #{@content_config.fetch(:title)}"
       %p.muted= @content_config.fetch(:description)
-    .actions
-      = link_to "Back to Content", admin_content_path, class: "button secondary"
+    = ui_actions do
+      = ui_link "Back to Content", admin_content_path, variant: :secondary
 
   - form_data = @content_config.fetch(:markdown) ? { controller: "markdown-preview", markdown_preview_url_value: preview_admin_content_pages_path } : {}
   = form_with model: @site_setting, url: admin_site_content_path(@content_key), method: :patch, class: "admin-form", data: form_data do |form|
@@ -46,6 +46,6 @@
                 = render_content_page_markdown(@site_setting.public_send(@content_attribute))
         - else
           = form.text_area @content_attribute, rows: 10, required: true
-    .form-actions
-      = form.submit "Save content", class: "button"
-      = link_to "Cancel", admin_content_path, class: "button secondary"
+    = ui_actions(kind: :form) do
+      = ui_submit form, "Save content", variant: :primary
+      = ui_link "Cancel", admin_content_path, variant: :secondary

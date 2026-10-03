@@ -1,12 +1,12 @@
 = render "admin/shared/header", title: "#{@trip.name} participant emails"
 
-%section.panel.participant-emails-panel
+= ui_panel(class: "participant-emails-panel") do
   .panel-header
     %div
       %h2 Participant Emails
       %p.muted Copy email lists for #{@trip.name}.
-    .actions
-      = link_to "Back to trip", admin_trip_path(@trip), class: "button secondary"
+    = ui_actions do
+      = ui_link "Back to trip", admin_trip_path(@trip), variant: :secondary
 
 .participant-email-section-grid
   = render "email_section",

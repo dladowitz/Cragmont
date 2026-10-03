@@ -1,11 +1,11 @@
 = render "admin/shared/header", title: "Trip Reports"
 %main
-  %section.panel
+  = ui_panel do
     .panel-header
       %div
         %h2 Trip Reports
         %p.muted Write a story or share a Google Photos album.
-      = link_to "New trip report", new_admin_trip_report_path, class: "button"
+      = ui_link "New trip report", new_admin_trip_report_path, variant: :primary
     = form_with url: admin_trip_reports_path, method: :get, class: "report-filters" do |form|
       .field
         = form.label :q, "Search reports"
@@ -13,7 +13,7 @@
       .field
         = form.label :status, "Status"
         = form.select :status, options_for_select([["All", ""], ["Drafts", "draft"], ["Published", "published"], ["Hidden", "hidden"]], params[:status])
-      = form.submit "Filter", class: "button secondary"
+      = ui_submit form, "Filter", variant: :secondary
     .report-management-list
       - @reports.each do |report|
         %article.report-management-row
@@ -23,8 +23,8 @@
               = report.draft["start_date"]
               - if report.trip&.campsite_coordinator
                 · #{report.trip.campsite_coordinator.full_name}
-            %span.status= report.display_status
-          .actions
+            = ui_badge((report.display_status))
+          = ui_actions do
             - if report.public_payload
               = link_to "View public report", public_report_path(report)
       - if @reports.empty?

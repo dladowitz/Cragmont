@@ -34,7 +34,7 @@
           %td{role: "cell", "data-label" => "Status"}
             - status_label = trip.deleted? ? "Deleted" : trip.status.titleize
             - status_class = trip.deleted? ? "deleted-status" : "#{trip.status}-status"
-            %span{ class: [ "status", status_class ] }= status_label
+            = ui_badge(status_label, class: status_class)
           %td{role: "cell", "data-label" => "Dates"}
             %dl.date-pair
               %div
@@ -48,11 +48,11 @@
           - open_spaces_class = trip.capacity_full? ? "danger-stat" : (trip.almost_full? ? "warning-stat" : "success-stat")
           %td.admin-open-spaces-cell{class: open_spaces_class, role: "cell", "data-label" => "Open spaces"}= trip.available_participant_capacity
           %td{role: "cell", "data-label" => "Capacity"}= trip.total_participant_capacity
-          %td.table-actions{role: "cell", "data-label" => "Actions"}
+          = ui_actions(tag: :td, kind: :table, role: "cell", "data-label" => "Actions") do
             - if trip.camping? && policy(trip).manage_payments?
-              = link_to "Transactions", admin_trip_transactions_path(trip), class: "button secondary admin-table-action-button"
+              = ui_link "Transactions", admin_trip_transactions_path(trip), variant: :secondary, class: "admin-table-action-button"
             - if trip.deleted? && policy(trip).restore?
-              = button_to "Restore", restore_admin_trip_path(trip), method: :patch, class: "button admin-table-action-button"
+              = ui_button_to "Restore", restore_admin_trip_path(trip), method: :patch, variant: :primary, class: "admin-table-action-button"
 - else
   .empty-state
     %p No trips found.

@@ -4,13 +4,13 @@
   %h1.public-mobile-hero-title Reset password
   %span.public-mobile-hero-caption Castleton Tower, Castle Valley, UT
 %main.public-main
-  %section.panel.auth-panel
+  = ui_panel(class: "auth-panel") do
     %h1 Reset password
     = form_with url: password_resets_path, class: "admin-form" do
       .field
         = required_label_tag :email, "Email"
         = email_field_tag :email, params[:email], required: true, autocomplete: "email"
-      .form-actions
+      = ui_actions(kind: :form) do
         = submit_tag "Send reset link"
-        = link_to "Back to log in", new_session_path, class: "button secondary"
+        = ui_link "Back to log in", new_session_path, variant: :secondary
 %p.background-image-caption Castleton Tower, Castle Valley, UT

@@ -1,0 +1,12 @@
+/* Shared UI tokens. Component and page styles consume these values. */
+:root {
+  --bg: #f7f5ef;
+  --panel: #fffefa;
+  --text: #203330;
+  --muted: #586b65;
+  --line: #d5ddd7;
+  --ui-radius: 5px;
+  --accent: #164b40;
+  --accent-dark: #103d34;
+  --danger: #a92e2c;
+}

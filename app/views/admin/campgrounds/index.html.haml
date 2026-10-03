@@ -1,10 +1,10 @@
 = render "admin/shared/header", title: "Campgrounds"
-%section.panel
+= ui_panel do
   .panel-header
     %div
       %h2 Campground directory
       %p Manage the places used by trip campsite reservations.
-    = link_to "New campground", new_admin_campground_path, class: "button"
+    = ui_link "New campground", new_admin_campground_path, variant: :primary
   - if @campgrounds.any?
     %table.admin-record-table{role: "table", "aria-label" => "Campground directory"}
       %thead
@@ -25,4 +25,4 @@
   - else
     .empty-state
       %p No campgrounds have been added yet.
-      = link_to "New campground", new_admin_campground_path, class: "button"
+      = ui_link "New campground", new_admin_campground_path, variant: :primary

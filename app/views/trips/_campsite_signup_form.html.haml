@@ -17,7 +17,7 @@
 - waitlist_signup_has_party = waitlist_signup&.includes_guests? || waitlist_signup&.includes_minors?
 - waitlist_note_text = waitlist_signup_has_party ? "This will move your party from the waitlist to confirmed" : "This will move you from the waitlist to confirmed"
 %div{class: ("waitlist-direct-signup-control" if waitlist_direct_signup), "data-controller" => "modal"}
-  %button.button{"data-action" => "modal#open", :type => "button"}= signup_button_text
+  = ui_button((signup_button_text), variant: :primary, "data-action" => "modal#open", :type => "button")
   %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
     .signup-modal-content
       .campsite-signup-modal-summary

@@ -1,12 +1,12 @@
 = render "admin/shared/header", title: "#{@trip.name} trip details email"
 
-%section.panel.trip-details-email-panel
+= ui_panel(class: "trip-details-email-panel") do
   .panel-header
     %div
       %h2 Trip Details Email Sent
       %p.muted This is the locked copy that went out to participants.
-    .actions
-      = link_to "Back to trip", admin_trip_path(@trip), class: "button secondary"
+    = ui_actions do
+      = ui_link "Back to trip", admin_trip_path(@trip), variant: :secondary
 
   .trip-details-email-sent-summary
     %div
@@ -22,7 +22,7 @@
       %span.muted Sent by
       %strong= @trip_details_email.sent_by&.full_name || "Unknown"
 
-%section.panel.trip-details-email-panel
+= ui_panel(class: "trip-details-email-panel") do
   .panel-header
     %div
       %h2 Recipients
@@ -44,12 +44,12 @@
             %td{role: "cell", "data-label" => "Campsite"}= recipient.campsite_label
             %td{role: "cell", "data-label" => "Status"}
               - status_class = recipient.delivered? ? "success-status" : (recipient.failed? ? "danger-status" : "warning-status")
-              %span.status{class: status_class}= recipient.delivery_status.titleize
+              = ui_badge((recipient.delivery_status.titleize), class: status_class)
             %td{role: "cell", "data-label" => "Delivered"}= recipient.delivered_at&.strftime("%b %-d, %Y %-l:%M %p") || "Not delivered"
   - else
     %p.muted No recipients were recorded.
 
-%section.panel.trip-details-email-panel
+= ui_panel(class: "trip-details-email-panel") do
   .panel-header
     %div
       %h2 Email Body

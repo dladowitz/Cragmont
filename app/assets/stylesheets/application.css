@@ -9,17 +9,6 @@
  * Consider organizing styles into separate files for maintainability.
  */
 
-:root {
-  --bg: #f7f5ef;
-  --panel: #ffffff;
-  --text: #1f2933;
-  --muted: #667085;
-  --line: #dedbd2;
-  --accent: #2f6f5e;
-  --accent-dark: #245548;
-  --danger: #b42318;
-}
-
 * {
   box-sizing: border-box;
 }
@@ -235,8 +224,7 @@ textarea {
   font: inherit;
 }
 
-.admin-header,
-.panel {
+.admin-header {
   width: min(1280px, calc(100% - 32px));
   margin-inline: auto;
 }
@@ -305,27 +293,6 @@ textarea {
   flex-wrap: wrap;
   gap: 14px;
   align-items: center;
-}
-
-.site-name {
-  display: inline-grid;
-  gap: 0;
-  color: var(--text);
-  line-height: 0.95;
-  text-decoration: none;
-}
-
-.site-name span {
-  font-size: 1.65rem;
-  font-weight: 800;
-}
-
-.site-name small {
-  color: var(--muted);
-  font-size: 1rem;
-  font-weight: 800;
-  letter-spacing: 0;
-  text-transform: uppercase;
 }
 
 .public-beta-notice {
@@ -544,9 +511,7 @@ body.trips-index-page .trips-index-notices .public-beta-notice {
 }
 
 .admin-nav a,
-.admin-public-link,
-.button,
-input[type="submit"] {
+.admin-public-link {
   display: inline-flex;
   align-items: center;
   min-height: 40px;
@@ -560,27 +525,10 @@ input[type="submit"] {
   text-decoration: none;
 }
 
-.button.secondary,
 .admin-nav a,
 .admin-public-link {
   background: #fff;
   color: var(--accent-dark);
-}
-
-.button.danger {
-  border-color: var(--danger);
-  background: var(--danger);
-}
-
-.button.danger.secondary {
-  background: #fff;
-  color: var(--danger);
-}
-
-.button:disabled,
-input[type="submit"]:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
 }
 
 .public-main {
@@ -739,14 +687,6 @@ body.home-page .nav-button {
 body.trips-index-page .public-liability-warning,
 body.trip-show-page .public-liability-warning {
   width: 100%;
-}
-
-.panel {
-  margin-bottom: 24px;
-  padding: 24px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel);
 }
 
 .public-main > .panel {
@@ -1613,14 +1553,6 @@ body.trip-show-page .trip-resource-links {
   margin: 0;
 }
 
-.actions,
-.form-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-}
-
 .trip-readiness-summary-button {
   gap: 10px;
 }
@@ -1629,10 +1561,6 @@ body.trip-show-page .trip-resource-links {
   padding: 2px 7px;
   font-size: 0.82rem;
   line-height: 1;
-}
-
-.form-actions .danger-form-action {
-  margin-left: auto;
 }
 
 .hidden-delete-form {
@@ -1646,24 +1574,6 @@ body.trip-show-page .trip-resource-links {
 
 .disabled-modal-trigger .button:disabled {
   pointer-events: none;
-}
-
-.table-actions {
-  white-space: nowrap;
-}
-
-.table-actions a,
-.table-actions form {
-  display: inline-block;
-}
-
-.table-actions form {
-  margin-left: 10px;
-}
-
-.table-actions [data-controller="modal"] {
-  display: inline-block;
-  margin-left: 10px;
 }
 
 .admin-campsite-card-header .table-actions > [data-controller="modal"]:first-child {
@@ -2227,10 +2137,6 @@ body.trip-show-page .trip-resource-links {
   padding-top: 2px;
 }
 
-.campsite-stats {
-  margin-top: 0;
-}
-
 .campsite-notes {
   margin: 0;
 }
@@ -2293,25 +2199,6 @@ body.trip-show-page .trip-resource-links {
 
 .campground-group:first-of-type {
   margin-top: 0;
-}
-
-.stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-  margin-top: 20px;
-}
-
-.stats > div {
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fbfaf7;
-}
-
-.stats strong {
-  display: block;
-  font-size: 1.8rem;
 }
 
 .day-trip-admin-details {
@@ -2388,29 +2275,6 @@ body.trip-show-page .trip-resource-links {
   font-size: 1rem;
 }
 
-.stats .availability-stat strong,
-.stats .availability-stat span {
-  color: inherit;
-}
-
-.stats .success-stat {
-  border-color: #9bd0ba;
-  background: #ecf8f2;
-  color: var(--accent);
-}
-
-.stats .warning-stat {
-  border-color: #efd77a;
-  background: #fff8db;
-  color: #936100;
-}
-
-.stats .danger-stat {
-  border-color: #f4b6ae;
-  background: #fff1f0;
-  color: var(--danger);
-}
-
 .admin-open-spaces-cell {
   box-shadow: inset 4px 0 0 currentColor;
   font-weight: 850;
@@ -2431,7 +2295,6 @@ body.trip-show-page .trip-resource-links {
   color: var(--danger);
 }
 
-.stats span,
 td span {
   display: block;
   color: var(--muted);
@@ -2686,30 +2549,6 @@ body.help-request-show-page .help-admin-detail h1 {
 .help-subscriber-form {
   max-width: 520px;
   margin-bottom: 22px;
-}
-
-.status-pill {
-  display: inline-flex;
-  width: fit-content;
-  padding: 4px 8px;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 800;
-}
-
-.open-status {
-  background: #fff8db;
-  color: #936100;
-}
-
-.replied-status {
-  background: #ecf8f2;
-  color: var(--accent-dark);
-}
-
-.resolved-status {
-  background: #eef4ff;
-  color: #1f5fbf;
 }
 
 body.trips-index-page .trips-index-panel {
@@ -4810,31 +4649,6 @@ th {
   box-sizing: border-box;
 }
 
-.status {
-  display: inline-block;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: #e7f1ed;
-  color: var(--accent-dark);
-  font-size: 0.85rem;
-  font-weight: 750;
-}
-
-.trip-type-badge.external-class-badge {
-  background: #fff3bf;
-  color: #7c4a03;
-}
-
-.trip-type-badge.day-trip-badge {
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
-.trip-type-badge.gym-outing-badge {
-  background: #ffedd5;
-  color: #9a3412;
-}
-
 .missing-value {
   color: var(--danger);
   font-weight: 750;
@@ -4949,21 +4763,6 @@ th {
 
 .payment-success-waiver-links .copy-link-button {
   vertical-align: middle;
-}
-
-.danger-status {
-  background: #fff1f0;
-  color: var(--danger);
-}
-
-.success-status {
-  background: #ecf8f2;
-  color: var(--accent);
-}
-
-.warning-status {
-  background: #fff8db;
-  color: #936100;
 }
 
 .trip-readiness-overview,
@@ -5359,26 +5158,6 @@ th {
   .trip-readiness-trip-checks {
     padding-left: 0;
   }
-}
-
-.draft-status {
-  background: #fff8db;
-  color: #936100;
-}
-
-.waitlisted-status {
-  background: #fff8db;
-  color: #936100;
-}
-
-.archived-status {
-  background: #eef4ff;
-  color: #1f5fbf;
-}
-
-.deleted-status {
-  background: #fff1f0;
-  color: var(--danger);
 }
 
 .admin-form {

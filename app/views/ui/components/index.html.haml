@@ -1,0 +1,38 @@
+- content_for :title, "UI components | Cragmont"
+= render "shared/public_header"
+%main.public-main
+  = ui_panel do
+    %h1 UI components
+    %p Shared components used by public and admin pages. This catalog is available only in development and tests.
+  = ui_panel do
+    %h2 Badges
+    = ui_actions do
+      - Ui::BadgeComponent::TONES.each_key do |tone|
+        = ui_badge(tone.to_s.humanize, tone: tone, class: ("trip-type-badge" if %i[day_trip gym_outing external_class].include?(tone)))
+  = ui_panel do
+    %h2 Buttons
+    = ui_actions do
+      - Ui::ButtonComponent::VARIANTS.each_key do |variant|
+        = ui_button(variant.to_s.humanize, type: :button, variant: variant)
+        = ui_button("Disabled #{variant.to_s.humanize}", type: :button, variant: variant, disabled: true)
+    %p Buttons retain native keyboard behavior; navigation uses links and mutations use Rails forms.
+    = ui_actions do
+      = ui_link "Trips", trips_path, variant: :secondary
+      = ui_button(type: :button, variant: :secondary, aria: {label: "Nested content example"}) do
+        %strong Nested content
+  = ui_panel do
+    %h2 Stats
+    = ui_stats do
+      = ui_stat(label: "Participants", value: 12)
+      = ui_stat(label: "Open spaces", value: 8, tone: :success)
+      = ui_stat(label: "Open spaces", value: 1, tone: :warning)
+      = ui_stat(label: "Open spaces", value: 0, tone: :danger)
+  = ui_panel do
+    %h2 Form actions
+    = form_with url: ui_components_path, method: :get, class: "admin-form" do |form|
+      .field
+        = required_label form, :example, "Example label"
+        = form.text_field :example, required: true
+      = ui_actions(kind: :form) do
+        = ui_submit form, "Preview"
+        = ui_link "Cancel", ui_components_path, variant: :secondary
