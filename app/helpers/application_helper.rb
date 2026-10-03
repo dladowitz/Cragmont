@@ -172,6 +172,10 @@ module ApplicationHelper
     "$#{value}"
   end
 
+  def trip_type_badge(trip)
+    tag.span(public_trip_type_label(trip), class: [ "status", "trip-type-badge", public_trip_type_badge_class(trip) ])
+  end
+
   def public_trip_type_label(trip)
     trip.class_trip? ? "External Class" : trip.trip_type_label
   end

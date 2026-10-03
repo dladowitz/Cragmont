@@ -3,6 +3,19 @@ require "fileutils"
 require "tmpdir"
 
 class ApplicationHelperTest < ActionView::TestCase
+  test "trip type badges use the same labels and semantic colors everywhere" do
+    {
+      "camping" => [ "Camping Trip", nil ],
+      "day_trip" => [ "Day Trip", "day-trip-badge" ],
+      "gym_outing" => [ "Gym Outing", "gym-outing-badge" ],
+      "class_trip" => [ "External Class", "external-class-badge" ]
+    }.each do |type, (label, variant)|
+      badge = Nokogiri::HTML.fragment(trip_type_badge(Trip.new(trip_type: type))).at_css("span")
+      assert_equal label, badge.text
+      assert_equal [ "status", "trip-type-badge", variant ].compact, badge["class"].split
+    end
+  end
+
   test "end times distinguish overnight outings without inventing missing times" do
     trip = Trip.new(meeting_time: "18:00", end_time: "20:00")
     assert_equal "8:00pm", formatted_trip_end_time(trip)

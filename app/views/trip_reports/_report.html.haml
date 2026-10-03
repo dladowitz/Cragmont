@@ -20,7 +20,7 @@
   - unless local_assigns[:hide_heading]
     %h2= payload["title"]
   - unless report.legacy_key.present?
-    %span.status.trip-type-badge{class: h(public_trip_type_badge_class(Trip.new(trip_type: payload["trip_type"])))}= Trip::TRIP_TYPE_LABELS[payload["trip_type"]]
+    = trip_type_badge(Trip.new(trip_type: payload["trip_type"]))
     %p.report-meta
       = Date.iso8601(payload["start_date"]).to_fs(:long)
       - if payload["end_date"].present? && payload["end_date"] != payload["start_date"]

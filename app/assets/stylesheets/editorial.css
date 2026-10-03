@@ -302,7 +302,7 @@ body.trips-index-page .trips-index-notices .calendar-subscription-notice {
 .calendar-subscription-notice p + p { margin-top: 6px; }
 .public-beta-notice, .public-liability-warning, .empty-state,
 .form-errors, .user-form-section, .note,
-.trip-card, .archived-trip-row, .campsite-card, .admin-campsite-card {
+.trip-card, .campsite-card, .admin-campsite-card {
   border-radius: var(--ui-radius);
   box-shadow: none;
 }
@@ -329,7 +329,7 @@ body.trips-index-page .trips-index-notices .calendar-subscription-notice {
 .club-history-sources { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); font-size: .95rem; }
 .club-history-sources h3 { margin-top: 0; }
 .club-form { display: block; width: 100%; height: 1600px; margin-top: 20px; border: 1px solid var(--line); border-radius: var(--ui-radius); }
-.archived-trips-panel, .club-archive { position: relative; z-index: 2; }
+.trips-index-panel, .club-archive { position: relative; z-index: 2; }
 .club-archive { margin-top: 24px; }
 .club-archive > .muted { margin-bottom: 24px; }
 .club-archive h1 { margin: 0 0 16px; }
@@ -412,27 +412,26 @@ body.trips-index-page .trips-index-notices .calendar-subscription-notice {
   box-shadow: none;
   transform: none;
 }
-.archived-trip-row:hover, .archived-trip-row:focus-visible {
-  border-color: var(--accent);
-  box-shadow: none;
-  transform: none;
-}
-.trip-card:focus-visible, .archived-trip-row:focus-visible {
+.trip-card:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 3px;
 }
 .trip-card h2, .trip-card h3, .row-title { font-weight: 500; }
-.trip-card h2, .archived-trip-row h3 { text-decoration: none; }
-.trip-card:hover h2, .trip-card:focus-visible h2,
-.archived-trip-row:hover h3, .archived-trip-row:focus-visible h3 { color: var(--accent-dark); }
-.status, .status-pill, .trip-type-badge {
+.trip-card h2 { text-decoration: none; }
+.trip-card:hover h2, .trip-card:focus-visible h2 { color: var(--accent-dark); }
+.status, .status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 7px;
+  line-height: 1.5;
   border-radius: var(--ui-radius);
-  font-size: .9rem;
+  font-size: .72rem;
   font-weight: 600;
-  letter-spacing: .06em;
+  letter-spacing: .035em;
   text-transform: uppercase;
 }
-.trip-type-badge { padding: 4px 9px; background: #e7f1ed; }
+.trip-type-badge { background: #e7f1ed; }
 .status.danger-status { color: var(--danger); }
 .status.warning-status { color: #91621c; }
 .stats > div { border-radius: var(--ui-radius); }
@@ -766,7 +765,7 @@ table { max-width: 100%; }
 }
 
 @media (max-width: 760px) {
-  :is(.trip-card-meta, .archived-trip-meta) dd { min-width: 0; text-align: right; }
+  .trip-card-meta dd { min-width: 0; text-align: right; }
   .admin-trip-resources-panel .admin-resource-link { grid-template-columns: minmax(0, 1fr); }
   .admin-resource-link > dt, .admin-resource-link .resource-url { display: none; }
   .admin-resource-link .resource-name { display: inline; }
@@ -901,8 +900,6 @@ table { max-width: 100%; }
 .admin-api-note { margin-top: 32px; font-size: .85rem; }
 .trip-card-meta div { grid-template-columns: minmax(max-content, 7.5rem) minmax(0, 1fr); }
 .trip-card-meta dt { white-space: nowrap; }
-.trips-index-page .trip-card .status,
-.admin-trips-table .status { font-size: .72rem; letter-spacing: .035em; padding: 3px 7px; }
 .admin-trips-table .admin-table-action-button { font-size: .8rem; padding: 6px 10px; min-height: 36px; }
 .campsite-card, .admin-campsite-card { border-left: 4px solid var(--accent); }
 .report-section-divider { border: 0; border-top: 1px solid var(--line); margin: 28px 0; }
@@ -940,8 +937,8 @@ table { max-width: 100%; }
   .panel > .admin-form > .form-actions > .danger-form-action :is(.button, [data-controller="modal"], .disabled-tooltip, .disabled-modal-trigger) { width: 100%; margin-inline: 0; }
   .panel > .admin-form > .form-actions > :only-child { grid-column: 1 / -1; }
   :is(.signup-modal, .confirmation-modal) .form-actions > form { width: 100%; margin: 0; }
-  body.trips-index-page :is(.trips-index-panel, .archived-trips-panel) { background: transparent; }
-  body.trips-index-page .archived-trips-panel > .panel-header { margin-bottom: 0; }
+  body.trips-index-page .trips-index-panel { background: transparent; }
+  body.trips-index-page #archived-trips > .panel-header { margin-bottom: 0; }
   .trip-list-empty {
     margin: 0;
     padding: 12px 14px;

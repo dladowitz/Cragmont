@@ -91,6 +91,8 @@ Before calling a new page finished, check it at approximately **360px, 760px, an
 
 ## October club review
 
+Trips and Past Trips render the same `trips/listing` and `trips/card` partials: use the same headings, surfaces, spacing, metadata alignment, and responsive behavior. Only the page title, notices, pagination, report links, and relevant metadata differ. Render every trip-type badge through `trip_type_badge`; keep badge typography and padding in the shared `.status`/`.status-pill` rule, with no page-specific size overrides.
+
 Keep trip-list badges and admin table badges/actions subordinate to trip names. Label availability Open Spaces. Campsite cards retain their green left border and a right inset on mobile. Report covers use a light gray background and no duplicate View photos link. Report titles provide the edit link in the admin list; Cancel and historical-report actions use secondary buttons. Place robot API documentation below the trip table. Preserve the original About text (without the outdated member count), the complete Steve Roper History reprint and all four archive photos, and the supplied Membership wording.
 
 On mobile trip lists, keep the outer section transparent. Empty-state notes use inset white cards with the same rounded corners, padding, and side alignment as the liability card. Keep Open Spaces on one line with enough label-column width.

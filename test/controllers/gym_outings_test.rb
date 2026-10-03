@@ -152,7 +152,7 @@ class GymOutingsTest < ActionDispatch::IntegrationTest
 
     get past_trips_trips_url
     assert_response :success
-    assert_select ".archived-trip-row[href='#{trip_path(@trip)}']" do
+    assert_select ".trip-card[href='#{trip_path(@trip)}']" do
       assert_select "dt", text: "Participants"
       assert_select "dd", text: "1"
       assert_select "dt", text: "Sites", count: 0

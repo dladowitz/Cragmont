@@ -56,7 +56,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select "a", text: "View trip", count: 0
     assert_select "nav.public-nav a[href='#{past_trips_path}']", text: "Past Trips"
     assert_select "main a[href='#{past_trips_trips_path}']", count: 0
-    assert_select ".archived-trips-panel", count: 0
+    assert_select "#archived-trips", count: 0
     assert_select ".trips-faq-callout a[href='#{what_to_expect_trips_path}']", text: "camping trips"
     assert_select ".trips-faq-callout a[href='#{day_trip_what_to_expect_trips_path}']", text: "day trips."
     assert_select ".calendar-subscription-notice p", count: 1
@@ -834,22 +834,22 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     get trips_url
 
     assert_response :success
-    assert_select ".archived-trips-panel", count: 0
+    assert_select "#archived-trips", count: 0
     archived_trips.each do |trip|
-      assert_select ".archived-trip-row[href='#{trip_path(trip)}']", count: 0
+      assert_select ".trip-card[href='#{trip_path(trip)}']", count: 0
     end
 
     get past_trips_trips_url
 
     assert_response :success
-    assert_select ".archived-trips-panel" do
+    assert_select "#archived-trips" do
       assert_select "h1", "Past Trips"
-      assert_select "h2.visually-hidden", "Recent trips"
+      assert_select ".trip-card h2", count: 5
       assert_select "a[href='#{trips_path}']", count: 0
       archived_trips[1..5].each do |trip|
-        assert_select ".archived-trip-row[href='#{trip_path(trip)}'] h3", text: trip.name
+        assert_select ".trip-card[href='#{trip_path(trip)}'] h2", text: trip.name
       end
-      assert_select ".archived-trip-row[href='#{trip_path(archived_trips.first)}']", count: 0
+      assert_select ".trip-card[href='#{trip_path(archived_trips.first)}']", count: 0
       assert_select ".pagination-summary", "Page 1 of 2"
       assert_select "a[href='#{past_trips_trips_path(archived_page: 2, anchor: "archived-trips")}']", text: "Next"
     end
@@ -857,10 +857,10 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     get past_trips_trips_url(archived_page: 2)
 
     assert_response :success
-    assert_select ".archived-trips-panel" do
-      assert_select ".archived-trip-row[href='#{trip_path(archived_trips.first)}'] h3", text: archived_trips.first.name
+    assert_select "#archived-trips" do
+      assert_select ".trip-card[href='#{trip_path(archived_trips.first)}'] h2", text: archived_trips.first.name
       archived_trips[1..5].each do |trip|
-        assert_select ".archived-trip-row[href='#{trip_path(trip)}']", count: 0
+        assert_select ".trip-card[href='#{trip_path(trip)}']", count: 0
       end
       assert_select ".pagination-summary", "Page 2 of 2"
       assert_select "a[href='#{past_trips_trips_path(archived_page: 1, anchor: "archived-trips")}']", text: "Previous"
