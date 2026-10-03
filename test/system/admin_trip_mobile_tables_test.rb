@@ -126,6 +126,18 @@ class AdminTripMobileTablesTest < ApplicationSystemTestCase
     controls.evaluate_script("this.scrollIntoView({block: 'center', behavior: 'instant'})")
     save_screenshot(Rails.root.join("tmp/screenshots/campsite-actions-#{width}.png"))
     assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
+    mode.click
+    within "dialog[open]" do
+      if width <= 760
+        actions = find(".form-actions")
+        actions.all("button", count: 2).each do |button|
+          assert_in_delta actions.native.rect.x, button.native.rect.x, 1
+          assert_in_delta actions.native.rect.width, button.native.rect.width, 1
+        end
+      end
+      click_button "Cancel", exact: true
+    end
+    assert_no_selector "dialog[open]"
   end
 
   def assert_record_tables_fit(width, *selectors)

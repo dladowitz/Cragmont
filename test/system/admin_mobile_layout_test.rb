@@ -174,6 +174,40 @@ class AdminMobileLayoutTest < ApplicationSystemTestCase
     end
   end
 
+  test "form footers align on phones and album settings keep their checkbox beside the label" do
+    create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
+    [ edit_admin_trip_campsite_path(trips(:yosemite), campsites(:yosemite_a)),
+      edit_admin_trip_path(trips(:yosemite)), edit_admin_user_path(users(:sam)), new_admin_trip_report_path ].each do |path|
+      [ 344, 390, 768, 1440 ].each do |width|
+        page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: 900, deviceScaleFactor: 1, mobile: false)
+        visit path
+        assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
+        if width <= 760
+          actions = find(".panel > .admin-form > .form-actions")
+          buttons = actions.all(":scope > .button, :scope > input[type='submit']", count: 2)
+          assert_in_delta buttons.first.native.rect.width, buttons.last.native.rect.width, 1
+          assert_in_delta buttons.first.native.rect.y, buttons.last.native.rect.y, 1
+          assert_in_delta actions.native.rect.x, buttons.first.native.rect.x, 1
+          assert_in_delta actions.native.rect.x + actions.native.rect.width, buttons.last.native.rect.x + buttons.last.native.rect.width, 1
+          actions.all(".danger-form-action .button").each do |button|
+            assert_in_delta actions.native.rect.x, button.native.rect.x, 1
+            assert_in_delta actions.native.rect.width, button.native.rect.width, 1
+          end
+        end
+        next unless path == edit_admin_trip_path(trips(:yosemite))
+
+        setting = find(".report-auto-setting")
+        checkbox = setting.find("input[type='checkbox']")
+        copy = setting.find("label span")
+        assert_operator copy.native.rect.x, :>, checkbox.native.rect.x + checkbox.native.rect.width
+        assert_in_delta copy.native.rect.y, checkbox.native.rect.y, 4
+        before = checkbox.checked?
+        copy.click
+        assert_equal !before, checkbox.checked?
+      end
+    end
+  end
+
   test "admin directories and user history show complete records without sideways scrolling" do
     User.create!(first_name: "Alexandria", last_name: "Very-Long-Climbing-Partner-Name",
       email: "alexandria.very-long-climbing-partner-name@example.com", password: "password")

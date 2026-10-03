@@ -373,6 +373,9 @@ body.trips-index-page .trips-index-notices .calendar-subscription-notice {
 .report-edit-photo .actions { gap: 6px; margin-top: 8px; }
 .report-edit-photo .button { min-width: 44px; min-height: 44px; font-size: .85rem; padding: 6px 10px; }
 .report-auto-setting { flex-basis: 100%; }
+.report-auto-setting .checkbox-field { align-items: flex-start; }
+.report-auto-setting input[type="checkbox"] { flex: 0 0 18px; margin: 3px 0 0; }
+.report-auto-setting > p { margin: 0; padding-left: 26px; }
 .report-editor [role="alert"] { color: var(--danger); }
 @media (max-width: 900px) {
   .trip-report-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -927,6 +930,16 @@ table { max-width: 100%; }
 }
 
 @media (max-width: 760px) {
+  .panel > .admin-form > .form-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+  .panel > .admin-form > .form-actions > :is(.button, input[type="submit"]) { width: 100%; min-width: 0; padding-inline: 10px; white-space: normal; }
+  .panel > .admin-form > .form-actions > .danger-form-action { grid-column: 1 / -1; width: 100%; margin-left: 0; }
+  .panel > .admin-form > .form-actions > .danger-form-action :is(.button, [data-controller="modal"], .disabled-tooltip, .disabled-modal-trigger) { width: 100%; margin-inline: 0; }
+  .panel > .admin-form > .form-actions > :only-child { grid-column: 1 / -1; }
+  :is(.signup-modal, .confirmation-modal) .form-actions > form { width: 100%; margin: 0; }
   body.trips-index-page :is(.trips-index-panel, .archived-trips-panel) { background: transparent; }
   body.trips-index-page .archived-trips-panel > .panel-header { margin-bottom: 0; }
   .trip-list-empty {
