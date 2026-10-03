@@ -283,6 +283,18 @@ class EditorialVisualTest < ApplicationSystemTestCase
       end
       save_screenshot(Rails.root.join("tmp/screenshots/admin-reports-#{width}.png")) if [ 1176, 390 ].include?(width)
     end
+    visit admin_trips_path
+    [ 1440, 390 ].each do |width|
+      page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: 900, deviceScaleFactor: 1, mobile: width <= 760)
+      buttons = all(".admin-trips-table a.button", text: "Transactions", minimum: 1)
+      buttons.each do |button|
+        assert_in_delta(width > 980 ? 36 : 44, button.native.rect.height, 1)
+        assert_includes %w[flex inline-flex], button.native.css_value("display")
+        assert_equal "center", button.native.css_value("align-items")
+      end
+      buttons.first.evaluate_script("this.scrollIntoView({block: 'center', behavior: 'instant'})")
+      save_screenshot(Rails.root.join("tmp/screenshots/transactions-buttons-#{width}.png"))
+    end
   ensure
     page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
   end

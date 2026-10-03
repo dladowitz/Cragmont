@@ -446,6 +446,7 @@ th { border-bottom-color: var(--text); color: var(--muted); font-size: .88rem; f
 td { border-bottom-color: var(--line); }
 table { max-width: 100%; }
 .admin-table-action-button, .trip-status-filters legend { font-size: .9rem; }
+.table-actions a.button { display: inline-flex; align-items: center; justify-content: center; }
 .admin-user-phone { white-space: nowrap; }
 
 .trip-filter-disclosure {
@@ -858,7 +859,7 @@ table { max-width: 100%; }
 .trip-card-meta div { grid-template-columns: 100px minmax(0, 1fr); }
 .trips-index-page .trip-card .status,
 .admin-trips-table .status { font-size: .72rem; letter-spacing: .035em; padding: 3px 7px; }
-.admin-trips-table .admin-table-action-button { font-size: .8rem; padding: 8px 10px; min-height: 44px; }
+.admin-trips-table .admin-table-action-button { font-size: .8rem; padding: 6px 10px; min-height: 36px; }
 .campsite-card, .admin-campsite-card { border-left: 4px solid var(--accent); }
 .report-section-divider { border: 0; border-top: 1px solid var(--line); margin: 28px 0; }
 .club-history-photos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin: 28px 0; }
@@ -869,6 +870,7 @@ table { max-width: 100%; }
   .trip-summary-copy .trip-title-line > .status { align-self: center; margin-block: 0; }
 }
 @media (max-width: 980px) {
+  .admin-trips-table .admin-table-action-button { min-height: 44px; }
   .admin-mode-label { flex-basis: 100%; order: 3; font-size: .95rem; }
   .admin-brand { gap: 16px; }
 }

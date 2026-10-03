@@ -96,3 +96,5 @@ Keep trip-list badges and admin table badges/actions subordinate to trip names. 
 On mobile trip lists, keep the outer section transparent. Empty-state notes use inset white cards with the same rounded corners, padding, and side alignment as the liability card. Keep Open Spaces on one line with enough label-column width.
 
 Keep the two logo lines separated with a full line height and a small gap. Center desktop trip badges against the title’s visible capital-letter height. Report cards use one compact thumbnail each, with a scenic sample thumbnail when no photo exists; full report galleries use evenly sized tiles. On mobile, campsite, partner-board, and coordinator cards share a 1px outline with a 4px colored left accent.
+
+Keep table action links as flex buttons so labels center vertically. Trip-list actions are compact on desktop (36px minimum height) and retain a 44px tap target on mobile.
