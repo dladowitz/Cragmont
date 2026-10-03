@@ -9,7 +9,7 @@
   .trip-show-mobile-hero-copy
     .trip-title-line
       %h1= public_member_text(@trip.name)
-      %span.status.trip-type-badge.external-class-badge= public_trip_type_label(@trip)
+      = trip_type_badge(@trip)
     %p.trip-show-mobile-location= public_member_text(@trip.location)
     %p.trip-show-mobile-dates
       = @trip.start_date.to_fs(:long)
@@ -26,7 +26,7 @@
       .trip-summary-copy
         .trip-title-line
           %h1= public_member_text(@trip.name)
-          %span.status.trip-type-badge.external-class-badge= public_trip_type_label(@trip)
+          = trip_type_badge(@trip)
         %h2= public_member_text(@trip.location)
         %p
           = @trip.start_date.to_fs(:long)

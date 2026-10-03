@@ -1,0 +1,45 @@
+- content_for :body_class, "trips-index-page"
+= render "shared/public_header"
+.trips-mobile-hero{aria: {hidden: "true"}}
+  %h1.trips-mobile-hero-title= title
+  %span.trips-mobile-hero-caption Regular Northwest Face, Half Dome
+%main.public-main
+  %section.panel.trips-index-panel{id: ("archived-trips" if archived)}
+    .panel-header
+      .trips-index-copy
+        %h1= title
+        - unless archived
+          .public-beta-notice.trips-faq-callout
+            %span
+              Want to know what to expect? Read about
+              = link_to "camping trips", what_to_expect_trips_path
+              or
+              = link_to "day trips.", day_trip_what_to_expect_trips_path
+      - unless archived
+        .trips-index-notices
+          .public-beta-notice.calendar-subscription-notice
+            %p
+              = link_to "Subscribe to all events", calendar_trips_url(format: :ics, protocol: "webcal"), data: { turbo: false }
+              or copy the
+              = link_to "iCal feed URL", calendar_trips_url(format: :ics), data: { turbo: false }
+              into your calendar app.
+    - if trips.any?
+      .trip-cards
+        - trips.each do |trip|
+          .trip-list-item
+            = render "trips/card", trip: trip, archived: archived
+            - if archived
+              - report = TripReport.for_trip(trip)
+              - if report.public_payload
+                %p.archived-report-link= link_to "Read report: #{public_member_text(trip.name, trip: trip)}", public_report_path(report)
+      - if archived && @archived_total_pages > 1
+        %nav.pagination{aria: {label: "Past trip pages"}}
+          - if @archived_current_page > 1
+            = link_to "Previous", past_trips_trips_path(archived_page: @archived_current_page - 1, anchor: "archived-trips"), class: "button secondary"
+          %span.pagination-summary Page #{@archived_current_page} of #{@archived_total_pages}
+          - if @archived_current_page < @archived_total_pages
+            = link_to "Next", past_trips_trips_path(archived_page: @archived_current_page + 1, anchor: "archived-trips"), class: "button secondary"
+    - else
+      %p.muted.trip-list-empty= archived ? "No trips from this site's calendar have been archived yet." : "No published trips are available right now."
+  = render "shared/liability_warning"
+%p.background-image-caption Regular Northwest Face, Half Dome

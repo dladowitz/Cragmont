@@ -12,10 +12,7 @@
   .trip-show-mobile-hero-copy
     .trip-title-line
       %h1= public_member_text(@trip.name)
-      - if @trip.gym_outing?
-        %span.status.trip-type-badge.gym-outing-badge= public_trip_type_label(@trip)
-      - else
-        %span.status.trip-type-badge.day-trip-badge= public_trip_type_label(@trip)
+      = trip_type_badge(@trip)
       - if @trip.capacity_full?
         %span.status.danger-status Trip Full
       - elsif @trip.almost_full?
@@ -42,10 +39,7 @@
       .trip-summary-copy
         .trip-title-line
           %h1= public_member_text(@trip.name)
-          - if @trip.gym_outing?
-            %span.status.trip-type-badge.gym-outing-badge= public_trip_type_label(@trip)
-          - else
-            %span.status.trip-type-badge.day-trip-badge= public_trip_type_label(@trip)
+          = trip_type_badge(@trip)
           - if @trip.capacity_full?
             %span.status.danger-status Trip Full
           - elsif @trip.almost_full?

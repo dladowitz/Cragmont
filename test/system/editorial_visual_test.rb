@@ -53,7 +53,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
       visit path
       [ [ 1440, 1000 ], [ 760, 1024 ], [ 717, 512 ], [ 390, 844 ], [ 344, 882 ] ].each do |width, height|
         page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: width <= 760)
-        rows = all(".trip-card-meta > div, .archived-trip-meta > div", minimum: 1)
+        rows = all(".trip-card-meta > div", minimum: 1)
         rows.each do |row|
           value = row.find("dd")
           label = row.find("dt")
