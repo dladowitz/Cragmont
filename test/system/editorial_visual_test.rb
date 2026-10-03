@@ -48,6 +48,10 @@ class EditorialVisualTest < ApplicationSystemTestCase
         rows = all(".trip-card-meta > div, .archived-trip-meta > div", minimum: 1)
         rows.each do |row|
           value = row.find("dd")
+          label = row.find("dt")
+          if label.text == "Open Spaces"
+            assert_equal 1, label.evaluate_script("(() => { const range = document.createRange(); range.selectNodeContents(this); return range.getClientRects().length; })()")
+          end
           if width <= 760
             assert_equal "right", value.native.css_value("text-align")
             assert_in_delta row.native.rect.x, row.find("dt").native.rect.x, 1

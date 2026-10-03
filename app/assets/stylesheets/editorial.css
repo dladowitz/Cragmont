@@ -856,7 +856,8 @@ table { max-width: 100%; }
 .public-admin-link { display: inline-flex; align-items: center; }
 .admin-mode-label { margin: 0; font-size: 1.1rem; font-weight: 700; }
 .admin-api-note { margin-top: 32px; font-size: .85rem; }
-.trip-card-meta div { grid-template-columns: 100px minmax(0, 1fr); }
+.trip-card-meta div { grid-template-columns: minmax(max-content, 7.5rem) minmax(0, 1fr); }
+.trip-card-meta dt { white-space: nowrap; }
 .trips-index-page .trip-card .status,
 .admin-trips-table .status { font-size: .72rem; letter-spacing: .035em; padding: 3px 7px; }
 .admin-trips-table .admin-table-action-button { font-size: .8rem; padding: 6px 10px; min-height: 36px; }
