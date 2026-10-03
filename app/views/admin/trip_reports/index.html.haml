@@ -4,7 +4,7 @@
     .panel-header
       %div
         %h2 Trip Reports
-        %p.muted Write a story, add photos, or manage an automatically published album.
+        %p.muted Write a story or share a Google Photos album.
       = link_to "New trip report", new_admin_trip_report_path, class: "button"
     = form_with url: admin_trip_reports_path, method: :get, class: "report-filters" do |form|
       .field
@@ -25,7 +25,6 @@
                 · #{report.trip.campsite_coordinator.full_name}
             %span.status= report.display_status
           .actions
-            = link_to(report.published.present? ? "Edit report" : "Continue report", report_edit_path(report), class: "button secondary")
             - if report.public_payload
               = link_to "View public report", public_report_path(report)
       - if @reports.empty?

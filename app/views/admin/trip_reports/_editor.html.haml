@@ -4,8 +4,11 @@
     %div
       %h2= @report.persisted? ? "Edit trip report" : "Write trip report"
       %p.muted{data: {report_editor_target: "publication"}}= @report.display_status
-      %p{role: "status", "aria-live" => "polite", data: {report_editor_target: "status"}} Drafts are private. Publishing makes your story, photos, and album link public.
-    = link_to "Back to reports", admin_trip_reports_path
+      %p{role: "status", "aria-live" => "polite", data: {report_editor_target: "status"}} Drafts are private. Publishing makes your story and album link public.
+    .actions
+      - if @report.public_payload
+        = link_to "View public report", public_report_path(@report), class: "button secondary"
+      = link_to "Back to reports", admin_trip_reports_path, class: "button secondary"
   - if @report.errors.any?
     = render "admin/shared/errors", record: @report
   .report-editor-tabs{role: "group", aria: {label: "Editor view"}}
@@ -52,21 +55,17 @@
         = form.label :album_url, "Google Photos album link (optional)"
         = form.url_field :album_url, value: draft["album_url"]
         %p.muted Use an album you have permission to share publicly. No private album access is required.
-      %fieldset
-        %legend Photos
-        - if report_legacy_image(draft)
-          %p.muted The original archive cover is preserved alongside any new uploads.
-        %p.muted Up to 24 JPEG, PNG, or WebP photos, 10 MB each. The first photo is the cover. Removing a draft photo does not change the live report until you publish.
-        = label_tag "report-photo-upload", "Add photos"
-        = file_field_tag "photos[]", id: "report-photo-upload", multiple: true, accept: "image/jpeg,image/png,image/webp", data: {action: "change->report-editor#upload", report_editor_target: "upload"}
-        .report-edit-photos{data: {report_editor_target: "photos"}}
-          - if @report.persisted?
+      - if Array(draft["photos"]).any?
+        %fieldset
+          %legend Existing photos
+          %p.muted Keep new photos together in the Google Photos album. You can still manage photos previously added to this report.
+          .report-edit-photos{data: {report_editor_target: "photos"}}
             = render "photos", report: @report
       .form-actions.report-editor-actions
         = form.submit "Save draft", class: "button secondary", data: {report_editor_target: "saveButton"}
         %button.button{type: "submit", name: "intent", value: "publish", data: {report_editor_target: "publishButton"}}= @report.published.present? ? "Publish changes" : "Publish report"
         %button.button.secondary{type: "button", hidden: @report.new_record?, data: {action: "report-editor#hide", report_editor_target: "hideButton"}} Hide report
-        = link_to "Cancel", admin_trip_reports_path
+        = link_to "Cancel", admin_trip_reports_path, class: "button secondary"
     %aside.report-preview{data: {report_editor_target: "preview"}, aria: {label: "Report preview"}}
       %h3 Public preview
       %p.muted Only published content is visible to visitors.

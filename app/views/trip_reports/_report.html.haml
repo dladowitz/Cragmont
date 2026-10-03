@@ -23,7 +23,7 @@
         to #{Date.iso8601(payload["end_date"]).to_fs(:long)}
       - if payload["location"].present?
         · #{payload["location"]}
-  - if album
+  - if album && !legacy_image
     = link_to "View photos", album, target: "_blank", rel: "noopener", class: ("report-album-card" unless legacy_image || report_photos.any?)
   - if !preview && policy(report).update?
     %p= link_to "Edit report", report_edit_path(report)

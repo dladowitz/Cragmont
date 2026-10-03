@@ -14,4 +14,5 @@
           = form.submit "Continue", class: "button"
           = link_to "Cancel", admin_trip_reports_path, class: "button secondary"
       - if policy(@report).link_trip?
-        %p= link_to "Add a historical report without a trip", new_admin_trip_report_path(standalone: 1)
+        %hr.report-section-divider
+        = link_to "Add a historical report without a trip", new_admin_trip_report_path(standalone: 1), class: "button secondary"

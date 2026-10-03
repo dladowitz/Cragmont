@@ -107,8 +107,10 @@ class Admin::TripReportsControllerTest < ActionDispatch::IntegrationTest
     log_in_as users(:sam)
     upload = Rack::Test::UploadedFile.new(Rails.root.join("app/assets/images/trip-reports/2026-08-14-tuolumne.jpg"), "image/jpeg")
     post photos_admin_trip_report_url(report), params: { lock_version: report.lock_version, photos: [ upload ] }, headers: { "Accept" => "application/json" }
-    assert_response :success
-    report.reload
+    assert_response :unprocessable_entity
+    assert_empty report.reload.photos
+    # Older attached photos remain private until published and remain editable.
+    report.add_photos!([ upload ], version: report.lock_version, actor: users(:sam))
     photo = report.draft["photos"].first
     assert photo
     get photo_admin_trip_report_url(report, photo_id: photo["id"])

@@ -191,7 +191,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
     [ 1440, 1280, 1176, 1024, 981, 980, 840, 768, 717, 390, 344 ].each do |width|
       page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: 900, deviceScaleFactor: 1, mobile: width <= 760)
       brand = find(".admin-brand .site-name").native.rect
-      admin = find_link("Admin", exact: true).native.rect
+      admin = find_link("Public View", exact: true).native.rect
       assert_in_delta brand.y + brand.height / 2.0, admin.y + admin.height / 2.0, 1, "Brand alignment at #{width}px"
       assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
       if width > 980
@@ -211,8 +211,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
         actions = all(".report-management-row > .actions")
         assert_equal 1, actions.map { |row| row.native.rect.x }.uniq.size, "Report actions shift at #{width}px"
         actions.each do |row|
-          edit, public_link = row.all("a").map { |link| link.native.rect }
-          assert_in_delta edit.y + edit.height / 2.0, public_link.y + public_link.height / 2.0, 1
+          assert_equal 1, row.all("a").size
         end
       end
       save_screenshot(Rails.root.join("tmp/screenshots/admin-reports-#{width}.png")) if [ 1176, 390 ].include?(width)
@@ -221,7 +220,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
     page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
   end
 
-  test "Admin is a consistent deep green homepage button on public and admin pages" do
+  test "Admin and Public View are clear navigation links across screen sizes" do
     assign_role(users(:sam), :trip_admin)
     visit new_session_path
     fill_in "Email", with: users(:sam).email
@@ -233,18 +232,17 @@ class EditorialVisualTest < ApplicationSystemTestCase
       visit path
       [ [ 1440, 900 ], [ 768, 1024 ], [ 717, 512 ], [ 390, 844 ], [ 344, 882 ] ].each do |width, height|
         page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: width <= 760)
-        admin = find_link("Admin", exact: true)
-        assert_equal admin_root_path, URI.parse(admin[:href]).path
-        assert_equal "rgba(22, 75, 64, 1)", admin.native.css_value("background-color")
-        assert_equal "rgba(255, 255, 255, 1)", admin.native.css_value("color")
-        assert_equal "5px", admin.native.css_value("border-radius")
-        assert_operator admin.native.rect.height, :>=, 48
+        admin_page = path == admin_trip_reports_path
+        admin = find_link(admin_page ? "Public View" : "Admin", exact: true)
+        assert_equal(admin_page ? root_path : admin_root_path, URI.parse(admin[:href]).path)
+        assert_equal "rgba(0, 0, 0, 0)", admin.native.css_value("background-color")
+        assert_operator admin.native.rect.height, :>=, 44
         assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
       end
     end
     page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
-    find_link("Admin", exact: true).send_keys(:return)
-    assert_current_path admin_trips_path
+    find_link("Public View", exact: true).send_keys(:return)
+    assert_current_path root_path
   ensure
     page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
   end
@@ -286,13 +284,13 @@ class EditorialVisualTest < ApplicationSystemTestCase
     page.driver.browser.manage.window.resize_to(1400, 1000)
   end
 
-  test "trip headings keep desktop and mobile sizes with badges on the next line" do
+  test "trip headings place desktop badges beside the name and retain mobile stacking" do
     page.driver.browser.manage.window.resize_to(1440, 900)
     visit trip_path(trips(:yosemite))
     assert_in_delta 58.29, find(".trip-summary-copy h1").native.css_value("font-size").to_f, 0.1
     assert_equal "32px", find(".trip-summary-copy > h2").native.css_value("font-size")
     heading = find("h1").native.rect
-    assert_operator find(".trip-type-badge").native.rect.y, :>=, heading.y + heading.height
+    assert_operator find(".trip-type-badge").native.rect.x, :>=, heading.x + heading.width
 
     page.driver.browser.manage.window.resize_to(390, 844)
     assert_equal "28px", find(".trip-show-mobile-hero h1").native.css_value("font-size")
@@ -301,13 +299,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
     assert_operator find(".trip-type-badge").native.rect.y, :>=, heading.y + heading.height
     [ 1440, 760, 360 ].each do |width|
       page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: 900, deviceScaleFactor: 1, mobile: width <= 760)
-      assert_selector "a.trip-calendar-download", text: "(Calendar)", count: 1
-      link = find_link("(Calendar)")
-      assert_equal calendar_trip_path(trips(:yosemite), format: :ics), URI.parse(link[:href]).path
-      assert_includes link.find(:xpath, "..").text, "June 12, 2026"
-      if width <= 760
-        assert_equal find(".trip-show-mobile-dates").native.css_value("color"), link.native.css_value("color")
-      end
+      assert_no_selector "a.trip-calendar-download"
       assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
     end
   ensure
@@ -430,26 +422,29 @@ class EditorialVisualTest < ApplicationSystemTestCase
 
   test "long history reads without horizontal scrolling on a phone" do
     visit history_path
-    assert_selector "#longer-history h2", text: "From Cragmont Rock to Yosemite"
+    assert_selector ".club-copy h2", text: "History of the Cragmont Climbing Club"
 
     browser = page.driver.browser
     browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
     assert_equal 390, page.evaluate_script("window.innerWidth")
-    assert_operator find("#longer-history").native.rect.width, :<=, 390
+    assert_operator find(".club-copy").native.rect.width, :<=, 390
     assert_operator page.evaluate_script("document.documentElement.scrollWidth - window.innerWidth"), :<=, 0
   ensure
     browser&.execute_cdp("Emulation.clearDeviceMetricsOverride")
   end
 
-  test "calendar subscription has room to breathe on desktop and phone" do
+  test "calendar subscription stays concise and readable on desktop and phone" do
     visit trips_path
     notice = find(".calendar-subscription-notice")
-    assert_equal 2, notice.all("p").size
-    assert_operator notice.native.rect.height, :>, 70
+    assert_equal 1, notice.all("p").size
+    assert_link "Subscribe to all events"
+    assert_no_text "Keep your next climb on the calendar"
 
-    page.driver.browser.manage.window.resize_to(390, 844)
-    assert_operator notice.native.rect.height, :>, 90
+    page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
+    assert_operator notice.native.rect.width, :<=, 390
+    assert_link "iCal feed URL"
   ensure
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
     page.driver.browser.manage.window.resize_to(1400, 1000)
   end
 
@@ -495,7 +490,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
 
     page.driver.browser.manage.window.resize_to(1400, 1000)
     visit admin_root_path
-    assert_selector ".admin-context", text: "Admin"
+    assert_selector ".admin-mode-label", text: "Admin Dashboard"
     logout = find_button("Logout")
     assert_equal "rgba(0, 0, 0, 0)", logout.native.css_value("border-bottom-color")
 

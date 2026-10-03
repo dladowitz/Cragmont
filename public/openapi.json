@@ -102,24 +102,6 @@
         }
       }
     },
-    "/api/v1/trip_reports/{id}/photos": {
-      "parameters": [{ "$ref": "#/components/parameters/TripId" }],
-      "post": {
-        "operationId": "uploadTripReportPhotos",
-        "summary": "Upload authorized images to a private report draft",
-        "description": "JPEG, PNG, or WebP, up to 10 MB and 40 megapixels each; at most 24 draft photos. Response includes attachment IDs in draft.photos. PATCH that ordered array to set captions, reorder, select the first photo as cover, or remove a photo from the draft. None of these changes become public until publishing.",
-        "security": [{ "adminSession": [], "csrfToken": [] }],
-        "requestBody": { "required": true, "content": { "multipart/form-data": { "schema": { "type": "object", "required": ["lock_version", "photos[]"], "properties": { "lock_version": { "type": "integer" }, "photos[]": { "type": "array", "items": { "type": "string", "format": "binary" } } } } } } },
-        "responses": {
-          "200": { "$ref": "#/components/responses/TripReportSaved" },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "403": { "$ref": "#/components/responses/Forbidden" },
-          "404": { "$ref": "#/components/responses/NotFound" },
-          "409": { "$ref": "#/components/responses/Conflict" },
-          "422": { "$ref": "#/components/responses/ValidationError" }
-        }
-      }
-    },
     "/api/v1/trips": {
       "get": {
         "operationId": "listTrips",

@@ -34,10 +34,10 @@ class ClubControllerTest < ActionDispatch::IntegrationTest
     get history_url
     assert_response :success
     assert_select "h1", "History"
-    assert_select ".club-timeline section", count: 5
-    assert_select "article#longer-history h2", "From Cragmont Rock to Yosemite"
-    assert_select "article#longer-history section", count: 4
-    assert_select ".club-history-sources a[href='https://www.cragmontclimbingclub.org/history']", /Steve Roper's full account/
+    assert_select ".club-copy p", "by Steve Roper (reprinted with permission)"
+    assert_select ".club-copy p", /They are the first modern-day climbing heroes of Yosemite/
+    assert_select ".club-history-photos img", count: 4
+    assert_select ".club-timeline", count: 0
   end
 
   test "past trips has a public top-level page" do
@@ -64,7 +64,8 @@ class ClubControllerTest < ActionDispatch::IntegrationTest
       assert_select ".club-report-gallery img[src='#{path}']", count: 1
     end
     assert_select ".club-report h2", "Yosemite Valley - Sept 18th, 2026"
-    assert_select ".club-report a[href='https://photos.app.goo.gl/eomxL1uoWFnRjkkJ6']", "View photos"
+    assert_select ".club-report-gallery a[href='https://photos.app.goo.gl/eomxL1uoWFnRjkkJ6']", count: 1
+    assert_select ".club-report a", text: "View photos", count: 0
     assert_select ".club-report-details p", /Vertical Pursuits/
   end
 
@@ -77,6 +78,7 @@ class ClubControllerTest < ActionDispatch::IntegrationTest
       assert_select "nav.public-nav a[href='#{trips_path}']", count: 1
       assert_select "nav.public-nav a[href='#{membership_path}']", count: 1
       destinations.each do |destination|
+        next if path == membership_path && destination == join_the_list_path
         assert_select "main a[href='#{destination}']", count: 0
       end
       assert_select "main nav.club-subnav", count: 0

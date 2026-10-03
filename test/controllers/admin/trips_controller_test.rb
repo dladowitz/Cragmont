@@ -25,7 +25,7 @@ class Admin::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".admin-public-link", "Public View"
     assert_select ".admin-nav a", text: "Trips"
     assert_select ".admin-nav a[href='#{admin_content_path}']", text: "Content"
-    assert_select ".admin-nav a", text: "Public View", count: 1
+    assert_select ".admin-brand a", text: "Public View", count: 1
     assert_select ".admin-brand .site-name", text: /Cragmont/
     assert_select "#admin-nav-toggle[aria-label='Toggle admin navigation menu']"
     assert_select ".admin-nav form[action='#{session_path}'][method='post']" do

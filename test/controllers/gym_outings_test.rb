@@ -187,7 +187,7 @@ class GymOutingsTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "gym-private-invite"
     assert_not_includes response.body, "gym-private-album"
     assert_select "a[href='#{new_session_path(return_to: trip_path(@trip))}']", text: /log in to reveal/
-    assert_select "a[href='#{calendar_trip_path(@trip, format: :ics)}']"
+    assert_select "a[href='#{calendar_trip_path(@trip, format: :ics)}']", count: 0
 
     get calendar_trips_url(format: :ics)
     assert_response :success

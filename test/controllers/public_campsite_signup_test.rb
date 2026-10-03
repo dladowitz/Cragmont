@@ -59,7 +59,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".archived-trips-panel", count: 0
     assert_select ".trips-faq-callout a[href='#{what_to_expect_trips_path}']", text: "camping trips"
     assert_select ".trips-faq-callout a[href='#{day_trip_what_to_expect_trips_path}']", text: "day trips."
-    assert_select ".calendar-subscription-notice p", count: 2
+    assert_select ".calendar-subscription-notice p", count: 1
+    assert_select ".trip-card-meta dt", text: "Open Spaces", minimum: 1
     assert_select ".trips-index-notices .public-beta-notice", count: 1
     assert_no_match(/getting dialed in/i, response.body)
     assert_select ".background-image-caption", "Regular Northwest Face, Half Dome"

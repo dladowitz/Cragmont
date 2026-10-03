@@ -13,7 +13,6 @@
     %p.trip-show-mobile-location= public_member_text(@trip.location)
     %p.trip-show-mobile-dates
       = @trip.start_date.to_fs(:long)
-      = render "calendar_download", trip: @trip
     - if whatsapp_group_url.present?
       = member_link_to "Join the WhatsApp Group", whatsapp_group_url, class: "trip-resource-link trip-mobile-resource-link trip-whatsapp-mobile-link", target: "_blank", rel: "noopener"
     - if weather_url.present?
@@ -31,7 +30,6 @@
         %h2= public_member_text(@trip.location)
         %p
           = @trip.start_date.to_fs(:long)
-          = render "calendar_download", trip: @trip
         - if @trip.partner_company.present?
           %p
             Taught by

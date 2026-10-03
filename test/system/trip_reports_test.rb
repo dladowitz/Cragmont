@@ -41,7 +41,9 @@ class TripReportsTest < ApplicationSystemTestCase
     end
     page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
     click_button "Publish report", exact: true
-    assert_selector "[data-report-editor-target='status']", text: "now public"
+    assert_current_path trip_report_path(report)
+    assert_selector ".club-report", text: report.reload.public_payload["body"]
+    visit edit_admin_trip_report_path(report)
     assert_equal "A brilliant day on granite.", report.reload.public_payload["body"]
     fill_in "Story (optional)", with: "Unfinished edits are private."
     click_button "Save draft", exact: true
@@ -87,11 +89,15 @@ class TripReportsTest < ApplicationSystemTestCase
     assert_current_path edit_admin_trip_report_path(TripReport.find_by!(trip: @trip))
   end
 
-  test "photo captions order and conflict handling preserve the editors work" do
-    attach_file "Add photos", [
-      Rails.root.join("app/assets/images/trip-reports/2026-08-14-tuolumne.jpg"),
-      Rails.root.join("app/assets/images/trip-reports/2026-08-22-snowshed-tahoe.jpg")
-    ]
+  test "existing photos and conflict handling remain available without new uploads" do
+    report = TripReport.for_trip(@trip)
+    report.save!
+    uploads = %w[2026-08-14-tuolumne.jpg 2026-08-22-snowshed-tahoe.jpg].map do |name|
+      Rack::Test::UploadedFile.new(Rails.root.join("app/assets/images/trip-reports", name), "image/jpeg")
+    end
+    report.add_photos!(uploads, version: report.lock_version, actor: users(:sam))
+    visit edit_admin_trip_report_path(report)
+    assert_no_selector "input[type='file']"
     assert_selector ".report-edit-photo", count: 2, wait: 10
     rows = all(".report-edit-photo")
     first_id = rows.first["data-photo-id"]
@@ -105,7 +111,9 @@ class TripReportsTest < ApplicationSystemTestCase
     assert_equal [ second_id.to_i, first_id.to_i ], report.draft["photos"].map { |photo| photo["id"] }
     assert_equal "Granite slabs", report.draft["photos"].first["caption"]
     click_button "Publish report", exact: true
-    assert_selector "[data-report-editor-target='status']", text: "now public"
+    assert_current_path trip_report_path(report)
+    assert_selector ".club-report", text: report.reload.public_payload["body"]
+    visit edit_admin_trip_report_path(report)
 
     report.reload.save_draft!({ body: "Another editor's saved work" }, version: report.lock_version, actor: users(:alex))
     fill_in "Story (optional)", with: "Keep my unsaved text"

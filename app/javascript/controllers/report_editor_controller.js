@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["form", "status", "publication", "photos", "upload", "previewContent", "writeTab", "previewTab", "publishButton", "hideButton"]
+  static targets = ["form", "status", "publication", "photos", "previewContent", "writeTab", "previewTab", "publishButton", "hideButton"]
   static values = { id: Number, version: Number }
 
   connect() {
@@ -24,7 +24,6 @@ export default class extends Controller {
   get endpoint() { return `/admin/trip_reports/${this.idValue}` }
 
   changed(event) {
-    if (event?.target === this.uploadTarget) return
     this.generation++
     this.statusTarget.textContent = "Unsaved changes"
     clearTimeout(this.timer)
@@ -49,7 +48,7 @@ export default class extends Controller {
       if (match) report[match[1]] = value
     }
     report.lock_version = this.versionValue
-    report.photos = [...this.photosTarget.children].map(row => ({ id: Number(row.dataset.photoId), caption: row.querySelector("[data-caption]").value }))
+    if (this.hasPhotosTarget) report.photos = [...this.photosTarget.children].map(row => ({ id: Number(row.dataset.photoId), caption: row.querySelector("[data-caption]").value }))
     return report
   }
 
@@ -97,30 +96,9 @@ export default class extends Controller {
     this.enqueue(async () => {
       await this.save()
       if (publish) {
-        await this.request(`${this.endpoint}/publish`, "PATCH", { lock_version: this.versionValue })
-        this.statusTarget.textContent = "Published. Your report is now public."
+        const result = await this.request(`${this.endpoint}/publish`, "PATCH", { lock_version: this.versionValue })
+        window.location.assign(result.report.public_path)
       }
-    })
-  }
-
-  upload(event) {
-    const files = [...event.target.files]
-    if (!files.length) return
-    this.enqueue(async () => {
-      await this.save()
-      const body = new FormData()
-      files.forEach(file => body.append("photos[]", file))
-      body.append("lock_version", this.versionValue)
-      this.statusTarget.textContent = "Uploading photos…"
-      // Only append newly uploaded IDs; preserve edits/removals made during upload.
-      const existing = new Set([...this.photosTarget.children].map(row => row.dataset.photoId))
-      const result = await this.request(`${this.endpoint}/photos`, "POST", body)
-      const template = document.createElement("template")
-      template.innerHTML = result.photos_html
-      for (const row of template.content.children) if (!existing.has(row.dataset.photoId)) this.photosTarget.append(row.cloneNode(true))
-      this.refreshPhotoControls()
-      this.uploadTarget.value = ""
-      this.statusTarget.textContent = "Photos added to your private draft."
     })
   }
 

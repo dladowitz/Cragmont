@@ -93,8 +93,7 @@ class Admin::TripReportsController < Admin::BaseController
   end
 
   def photos
-    @report.add_photos!(params[:photos], version: params.require(:lock_version), actor: current_user)
-    saved_response
+    report_error("Keep your photos together in a Google Photos album and add its link to the report.", :unprocessable_entity)
   end
 
   def photo
@@ -158,7 +157,13 @@ class Admin::TripReportsController < Admin::BaseController
 
   def saved_response(status = :ok)
     respond_to do |format|
-      format.html { redirect_to edit_admin_trip_report_path(@report), notice: "Trip report saved." }
+      format.html do
+        if action_name == "publish" || params[:intent] == "publish"
+          redirect_to trip_report_path(@report), notice: "On belay! Your trip report is published."
+        else
+          redirect_to edit_admin_trip_report_path(@report), notice: "On belay! Your trip report is saved."
+        end
+      end
       format.json do
         render json: { report: report_json(@report),
           preview_html: render_to_string(partial: "trip_reports/report", formats: [ :html ], locals: { report: @report, payload: @report.draft, preview: true }),
@@ -170,6 +175,7 @@ class Admin::TripReportsController < Admin::BaseController
   def report_json(report)
     { id: report.id, trip_id: report.trip_id, lock_version: report.lock_version, draft: report.draft,
       status: report.display_status, published_at: report.published_at, hidden: report.hidden?,
+      public_path: report.public_payload && report.persisted? ? trip_report_path(report) : nil,
       updated_at: report.updated_at, edit_path: report.persisted? ? edit_admin_trip_report_path(report) : new_admin_trip_report_path(trip_id: report.trip_id) }
   end
 
