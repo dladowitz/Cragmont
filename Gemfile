@@ -47,7 +47,7 @@ gem "ruby-vips", "~> 2.0"
 gem "aws-sdk-s3", "~> 1.225"
 
 # Render Rails views with HAML templates.
-gem "haml-rails", "~> 3.0"
+gem "haml-rails", "~> 3.1"
 
 # Render admin-managed Markdown content pages.
 gem "commonmarker", "~> 2.0"
