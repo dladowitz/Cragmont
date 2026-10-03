@@ -98,3 +98,7 @@ On mobile trip lists, keep the outer section transparent. Empty-state notes use 
 Keep the two logo lines separated with a full line height and a small gap. Center desktop trip badges against the title’s visible capital-letter height. Report cards use one compact thumbnail each, with a scenic sample thumbnail when no photo exists; full report galleries use evenly sized tiles. On mobile, campsite, partner-board, and coordinator cards share a 1px outline with a 4px colored left accent.
 
 Keep table action links as flex buttons so labels center vertically. Trip-list actions are compact on desktop (36px minimum height) and fill the mobile card width with a 44px minimum tap target. On mobile, report-editor navigation and Write/Preview controls use two equal columns aligned with the form fields.
+
+On mobile, confirmed-participant admin cards pair labels and values on compact rows, omit empty minors rows, and use full-width reservation actions. Keep report editor save/publish/hide/cancel actions and trip Read/Edit report links in equal-width columns aligned to their containing panel. On every screen size, campsite controls use a signup-mode action spanning the action area above an equal-width Add Participant / Edit Campsite row.
+
+Center button labels in both directions, including wrapped labels. Report forms use the shared 18px grid gap without additional field margins. Hidden dialog containers must not reserve blank rows in participant cards. Desktop gallery cards stretch to the same row height so their bottom borders align even when titles wrap.

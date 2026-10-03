@@ -8,7 +8,7 @@
 - remove_waitlist_tooltip = "Removes Participant from Waitlist"
 - signups_by_primary_id = signups.group_by { |signup| signup.guest_of_signup_id || signup.id }
 - display_signups = waitlist ? signups : signups.reject(&:guest?).flat_map { |signup| [signup] + signups_by_primary_id.fetch(signup.id, []).select(&:guest?) }
-%table.admin-signups-table.admin-record-table{role: "table", "aria-label" => (waitlist ? "Trip waitlist" : "Confirmed participants")}
+%table.admin-signups-table.admin-record-table{class: ("admin-confirmed-participants-table" unless waitlist), role: "table", "aria-label" => (waitlist ? "Trip waitlist" : "Confirmed participants")}
   %thead
     %tr
       %th Participant

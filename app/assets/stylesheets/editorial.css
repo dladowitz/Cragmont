@@ -217,6 +217,8 @@ body:is(.club-page, .home-page, .trips-index-page, .session-new-page, .password-
 /* Common controls and content surfaces drive both public and admin pages. */
 .button, input[type="submit"] {
   min-height: 48px;
+  justify-content: center;
+  text-align: center;
   padding: 10px 20px;
   border: 1px solid var(--accent);
   border-radius: var(--ui-radius);
@@ -331,7 +333,7 @@ body.trips-index-page .trips-index-notices .calendar-subscription-notice {
 .club-archive { margin-top: 24px; }
 .club-archive > .muted { margin-bottom: 24px; }
 .club-archive h1 { margin: 0 0 16px; }
-.club-report-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 32px; }
+.club-report-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 32px; }
 .club-report { min-width: 0; padding-bottom: 24px; border-bottom: 1px solid var(--line); transform-origin: top left; }
 .club-report:has(.club-report-details[open]) { grid-column: 1 / -1; }
 .club-report h2 { margin: 16px 0 8px; font-size: 1.4rem; font-weight: 500; }
@@ -358,7 +360,8 @@ body.trips-index-page .trips-index-notices .calendar-subscription-notice {
 .report-management-row > .actions { flex-shrink: 0; }
 .report-editor-columns { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 32px; }
 .report-write, .report-preview { min-width: 0; }
-.report-write .field { margin-bottom: 18px; }
+.report-write .field { margin: 0; }
+.report-write > p, .report-write .field > p { margin: 0; }
 .report-preview { padding: 20px; background: #f7f5ef; border: 1px solid var(--line); border-radius: var(--ui-radius); align-self: start; overflow-wrap: anywhere; }
 .report-preview h3 { margin-top: 0; }
 .report-editor .report-editor-tabs { display: none; }
@@ -372,11 +375,16 @@ body.trips-index-page .trips-index-notices .calendar-subscription-notice {
 .report-auto-setting { flex-basis: 100%; }
 .report-editor [role="alert"] { color: var(--danger); }
 @media (max-width: 900px) {
+  .trip-report-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .trip-report-actions > .button { min-width: 0; justify-content: center; text-align: center; padding-inline: 12px; white-space: normal; }
+  .trip-report-actions > .button:only-child { grid-column: 1 / -1; }
   .report-editor-columns { display: block; }
   .report-editor > .panel-header { display: block; }
+  .report-editor .report-editor-actions,
   .report-editor .report-editor-navigation,
   .report-editor .report-editor-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 10px; width: 100%; }
   .report-editor .report-editor-tabs { margin: 16px 0; }
+  .report-editor-actions .button,
   .report-editor-navigation .button,
   .report-editor-tabs .button { min-width: 0; justify-content: center; text-align: center; padding-inline: 12px; white-space: normal; }
   .report-editor-navigation > .button:only-child { grid-column: 1 / -1; }
@@ -583,7 +591,7 @@ table { max-width: 100%; }
     box-shadow: 0 8px 20px rgb(11 25 19 / 15%);
   }
   .admin-nav-checkbox:checked ~ .admin-nav { display: grid; gap: 0; }
-  .admin-nav :is(a, .button) { display: flex; min-height: 46px; width: 100%; border-bottom: 1px solid var(--line); text-align: left; }
+  .admin-nav :is(a, .button) { display: flex; min-height: 46px; width: 100%; border-bottom: 1px solid var(--line); justify-content: flex-start; text-align: left; }
   .admin-nav form { width: 100%; }
   .admin-nav form .button { border: 0; padding-inline: 0; }
 
@@ -656,10 +664,24 @@ table { max-width: 100%; }
   body.admin-body table.admin-record-table > tbody > tr > .table-actions:empty { display: none; }
   .admin-record-table .table-actions :is(a, form) { margin: 0; }
   .admin-record-table .reimbursement-status-link { min-height: 44px; text-align: left; }
-  body.admin-body table.admin-signups-table > tbody > tr > .admin-record-empty,
+  body.admin-body table.admin-signups-table.admin-record-table > tbody > tr > .admin-record-empty,
   body.admin-body table.trip-revenue-table.admin-record-table > tbody > tr > td:empty { display: none; }
   body.admin-body table.admin-signups-table > tbody > tr > td[data-label] { display: block; }
   .admin-signups-table > tbody > tr > td[data-label]::before { display: block; margin-bottom: 4px; }
+  .admin-campsite-card .confirmed-signups-section { padding: 10px; }
+  body.admin-body table.admin-confirmed-participants-table > tbody > tr { padding: 12px; gap: 6px; }
+  body.admin-body table.admin-confirmed-participants-table > tbody > tr > td[data-label]:not(.admin-record-empty) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  .admin-confirmed-participants-table > tbody > tr > td[data-label]::before { flex-shrink: 0; margin: 0 auto 0 0; }
+  .admin-confirmed-participants-table .admin-payment-control { min-width: 0; grid-template-columns: minmax(0, max-content) minmax(0, max-content); }
+  .admin-confirmed-participants-table .admin-payment-status { white-space: normal; }
+  body.admin-body table.admin-confirmed-participants-table > tbody > tr > .table-actions > [data-controller="modal"]:has(> .button) { width: 100%; margin: 0; }
+  body.admin-body table.admin-confirmed-participants-table > tbody > tr > .table-actions > [data-controller="modal"]:not(:has(> .button)) { display: contents; }
+  .admin-confirmed-participants-table > tbody > tr > .table-actions > [data-controller="modal"] > .button { width: 100%; justify-content: center; }
   .admin-users-table .user-name-cell { grid-template-columns: 18px minmax(0, 1fr); max-width: 100%; }
   .admin-users-table .user-name-cell a { overflow-wrap: anywhere; }
   body.admin-body table.admin-user-trip-history > tbody > tr > td:first-child { min-width: 0; }
@@ -856,6 +878,18 @@ table { max-width: 100%; }
   body.trip-show-page table { display: block; width: 100%; max-width: 100%; overflow-x: auto; }
   body.trip-show-page .date-pair div { grid-template-columns: 84px minmax(0, 1fr); }
   body.trip-show-page .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.admin-campsite-card .campsite-card-actions { justify-self: stretch; justify-items: stretch; }
+.admin-campsite-card .campsite-signup-mode { justify-items: stretch; }
+.admin-campsite-card .campsite-action-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; }
+.admin-campsite-card .campsite-action-buttons > [data-controller="modal"] { display: flex; min-width: 0; }
+.admin-campsite-card .campsite-action-buttons > :only-child { grid-column: 1 / -1; }
+.admin-campsite-card .campsite-action-buttons > .button,
+.admin-campsite-card .campsite-action-buttons > [data-controller="modal"] > .button,
+.admin-campsite-card .campsite-signup-mode-button { width: 100%; min-width: 0; padding-inline: 10px; white-space: normal; justify-content: center; text-align: center; }
+@media (min-width: 981px) and (max-width: 1280px) {
+  .admin-campsite-card .campsite-card-actions { width: 100%; max-width: 26rem; justify-self: start; }
 }
 
 /* Club review: quieter metadata, clear modes, and grouped campsite content. */

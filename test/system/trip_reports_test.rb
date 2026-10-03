@@ -31,6 +31,12 @@ class TripReportsTest < ApplicationSystemTestCase
     [ [ 1440, 900 ], [ 768, 1024 ], [ 717, 512 ], [ 390, 844 ], [ 344, 882 ] ].each do |width, height|
       page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: width < 901)
       assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
+      title = find_field("Title").native.rect
+      date = find_field("Trip date").find(:xpath, "..").native.rect
+      assert_in_delta 18, date.y - title.y - title.height, 1
+      byline = find_field("Written by (optional)").native.rect
+      album = find_field("Google Photos album link (optional)").find(:xpath, "..").native.rect
+      assert_in_delta 18, album.y - byline.y - byline.height, 1
       if width <= 900
         field = find_field("Title").native.rect
         [ ".report-editor-navigation", ".report-editor-tabs" ].each do |selector|
@@ -43,6 +49,15 @@ class TripReportsTest < ApplicationSystemTestCase
         end
         find(".report-editor").evaluate_script("this.scrollIntoView({block: 'start', behavior: 'instant'})")
         save_screenshot(Rails.root.join("tmp/screenshots/report-editor-buttons-#{width}.png"))
+        actions = all(".report-editor-actions > .button", count: 4)
+        actions.each_slice(2) do |pair|
+          assert_in_delta field.x, pair.first.native.rect.x, 1
+          assert_in_delta field.x + field.width, pair.last.native.rect.x + pair.last.native.rect.width, 1
+          assert_in_delta pair.first.native.rect.width, pair.last.native.rect.width, 1
+          assert_in_delta pair.first.native.rect.y, pair.last.native.rect.y, 1
+        end
+        find(".report-editor-actions").evaluate_script("this.scrollIntoView({block: 'center', behavior: 'instant'})")
+        save_screenshot(Rails.root.join("tmp/screenshots/report-editor-footer-#{width}.png"))
         find_button("Preview", exact: true).send_keys(:enter)
         assert_selector ".report-preview", text: "A brilliant day on granite.", wait: 5
         assert_no_selector ".report-write"
@@ -54,6 +69,19 @@ class TripReportsTest < ApplicationSystemTestCase
     click_button "Publish report", exact: true
     assert_current_path trip_report_path(report)
     assert_selector ".club-report", text: report.reload.public_payload["body"]
+    visit trip_path(@trip)
+    [ 390, 344 ].each do |width|
+      page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: 844, deviceScaleFactor: 1, mobile: true)
+      row = find(".trip-report-actions")
+      buttons = row.all(".button", count: 2)
+      assert_in_delta row.native.rect.x, buttons.first.native.rect.x, 1
+      assert_in_delta row.native.rect.x + row.native.rect.width, buttons.last.native.rect.x + buttons.last.native.rect.width, 1
+      assert_in_delta buttons.first.native.rect.width, buttons.last.native.rect.width, 1
+      assert_in_delta buttons.first.native.rect.y, buttons.last.native.rect.y, 1
+      row.evaluate_script("this.scrollIntoView({block: 'center', behavior: 'instant'})")
+      save_screenshot(Rails.root.join("tmp/screenshots/trip-report-actions-#{width}.png"))
+    end
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
     visit edit_admin_trip_report_path(report)
     assert_equal "A brilliant day on granite.", report.reload.public_payload["body"]
     fill_in "Story (optional)", with: "Unfinished edits are private."

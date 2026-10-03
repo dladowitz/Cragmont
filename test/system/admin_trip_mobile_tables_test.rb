@@ -32,12 +32,39 @@ class AdminTripMobileTablesTest < ApplicationSystemTestCase
   end
 
   test "trip records and transactions need no sideways scrolling on phones" do
+    [ 1440, 1280 ].each do |width|
+      page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: 1000, deviceScaleFactor: 1, mobile: false)
+      visit admin_trip_path(trips(:yosemite))
+      assert_campsite_actions_aligned(width)
+    end
+
     [ 320, 390 ].each do |width|
       page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: 844, deviceScaleFactor: 1, mobile: false)
       visit admin_trip_path(trips(:yosemite))
       assert_record_tables_fit(width, ".admin-signups-table", ".trip-payment-requests-table", ".trip-revenue-table")
       assert_text "Shared campsite supplies"
       assert_selector ".admin-signups-table td[data-label='Payment']"
+      assert_campsite_actions_aligned(width)
+      participant = find(".admin-confirmed-participants-table > tbody > tr", text: users(:sam).full_name)
+      assert_no_selector ".admin-confirmed-participants-table td[data-label='Minors']", visible: true
+      participant.all("td[data-label]", minimum: 4).each do |cell|
+        assert_equal "flex", cell.native.css_value("display")
+        assert_operator cell.native.rect.height, :<, 64
+      end
+      change = participant.find_button("Change")
+      assert_in_delta participant.find(".table-actions").native.rect.width, change.native.rect.width, 1
+      assert_operator participant.native.rect.y + participant.native.rect.height - change.native.rect.y - change.native.rect.height, :<=, 16
+      participant.evaluate_script("this.scrollIntoView({block: 'center', behavior: 'instant'})")
+      save_screenshot(Rails.root.join("tmp/screenshots/admin-participant-card-#{width}.png"))
+      change.click
+      within "dialog[open]" do
+        click_button "Move to Waitlist", exact: true
+      end
+      within "dialog[open]" do
+        assert_text "Move Sam Lee to the waitlist?"
+        click_button "Cancel", exact: true
+      end
+      assert_no_selector "dialog[open]"
       assert_selector ".trip-payment-requests-table .trip-payment-request-actions button", text: "Copy Link"
 
       visit admin_trip_transactions_path(trips(:yosemite))
@@ -83,6 +110,23 @@ class AdminTripMobileTablesTest < ApplicationSystemTestCase
   end
 
   private
+
+  def assert_campsite_actions_aligned(width)
+    campsite = find("#admin-campsite-#{campsites(:yosemite_a).id}")
+    controls = campsite.find(".campsite-card-actions")
+    assert_operator controls.native.rect.width, :<=, 416 if width > 980
+    mode = controls.find(".campsite-signup-mode-button")
+    add = controls.find_button("Add Participant", exact: true)
+    edit = controls.find_link("Edit Campsite", exact: true)
+    assert_in_delta controls.native.rect.width, mode.native.rect.width, 1
+    assert_in_delta controls.native.rect.x, add.native.rect.x, 1
+    assert_in_delta controls.native.rect.x + controls.native.rect.width, edit.native.rect.x + edit.native.rect.width, 1
+    assert_in_delta add.native.rect.width, edit.native.rect.width, 1
+    assert_in_delta add.native.rect.y, edit.native.rect.y, 1
+    controls.evaluate_script("this.scrollIntoView({block: 'center', behavior: 'instant'})")
+    save_screenshot(Rails.root.join("tmp/screenshots/campsite-actions-#{width}.png"))
+    assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
+  end
 
   def assert_record_tables_fit(width, *selectors)
     selectors.each do |selector|

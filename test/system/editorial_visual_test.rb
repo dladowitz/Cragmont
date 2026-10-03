@@ -24,6 +24,14 @@ class EditorialVisualTest < ApplicationSystemTestCase
           assert_in_delta photos.first.native.rect.height, photo.native.rect.height, 1
         end
         if path == trip_reports_path
+          if width > 600
+            all(".club-report-grid > .club-report").each_slice(2) do |pair|
+              next unless pair.size == 2
+
+              assert_in_delta pair.first.native.rect.y + pair.first.native.rect.height,
+                pair.last.native.rect.y + pair.last.native.rect.height, 1
+            end
+          end
           assert_selector "#report-#{empty.id} .club-report-gallery-placeholder img[alt*='sample']"
           assert_in_delta photos.first.native.rect.height, find("#report-#{empty.id} .club-report-gallery img").native.rect.height, 1
           assert_link "View photos", href: empty.published["album_url"]
