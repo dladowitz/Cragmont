@@ -2,14 +2,14 @@
 - content_for :body_class, "club-page trip-reports-page"
 = render "shared/public_header"
 %main.public-main
-  %section.panel.club-archive{aria: {label: "Club trip reports"}}
+  = ui_panel(class: "club-archive", aria: {label: "Club trip reports"}) do
     .panel-header
       %div
         %p.eyebrow Cragmont Climbing Club
         %h1 Trip Reports
         %p.muted Photos and stories from club outings. Open an album to see all the photos.
       - if policy(TripReport).index?
-        = link_to "Manage reports", admin_trip_reports_path, class: "button secondary"
+        = ui_link "Manage reports", admin_trip_reports_path, variant: :secondary
     .club-report-grid{data: {controller: "report-grid", action: "click->report-grid#toggle turbo:before-cache@document->report-grid#reset"}}
       - @reports.each do |report|
         = render "trip_reports/report", report: report, payload: report.public_payload, preview: false, compact: true

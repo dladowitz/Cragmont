@@ -1,6 +1,6 @@
 # Cragmont design language
 
-Use this guide when adding or changing a page. It records the choices already expressed in the site, not a second set of CSS tokens. The working sources are [`application.css`](../app/assets/stylesheets/application.css), [`editorial.css`](../app/assets/stylesheets/editorial.css), the [public header](../app/views/shared/_public_header.html.haml), and the [admin header](../app/views/admin/shared/_header.html.haml). Inspect those before adding a new pattern.
+Use this guide when adding or changing a page. It records the choices already expressed in the site, not a second set of CSS tokens. Use the [shared UI components](ui-components.md) for badges, buttons, panels, action groups, stats, and the brand. Their canonical tokens and styles live in `app/assets/stylesheets/ui/`. The page-composition sources are [`application.css`](../app/assets/stylesheets/application.css), [`editorial.css`](../app/assets/stylesheets/editorial.css), the [public header](../app/views/shared/_public_header.html.haml), and the [admin header](../app/views/admin/shared/_header.html.haml). Inspect those before adding a new pattern.
 
 ## What the site should feel like
 
@@ -23,7 +23,7 @@ Cragmont is a real climbing club, not a booking marketplace. Pages should feel o
 | Actions | Filled green primary button; outlined secondary; danger style only for destructive actions | The next step should be unmistakable. |
 | Badges | Compact text **and** color. Camping/default is green, day trip is blue, gym outing is orange, external class is amber; operational statuses retain their own semantic colors | The type/status must remain understandable without color. Preserve these distinctions when making pages. |
 
-The current public examples are [home](../app/views/home/index.html.haml), [trips](../app/views/trips/index.html.haml), [membership](../app/views/club/membership.html.haml), and [history](../app/views/club/history.html.haml). Reuse their HAML structure and existing classes before inventing a new component. `editorial.css` carries the newer visual treatment; check `application.css` for the original component and responsive rules before editing either file. Avoid stacking a page-specific override on a shared style unless the page genuinely differs.
+The current public examples are [home](../app/views/home/index.html.haml), [trips](../app/views/trips/index.html.haml), [membership](../app/views/club/membership.html.haml), and [history](../app/views/club/history.html.haml). Compose shared UI components and domain partials before inventing a new pattern. `editorial.css` carries the newer visual treatment; check `application.css` for the original component and responsive rules before editing either file. Avoid stacking a page-specific override on a shared style unless the page genuinely differs.
 
 ## Page patterns and decisions
 

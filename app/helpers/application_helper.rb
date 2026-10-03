@@ -1,6 +1,7 @@
 require "commonmarker"
 
 module ApplicationHelper
+  include UiHelper
   TRIP_DETAILS_EMAIL_MARKDOWN_TAGS = %w[p h1 h2 h3 h4 ul ol li strong em a br hr].freeze
   TRIP_DETAILS_EMAIL_MARKDOWN_ATTRIBUTES = %w[href title target rel].freeze
 
@@ -148,10 +149,7 @@ module ApplicationHelper
   end
 
   def help_request_status_pill(help_request)
-    tag.span(
-      help_request.status.titleize,
-      class: [ "status-pill", help_request_status_class(help_request.status) ]
-    )
+    ui_badge(help_request.status.titleize, pill: true, class: help_request_status_class(help_request.status))
   end
 
   def format_cents(cents)
@@ -173,7 +171,7 @@ module ApplicationHelper
   end
 
   def trip_type_badge(trip)
-    tag.span(public_trip_type_label(trip), class: [ "status", "trip-type-badge", public_trip_type_badge_class(trip) ])
+    ui_badge(public_trip_type_label(trip), class: [ "trip-type-badge", public_trip_type_badge_class(trip) ])
   end
 
   def public_trip_type_label(trip)

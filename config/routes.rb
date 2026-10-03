@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  get "ui/components", to: "ui/components#index", as: :ui_components if Rails.env.development? || Rails.env.test?
+
   root "home#index"
   get "about", to: "club#about", as: :about
   get "membership", to: "club#membership", as: :membership

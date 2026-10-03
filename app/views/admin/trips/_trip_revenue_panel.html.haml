@@ -1,4 +1,4 @@
-%section.panel.trip-revenue-panel
+= ui_panel(class: "trip-revenue-panel") do
   .panel-header
     %div
       %h2 Trip Profitability
@@ -55,8 +55,8 @@
                         %td{colspan: 2}
                         %td Stripe processing fees
                         %td{"data-label" => "Total"}= "-#{format_cents(summary.stripe_processing_fee_cents)}"
-                  .form-actions
-                    %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+                  = ui_actions(kind: :form) do
+                    = ui_button("Close", variant: :secondary, "data-action" => "modal#close", type: "button")
           %td
           %td
           %td{"data-label" => "Expense"}= "-#{format_cents(summary.stripe_processing_fee_cents)}"
@@ -113,8 +113,8 @@
                     %div
                       %dt Notes
                       %dd= line.campsite.registration_reimbursement_notes.presence || "None"
-                  .form-actions
-                    %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+                  = ui_actions(kind: :form) do
+                    = ui_button("Close", variant: :secondary, "data-action" => "modal#close", type: "button")
           %td
           %td
           %td{"data-label" => "Expense"}= "-#{format_cents(line.fee_cents)}"

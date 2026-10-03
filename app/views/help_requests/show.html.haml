@@ -2,13 +2,13 @@
 = render "shared/public_header"
 
 %main.public-main
-  %section.panel.help-admin-detail
+  = ui_panel(class: "help-admin-detail") do
     .panel-header
       %div
         .help-request-title-line
           %h1= @help_request.subject
           = help_request_status_pill(@help_request)
-      = link_to "Back to my help requests", help_requests_path, class: "button secondary"
+      = ui_link "Back to my help requests", help_requests_path, variant: :secondary
     %section.help-conversation
       %article.help-reply
         %p.help-reply-heading Original message

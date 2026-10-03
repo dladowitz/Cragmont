@@ -21,7 +21,7 @@
       = member_link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-mobile-resource-link trip-photo-album-mobile-link", target: "_blank", rel: "noopener"
   %span.trip-show-mobile-hero-caption IRS Wall, Joshua Tree
 %main.public-main
-  %section.panel.trip-overview.day-trip-overview.class-trip-overview
+  = ui_panel(class: "trip-overview day-trip-overview class-trip-overview") do
     .panel-header.trip-summary-header
       .trip-summary-copy
         .trip-title-line
@@ -46,16 +46,12 @@
           - if photo_album_url.present?
             = member_link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-photo-album-link", target: "_blank", rel: "noopener"
     = render "report_links", trip: @trip
-    .stats
-      %div
-        %span Interested
-        %strong= @trip.confirmed_signup_count
-      %div
-        %span Max Class Size
-        %strong= @trip.total_participant_capacity
+    = ui_stats do
+      = ui_stat(label: "Interested", value: @trip.confirmed_signup_count)
+      = ui_stat(label: "Max Class Size", value: @trip.total_participant_capacity)
 
   - if @trip.description.present? || class_signup_url.present?
-    %section.panel.day-trip-description-panel.class-trip-description-panel
+    = ui_panel(class: "day-trip-description-panel class-trip-description-panel") do
       .class-description-body{class: ("has-registration-action" if class_signup_url.present?)}
         .class-description-copy
           %h2 Description
@@ -65,16 +61,16 @@
         - if class_signup_url.present?
           .class-registration-card
             .day-trip-signup-action
-              = public_external_link_to "Register with #{@trip.partner_company&.name || 'guiding company'}", class_signup_url, class: "button day-trip-signup-button", target: "_blank", rel: "noopener"
+              = ui_public_link "Register with #{@trip.partner_company&.name || 'guiding company'}", class_signup_url, class: "day-trip-signup-button", target: "_blank", rel: "noopener"
               %p.muted.class-registration-note You must register and pay on the guiding company's website to be officially signed up.
 
-  %section.panel.day-trip-safety-panel.class-reminder-panel
+  = ui_panel(class: "day-trip-safety-panel class-reminder-panel") do
     %h2= public_member_text(@class_reminder.title)
     .content-page-markdown
       - class_reminder_body = @class_reminder.body.to_s.sub(/\A## Class Details[ \t]*\r?\n\r?\n?/, "")
       = render_content_page_markdown(class_reminder_body)
 
-  %section.panel.day-trip-details-panel.class-trip-details-panel
+  = ui_panel(class: "day-trip-details-panel class-trip-details-panel") do
     %h2 Cost Details
     %dl.details-list
       %div
@@ -93,7 +89,7 @@
           %dt Discounted price
           %dd= public_member_text(format_class_price(@trip.class_discounted_price))
 
-  %section.panel.day-trip-participants-panel.class-trip-participants-panel
+  = ui_panel(class: "day-trip-participants-panel class-trip-participants-panel") do
     %h2 Participants
     - if @class_signups.any?
       %table.confirmed-participants-table.public-card-table
@@ -115,23 +111,23 @@
         %p
           %strong You have indicated you signed up for this class.
         %div{"data-controller" => "modal"}
-          %button.button.danger{"data-action" => "modal#open", type: "button"} Remove me
+          = ui_button("Remove me", variant: :danger, "data-action" => "modal#open", type: "button")
           %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
             .signup-modal-content
               %div
                 %h2 Remove yourself?
-              .form-actions
-                %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
-                = button_to "Remove Me", trip_class_signup_path(@trip), method: :delete, class: "button danger"
+              = ui_actions(kind: :form) do
+                = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", type: "button")
+                = ui_button_to "Remove Me", trip_class_signup_path(@trip), method: :delete, variant: :danger
       - elsif user_signed_in?
         - if @trip.capacity_full?
-          %button.button.secondary{disabled: true, type: "button"} Class full
+          = ui_button("Class full", variant: :secondary, disabled: true, type: "button")
         - else
-          = button_to "I've Signed Up", trip_class_signup_path(@trip), method: :post, class: "button day-trip-signup-button"
+          = ui_button_to "I've Signed Up", trip_class_signup_path(@trip), method: :post, variant: :primary, class: "day-trip-signup-button"
           %p.muted This indicates to other Cragmont participants you have signed up.
           %p.muted You must signup on #{company_website_owner} website to be enrolled. This does not automatically sync with their signups.
       - else
-        = link_to "Log in to mark interest", member_links_login_path, class: "button secondary"
+        = ui_link "Log in to mark interest", member_links_login_path, variant: :secondary
         %p.muted This indicates to other Cragmont participants you have signed up.
         %p.muted You must signup on #{company_website_owner} website to be enrolled. This does not automatically sync with their signups.
 

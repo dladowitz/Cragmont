@@ -28,7 +28,7 @@
           %td{role: "cell", class: ("admin-record-title" unless public_table), "data-label" => "Participant"}= entry.participant_name
           %td{role: "cell", "data-label" => "Amount Paid"}= format_cents(entry.amount_cents)
           %td{role: "cell", "data-label" => "Status"}
-            %span.status.transaction-status{class: status_class}= status_label
+            = ui_badge((status_label), class: ["transaction-status", status_class])
           %td{role: "cell", "data-label" => "Paid At"}= entry.occurred_at&.strftime("%-m/%-d/%y %l:%M %p") || "None"
           %td{role: "cell", class: ("table-actions" unless public_table), "data-label" => "Details"}
             = render "admin/trip_transactions/entry_details",

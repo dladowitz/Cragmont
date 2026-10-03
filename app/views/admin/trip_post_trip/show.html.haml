@@ -1,27 +1,27 @@
 = render "admin/shared/header", title: "#{@trip.name} post trip"
 - editable_readiness = policy(@trip).update? && !@trip.deleted?
-%section.panel.trip-readiness-overview
+= ui_panel(class: "trip-readiness-overview") do
   .panel-header.trip-readiness-header
     .trip-readiness-category-title-row.has-trip-heading
       %h2 Post Trip
       %span.trip-readiness-trip-heading= @trip.name
-      %span.status{class: (@category.completed_count == @category.total_count ? "success-status" : "warning-status"), data: { readiness_count_key: "overall" }}
+      = ui_badge(class: (@category.completed_count == @category.total_count ? "success-status" : "warning-status"), data: { readiness_count_key: "overall" }) do
         = "#{@category.completed_count} of #{@category.total_count}"
     .trip-readiness-summary
-      = link_to "Back to trip", admin_trip_path(@trip), class: "button secondary"
+      = ui_link "Back to trip", admin_trip_path(@trip), variant: :secondary
       - report = TripReport.for_trip(@trip)
       - if policy(report).update?
-        = link_to(report.persisted? ? "Edit trip report" : "Write trip report", report_edit_path(report), class: "button")
+        = ui_link(report.persisted? ? "Edit trip report" : "Write trip report", report_edit_path(report), variant: :primary)
   - if @trip.deleted?
     .deleted-trip-banner
       %strong This trip has been deleted.
       %p Restore the trip before changing post trip tasks.
 
-%section.panel.trip-readiness-category{id: "readiness-#{@category.key}"}
+= ui_panel(class: "trip-readiness-category", id: "readiness-#{@category.key}") do
   .panel-header.trip-readiness-category-header
     .trip-readiness-category-title-row
       %h2= @category.name
-      %span.status{class: (@category.completed_count == @category.total_count ? "success-status" : "warning-status"), data: { readiness_count_key: @category.key }}
+      = ui_badge(class: (@category.completed_count == @category.total_count ? "success-status" : "warning-status"), data: { readiness_count_key: @category.key }) do
         = "#{@category.completed_count} of #{@category.total_count}"
   .trip-readiness-task-list
     - @category.tasks.each do |task|
@@ -43,6 +43,6 @@
             = form_with url: readiness_task_admin_trip_path(@trip, task.key), method: :patch, class: "trip-readiness-toggle-form", data: { controller: "readiness-toggle", action: "submit->readiness-toggle#submit", turbo: false } do
               = hidden_field_tag :scope, "post_trip"
               = hidden_field_tag :completed, task.complete? ? "0" : "1"
-              = submit_tag(task.complete? ? "Mark incomplete" : "Manually Mark", class: "button secondary trip-readiness-small-button")
+              = ui_submit_tag(task.complete? ? "Mark incomplete" : "Manually Mark", variant: :secondary, class: "trip-readiness-small-button")
           - elsif !editable_readiness && (task.manual? || task.overrideable?)
             %span.muted Read only

@@ -2,7 +2,7 @@
 - content_for :body_class, "club-page"
 = render "shared/public_header"
 %main.public-main.club-main
-  %article.panel.club-panel
+  = ui_panel(tag: :article, class: "club-panel") do
     %p.eyebrow Cragmont Climbing Club
     %h1 Membership
     .club-copy.content-page-markdown

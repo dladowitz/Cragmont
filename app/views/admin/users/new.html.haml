@@ -1,5 +1,5 @@
 = render "admin/shared/header", title: "New user"
-%section.panel
+= ui_panel do
   .panel-header
     %h2 New user
   = render "form", user: @user

@@ -30,7 +30,7 @@
             An Event Coordinator is required to host the meetups. Confirm their availability before publishing.
           %p All dates start at the same gym and time. Changes to an outing affect only that date; the schedule ends on your chosen date.
           %p Preview clears file selections. Choose your location image after previewing the dates.
-          = button_tag "Preview meetup dates", name: "preview_meetups", value: "1", class: "button secondary", formnovalidate: true
+          = ui_button "Preview meetup dates", name: "preview_meetups", value: "1", variant: :secondary, formnovalidate: true
       - if @preview_dates
         %div{role: "status"}
           %h3= "#{@preview_dates.size} meetup dates"
@@ -218,32 +218,32 @@
           = form.label :sun_exposure, "Sun Exposure"
           = form.text_field :sun_exposure, placeholder: "Sun in the morning. Shade in the afternoon"
   = render "admin/trips/report_setting", form: form
-  .form-actions
+  = ui_actions(kind: :form) do
     = form.submit
-    = link_to "Cancel", trip.persisted? ? admin_trip_path(trip) : admin_trips_path, class: "button secondary"
+    = ui_link "Cancel", trip.persisted? ? admin_trip_path(trip) : admin_trips_path, variant: :secondary
     - if trip.persisted? && policy(trip).destroy?
       .danger-form-action
         - if trip.delete_blocked_by_participants?
           %div{"data-controller" => "modal"}
             %span.disabled-modal-trigger{"aria-disabled" => "true", "data-action" => "click->modal#open keydown.enter->modal#open keydown.space->modal#open", role: "button", tabindex: "0", title: "Cannot delete a trip with participants signed up"}
-              %button.button.danger.secondary{disabled: true, type: "button"} Delete trip
+              = ui_button("Delete trip", variant: :danger_secondary, disabled: true, type: "button")
             %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
               .confirmation-modal-content
                 %div
                   %h2 Cannot delete a trip with participants signed up
-                .form-actions
-                  %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+                = ui_actions(kind: :form) do
+                  = ui_button("Close", variant: :secondary, "data-action" => "modal#close", type: "button")
         - else
           %div{"data-controller" => "modal"}
-            %button.button.danger.secondary{"data-action" => "modal#open", type: "button"} Delete trip
+            = ui_button("Delete trip", variant: :danger_secondary, "data-action" => "modal#open", type: "button")
             %dialog.confirmation-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
               .confirmation-modal-content
                 %div
                   %h2 Delete trip?
                   %p This will hide the trip from normal lists. Campsites, participants, payments, refunds, and transaction history will be preserved.
-                .form-actions
-                  %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
-                  %button.button.danger{form: "delete-trip-#{trip.id}", type: "submit"} Delete trip
+                = ui_actions(kind: :form) do
+                  = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", type: "button")
+                  = ui_button("Delete trip", variant: :danger, form: "delete-trip-#{trip.id}", type: "submit")
 
 - if trip.persisted? && !trip.delete_blocked_by_participants? && policy(trip).destroy?
   = form_with url: admin_trip_path(trip), method: :delete, html: { id: "delete-trip-#{trip.id}", class: "hidden-delete-form" } do

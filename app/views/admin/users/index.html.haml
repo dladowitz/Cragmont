@@ -1,9 +1,9 @@
 = render "admin/shared/header", title: "Users"
-%section.panel
+= ui_panel do
   .panel-header
     %div
       %h2 User directory
-    = link_to "New user", new_admin_user_path, class: "button"
+    = ui_link "New user", new_admin_user_path, variant: :primary
   - if @users.any?
     %table.admin-record-table.admin-users-table{role: "table", "aria-label" => "User directory"}
       %thead
@@ -35,4 +35,4 @@
   - else
     .empty-state
       %p No users have been added yet.
-      = link_to "New user", new_admin_user_path, class: "button"
+      = ui_link "New user", new_admin_user_path, variant: :primary

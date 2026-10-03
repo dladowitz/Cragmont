@@ -1,0 +1,168 @@
+/* Shared UI components. Keep page composition in application/editorial.css. */
+
+/* Buttons: native links, actions, buttons, and form submits share this skin. */
+.button, input[type="submit"] {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  min-height: 48px;
+  justify-content: center;
+  text-align: center;
+  padding: 10px 20px;
+  border: 1px solid var(--accent);
+  border-radius: var(--ui-radius);
+  background: var(--accent);
+  box-shadow: none;
+  color: #fff;
+  font-weight: 600;
+  line-height: 1.35;
+  text-decoration: none;
+}
+.button:hover, input[type="submit"]:hover { background: var(--accent-dark); }
+.button.secondary, .button.outline {
+  border-color: var(--accent);
+  background: transparent;
+  color: var(--accent);
+}
+.button.secondary:hover, .button.outline:hover { background: #e7eee9; }
+.button.danger { border-color: var(--danger); background: var(--danger); color: #fff; }
+.button.danger.secondary { background: transparent; color: var(--danger); }
+.button:disabled, input[type="submit"]:disabled,
+.waiver-form button[type="submit"]:disabled {
+  cursor: not-allowed;
+  border-color: #687b74;
+  border-style: dashed;
+  background: #e7ebe8;
+  color: #40504c;
+  opacity: 1;
+}
+.button.danger.secondary:disabled {
+  border-color: #872422;
+  background: #f8e9e7;
+  color: #872422;
+}
+
+/* Panels */
+.panel {
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius);
+  background: var(--panel);
+  box-shadow: none;
+}
+
+/* Badges */
+.status, .status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 7px;
+  line-height: 1.5;
+  border-radius: var(--ui-radius);
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .035em;
+  text-transform: uppercase;
+}
+
+.status { background: #e7f1ed; color: var(--accent-dark); }
+.status-pill { width: fit-content; }
+.open-status {
+  background: #fff8db;
+  color: #936100;
+}
+.replied-status {
+  background: #ecf8f2;
+  color: var(--accent-dark);
+}
+.resolved-status {
+  background: #eef4ff;
+  color: #1f5fbf;
+}
+.trip-type-badge.external-class-badge {
+  background: #fff3bf;
+  color: #7c4a03;
+}
+.trip-type-badge.day-trip-badge {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.trip-type-badge.gym-outing-badge {
+  background: #ffedd5;
+  color: #9a3412;
+}
+.danger-status {
+  background: #fff1f0;
+  color: var(--danger);
+}
+.success-status {
+  background: #ecf8f2;
+  color: var(--accent);
+}
+.warning-status {
+  background: #fff8db;
+  color: #936100;
+}
+.draft-status {
+  background: #fff8db;
+  color: #936100;
+}
+.waitlisted-status {
+  background: #fff8db;
+  color: #936100;
+}
+.archived-status {
+  background: #eef4ff;
+  color: #1f5fbf;
+}
+.deleted-status {
+  background: #fff1f0;
+  color: var(--danger);
+}
+.trip-type-badge { background: #e7f1ed; }
+.status.danger-status { color: var(--danger); }
+.status.warning-status { color: #91621c; }
+
+/* Stats */
+.stats > div { border: 1px solid var(--line); border-radius: var(--ui-radius); background: #fbfaf7; }
+.stats strong { font-size: 1.9rem; font-weight: 400; }
+.stats span { color: var(--muted); font-size: .88rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.stats .availability-stat strong,
+.stats .availability-stat span {
+  color: inherit;
+}
+.stats .success-stat {
+  border-color: #9bd0ba;
+  background: #ecf8f2;
+  color: var(--accent);
+}
+.stats .warning-stat {
+  border-color: #efd77a;
+  background: #fff8db;
+  color: #936100;
+}
+.stats .danger-stat {
+  border-color: #f4b6ae;
+  background: #fff1f0;
+  color: var(--danger);
+}
+
+/* Brand */
+.site-name {
+  display: inline-grid;
+  gap: 2px;
+  color: var(--text);
+  line-height: 1;
+  text-decoration: none;
+}
+.site-name span {
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+.site-name small {
+  color: var(--muted);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}

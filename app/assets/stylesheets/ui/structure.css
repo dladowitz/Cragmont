@@ -1,0 +1,48 @@
+/* Structural defaults precede page composition. Visual tokens and variants live in components.css. */
+.panel {
+  width: min(1280px, calc(100% - 32px));
+  margin-inline: auto;
+  margin-bottom: 24px;
+  padding: 24px;
+}
+
+/* Action groups */
+.actions,
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.form-actions .danger-form-action {
+  margin-left: auto;
+}
+.table-actions {
+  white-space: nowrap;
+}
+.table-actions a,
+.table-actions form {
+  display: inline-block;
+}
+.table-actions form {
+  margin-left: 10px;
+}
+.table-actions [data-controller="modal"] {
+  display: inline-block;
+  margin-left: 10px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+.stats > div {
+  padding: 16px;
+}
+.stats strong {
+  display: block;
+}
+
+.stats span { display: block; }

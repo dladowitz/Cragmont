@@ -1,15 +1,4 @@
 /* Alpine editorial: one typeface and quiet surfaces. */
-:root {
-  --bg: #f7f5ef;
-  --panel: #fffefa;
-  --text: #203330;
-  --muted: #586b65;
-  --line: #d5ddd7;
-  --ui-radius: 5px;
-  --accent: #164b40;
-  --accent-dark: #103d34;
-  --danger: #a92e2c;
-}
 
 html { scroll-behavior: smooth; }
 body {
@@ -60,9 +49,6 @@ a { color: var(--accent); font-weight: 500; text-underline-offset: .2em; }
   align-items: center;
 }
 .public-brand { gap: 28px; flex-wrap: nowrap; }
-.site-name { gap: 2px; line-height: 1; }
-.site-name span { font-size: 1.65rem; font-weight: 800; letter-spacing: 0; }
-.site-name small { font-size: 1rem; font-weight: 800; letter-spacing: 0; }
 .public-nav { gap: clamp(14px, 2vw, 30px); }
 .public-nav form { margin: 0; }
 .public-nav-group { position: relative; }
@@ -215,50 +201,8 @@ body:is(.club-page, .home-page, .trips-index-page, .session-new-page, .password-
   color: var(--accent-dark);
 }
 /* Common controls and content surfaces drive both public and admin pages. */
-.button, input[type="submit"] {
-  min-height: 48px;
-  justify-content: center;
-  text-align: center;
-  padding: 10px 20px;
-  border: 1px solid var(--accent);
-  border-radius: var(--ui-radius);
-  background: var(--accent);
-  box-shadow: none;
-  color: #fff;
-  font-weight: 600;
-  line-height: 1.35;
-  text-decoration: none;
-}
-.button:hover, input[type="submit"]:hover { background: var(--accent-dark); }
 .home-hero .button:hover { color: #fff; }
-.button.secondary, .button.outline {
-  border-color: var(--accent);
-  background: transparent;
-  color: var(--accent);
-}
-.button.secondary:hover, .button.outline:hover { background: #e7eee9; }
-.admin-nav .button.secondary { border-color: transparent; }
-.button.danger { border-color: var(--danger); background: var(--danger); color: #fff; }
-.button.danger.secondary { background: transparent; color: var(--danger); }
-.button:disabled, input[type="submit"]:disabled,
-.waiver-form button[type="submit"]:disabled {
-  border-color: #687b74;
-  border-style: dashed;
-  background: #e7ebe8;
-  color: #40504c;
-  opacity: 1;
-}
-.button.danger.secondary:disabled {
-  border-color: #872422;
-  background: #f8e9e7;
-  color: #872422;
-}
-.panel {
-  border: 1px solid var(--line);
-  border-radius: var(--ui-radius);
-  background: var(--panel);
-  box-shadow: none;
-}
+.admin-nav .button.secondary { border-color: transparent; color: var(--accent); }
 .public-main { position: relative; z-index: 2; }
 body:is(.trips-index-page, .not-found-page,
   .trip-what-to-expect-page, .help-request-page, .trip-show-page,
@@ -419,24 +363,6 @@ body.trips-index-page .trips-index-notices .calendar-subscription-notice {
 .trip-card h2, .trip-card h3, .row-title { font-weight: 500; }
 .trip-card h2 { text-decoration: none; }
 .trip-card:hover h2, .trip-card:focus-visible h2 { color: var(--accent-dark); }
-.status, .status-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3px 7px;
-  line-height: 1.5;
-  border-radius: var(--ui-radius);
-  font-size: .72rem;
-  font-weight: 600;
-  letter-spacing: .035em;
-  text-transform: uppercase;
-}
-.trip-type-badge { background: #e7f1ed; }
-.status.danger-status { color: var(--danger); }
-.status.warning-status { color: #91621c; }
-.stats > div { border-radius: var(--ui-radius); }
-.stats strong { font-size: 1.9rem; font-weight: 400; }
-.stats span { color: var(--muted); font-size: .88rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
 
 label, legend { font-weight: 500; }
 .required-marker { color: var(--danger); font-weight: 700; }

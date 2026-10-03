@@ -1,0 +1,13 @@
+- case component.kind
+- when :link
+  = link_to content, component.url, component.attributes
+- when :public_link
+  = public_external_link_to content, component.url, **component.attributes
+- when :action
+  = button_to content, component.url, component.attributes
+- when :submit
+  = component.form.submit content, component.attributes
+- when :submit_tag
+  = submit_tag content, component.attributes
+- else
+  = button_tag content, component.attributes

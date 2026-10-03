@@ -1,10 +1,10 @@
 = render "admin/shared/header", title: "Partners"
-%section.panel
+= ui_panel do
   .panel-header
     %div
       %h2 Partner companies
       %p Manage guiding companies used for instructional classes.
-    = link_to "New partner", new_admin_partner_company_path, class: "button"
+    = ui_link "New partner", new_admin_partner_company_path, variant: :primary
   - if @partner_companies.any?
     %table.admin-record-table.admin-partners-table{role: "table", "aria-label" => "Partner companies"}
       %thead
@@ -24,4 +24,4 @@
   - else
     .empty-state
       %p No partner companies have been added yet.
-      = link_to "New partner", new_admin_partner_company_path, class: "button"
+      = ui_link "New partner", new_admin_partner_company_path, variant: :primary

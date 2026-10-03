@@ -13,7 +13,7 @@
         = link_to link_text, participant_link, class: "missing-details-link"
         .admin-participant-link-actions
           %span{"data-controller" => "copy-link", "data-copy-link-url-value" => participant_link}
-            %button.button.secondary.copy-link-button.admin-participant-link-action{"data-action" => "copy-link#copy", type: "button"}
+            = ui_button(variant: :secondary, class: "copy-link-button admin-participant-link-action", "data-action" => "copy-link#copy", type: "button") do
               %span.copy-link-icon.copy-icon{aria: { hidden: "true" }}
                 %svg{fill: "none", height: "14", viewbox: "0 0 24 24", width: "14", xmlns: "http://www.w3.org/2000/svg"}
                   %rect{height: "12", rx: "2", stroke: "currentColor", "stroke-width" => "2", width: "12", x: "8", y: "8"}
@@ -23,6 +23,6 @@
                   %path{d: "M20 6 9 17l-5-5", stroke: "currentColor", "stroke-linecap" => "round", "stroke-linejoin" => "round", "stroke-width" => "2.5"}
               %span Copy Link
           - if signup.user.email.present?
-            = button_to "Email link to participant", email_participant_link_admin_trip_campsite_signup_path(trip, signup), method: :post, class: "button secondary admin-participant-link-action", form: { class: "admin-participant-link-action-form", data: { controller: "email-link", action: "submit->email-link#send" } }
-      .form-actions
-        %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+            = ui_button_to "Email link to participant", email_participant_link_admin_trip_campsite_signup_path(trip, signup), method: :post, variant: :secondary, class: "admin-participant-link-action", form: { class: "admin-participant-link-action-form", data: { controller: "email-link", action: "submit->email-link#send" } }
+      = ui_actions(kind: :form) do
+        = ui_button("Close", variant: :secondary, "data-action" => "modal#close", type: "button")

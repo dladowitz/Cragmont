@@ -13,6 +13,6 @@
   .field
     = form.label :notes
     = form.text_area :notes, rows: 5
-  .form-actions
+  = ui_actions(kind: :form) do
     = form.submit
-    = link_to "Cancel", campground.persisted? ? admin_campground_path(campground) : admin_campgrounds_path, class: "button secondary"
+    = ui_link "Cancel", campground.persisted? ? admin_campground_path(campground) : admin_campgrounds_path, variant: :secondary

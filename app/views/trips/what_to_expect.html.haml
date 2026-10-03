@@ -1,7 +1,7 @@
 - content_for :body_class, "trip-what-to-expect-page"
 = render "shared/public_header"
 %main.public-main
-  %section.panel.trip-what-to-expect-panel
+  = ui_panel(class: "trip-what-to-expect-panel") do
     .panel-header
       %div
         %h1= public_member_text(@content_page.title)

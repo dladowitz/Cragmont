@@ -24,7 +24,7 @@
     %link{:href => "/icon.svg?v=4", :rel => "icon", :type => "image/svg+xml"}/
     %link{:href => "/icon.png?v=4", :rel => "alternate icon", :type => "image/png"}/
     %link{:href => "/icon.png?v=4", :rel => "apple-touch-icon"}/
-    = stylesheet_link_tag :app, "data-turbo-track": "reload"
+    = stylesheet_link_tag "ui/tokens", "ui/structure", "application", "ui/components", "editorial", "data-turbo-track": "reload"
     = javascript_importmap_tags
   - environment_name = visible_environment_name
   - admin_body = controller_path.start_with?("admin/")

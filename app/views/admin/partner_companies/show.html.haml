@@ -1,5 +1,5 @@
 = render "admin/shared/header", title: @partner_company.name
-%section.panel
+= ui_panel do
   .panel-header
     %div
       %h2= @partner_company.name
@@ -8,9 +8,9 @@
         %p= link_to @partner_company.website_url, website_url, target: "_blank", rel: "noopener"
       - else
         %p= @partner_company.website_url
-    .actions
-      = link_to "Edit Company", edit_admin_partner_company_path(@partner_company), class: "button secondary"
-      = button_to "Delete Company", admin_partner_company_path(@partner_company), method: :delete, class: "button danger"
+    = ui_actions do
+      = ui_link "Edit Company", edit_admin_partner_company_path(@partner_company), variant: :secondary
+      = ui_button_to "Delete Company", admin_partner_company_path(@partner_company), method: :delete, variant: :danger
   %dl.details-list
     %div
       %dt Partner Name

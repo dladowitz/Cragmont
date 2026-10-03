@@ -1,7 +1,7 @@
 - content_for :body_class, "profile-show-page"
 = render "shared/public_header"
 %main.public-main
-  %section.panel
+  = ui_panel do
     .panel-header.user-detail-header
       %div
         %h1= @user.full_name
@@ -22,20 +22,20 @@
                 = render "shared/waiver_modal", waiver: @current_waiver, button_label: @current_waiver.waiver_signed_at.strftime("%m/%d/%y"), modal_id: "profile-current-waiver"
               - else
                 = link_to "Missing", new_profile_waiver_path, class: "missing-value missing-link"
-      .actions
-        = link_to "Edit profile", edit_profile_path, class: "button secondary"
-  %section.panel
+      = ui_actions do
+        = ui_link "Edit profile", edit_profile_path, variant: :secondary
+  = ui_panel do
     %h2 Trips and Transactions
     = render "shared/user_trip_history",
       rows: @trip_history_rows,
       empty_message: "No trip signups yet.",
       public_table: true
-  %section.panel
+  = ui_panel do
     .panel-header
       %div
         %h2 Inbox
         %p.muted View your help requests and replies from the Cragmont admins.
-      = link_to "All Help Requests", help_requests_path, class: "button secondary"
+      = ui_link "All Help Requests", help_requests_path, variant: :secondary
     - if @recent_help_requests.any?
       %table.profile-inbox-table.public-card-table
         %thead
@@ -53,11 +53,11 @@
               %td{"data-label" => "Reason"}= help_request.reason_label
               %td{"data-label" => "Status"}
                 = help_request_status_pill(help_request)
-              %td{"data-label" => "View"}= link_to "View", help_request_path(help_request), class: "button secondary admin-table-action-button"
+              %td{"data-label" => "View"}= ui_link "View", help_request_path(help_request), variant: :secondary, class: "admin-table-action-button"
     - else
       %p.muted No help requests yet.
   - if @coordinated_trips.any?
-    %section.panel
+    = ui_panel do
       %h2 Coordinated trips
       %table.public-card-table
         %thead
@@ -76,7 +76,7 @@
                 = link_to trip.name, trip_path(trip)
                 %span= trip.location
               %td{"data-label" => "Status"}
-                %span{ class: [ "status", "#{trip.status}-status" ] }= trip.status.titleize
+                = ui_badge(trip.status.titleize, class: "#{trip.status}-status")
               %td{"data-label" => "Dates"}
                 %dl.date-pair
                   %div
@@ -88,5 +88,5 @@
               %td{"data-label" => "Campsites"}= trip.campsite_count
               %td{"data-label" => "Participant Capacity"}= trip.total_participant_capacity
               %td{"data-label" => "Signed Up"}= trip.confirmed_signup_count
-              %td{"data-label" => "Manage"}= link_to "Manage trip", admin_trip_path(trip), class: "button secondary admin-table-action-button"
+              %td{"data-label" => "Manage"}= ui_link "Manage trip", admin_trip_path(trip), variant: :secondary, class: "admin-table-action-button"
 %p.background-image-caption Castle Valley, UT. Castleton Tower.

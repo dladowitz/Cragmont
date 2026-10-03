@@ -26,5 +26,5 @@
                   %div
                     %dt Relationship
                     %dd= minor.relationship
-                .form-actions
-                  %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+                = ui_actions(kind: :form) do
+                  = ui_button("Close", variant: :secondary, "data-action" => "modal#close", type: "button")

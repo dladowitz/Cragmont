@@ -2,21 +2,21 @@
 - editable_readiness = policy(@trip).update? && !@trip.deleted?
 - compact_trip_readiness = @categories.one? && @categories.first.key == "trip"
 - unless compact_trip_readiness
-  %section.panel.trip-readiness-overview
+  = ui_panel(class: "trip-readiness-overview") do
     .panel-header.trip-readiness-header
       .trip-readiness-category-title-row
         %h2 Trip Readiness
-        %span.status{class: (@completed_count == @total_count ? "success-status" : "warning-status"), data: { readiness_count_key: "overall" }}
+        = ui_badge(class: (@completed_count == @total_count ? "success-status" : "warning-status"), data: { readiness_count_key: "overall" }) do
           = "#{@completed_count} of #{@total_count}"
       .trip-readiness-summary
-        = link_to "Back to trip", admin_trip_path(@trip), class: "button secondary"
+        = ui_link "Back to trip", admin_trip_path(@trip), variant: :secondary
     - if @trip.deleted?
       .deleted-trip-banner
         %strong This trip has been deleted.
         %p Restore the trip before changing manual readiness tasks.
 
 - @categories.each do |category|
-  %section.panel.trip-readiness-category{id: "readiness-#{category.key}"}
+  = ui_panel(class: "trip-readiness-category", id: "readiness-#{category.key}") do
     .panel-header.trip-readiness-category-header
       .trip-readiness-category-title-row{class: ("has-trip-heading" if category.key == "trip")}
         %h2= compact_trip_readiness ? "Trip Readiness" : category.name
@@ -27,18 +27,18 @@
               = @trip.start_date.strftime("%-m/%-d/%Y")
               - unless @trip.uses_day_trip_signups?
                 to #{@trip.end_date.strftime("%-m/%-d/%Y")}
-        %span.status{class: (category.completed_count == category.total_count ? "success-status" : "warning-status"), data: { readiness_count_key: category.key }}
+        = ui_badge(class: (category.completed_count == category.total_count ? "success-status" : "warning-status"), data: { readiness_count_key: category.key }) do
           = "#{category.completed_count} of #{category.total_count}"
       - if compact_trip_readiness
-        .actions.trip-readiness-header-actions
+        = ui_actions(class: "trip-readiness-header-actions") do
           - if editable_readiness
-            = link_to "Update Trip", edit_admin_trip_path(@trip), class: "button secondary"
+            = ui_link "Update Trip", edit_admin_trip_path(@trip), variant: :secondary
           - else
             %span.muted Read only
-          = link_to "Back to trip", admin_trip_path(@trip), class: "button secondary"
+          = ui_link "Back to trip", admin_trip_path(@trip), variant: :secondary
       - elsif category.key == "trip"
         - if editable_readiness
-          = link_to "Update Trip", edit_admin_trip_path(@trip), class: "button secondary"
+          = ui_link "Update Trip", edit_admin_trip_path(@trip), variant: :secondary
         - else
           %span.muted Read only
     - if compact_trip_readiness && @trip.deleted?
@@ -77,7 +77,7 @@
                     = form_with url: readiness_task_admin_trip_path(@trip, task.key), method: :patch, class: "trip-readiness-toggle-form", data: { controller: "readiness-toggle", action: "submit->readiness-toggle#submit", turbo: false } do
                       = hidden_field_tag :scope, "readiness"
                       = hidden_field_tag :completed, task.complete? ? "0" : "1"
-                      = submit_tag(task.complete? ? "Mark incomplete" : "Manually Mark", class: "button secondary trip-readiness-small-button")
+                      = ui_submit_tag(task.complete? ? "Mark incomplete" : "Manually Mark", variant: :secondary, class: "trip-readiness-small-button")
                 - elsif !editable_readiness && (task.manual? || task.overrideable?)
                   %span.muted Read only
       - elsif category.key == "campsites" && category.tasks.any?(&:update_campsite)
@@ -87,7 +87,7 @@
               .trip-readiness-campsite-title-row
                 %h3= "#{campsite.campground.name} site #{campsite.site_number}"
               - if editable_readiness
-                = link_to "Update Campsite", edit_admin_trip_campsite_path(@trip, campsite), class: "button secondary"
+                = ui_link "Update Campsite", edit_admin_trip_campsite_path(@trip, campsite), variant: :secondary
               - else
                 %span.muted Read only
             .trip-readiness-campsite-checks
@@ -110,7 +110,7 @@
                       = form_with url: readiness_task_admin_trip_path(@trip, task.key), method: :patch, class: "trip-readiness-toggle-form", data: { controller: "readiness-toggle", action: "submit->readiness-toggle#submit", turbo: false } do
                         = hidden_field_tag :scope, "readiness"
                         = hidden_field_tag :completed, task.complete? ? "0" : "1"
-                        = submit_tag(task.complete? ? "Mark incomplete" : "Manually Mark", class: "button secondary trip-readiness-small-button")
+                        = ui_submit_tag(task.complete? ? "Mark incomplete" : "Manually Mark", variant: :secondary, class: "trip-readiness-small-button")
       - else
         - category.tasks.each do |task|
           .trip-readiness-task{class: [("is-complete" if task.complete?), ("is-manual" if task.manual?), ("is-automatic" if task.automatic?)].compact, data: { readiness_task_key: task.key }}
@@ -132,11 +132,11 @@
               .trip-readiness-task-actions
                 - if editable_readiness && task.update_label.present?
                   - update_path = task.update_campsite.present? ? edit_admin_trip_campsite_path(@trip, task.update_campsite) : edit_admin_trip_path(@trip)
-                  = link_to task.update_label, update_path, class: "button secondary"
+                  = ui_link task.update_label, update_path, variant: :secondary
                 - if editable_readiness && (task.manual? || (task.overrideable? && !task.source_complete?))
                   = form_with url: readiness_task_admin_trip_path(@trip, task.key), method: :patch, class: "trip-readiness-toggle-form", data: { controller: "readiness-toggle", action: "submit->readiness-toggle#submit", turbo: false } do
                     = hidden_field_tag :scope, "readiness"
                     = hidden_field_tag :completed, task.complete? ? "0" : "1"
-                    = submit_tag(task.complete? ? "Mark incomplete" : "Manually Mark", class: "button secondary trip-readiness-small-button")
+                    = ui_submit_tag(task.complete? ? "Mark incomplete" : "Manually Mark", variant: :secondary, class: "trip-readiness-small-button")
                 - elsif !editable_readiness
                   %span.muted Read only

@@ -1,5 +1,5 @@
 = render "admin/shared/header", title: "Content"
-%section.panel
+= ui_panel do
   .panel-header
     %div
       %h2 Edit #{@content_page.title}
@@ -46,5 +46,5 @@
               %p.muted Updates as you type.
             .content-page-markdown.content-page-preview{data: { markdown_preview_target: "preview" }}
               = render_content_page_markdown(@content_page.body)
-    .form-actions
-      = form.submit "Save content", class: "button"
+    = ui_actions(kind: :form) do
+      = ui_submit form, "Save content", variant: :primary

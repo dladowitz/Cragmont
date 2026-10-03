@@ -7,9 +7,9 @@
       %h1= public_member_text(@trip.name)
       = trip_type_badge(@trip)
       - if @trip.capacity_full?
-        %span.status.danger-status Trip Full
+        = ui_badge("Trip Full", tone: :danger)
       - elsif @trip.almost_full?
-        %span.status.warning-status Almost Full
+        = ui_badge("Almost Full", tone: :warning)
     %p.trip-show-mobile-location= public_member_text(@trip.location)
     %p.trip-show-mobile-dates
       = @trip.start_date.to_fs(:long)
@@ -31,16 +31,16 @@
       = member_link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-mobile-resource-link trip-photo-album-mobile-link", target: "_blank", rel: "noopener"
   %span.trip-show-mobile-hero-caption IRS Wall, Joshua Tree
 %main.public-main
-  %section.panel.trip-overview
+  = ui_panel(class: "trip-overview") do
     .panel-header.trip-summary-header
       .trip-summary-copy
         .trip-title-line
           %h1= public_member_text(@trip.name)
           = trip_type_badge(@trip)
           - if @trip.capacity_full?
-            %span.status.danger-status Trip Full
+            = ui_badge("Trip Full", tone: :danger)
           - elsif @trip.almost_full?
-            %span.status.warning-status Almost Full
+            = ui_badge("Almost Full", tone: :warning)
         %h2= public_member_text(@trip.location)
         %p
           = @trip.start_date.to_fs(:long)
@@ -64,7 +64,7 @@
             - if photo_album_url.present?
               = member_link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-photo-album-link", target: "_blank", rel: "noopener"
     = render "report_links", trip: @trip
-    .stats
+    = ui_stats do
       - if @trip.confirmed_uncounted_minor_count.positive?
         .split-signup-stat
           %section
@@ -78,19 +78,11 @@
                 %span.info-tooltip-box{role: "tooltip"}= uncounted_minor_tooltip
             %strong= @trip.confirmed_uncounted_minor_count
       - else
-        %div
-          %span Signed up
-          %strong= @trip.confirmed_signup_count
-      %div{:class => "availability-stat #{@trip.capacity_full? ? "danger-stat" : (@trip.almost_full? ? "warning-stat" : "success-stat")}"}
-        %span Open Spaces
-        %strong= @trip.available_participant_capacity
-      %div
-        %span Total Capacity
-        %strong= @trip.total_participant_capacity
-      %div
-        %span Campsites
-        %strong= @trip.campsite_count
-  %section.panel.campsites-panel
+        = ui_stat(label: "Signed up", value: @trip.confirmed_signup_count)
+      = ui_stat(label: "Open Spaces", value: @trip.available_participant_capacity, tone: (@trip.capacity_full? ? :danger : (@trip.almost_full? ? :warning : :success)))
+      = ui_stat(label: "Total Capacity", value: @trip.total_participant_capacity)
+      = ui_stat(label: "Campsites", value: @trip.campsite_count)
+  = ui_panel(class: "campsites-panel") do
     %h2 Campsites
     - if @campsites.any?
       .campsite-card-list
@@ -124,7 +116,7 @@
                   - if current_pending_signup
                     %strong Payment pending for this campsite.
                     - if @current_signup.current_payment&.checkout_url.present?
-                      = link_to "Return to payment", @current_signup.current_payment.checkout_url, class: "button", target: "_blank", rel: "noopener"
+                      = ui_link "Return to payment", @current_signup.current_payment.checkout_url, variant: :primary, target: "_blank", rel: "noopener"
                   - else
                     %strong
                       You are #{@current_signup.status} for this campsite.
@@ -135,7 +127,7 @@
                         - remove_button_text = @current_signup.waitlisted? ? "Remove me from the waitlist" : "Remove me from this campsite"
                         - remove_title = @current_signup.waitlisted? ? "Remove yourself from the waitlist?" : "Remove yourself from this campsite?"
                         - refund_amount_cents = @current_signup.refund_eligible? ? @current_signup.refundable_amount_cents : 0
-                        %button.button.danger{"data-action" => "modal#open", :type => "button"}= remove_button_text
+                        = ui_button((remove_button_text), variant: :danger, "data-action" => "modal#open", :type => "button")
                         %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                           .signup-modal-content
                             %div
@@ -158,9 +150,9 @@
                                     %div
                                       %dt Refund amount
                                       %dd= format_cents(refund_amount_cents)
-                            .form-actions
-                              %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
-                              = button_to remove_button_text, trip_campsite_campsite_signup_path(@trip, campsite), method: :delete, class: "button danger"
+                            = ui_actions(kind: :form) do
+                              = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", :type => "button")
+                              = ui_button_to remove_button_text, trip_campsite_campsite_signup_path(@trip, campsite), method: :delete, variant: :danger
                 - elsif signed_up_for_another_campsite
                   %p.muted.already-signed-up-note You are already signed up for another campsite on this trip.
                 - elsif current_waitlisted_signup
@@ -172,7 +164,7 @@
                     - elsif waitlist_direct_signup_available
                       = render "campsite_signup_form", trip: @trip, campsite: campsite, waitlist_direct_signup: true
                     - else
-                      %button.button.secondary{:disabled => true, :type => "button"} On waitlist
+                      = ui_button("On waitlist", variant: :secondary, :disabled => true, :type => "button")
                 - elsif user_signed_in?
                   - if campsite.waitlist_signup_required?
                     = render "waitlist_form", trip: @trip, campsite: campsite
@@ -184,9 +176,9 @@
                   - else
                     = render "campsite_signup_form", trip: @trip, campsite: campsite
                 - else
-                  = link_to "Log in to sign up", member_links_login_path, class: "button"
+                  = ui_link "Log in to sign up", member_links_login_path, variant: :primary
             .campsite-card-details
-              .stats.campsite-stats
+              = ui_stats(class: "campsite-stats") do
                 - if campsite.confirmed_uncounted_minor_count.positive?
                   .split-signup-stat
                     %section
@@ -200,15 +192,9 @@
                           %span.info-tooltip-box{role: "tooltip"}= uncounted_minor_tooltip
                       %strong= campsite.confirmed_uncounted_minor_count
                 - else
-                  %div
-                    %span Signed up
-                    %strong= campsite.confirmed_signup_count
-                %div{:class => "availability-stat #{campsite.capacity_full? ? "danger-stat" : "success-stat"}"}
-                  %span Open Spaces
-                  %strong= campsite.available_participant_capacity
-                %div
-                  %span Total Capacity
-                  %strong= campsite.participant_capacity
+                  = ui_stat(label: "Signed up", value: campsite.confirmed_signup_count)
+                = ui_stat(label: "Open Spaces", value: campsite.available_participant_capacity, tone: (campsite.capacity_full? ? :danger : :success))
+                = ui_stat(label: "Total Capacity", value: campsite.participant_capacity)
                 .parking-stat
                   %span Parking
                   .parking-breakdown
@@ -270,8 +256,8 @@
                                         = link_to "Waiver Link", guest_waiver_link, class: "missing-details-link"
                                         .admin-participant-link-actions
                                           = render "guest_waiver_link_actions", waiver_link: guest_waiver_url, email_path: guest_email_path
-                                      .form-actions
-                                        %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+                                      = ui_actions(kind: :form) do
+                                        = ui_button("Close", variant: :secondary, "data-action" => "modal#close", type: "button")
                               - elsif user_signed_in? && signup.user_id == current_user.id
                                 - details_link_purpose = signup.guest? ? :complete_guest_details : :complete_participant_details
                                 = link_to "Missing", trip_path(@trip, complete_signup: signup.signed_id(purpose: details_link_purpose), anchor: "campsite-#{campsite.id}"), class: "missing-value missing-link"
@@ -289,7 +275,7 @@
                               - unless signup.user_id == current_user.id
                                 - contact_modal_title_id = "participant-contact-title-#{signup.id}"
                                 %div.participant-contact-control{"data-controller" => "modal"}
-                                  %button.button.secondary{"data-action" => "modal#open", type: "button"} Contact Info
+                                  = ui_button("Contact Info", variant: :secondary, "data-action" => "modal#open", type: "button")
                                   %dialog.signup-modal.participant-contact-modal{"aria-labelledby" => contact_modal_title_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                                     .signup-modal-content
                                       %div
@@ -302,8 +288,8 @@
                                           %div
                                             %dt Email
                                             %dd= signup.user.email.presence || "Not provided"
-                                      .form-actions
-                                        %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+                                      = ui_actions(kind: :form) do
+                                        = ui_button("Close", variant: :secondary, "data-action" => "modal#close", type: "button")
                 - else
                   %p.muted No confirmed participants yet.
               = render "parking_spots", campsite: campsite
@@ -338,17 +324,17 @@
                   %td.waitlist-action-column{class: ("public-empty-action" unless waitlist_action_available), "data-label" => "Action"}
                     - if waitlist_action_available
                       %div{"data-controller" => "modal"}
-                        %button.button.danger{"data-action" => "modal#open", :type => "button"} Remove From Waitlist
+                        = ui_button("Remove From Waitlist", variant: :danger, "data-action" => "modal#open", :type => "button")
                         %dialog.signup-modal{"data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                           .signup-modal-content
                             %div
                               %h2 Remove me from the waitlist
-                            .form-actions
-                              %button.button.secondary{"data-action" => "modal#close", :type => "button"} Cancel
-                              = button_to "Remove Me", trip_campsite_campsite_signup_path(@trip, @campsites.first), method: :delete, class: "button danger"
+                            = ui_actions(kind: :form) do
+                              = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", :type => "button")
+                              = ui_button_to "Remove Me", trip_campsite_campsite_signup_path(@trip, @campsites.first), method: :delete, variant: :danger
     - else
       %p.muted No campsite reservations have been added yet.
-  %section.panel.climbing-partner-panel{id: "climbing-partners"}
+  = ui_panel(class: "climbing-partner-panel", id: "climbing-partners") do
     .panel-header.climbing-partner-header
       %div
         %h2 Climbing Partner Board
@@ -363,7 +349,7 @@
               %span Looking for a climbing partner on this trip
             - if user_signed_in?
               .climbing-partner-contact-control{"data-controller" => "modal"}
-                %button.button.secondary{"data-action" => "modal#open", type: "button"} Show contact info
+                = ui_button("Show contact info", variant: :secondary, "data-action" => "modal#open", type: "button")
                 %dialog.signup-modal.climbing-partner-contact-modal{"aria-labelledby" => contact_modal_title_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
                   .signup-modal-content
                     %div
@@ -375,31 +361,31 @@
                         %div
                           %dt Email
                           %dd= partner_request.user.email.presence || "Not provided"
-                    .form-actions
-                      %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
+                    = ui_actions(kind: :form) do
+                      = ui_button("Close", variant: :secondary, "data-action" => "modal#close", type: "button")
             - else
-              = link_to "Log in to reveal contact details", member_links_login_path, class: "button secondary"
+              = ui_link "Log in to reveal contact details", member_links_login_path, variant: :secondary
     - else
       %p.muted.climbing-partner-empty-state No climbers are looking for a partner yet.
     - if @current_climbing_partner_request.present?
       .climbing-partner-self-service
         %p Found your partner? Take your request off the board.
-        = button_to "I found a partner",
+        = ui_button_to "I found a partner",
           trip_climbing_partner_request_path(@trip),
           method: :delete,
-          class: "button secondary"
+          variant: :secondary
     - elsif !@trip.archived?
       .climbing-partner-self-service
         - if user_signed_in?
           %p Add your name and contact info—no campsite signup, dates, waiver, or payment required.
-          = button_to "Add me to the board",
+          = ui_button_to "Add me to the board",
             trip_climbing_partner_request_path(@trip),
             method: :post,
-            class: "button"
+            variant: :primary
         - else
           %p Log in to add your name—no campsite signup, dates, waiver, or payment required.
-          = link_to "Log in to join the board", member_links_login_path, class: "button"
-  %section.panel.trip-coordinator-panel
+          = ui_link "Log in to join the board", member_links_login_path, variant: :primary
+  = ui_panel(class: "trip-coordinator-panel") do
     %h2 Trip Coordinator
     - if @trip.campsite_coordinator.present?
       %dl.details-list

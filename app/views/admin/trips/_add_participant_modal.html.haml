@@ -17,7 +17,7 @@
   - option_label = "#{option_label} - already on trip" if signed_up
   - { label: option_label, value: user.id, disabled: signed_up, search_text: [user.full_name, user.email].compact.join(" ").downcase }
 %div{"data-controller" => "modal"}
-  %button.button.secondary{"aria-controls" => modal_id, "data-action" => "modal#open", type: "button"} Add Participant
+  = ui_button("Add Participant", variant: :secondary, "aria-controls" => modal_id, "data-action" => "modal#open", type: "button")
   %dialog.signup-modal.admin-add-participant-modal{id: modal_id, "data-action" => "click->modal#closeOnBackdrop", "data-modal-target" => "dialog"}
     .signup-modal-content
       %div
@@ -93,6 +93,6 @@
           .field{"data-admin-participant-target" => "otherWaiveReasonField", hidden: true}
             = required_label_tag other_waive_reason_id, "Other reason"
             = text_area_tag "campsite_signup[waived_reason]", "", id: other_waive_reason_id, rows: 2, disabled: true, data: { admin_participant_target: "otherWaiveReasonInput" }
-        .form-actions
-          %button.button.secondary{"data-action" => "modal#close", type: "button"} Cancel
-          = submit_tag "Add Participant", class: "button"
+        = ui_actions(kind: :form) do
+          = ui_button("Cancel", variant: :secondary, "data-action" => "modal#close", type: "button")
+          = ui_submit_tag "Add Participant", variant: :primary

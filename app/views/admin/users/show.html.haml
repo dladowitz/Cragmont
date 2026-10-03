@@ -1,5 +1,5 @@
 = render "admin/shared/header", title: @user.full_name
-%section.panel
+= ui_panel do
   .panel-header.user-detail-header
     %div
       %h2= @user.full_name
@@ -19,16 +19,16 @@
         %div
           %dt Roles
           %dd= @user.roles.order(:name).map(&:name).to_sentence.presence || "None"
-    .actions
+    = ui_actions do
       - if policy(@user).update?
-        = link_to "Edit user", edit_admin_user_path(@user), class: "button secondary"
+        = ui_link "Edit user", edit_admin_user_path(@user), variant: :secondary
       - if policy(@user).destroy?
-        = button_to "Delete user", admin_user_path(@user), method: :delete, class: "button danger", form: { data: { turbo_confirm: "Are you sure you want to delete this user?" } }
-%section.panel
+        = ui_button_to "Delete user", admin_user_path(@user), method: :delete, variant: :danger, form: { data: { turbo_confirm: "Are you sure you want to delete this user?" } }
+= ui_panel do
   .panel-header
     %div
       %h2 Waivers
-    .actions
+    = ui_actions do
       = render "waiver_request_modal", user: @user
   - if @waivers.any?
     %table.admin-record-table.admin-user-waivers-table{role: "table", "aria-label" => "Waivers"}
@@ -48,16 +48,17 @@
             %td{role: "cell", "data-label" => "Type"}= waiver.display_type
             %td{role: "cell", "data-label" => "Trip"}= waiver.trip&.name || "Standalone"
             %td{role: "cell", "data-label" => "Minors"}= waiver.minors_summary
-            %td.table-actions{role: "cell"}= render "shared/waiver_modal", waiver: waiver, button_label: "View", modal_id: "admin-user-waiver-#{waiver.id}"
+            = ui_actions(tag: :td, kind: :table, role: "cell") do
+              = render "shared/waiver_modal", waiver: waiver, button_label: "View", modal_id: "admin-user-waiver-#{waiver.id}"
   - else
     %p.muted No waivers signed yet.
-%section.panel
+= ui_panel do
   %h2 Trips and Transactions
   = render "shared/user_trip_history",
     rows: @trip_history_rows,
     empty_message: "No trip signups yet.",
     admin_view: true
-%section.panel
+= ui_panel do
   %h2 Coordinated trips
   - if @coordinated_trips.any?
     = render "admin/trips/table", trips: @coordinated_trips

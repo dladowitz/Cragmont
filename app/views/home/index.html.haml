@@ -12,5 +12,5 @@
       %ul.home-destinations{aria: {label: "Places we climb"}}
         - [ "Yosemite", "Tahoe", "Bay Area", "Mt St Helena", "Touchstone", "Joshua Tree", "Movement", "Indian Creek", "City of Rocks", "More" ].each do |destination|
           %li= destination
-      = link_to "View trips", trips_path, class: "button"
+      = ui_link "View trips", trips_path, variant: :primary
   = render "shared/liability_warning"

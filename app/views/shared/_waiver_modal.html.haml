@@ -14,6 +14,6 @@
           signed #{waiver.waiver_signed_at.to_fs(:long)}
       .waiver-document-frame
         %iframe.waiver-document-iframe{src: inline_waiver_path, title: "Waiver PDF"}
-      .form-actions
-        %button.button.secondary{"data-action" => "modal#close", type: "button"} Close
-        = link_to "Download Waiver", download_waiver_path, class: "button"
+      = ui_actions(kind: :form) do
+        = ui_button("Close", variant: :secondary, "data-action" => "modal#close", type: "button")
+        = ui_link "Download Waiver", download_waiver_path, variant: :primary

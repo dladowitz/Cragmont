@@ -1,13 +1,13 @@
 = render "admin/shared/header", title: "#{@trip.name} transactions"
 
-%section.panel
+= ui_panel do
   .panel-header
     %div
       %h2 Transactions
-    .actions
-      = link_to "Back to trip", admin_trip_path(@trip), class: "button secondary"
+    = ui_actions do
+      = ui_link "Back to trip", admin_trip_path(@trip), variant: :secondary
       - if @trip.deleted? && policy(@trip).restore?
-        = button_to "Restore trip", restore_admin_trip_path(@trip), method: :patch, class: "button"
+        = ui_button_to "Restore trip", restore_admin_trip_path(@trip), method: :patch, variant: :primary
 
   - if @trip.deleted?
     .deleted-trip-banner

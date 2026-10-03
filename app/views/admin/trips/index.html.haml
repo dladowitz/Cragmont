@@ -1,10 +1,10 @@
 = render "admin/shared/header", title: "Trips"
-%section.panel
+= ui_panel do
   .panel-header
     %div
       %h2 Trips
     - if policy(Trip).new?
-      = link_to "New trip", new_admin_trip_path, class: "button"
+      = ui_link "New trip", new_admin_trip_path, variant: :primary
   %details.trip-filter-disclosure
     %summary
       %strong Filters:
@@ -17,7 +17,7 @@
           %label.trip-status-filter
             = check_box_tag "status[]", status, @selected_statuses.include?(status), id: "trip_status_#{status}"
             %span= status.titleize
-      = submit_tag "Apply filters", class: "button"
+      = ui_submit_tag "Apply filters", variant: :primary
   = render "table", trips: @trips
   %p.admin-api-note.muted
     = link_to "Agent API docs", "/.well-known/openapi.json"
