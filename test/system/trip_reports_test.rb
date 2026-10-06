@@ -128,7 +128,62 @@ class TripReportsTest < ApplicationSystemTestCase
     assert_current_path edit_admin_trip_report_path(TripReport.find_by!(trip: @trip))
   end
 
-  test "existing photos and conflict handling remain available without new uploads" do
+  test "coordinator uploads a cover photo that becomes the report card thumbnail" do
+    assert_selector "label", text: "Upload cover photo"
+    assert_no_selector ".report-edit-photo"
+    # The report is not saved yet; the upload creates the draft first.
+    attach_file "Upload cover photo", Rails.root.join("app/assets/images/trip-reports/2026-09-18-yosemite-valley.jpg")
+    assert_selector "[data-report-editor-target='status']", text: "On belay! Cover photo added", wait: 10
+    report = TripReport.find_by!(trip: @trip)
+    assert_current_path edit_admin_trip_report_path(report)
+    assert_selector ".report-edit-photo", count: 1
+    assert_button "Cover photo", exact: true
+    assert_selector ".report-preview .club-report-gallery img[src*='/photos/']"
+    assert_equal 1, report.draft["photos"].size
+    assert_empty find_field("Upload cover photo").value
+
+    attach_file "Upload cover photo", Rails.root.join("app/assets/images/trip-reports/2026-08-14-tuolumne.jpg")
+    assert_selector ".report-edit-photo", count: 2, wait: 10
+    newest = report.reload.draft["photos"].first["id"]
+    assert_selector ".report-edit-photo:first-child[data-photo-id='#{newest}']"
+    assert_selector ".report-edit-photo:first-child button", text: "Cover photo"
+    assert_selector ".report-edit-photo:last-child button", text: "Make cover"
+    [ [ 1440, 900 ], [ 390, 844 ], [ 344, 882 ] ].each do |width, height|
+      page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: width < 901)
+      assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0
+      find(".report-cover-fieldset").evaluate_script("this.scrollIntoView({block: 'start', behavior: 'instant'})")
+      save_screenshot(Rails.root.join("tmp/screenshots/report-cover-upload-#{width}.png"))
+    end
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+    # Typing after an upload saves against the new version, keeping both photos.
+    fill_in "Story (optional)", with: "Crew shot on the cover."
+    assert_selector "[data-report-editor-target='status']", text: "Saved at", wait: 5
+    assert_equal 2, report.reload.draft["photos"].size
+
+    click_button "Publish report", exact: true
+    assert_current_path trip_report_path(report)
+    visit trip_reports_path
+    cover = find("#report-#{report.id} .club-report-gallery a[href='#{@trip.photo_album_url}'] img")
+    assert_equal photo_trip_report_path(report, photo_id: newest), URI(cover[:src]).path
+    assert cover.evaluate_script("this.complete && this.naturalWidth > 0"), "published cover should load for visitors"
+    assert_no_link "View photos", href: @trip.photo_album_url
+    find("#report-#{report.id}").evaluate_script("this.scrollIntoView({block: 'center', behavior: 'instant'})")
+    save_screenshot(Rails.root.join("tmp/screenshots/report-cover-card.png"))
+  ensure
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
+  test "cover upload errors keep the editor text" do
+    fill_in "Story (optional)", with: "Do not lose this story."
+    assert_selector "[data-report-editor-target='status']", text: "Saved at", wait: 5
+    attach_file "Upload cover photo", Rails.root.join("README.md"), make_visible: true
+    assert_selector "[role='alert']", text: "Use JPEG, PNG, or WebP", wait: 10
+    assert_field "Story (optional)", with: "Do not lose this story."
+    assert_no_selector ".report-edit-photo"
+    assert_empty TripReport.find_by!(trip: @trip).photos
+  end
+
+  test "existing photos and conflict handling remain available" do
     report = TripReport.for_trip(@trip)
     report.save!
     uploads = %w[2026-08-14-tuolumne.jpg 2026-08-22-snowshed-tahoe.jpg].map do |name|
@@ -136,13 +191,12 @@ class TripReportsTest < ApplicationSystemTestCase
     end
     report.add_photos!(uploads, version: report.lock_version, actor: users(:sam))
     visit edit_admin_trip_report_path(report)
-    assert_no_selector "input[type='file']"
     assert_selector ".report-edit-photo", count: 2, wait: 10
     rows = all(".report-edit-photo")
     first_id = rows.first["data-photo-id"]
     second_id = rows.last["data-photo-id"]
     rows.last.fill_in "Caption / image description", with: "Granite slabs"
-    rows.last.find_button("Move to first", exact: true).send_keys(:enter)
+    rows.last.find_button("Make cover", exact: true).send_keys(:enter)
     assert_selector ".report-edit-photo:first-child[data-photo-id='#{second_id}']"
     click_button "Save draft", exact: true
     assert_selector "[data-report-editor-target='status']", text: "Saved at", wait: 5

@@ -101,35 +101,101 @@ class Admin::TripReportsControllerTest < ActionDispatch::IntegrationTest
     assert_empty report.reload.published
   end
 
-  test "uploaded draft photos require permission and public photos follow published snapshot" do
+  test "coordinator uploads a cover photo that stays private until published" do
     report = TripReport.for_trip(@trip)
     report.save!
+    report.add_photos!([ report_image("2026-08-14-tuolumne.jpg") ], version: report.lock_version, actor: users(:sam))
+    old_cover = report.draft["photos"].first["id"]
     log_in_as users(:sam)
-    upload = Rack::Test::UploadedFile.new(Rails.root.join("app/assets/images/trip-reports/2026-08-14-tuolumne.jpg"), "image/jpeg")
-    post photos_admin_trip_report_url(report), params: { lock_version: report.lock_version, photos: [ upload ] }, headers: { "Accept" => "application/json" }
-    assert_response :unprocessable_entity
-    assert_empty report.reload.photos
-    # Older attached photos remain private until published and remain editable.
-    report.add_photos!([ upload ], version: report.lock_version, actor: users(:sam))
-    photo = report.draft["photos"].first
-    assert photo
-    get photo_admin_trip_report_url(report, photo_id: photo["id"])
+    post cover_photo_admin_trip_report_url(report), params: { lock_version: report.lock_version, photo: report_image("2026-09-18-yosemite-valley.jpg") },
+      headers: { "Accept" => "application/json" }
+    assert_response :success
+    new_cover = report.reload.draft["photos"].first["id"]
+    assert_equal [ new_cover, old_cover ], report.draft["photos"].map { |photo| photo["id"] }
+    assert_equal report.lock_version, response.parsed_body.dig("report", "lock_version")
+    assert_equal "Published · unpublished changes", response.parsed_body.dig("report", "status")
+    assert_match %r{data-photo-id="#{new_cover}".*Cover photo}m, response.parsed_body["photos_html"]
+    assert_match "Make cover", response.parsed_body["photos_html"]
+    assert_match photo_admin_trip_report_path(report, photo_id: new_cover), response.parsed_body["preview_html"]
+    get photo_admin_trip_report_url(report, photo_id: new_cover)
     assert_response :success
     assert_match "no-store", response.headers["Cache-Control"]
+
+    # Drafts never leak: visitors see the new cover only after publishing.
     delete session_url
-    get photo_trip_report_url(report, photo_id: photo["id"])
+    get photo_trip_report_url(report, photo_id: new_cover)
     assert_response :not_found
-    get photo_admin_trip_report_url(report, photo_id: photo["id"])
+    get photo_admin_trip_report_url(report, photo_id: new_cover)
     assert_redirected_to new_session_path
+    get trip_reports_url
+    assert_select "#report-#{report.id} .club-report-gallery-placeholder"
     report.publish!(version: report.lock_version, actor: users(:sam))
-    get photo_trip_report_url(report, photo_id: photo["id"])
+    get photo_trip_report_url(report, photo_id: new_cover)
     assert_response :success
+    get trip_reports_url
+    assert_select "#report-#{report.id} .club-report-gallery img", count: 1
+    assert_select "#report-#{report.id} .club-report-gallery img[src='#{photo_trip_report_path(report, photo_id: new_cover)}']"
+
+    # Removing a photo from the draft keeps it public until the next publish.
     report.save_draft!({ photos: [] }, version: report.lock_version, actor: users(:sam))
-    get photo_trip_report_url(report, photo_id: photo["id"])
+    get photo_trip_report_url(report, photo_id: new_cover)
     assert_response :success
     report.publish!(version: report.lock_version, actor: users(:sam))
-    get photo_trip_report_url(report, photo_id: photo["id"])
+    get photo_trip_report_url(report, photo_id: new_cover)
     assert_response :not_found
+  end
+
+  test "cover uploads require permission one image and the latest version" do
+    report = TripReport.for_trip(@trip)
+    report.save!
+    post cover_photo_admin_trip_report_url(report), params: { lock_version: report.lock_version, photo: report_image("2026-08-14-tuolumne.jpg") }
+    assert_redirected_to new_session_path
+
+    log_in_as users(:sam)
+    stale_version = report.lock_version
+    report.save_draft!({ body: "Another editor" }, version: report.lock_version, actor: users(:alex))
+    post cover_photo_admin_trip_report_url(report), params: { lock_version: stale_version, photo: report_image("2026-08-14-tuolumne.jpg") },
+      headers: { "Accept" => "application/json" }
+    assert_response :conflict
+    assert_match "Someone else changed this report", response.parsed_body["error"]
+
+    [ { photo: [ report_image("2026-08-14-tuolumne.jpg"), report_image("2026-07-05-vent-five.jpg") ] }, { photo: "not-a-file" } ].each do |invalid|
+      post cover_photo_admin_trip_report_url(report), params: invalid.merge(lock_version: report.reload.lock_version), headers: { "Accept" => "application/json" }
+      assert_response :unprocessable_entity
+      assert_equal "Choose one cover photo", response.parsed_body["error"]
+    end
+
+    @trip.update!(campsite_coordinator: users(:alex))
+    post cover_photo_admin_trip_report_url(report), params: { lock_version: report.reload.lock_version, photo: report_image("2026-08-14-tuolumne.jpg") },
+      headers: { "Accept" => "application/json" }
+    assert_response :forbidden
+    assert_empty report.reload.photos
+    assert_empty report.draft["photos"]
+  end
+
+  test "cover upload replaces a legacy archive thumbnail on the report card" do
+    LegacyTripReportImport.call
+    report = TripReport.find_by!(legacy_key: "2026-09-18-yosemite-valley")
+    album = report.published["album_url"]
+    log_in_as users(:alex)
+    post cover_photo_api_v1_trip_report_url(report), params: { lock_version: report.lock_version, photo: report_image("2026-08-14-tuolumne.jpg") }
+    assert_response :success
+    get trip_reports_url
+    # Unpublished: the archive thumbnail still shows.
+    assert_select "#report-#{report.id} .club-report-gallery img[src*='trip-reports/2026-09-18-yosemite-valley']", count: 1
+
+    report.reload.publish!(version: report.lock_version, actor: users(:alex))
+    cover = photo_trip_report_path(report, photo_id: report.published["photos"].first["id"])
+    get trip_reports_url
+    assert_select "#report-#{report.id} .club-report-gallery img", count: 1
+    assert_select "#report-#{report.id} .club-report-gallery a[href='#{album}'][target='_blank'][rel='noopener'][aria-label*='opens in a new tab'] img[src='#{cover}']"
+    assert_select "#report-#{report.id} a", text: "View photos", count: 0
+    assert_select ".club-report-gallery img[src^='/assets/trip-reports/']", count: 21
+
+    # The full report keeps the archive image beside the new cover.
+    get trip_report_url(report)
+    assert_select ".club-report-gallery img[src='#{cover}']", count: 1
+    assert_select ".club-report-gallery img[src*='trip-reports/2026-09-18-yosemite-valley']", count: 1
   end
 
   test "admin can edit a legacy report and link it to a trip" do
@@ -181,9 +247,16 @@ class Admin::TripReportsControllerTest < ActionDispatch::IntegrationTest
       assert_response :unprocessable_entity
     end
     upload = Rack::Test::UploadedFile.new(Rails.root.join("README.md"), "image/jpeg")
-    post photos_api_v1_trip_report_url(report), params: { lock_version: report.lock_version, photos: [ upload ] }, headers: { "Accept" => "application/json" }
+    post cover_photo_api_v1_trip_report_url(report), params: { lock_version: report.lock_version, photo: upload }, headers: { "Accept" => "application/json" }
     assert_response :unprocessable_entity
+    assert_match "Use JPEG, PNG, or WebP", response.parsed_body["error"]
     assert_empty report.reload.photos
     assert_equal @trip.name, report.draft["title"]
+  end
+
+  private
+
+  def report_image(name)
+    Rack::Test::UploadedFile.new(Rails.root.join("app/assets/images/trip-reports", name), "image/jpeg")
   end
 end

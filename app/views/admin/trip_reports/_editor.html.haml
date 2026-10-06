@@ -55,12 +55,13 @@
         = form.label :album_url, "Google Photos album link (optional)"
         = form.url_field :album_url, value: draft["album_url"]
         %p.muted Use an album you have permission to share publicly. No private album access is required.
-      - if Array(draft["photos"]).any?
-        %fieldset
-          %legend Existing photos
-          %p.muted Keep new photos together in the Google Photos album. You can still manage photos previously added to this report.
-          .report-edit-photos{data: {report_editor_target: "photos"}}
-            = render "photos", report: @report
+      %fieldset.report-cover-fieldset
+        %legend Cover photo
+        %p.muted Pick a favorite crew shot from the album. It becomes the Trip Reports thumbnail once you publish. JPEG, PNG, or WebP up to 10 MB.
+        = label_tag "report-cover-upload", "Upload cover photo"
+        = file_field_tag "photo", id: "report-cover-upload", accept: "image/jpeg,image/png,image/webp", data: {action: "change->report-editor#uploadCover"}
+        .report-edit-photos{data: {report_editor_target: "photos"}}
+          = render "photos", report: @report
       = ui_actions(kind: :form, class: "report-editor-actions") do
         = ui_submit form, "Save draft", variant: :secondary, data: {report_editor_target: "saveButton"}
         = ui_button((@report.published.present? ? "Publish changes" : "Publish report"), variant: :primary, type: "submit", name: "intent", value: "publish", data: {report_editor_target: "publishButton"})
