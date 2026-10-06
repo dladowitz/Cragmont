@@ -1,19 +1,19 @@
 %article.club-report{id: (preview ? nil : "report-#{report.id || "trip-#{report.trip_id}"}")}
   - album = safe_external_url(payload["album_url"])
-  - legacy_image = report_legacy_image(payload)
+  - cover = report_cover_image(payload)
   - report_photos = Array(payload["photos"])
-  - report_photos = legacy_image ? [] : report_photos.first(1) if local_assigns[:compact]
-  - if legacy_image || report_photos.any?
-    .club-report-gallery{class: ("report-photo-gallery" if report_photos.size + (legacy_image ? 1 : 0) > 1)}
+  - report_photos = cover ? [] : report_photos.first(1) if local_assigns[:compact]
+  - if cover || report_photos.any?
+    .club-report-gallery{class: ("report-photo-gallery" if report_photos.size + (cover ? 1 : 0) > 1)}
       - report_photos.each do |photo|
         %figure
           = link_to report_photo_path(report, photo, preview: preview), target: "_blank", rel: "noopener" do
             = image_tag report_photo_path(report, photo, preview: preview), alt: photo["caption"].presence || "Photo from #{payload['title']}", loading: "lazy", decoding: "async", width: 960, height: 720
           - if photo["caption"].present?
             %figcaption= photo["caption"]
-      - if legacy_image
+      - if cover
         = link_to album || "#", target: "_blank", rel: "noopener", aria: {label: "View photos from #{payload['title']} (opens in a new tab)"} do
-          = image_tag legacy_image, alt: "Photo from #{payload['title']}", loading: "lazy", decoding: "async", width: 960, height: 720
+          = image_tag cover, alt: "Photo from #{payload['title']}", loading: "lazy", decoding: "async", width: 960, height: 720
   - else
     .club-report-gallery.club-report-gallery-placeholder
       = image_tag "backgrounds/tuolumne-meadows-fairview-dome.jpg", alt: "Fairview Dome — sample trip report thumbnail", loading: "lazy", decoding: "async", width: 960, height: 640
@@ -27,8 +27,8 @@
         to #{Date.iso8601(payload["end_date"]).to_fs(:long)}
       - if payload["location"].present?
         · #{payload["location"]}
-  - if album && !legacy_image
-    = link_to "View photos", album, target: "_blank", rel: "noopener", class: ("report-album-card" unless legacy_image || report_photos.any?)
+  - if album && !cover
+    = link_to "View photos", album, target: "_blank", rel: "noopener", class: ("report-album-card" unless cover || report_photos.any?)
   - if !preview && policy(report).update?
     %p= link_to "Edit report", report_edit_path(report)
   - if payload["body"].present?

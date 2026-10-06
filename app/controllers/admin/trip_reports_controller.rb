@@ -1,5 +1,5 @@
 class Admin::TripReportsController < Admin::BaseController
-  before_action :set_report, only: %i[show edit update publish hide photos photo preview]
+  before_action :set_report, only: %i[show edit update publish hide photos refresh_cover photo preview]
   before_action :private_response
 
   rescue_from ActiveRecord::StaleObjectError do
@@ -94,6 +94,13 @@ class Admin::TripReportsController < Admin::BaseController
 
   def photos
     report_error("Keep your photos together in a Google Photos album and add its link to the report.", :unprocessable_entity)
+  end
+
+  def refresh_cover
+    album_url = @report.draft["album_url"]
+    raise ArgumentError, "Add a Google Photos album link first" if album_url.blank?
+    raise ArgumentError, "Whipper! Couldn’t read the album cover. Check that the album link works and is shared." unless AlbumCover.refresh(album_url)
+    saved_response
   end
 
   def photo

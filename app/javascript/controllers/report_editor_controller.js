@@ -124,6 +124,16 @@ export default class extends Controller {
   cover(event) { this.photosTarget.prepend(event.target.closest(".report-edit-photo")); this.photosChanged() }
   remove(event) { event.target.closest(".report-edit-photo").remove(); this.photosChanged() }
 
+  refreshCover() {
+    clearTimeout(this.timer)
+    this.enqueue(async () => {
+      if (this.dirty || !this.idValue) await this.save()
+      this.statusTarget.textContent = "Checking the album cover…"
+      await this.request(`${this.endpoint}/refresh_cover`, "POST", {})
+      this.statusTarget.textContent = "On belay! Cover updated from the album."
+    })
+  }
+
   photosChanged() { this.refreshPhotoControls(); this.changed() }
 
   refreshPhotoControls() {
