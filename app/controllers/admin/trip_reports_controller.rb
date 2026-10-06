@@ -1,5 +1,5 @@
 class Admin::TripReportsController < Admin::BaseController
-  before_action :set_report, only: %i[show edit update publish hide cover_photo photo preview]
+  before_action :set_report, only: %i[show edit update publish hide photos photo preview]
   before_action :private_response
 
   rescue_from ActiveRecord::StaleObjectError do
@@ -92,11 +92,8 @@ class Admin::TripReportsController < Admin::BaseController
     saved_response
   end
 
-  def cover_photo
-    upload = params.require(:photo)
-    raise ArgumentError, "Choose one cover photo" unless upload.is_a?(ActionDispatch::Http::UploadedFile)
-    @report.add_photos!([ upload ], version: params.require(:lock_version), actor: current_user)
-    saved_response
+  def photos
+    report_error("Keep your photos together in a Google Photos album and add its link to the report.", :unprocessable_entity)
   end
 
   def photo

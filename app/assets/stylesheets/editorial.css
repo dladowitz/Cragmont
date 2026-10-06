@@ -312,9 +312,6 @@ body.trips-index-page .trips-index-notices .calendar-subscription-notice {
 .report-editor-actions { position: sticky; bottom: 0; z-index: 3; padding: 14px 0 calc(14px + env(safe-area-inset-bottom)); background: var(--panel); border-top: 1px solid var(--line); }
 .report-formatting { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
 .report-formatting .button { min-width: 44px; min-height: 44px; padding: 6px 12px; }
-.report-cover-fieldset { display: grid; gap: 8px; min-width: 0; margin: 0; padding: 0; border: 0; }
-.report-cover-fieldset > legend { padding: 0; margin-bottom: 4px; }
-.report-cover-fieldset > p { margin: 0; }
 .report-edit-photo { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--line); }
 .report-edit-photo img { width: 120px; height: 90px; object-fit: cover; border-radius: var(--ui-radius); }
 .report-edit-photo .actions { gap: 6px; margin-top: 8px; }

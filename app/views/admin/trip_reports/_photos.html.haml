@@ -5,7 +5,7 @@
       = label_tag "caption-#{photo['id']}", "Caption / image description"
       = text_field_tag nil, photo["caption"], id: "caption-#{photo['id']}", maxlength: 500, data: {caption: true, action: "input->report-editor#changed"}
       = ui_actions do
-        = ui_button((index.zero? ? "Cover photo" : "Make cover"), variant: :secondary, type: "button", data: {action: "report-editor#cover"}, aria: {label: "Make photo #{index + 1} the cover"})
+        = ui_button((index.zero? ? "First photo" : "Move to first"), variant: :secondary, type: "button", data: {action: "report-editor#cover"}, aria: {label: "Move photo #{index + 1} to first"})
         = ui_button("↑", variant: :secondary, type: "button", data: {action: "report-editor#up"}, aria: {label: "Move photo #{index + 1} earlier"})
         = ui_button("↓", variant: :secondary, type: "button", data: {action: "report-editor#down"}, aria: {label: "Move photo #{index + 1} later"})
         = ui_button("Remove", variant: :secondary, type: "button", data: {action: "report-editor#remove"}, aria: {label: "Remove photo #{index + 1} from draft"})

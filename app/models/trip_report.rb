@@ -108,8 +108,7 @@ class TripReport < ApplicationRecord
       ids_before = photos.map(&:id)
       photos.attach(uploads)
       additions = photos_attachments.reload.reject { |photo| ids_before.include?(photo.id) }.map { |photo| { "id" => photo.id, "caption" => "" } }
-      # The first photo is the cover, so a new upload replaces the card thumbnail.
-      update!(draft: draft.merge("photos" => additions + Array(draft["photos"])), last_edited_by: actor)
+      update!(draft: draft.merge("photos" => Array(draft["photos"]) + additions), last_edited_by: actor)
     end
   end
 

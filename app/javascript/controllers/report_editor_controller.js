@@ -24,7 +24,6 @@ export default class extends Controller {
   get endpoint() { return `/admin/trip_reports/${this.idValue}` }
 
   changed(event) {
-    if (event?.target.type === "file") return // uploadCover saves the file itself.
     this.generation++
     this.statusTarget.textContent = "Unsaved changes"
     clearTimeout(this.timer)
@@ -110,24 +109,6 @@ export default class extends Controller {
       await this.request(`${this.endpoint}/hide`, "PATCH", { lock_version: this.versionValue })
       this.statusTarget.textContent = "Report hidden. Automatic publication will not restore it."
     })
-  }
-
-  uploadCover(event) {
-    const input = event.target
-    const file = input.files[0]
-    if (!file) return
-    clearTimeout(this.timer)
-    this.enqueue(async () => {
-      if (this.dirty || !this.idValue) await this.save()
-      this.statusTarget.setAttribute("role", "status")
-      this.statusTarget.textContent = "Uploading cover photo…"
-      const body = new FormData()
-      body.append("photo", file)
-      body.append("lock_version", this.versionValue)
-      const result = await this.request(`${this.endpoint}/cover_photo`, "POST", body)
-      this.photosTarget.innerHTML = result.photos_html
-      this.statusTarget.textContent = "On belay! Cover photo added. Publish to show it on Trip Reports."
-    }).finally(() => { input.value = "" })
   }
 
   up(event) {

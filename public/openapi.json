@@ -102,24 +102,6 @@
         }
       }
     },
-    "/api/v1/trip_reports/{id}/cover_photo": {
-      "parameters": [{ "$ref": "#/components/parameters/TripId" }],
-      "post": {
-        "operationId": "uploadTripReportCoverPhoto",
-        "summary": "Upload a draft cover photo",
-        "description": "Adds one photo to the front of the draft photo list so it becomes the card thumbnail, replacing any archive thumbnail. Visitors see it only after publishing. JPEG, PNG, or WebP up to 10 MB and 40 megapixels. Google Photos albums are never read.",
-        "security": [{ "adminSession": [], "csrfToken": [] }],
-        "requestBody": { "required": true, "content": { "multipart/form-data": { "schema": { "type": "object", "required": ["photo", "lock_version"], "properties": { "photo": { "type": "string", "format": "binary" }, "lock_version": { "type": "integer", "minimum": 0 } } } } } },
-        "responses": {
-          "200": { "$ref": "#/components/responses/TripReportSaved" },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "403": { "$ref": "#/components/responses/Forbidden" },
-          "404": { "$ref": "#/components/responses/NotFound" },
-          "409": { "$ref": "#/components/responses/Conflict" },
-          "422": { "$ref": "#/components/responses/ValidationError" }
-        }
-      }
-    },
     "/api/v1/trips": {
       "get": {
         "operationId": "listTrips",

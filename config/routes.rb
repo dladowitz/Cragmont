@@ -15,7 +15,7 @@ Rails.application.routes.draw do
     resources :trip_reports, only: %i[index show create update] do
       patch :publish, on: :member
       patch :hide, on: :member
-      post :cover_photo, on: :member
+      post :photos, on: :member
     end
   end
   get "/.well-known/openapi.json", to: redirect("/openapi.json")
@@ -78,7 +78,7 @@ Rails.application.routes.draw do
     resources :trip_reports, except: :destroy do
       patch :publish, on: :member
       patch :hide, on: :member
-      post :cover_photo, on: :member
+      post :photos, on: :member
       get :preview, on: :member
       get "photos/:photo_id", action: :photo, on: :member, as: :photo
     end
