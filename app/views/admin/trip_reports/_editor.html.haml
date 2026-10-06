@@ -54,7 +54,9 @@
       .field
         = form.label :album_url, "Google Photos album link (optional)"
         = form.url_field :album_url, value: draft["album_url"]
-        %p.muted Use an album you have permission to share publicly. No private album access is required.
+        %p.muted Use an album you have permission to share publicly. No private album access is required. The album cover becomes the report thumbnail and updates daily.
+        = ui_actions do
+          = ui_button "Refresh cover", variant: :secondary, type: "button", data: {action: "report-editor#refreshCover"}
       - if Array(draft["photos"]).any?
         %fieldset
           %legend Existing photos

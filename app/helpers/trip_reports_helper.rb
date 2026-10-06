@@ -16,6 +16,12 @@ module TripReportsHelper
     preview ? photo_admin_trip_report_path(report, photo_id: photo["id"]) : photo_trip_report_path(report, photo_id: photo["id"])
   end
 
+  # The archive thumbnails are album covers the old site copied once, so the current cover replaces them.
+  def report_cover_image(payload)
+    @album_covers ||= AlbumCover.with_attached_image.index_by(&:album_url)
+    @album_covers[payload["album_url"]]&.image.presence || report_legacy_image(payload)
+  end
+
   def report_legacy_image(payload)
     image = payload["legacy_image"].to_s
     image if image.match?(%r{\Atrip-reports/[a-z0-9-]+\.jpg\z}) && Rails.root.join("app/assets/images", image).file?

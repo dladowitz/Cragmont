@@ -132,6 +132,51 @@ class Admin::TripReportsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "refresh cover pulls the album cover into the editor preview" do
+    report = TripReport.for_trip(@trip)
+    report.save!
+    other = TripReport.for_trip(trips(:jtree))
+    other.save!
+    refreshed = []
+    result = nil
+    original = AlbumCover.method(:refresh)
+    AlbumCover.define_singleton_method(:refresh) do |album_url|
+      refreshed << album_url
+      result&.call(album_url)
+    end
+
+    post refresh_cover_admin_trip_report_url(report), as: :json
+    assert_response :unauthorized
+    log_in_as users(:sam)
+    post refresh_cover_admin_trip_report_url(other), as: :json
+    assert_response :forbidden
+    assert_empty refreshed
+
+    post refresh_cover_admin_trip_report_url(report), as: :json
+    assert_response :unprocessable_entity
+    assert_match "Whipper! Couldn’t read the album cover", response.parsed_body["error"]
+
+    result = lambda do |album_url|
+      AlbumCover.create!(album_url: album_url, source_url: "https://lh3.googleusercontent.com/pw/sample=w960-h960").tap do |cover|
+        cover.image.attach(io: Rails.root.join("app/assets/images/trip-reports/2026-08-14-tuolumne.jpg").open, filename: "album-cover.jpg", content_type: "image/jpeg")
+      end
+    end
+    version = report.reload.lock_version
+    post refresh_cover_admin_trip_report_url(report), as: :json
+    assert_response :success
+    assert_equal [ "https://photos.app.goo.gl/sample" ] * 2, refreshed
+    assert_match %r{<a [^>]*href="https://photos.app.goo.gl/sample"[^>]*>\s*<img [^>]*src="[^"]*/rails/active_storage/blobs/}, response.parsed_body["preview_html"]
+    assert_equal version, report.reload.lock_version
+
+    report.save_draft!({ album_url: "" }, version: report.lock_version, actor: users(:sam))
+    post refresh_cover_admin_trip_report_url(report), as: :json
+    assert_response :unprocessable_entity
+    assert_equal "Add a Google Photos album link first", response.parsed_body["error"]
+    assert_equal 2, refreshed.size
+  ensure
+    AlbumCover.define_singleton_method(:refresh, original) if original
+  end
+
   test "admin can edit a legacy report and link it to a trip" do
     LegacyTripReportImport.call
     report = TripReport.find_by!(legacy_key: "2026-08-14-tuolumne")
