@@ -7,18 +7,22 @@ class ClubControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", "About the Club"
     assert_select "nav.public-nav details[open]", count: 0
-    assert_select "nav.public-nav details", count: 2
+    assert_select "nav.public-nav details", count: 3
     assert_select "nav.public-nav details:first-child summary", "Trips"
     assert_select "nav.public-nav details:first-child a[href='#{trips_path}']", "Trips"
     assert_select "nav.public-nav details:first-child a[href='#{past_trips_path}']", "Past Trips"
     assert_select "nav.public-nav details:first-child a[href='#{trip_reports_path}']", "Trip Reports"
     assert_select "nav.public-nav details:first-child a[href='#{join_the_list_path}']", count: 0
-    assert_select "nav.public-nav details:nth-child(2) summary", "Club"
-    assert_select "nav.public-nav details:nth-child(2) a[href='#{membership_path}']", "Membership"
-    assert_select "nav.public-nav details:nth-child(2) a[href='#{history_path}']", "History"
-    assert_select "nav.public-nav details:nth-child(2) a[href='#{new_help_request_path}']", "Get Help"
-    assert_select "nav.public-nav details:nth-child(2) a[href='#{about_path}']", "About"
+    assert_select "nav.public-nav details:nth-child(2) summary", "Resources"
     assert_select "nav.public-nav details:nth-child(2) a" do |links|
+      assert_equal [ "Training", "Vendors", "News", "Upcoming Events" ], links.map(&:text)
+    end
+    assert_select "nav.public-nav details:nth-child(3) summary", "Club"
+    assert_select "nav.public-nav details:nth-child(3) a[href='#{membership_path}']", "Membership"
+    assert_select "nav.public-nav details:nth-child(3) a[href='#{history_path}']", "History"
+    assert_select "nav.public-nav details:nth-child(3) a[href='#{new_help_request_path}']", "Get Help"
+    assert_select "nav.public-nav details:nth-child(3) a[href='#{about_path}']", "About"
+    assert_select "nav.public-nav details:nth-child(3) a" do |links|
       assert_equal [ "Membership", "History", "About", "Join the List", "Get Help" ], links.map(&:text)
     end
     assert_select "nav.public-nav a.nav-auth-login[href='#{new_session_path}']", "Log in"
@@ -70,9 +74,11 @@ class ClubControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "page switching stays in the top navigation rather than page content" do
+    resource_paths = Resource::CATEGORIES.keys.map { |category| resource_category_path(category) }
     destinations = [ trips_path, past_trips_path, past_trips_trips_path, trip_reports_path,
-      about_path, membership_path, history_path, join_the_list_path ]
-    (destinations.uniq + [ trip_report_path(TripReport.first!) ]).each do |path|
+      about_path, membership_path, history_path, join_the_list_path ] + resource_paths
+    article = Resource.create!(user: users(:sam), category: "news", kind: "article", title: "Club news", body: "Fresh chalk.")
+    (destinations.uniq + [ trip_report_path(TripReport.first!), resource_article_path("news", article) ]).each do |path|
       get path
       assert_response :success
       assert_select "nav.public-nav a[href='#{trips_path}']", count: 1

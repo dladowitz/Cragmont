@@ -11,6 +11,11 @@ Rails.application.routes.draw do
   get "trip-reports/:id", to: "trip_reports#show", as: :trip_report
   get "trip-reports/:id/photos/:photo_id", to: "trip_reports#photo", as: :photo_trip_report
   get "trips/:trip_id/report", to: "trip_reports#show", as: :trip_trip_report
+  resources :resources, only: %i[new create edit update destroy]
+  scope "resources/:category", constraints: { category: Regexp.union(Resource::CATEGORIES.keys) } do
+    get "", to: "resources#index", as: :resource_category
+    get ":id", to: "resources#show", as: :resource_article, constraints: { id: /\d+/ }
+  end
   scope "/api/v1", module: "admin", as: "api_v1", defaults: { format: :json } do
     resources :trip_reports, only: %i[index show create update] do
       patch :publish, on: :member

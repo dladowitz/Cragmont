@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_27_010100) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_06_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -327,6 +327,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_010100) do
     t.datetime "updated_at", null: false
     t.text "website_url", null: false
     t.index ["name"], name: "index_partner_companies_on_name"
+  end
+
+  create_table "resources", force: :cascade do |t|
+    t.text "body"
+    t.string "category", null: false
+    t.datetime "created_at", null: false
+    t.string "kind", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.string "url"
+    t.bigint "user_id", null: false
+    t.index ["category", "created_at"], name: "index_resources_on_category_and_created_at"
+    t.index ["user_id"], name: "index_resources_on_user_id"
   end
 
   create_table "roles", force: :cascade do |t|
@@ -719,6 +732,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_010100) do
   add_foreign_key "help_request_replies", "help_requests"
   add_foreign_key "help_request_replies", "users"
   add_foreign_key "help_requests", "users"
+  add_foreign_key "resources", "users"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

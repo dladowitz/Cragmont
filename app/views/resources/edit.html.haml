@@ -1,0 +1,8 @@
+- content_for :title, "Edit resource | Cragmont Climbing Club"
+- content_for :body_class, "club-page resources-page"
+= render "shared/public_header"
+%main.public-main.club-main
+  = ui_panel(class: "club-panel") do
+    %p.eyebrow Resources
+    %h1.report-page-title Edit resource
+    = render "form", resource: @resource

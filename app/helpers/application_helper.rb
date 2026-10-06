@@ -36,7 +36,7 @@ module ApplicationHelper
     ENV["GOOGLE_ANALYTICS_MEASUREMENT_ID"].presence
   end
 
-  def render_content_page_markdown(markdown)
+  def render_content_page_markdown(markdown, rel: "noopener")
     html = Commonmarker.to_html(markdown.to_s)
     html = html.gsub(%r{<a href="#[^"]+" aria-hidden="true" class="anchor" id="[^"]+"></a>}, "")
     sanitized_html = sanitize(
@@ -45,7 +45,7 @@ module ApplicationHelper
       attributes: %w[href title target rel]
     )
 
-    public_member_content(add_external_link_attributes(sanitized_html))
+    public_member_content(add_external_link_attributes(sanitized_html, rel: rel))
   end
 
   def member_links_login_path
@@ -249,13 +249,13 @@ module ApplicationHelper
     end
   end
 
-  def add_external_link_attributes(html)
+  def add_external_link_attributes(html, rel: "noopener")
     fragment = Nokogiri::HTML5.fragment(html)
     fragment.css("a[href]").each do |link|
       next unless link["href"].match?(%r{\Ahttps?://}i)
 
       link["target"] = "_blank"
-      link["rel"] = "noopener"
+      link["rel"] = rel
     end
 
     fragment.to_html.html_safe

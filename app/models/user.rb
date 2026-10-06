@@ -19,6 +19,7 @@ class User < ApplicationRecord
     inverse_of: :registered_by
   has_many :campsite_signups, dependent: :restrict_with_error
   has_many :climbing_partner_requests, dependent: :destroy
+  has_many :resources, dependent: :destroy
   has_many :day_trip_signups, dependent: :restrict_with_error
   has_many :class_signups, dependent: :restrict_with_error
   has_many :waivers, dependent: :destroy

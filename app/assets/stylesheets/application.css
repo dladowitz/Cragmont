@@ -5883,7 +5883,7 @@ label {
   align-items: center;
 }
 
-.radio-field input {
+.radio-field input[type="radio"] {
   width: auto;
 }
 

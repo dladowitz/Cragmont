@@ -1,0 +1,13 @@
+- content_for :title, "#{@resource.title} | Resources | Cragmont Climbing Club"
+- content_for :body_class, "club-page resources-page"
+= render "shared/public_header"
+%main.public-main.club-main
+  = ui_panel(tag: :article, class: "club-panel") do
+    %p.eyebrow Resources · #{@resource.category_name}
+    %h1.report-page-title= @resource.title
+    %p.report-meta
+      By #{@resource.user.public_name} ·
+      = time_tag @resource.created_at.to_date, @resource.created_at.to_date.to_fs(:long)
+    .club-copy.content-page-markdown
+      = render_content_page_markdown(@resource.body, rel: Resource::LINK_REL)
+    = render "actions", resource: @resource

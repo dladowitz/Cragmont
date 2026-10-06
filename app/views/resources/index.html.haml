@@ -1,0 +1,36 @@
+- category_name = Resource::CATEGORIES.fetch(@category)
+- content_for :title, "#{category_name} | Resources | Cragmont Climbing Club"
+- content_for :body_class, "club-page resources-page"
+= render "shared/public_header"
+%main.public-main.club-main
+  = ui_panel(class: "club-archive", aria: {label: "#{category_name} resources"}) do
+    .panel-header
+      %div
+        %p.eyebrow Resources
+        %h1= category_name
+        %p.muted Links and articles shared by club members, newest first.
+      = ui_link "Submit a resource", new_resource_path(category: @category)
+    - if @resources.any?
+      %ol.resource-list
+        - @resources.each do |resource|
+          %li.resource-entry
+            - external_url = safe_external_url(resource.url) if resource.link?
+            %h2
+              - if resource.article?
+                = link_to resource.title, resource_article_path(resource.category, resource)
+              - elsif external_url
+                = link_to external_url, target: "_blank", rel: Resource::LINK_REL do
+                  = resource.title
+                  %span.visually-hidden (opens in a new tab)
+              - else
+                = resource.title
+            %p.report-meta
+              - if resource.article?
+                Article
+              - else
+                External link#{" · #{URI.parse(external_url).host}" if external_url}
+              · Shared by #{resource.user.public_name} ·
+              = time_tag resource.created_at.to_date, resource.created_at.to_date.to_fs(:long)
+            = render "actions", resource: resource
+    - else
+      %p.muted Nothing here yet. Be the first to share one.

@@ -16,6 +16,11 @@
           = link_to "Past Trips", past_trips_path
           = link_to "Trip Reports", trip_reports_path
       %details.public-nav-group{name: "primary-navigation", data: {navigation_target: "group"}}
+        %summary Resources
+        .public-nav-dropdown
+          - Resource::CATEGORIES.each do |slug, name|
+            = link_to name, resource_category_path(slug)
+      %details.public-nav-group{name: "primary-navigation", data: {navigation_target: "group"}}
         %summary Club
         .public-nav-dropdown
           = link_to "Membership", membership_path
