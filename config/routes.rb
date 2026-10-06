@@ -79,6 +79,7 @@ Rails.application.routes.draw do
       patch :publish, on: :member
       patch :hide, on: :member
       post :photos, on: :member
+      post :refresh_cover, on: :member
       get :preview, on: :member
       get "photos/:photo_id", action: :photo, on: :member, as: :photo
     end

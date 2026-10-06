@@ -161,4 +161,53 @@ class TripReportsTest < ApplicationSystemTestCase
     assert_field "Story (optional)", with: "Keep my unsaved text"
     assert_equal "Another editor's saved work", report.reload.draft["body"]
   end
+
+  test "refresh cover saves the draft and shows the album cover in the preview" do
+    refreshed = stub_album_cover_refresh do |album_url|
+      AlbumCover.create!(album_url: album_url, source_url: "https://lh3.googleusercontent.com/pw/sample=w960-h960").tap do |cover|
+        cover.image.attach(io: Rails.root.join("app/assets/images/trip-reports/2026-08-14-tuolumne.jpg").open, filename: "album-cover.jpg", content_type: "image/jpeg")
+      end
+    end
+    fill_in "Story (optional)", with: "Crew shot is in the album."
+    click_button "Refresh cover", exact: true
+    assert_selector "[data-report-editor-target='status']", text: "On belay! Cover updated from the album.", wait: 5
+    cover = find(".report-preview a[href='https://photos.app.goo.gl/sample'] img[src*='/rails/active_storage/blobs/']")
+    scroll_to(cover, align: :center)
+    assert_predicate cover.evaluate_async_script("const done = arguments[0]; this.decode().then(() => done(this.naturalWidth), () => done(0))"), :positive?
+    assert_equal [ "https://photos.app.goo.gl/sample" ], refreshed
+    assert_equal "Crew shot is in the album.", TripReport.find_by!(trip: @trip).draft["body"]
+
+    [ 1440, 390, 344 ].each do |width|
+      page.driver.browser.manage.window.resize_to(width, 900)
+      assert_operator page.evaluate_script("document.documentElement.scrollWidth - innerWidth"), :<=, 0, "overflow at #{width}px"
+      scroll_to(find_button("Refresh cover", exact: true), align: :center)
+      save_screenshot(Rails.root.join("tmp/screenshots/report-refresh-cover-#{width}.png"))
+    end
+  ensure
+    restore_album_cover_refresh
+  end
+
+  test "refresh cover errors keep the editor text" do
+    stub_album_cover_refresh { nil }
+    fill_in "Story (optional)", with: "Keep this story"
+    click_button "Refresh cover", exact: true
+    assert_selector "[role='alert']", text: "Whipper! Couldn’t read the album cover", wait: 5
+    assert_field "Story (optional)", with: "Keep this story"
+    assert_no_selector ".report-preview img[src*='/rails/active_storage/']"
+  ensure
+    restore_album_cover_refresh
+  end
+
+  private
+
+  def stub_album_cover_refresh(&result)
+    refreshed = []
+    @original_refresh = AlbumCover.method(:refresh)
+    AlbumCover.define_singleton_method(:refresh) { |album_url| refreshed << album_url; result.call(album_url) }
+    refreshed
+  end
+
+  def restore_album_cover_refresh
+    AlbumCover.define_singleton_method(:refresh, @original_refresh) if @original_refresh
+  end
 end

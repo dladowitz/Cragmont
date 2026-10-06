@@ -69,6 +69,45 @@ class ClubControllerTest < ActionDispatch::IntegrationTest
     assert_select ".club-report-details p", /Vertical Pursuits/
   end
 
+  test "a saved album cover replaces the archive thumbnail on the card and full report" do
+    album = "https://photos.app.goo.gl/eomxL1uoWFnRjkkJ6"
+    cover = AlbumCover.create!(album_url: album, source_url: "https://lh3.googleusercontent.com/pw/crew=w960-h960")
+    cover.image.attach(io: Rails.root.join("app/assets/images/trip-reports/2026-08-14-tuolumne.jpg").open, filename: "album-cover.jpg", content_type: "image/jpeg")
+
+    get trip_reports_url
+    assert_response :success
+    assert_select ".club-report-gallery img[src^='/assets/trip-reports/']", count: 21
+    assert_select ".club-report-gallery a[href='#{album}'] img[src*='/rails/active_storage/blobs/']", count: 1
+    assert_select ".club-report-gallery a[href='#{album}'] img[src^='/assets/']", count: 0
+    assert_select ".club-report a", text: "View photos", count: 0
+    get css_select(".club-report-gallery img[src*='/rails/active_storage/']").first["src"]
+    follow_redirect!
+    assert_response :success
+    assert_equal "image/jpeg", response.media_type
+
+    get trip_report_url(TripReport.find_by!(legacy_key: "2026-09-18-yosemite-valley"))
+    assert_select ".club-report-gallery img", count: 1
+    assert_select ".club-report-gallery a[href='#{album}'] img[src*='/rails/active_storage/blobs/']", count: 1
+  end
+
+  test "an automatic report shows its album cover once one is saved" do
+    trip = trips(:yosemite)
+    trip.update!(start_date: Date.new(2026, 6, 12), end_date: Date.new(2026, 6, 15), auto_trip_report: true,
+      photo_album_url: "https://photos.app.goo.gl/automatic")
+    travel_to Time.utc(2026, 10, 6) do
+      get trip_trip_report_url(trip)
+      assert_select ".club-report-gallery-placeholder", count: 1
+      assert_select ".club-report a.report-album-card[href='https://photos.app.goo.gl/automatic']", "View photos"
+
+      cover = AlbumCover.create!(album_url: trip.photo_album_url, source_url: "https://lh3.googleusercontent.com/pw/auto=w960-h960")
+      cover.image.attach(io: Rails.root.join("app/assets/images/trip-reports/2026-08-14-tuolumne.jpg").open, filename: "album-cover.jpg", content_type: "image/jpeg")
+      get trip_trip_report_url(trip)
+      assert_select ".club-report-gallery-placeholder", count: 0
+      assert_select ".club-report-gallery a[href='https://photos.app.goo.gl/automatic'] img[src*='/rails/active_storage/blobs/']", count: 1
+      assert_select ".club-report a", text: "View photos", count: 0
+    end
+  end
+
   test "page switching stays in the top navigation rather than page content" do
     destinations = [ trips_path, past_trips_path, past_trips_trips_path, trip_reports_path,
       about_path, membership_path, history_path, join_the_list_path ]
