@@ -69,6 +69,8 @@ class ResourcesControllerTest < ActionDispatch::IntegrationTest
   test "signed-out visitors are sent through login and back to the form" do
     get new_resource_path(category: "news")
     assert_redirected_to new_session_path(return_to: "/resources/new?category=news")
+    get edit_resource_path(@link)
+    assert_redirected_to new_session_path(return_to: edit_resource_path(@link))
 
     assert_no_difference "Resource.count" do
       post resources_path, params: link_params

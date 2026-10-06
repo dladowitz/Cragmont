@@ -49,7 +49,7 @@ class ResourcesController < ApplicationController
   def require_resource_login
     return if user_signed_in?
 
-    return_to = request.get? ? request.fullpath : new_resource_path
+    return_to = %w[new edit].include?(action_name) ? request.fullpath : new_resource_path
     redirect_to new_session_path(return_to: return_to), alert: "Tie in first: log in to submit a resource."
   end
 
