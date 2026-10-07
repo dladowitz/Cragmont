@@ -13,11 +13,12 @@ class ResourcesTest < ApplicationSystemTestCase
     page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
   end
 
-  test "member logs in from a category, toggles the form, formats an article, and publishes both kinds" do
+  test "admin logs in to the form, toggles it, formats an article, and publishes both kinds" do
     visit resource_category_path("training")
-    click_link "Submit a resource"
+    assert_no_link "Submit a resource"
+    visit new_resource_path(category: "training")
     assert_selector ".flash.alert", text: "Tie in first: log in to submit a resource."
-    fill_in "Email", with: users(:sam).email
+    fill_in "Email", with: users(:alex).email
     fill_in "Password", with: "password"
     click_button "Log in", exact: true
     assert_current_path new_resource_path(category: "training")

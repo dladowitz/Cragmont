@@ -29,7 +29,7 @@ class ResourcesControllerTest < ActionDispatch::IntegrationTest
       assert_response :success
       assert_select "body.club-page"
       assert_select "h1", name
-      assert_select "main a[href=?]", new_resource_path(category: slug), text: "Submit a resource"
+      assert_select "main a", text: "Submit a resource", count: 0
     end
 
     get resource_category_path("training")
@@ -82,7 +82,7 @@ class ResourcesControllerTest < ActionDispatch::IntegrationTest
     delete resource_path(@link)
     assert_equal "Fingerboard plan", @link.reload.title
 
-    post session_url, params: { email: users(:sam).email, password: "password", return_to: "/resources/new?category=news" }
+    post session_url, params: { email: users(:alex).email, password: "password", return_to: "/resources/new?category=news" }
     assert_redirected_to "/resources/new?category=news"
     follow_redirect!
     assert_select "select[name='resource[category]'] option[selected][value='news']"
@@ -90,7 +90,7 @@ class ResourcesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "form marks required fields and hides the unused kind" do
-    log_in_as users(:sam)
+    log_in_as users(:alex)
     get new_resource_path(category: "training")
     assert_response :success
     assert_select "label[for='resource_category'] .required-marker", "*"
@@ -105,27 +105,29 @@ class ResourcesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "an unknown preselected category is ignored" do
-    log_in_as users(:sam)
+    log_in_as users(:alex)
     get new_resource_path(category: "gear")
     assert_response :success
     assert_select "select[name='resource[category]'] option[selected]", count: 0
   end
 
-  test "signed-in member publishes a link immediately" do
-    log_in_as users(:sam)
+  test "admin publishes a link immediately" do
+    log_in_as users(:alex)
+    get resource_category_path("vendors")
+    assert_select "main a[href=?]", new_resource_path(category: "vendors"), text: "Submit a resource"
     assert_difference "Resource.count", 1 do
-      post resources_path, params: link_params(user_id: users(:alex).id)
+      post resources_path, params: link_params(user_id: users(:sam).id)
     end
     resource = Resource.order(:id).last
-    assert_equal users(:sam), resource.user
+    assert_equal users(:alex), resource.user
     assert_redirected_to resource_category_path("vendors")
     follow_redirect!
     assert_select ".flash.notice .flash-text", "On belay! Your resource is up."
     assert_select "a[href='https://gear.example.com'][rel='noopener nofollow ugc']", /Local gear shop/
   end
 
-  test "signed-in member publishes an article immediately" do
-    log_in_as users(:sam)
+  test "admin publishes an article immediately" do
+    log_in_as users(:alex)
     post resources_path, params: { resource: { kind: "article", category: "upcoming-events", title: "Spring social", body: "Bring **snacks**.", url: "https://ignored.example.com" } }
     resource = Resource.order(:id).last
     assert resource.article?
@@ -138,7 +140,7 @@ class ResourcesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "invalid input re-renders with errors and keeps entered data" do
-    log_in_as users(:sam)
+    log_in_as users(:alex)
     assert_no_difference "Resource.count" do
       post resources_path, params: link_params(title: "My beta", url: "javascript:alert(1)")
     end
@@ -156,6 +158,30 @@ class ResourcesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type='radio'][value='article'][checked]"
     assert_select "fieldset:not([hidden]) textarea#resource_body"
     assert_select "fieldset[hidden][disabled] input#resource_url"
+  end
+
+  test "only super admins and trip admins can add resources" do
+    assign_role(@riley, :finance_admin)
+    trips(:yosemite).update!(campsite_coordinator: @riley)
+    [ users(:sam), @riley ].each do |member|
+      log_in_as member
+      get resource_category_path("training")
+      assert_select "main a", text: "Submit a resource", count: 0
+      get new_resource_path(category: "training")
+      assert_redirected_to root_path
+      assert_equal "Wow, that was a whipper. You do not have permission to access that page.", flash[:alert]
+      assert_no_difference "Resource.count" do
+        post resources_path, params: link_params
+      end
+      assert_redirected_to root_path
+    end
+
+    assign_role(@riley, :trip_admin)
+    log_in_as @riley
+    assert_difference "Resource.count", 1 do
+      post resources_path, params: link_params
+    end
+    assert_equal @riley, Resource.order(:id).last.user
   end
 
   test "author edits and deletes their own resource" do
