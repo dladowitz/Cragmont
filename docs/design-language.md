@@ -50,6 +50,11 @@ The current public examples are [home](../app/views/home/index.html.haml), [trip
    In mobile trip records, align metadata labels to the left edge and their values to the right edge, leaving flexible space between them. Keep the title, actions, and stats boxes in their existing alignment; let long values wrap within their column.
    Manage destinations become full-width navigation rows with aligned progress badges, chevrons, and at least 48px tap targets. Reimbursement totals remain non-interactive. Trip and help-request status filters use a native disclosure with an always-visible summary of the applied selections, checkboxes, and one Apply button. Campsite reimbursement filtering uses a labelled native select with the shared inset chevron and reserved right padding; preserve filters through recording and CSV export, including bookmarked legacy combinations. Do not replace these controls with a custom menu library.
 
+## Trip privacy
+
+- Signed-out visitors see the Trips list with name, location, type, and dates only. Open spots, campsites, participants, past trips, and trip pages need a login. Trip pages redirect to login rather than showing a redacted version.
+- Keep trip details out of search. The Trips list, login page, and calendar feeds send `X-Robots-Tag: noindex`. Calendar feeds stay public because calendar apps can't log in.
+
 ## Trip-report publishing and editing
 
 - New public trips with a Google Photos album link automatically appear in Trip Reports after the trip ends. Use the end date, not the start date, in the club's local time; honor overnight outings. No written report or manual archive action is required. Draft and deleted trips stay excluded.

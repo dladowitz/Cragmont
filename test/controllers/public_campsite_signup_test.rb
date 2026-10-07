@@ -26,6 +26,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "trips index shows published trips and hides unpublished trips" do
+    log_in_as_member
     class_trip = create_class_trip!(name: "Intro to Anchors")
     day_trip = Trip.create!(
       trip_type: "day_trip",
@@ -162,6 +163,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public class detail renders external event information" do
+    log_in_as_member
     ContentPage.current!("class_reminder").update!(
       title: "Class Reminder",
       body: "## Class Details\n\nRegister with the guide company."
@@ -216,6 +218,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public class detail hides discount fields when class does not offer a discount" do
+    log_in_as_member
     trip = create_class_trip!(
       class_original_price: "250",
       class_discount_code: "CRAG10",
@@ -281,6 +284,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public day trip stats show simple capacity counts" do
+    log_in_as_member
     trip = Trip.create!(
       trip_type: "day_trip",
       name: "Castle Rock Day",
@@ -535,6 +539,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public day trip detail shows waitlisted participants separately" do
+    log_in_as_member
     trip = Trip.create!(
       trip_type: "day_trip",
       name: "Vent 5 Waitlist",
@@ -574,6 +579,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public day trip safety reminder uses editable markdown setting" do
+    log_in_as_member
     SiteSetting.current.update!(day_trip_safety_reminder: "## Belay Check\n\nBring **judgment** to the crag.")
     trip = Trip.create!(
       trip_type: "day_trip",
@@ -797,6 +803,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "liability warning appears on public trip pages" do
+    log_in_as_member
     SiteSetting.current.update!(liability_warning: "Custom liability warning for public pages.")
 
     get root_url
@@ -821,6 +828,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "past trips page shows archived trips five at a time" do
+    log_in_as_member
     archived_trips = 6.times.map do |index|
       Trip.create!(
         name: "Archived Route #{index + 1}",
@@ -886,6 +894,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public pages hide deleted trips" do
+    log_in_as_member
     trips(:yosemite).soft_delete!
 
     get trips_url
@@ -1004,6 +1013,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "archived public trip detail is viewable but closed to new participants" do
+    log_in_as_member
     trips(:yosemite).update!(status: "archived")
 
     get trip_url(trips(:yosemite))
@@ -1025,6 +1035,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public trip detail shows placeholder when campsite coordinator is not set" do
+    log_in_as_member
     trips(:yosemite).update!(campsite_coordinator: nil)
 
     get trip_url(trips(:yosemite))
@@ -2853,6 +2864,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "trip detail shows almost full warning at seventy five percent capacity" do
+    log_in_as_member
     trip = trips(:yosemite)
     7.times do |index|
       campsite = index < 6 ? campsites(:yosemite_a) : campsites(:yosemite_b)
@@ -2886,7 +2898,8 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
     assert_select ".stats .warning-stat", text: /Open Spaces/
   end
 
-  test "public confirmed participants table abbreviates names and hides contact details" do
+  test "members not on the trip see abbreviated names without contact details" do
+    log_in_as_member
     create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam), arrival_date: Date.new(2026, 6, 13))
 
     get trip_url(trips(:yosemite))
@@ -2980,6 +2993,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public parking section shows campsite spot assignments" do
+    log_in_as_member
     primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:alex))
     open_spot_user = User.create!(first_name: "Opal", last_name: "Open", email: "public-open-parking@example.com", password: "password")
     create_campsite_signup!(campsite: campsites(:yosemite_a), user: open_spot_user)
@@ -3099,6 +3113,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public confirmed participants table shows signed waiver status" do
+    log_in_as_member
     attach_test_waiver_to(create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam)))
 
     get trip_url(trips(:yosemite))
@@ -3111,6 +3126,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public confirmed participants table summarizes minors without names" do
+    log_in_as_member
     SiteSetting.current.update!(uncounted_minor_age_limit: 10)
     signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     signup.campsite_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 9, relationship: "Child")
@@ -3128,6 +3144,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public confirmed participants table separates minor age categories" do
+    log_in_as_member
     SiteSetting.current.update!(uncounted_minor_age_limit: 10)
     signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     signup.campsite_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 9, relationship: "Child")
@@ -3144,6 +3161,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public confirmed participants table groups guest rows with primary participant" do
+    log_in_as_member
     primary_signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:alex))
     guest_user = User.create!(
       first_name: "Gina",
@@ -3186,6 +3204,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public stats split out uncounted minors" do
+    log_in_as_member
     signup = create_campsite_signup!(campsite: campsites(:yosemite_a), user: users(:sam))
     signup.campsite_signup_minors.create!(first_name: "Mika", last_name: "Lee", age: 12, relationship: "Child")
 
@@ -3213,6 +3232,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   end
 
   test "public trip detail shows waitlisted users separately" do
+    log_in_as_member
     trip = trips(:yosemite)
     waitlisted_user = User.create!(first_name: "Willa", last_name: "Wait", email: "willa@example.com", password: "password")
     willa_joined_at = Time.zone.local(2026, 5, 2, 9, 15)

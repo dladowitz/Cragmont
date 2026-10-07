@@ -20,7 +20,7 @@
       %div
         %dt= trip.single_day_event? ? "Participants" : "Sites"
         %dd= trip.single_day_event? ? trip.confirmed_signup_count : trip.campsite_count
-    - elsif !trip.class_trip?
+    - elsif !trip.class_trip? && user_signed_in?
       %div
         %dt Open Spaces
         %dd

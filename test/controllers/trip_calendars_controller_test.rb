@@ -9,6 +9,7 @@ class TripCalendarsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_equal "text/calendar", response.media_type
+    assert_equal "noindex", response.headers["X-Robots-Tag"]
     assert_includes response.headers["Content-Disposition"], "cragmont-events.ics"
     assert_includes response.body, "UID:trip-#{trips(:yosemite).id}@cragmontclimbing.com"
     assert_includes response.body, "UID:trip-#{archived.id}@cragmontclimbing.com"
@@ -62,6 +63,7 @@ class TripCalendarsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index offers calendar subscription without misleading individual downloads" do
+    log_in_as_member
     get trips_url
     assert_response :success
     assert_select "a[href='#{calendar_trips_url(format: :ics, protocol: 'webcal')}']", text: "Subscribe to all events"

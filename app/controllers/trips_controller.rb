@@ -2,8 +2,12 @@ class TripsController < ApplicationController
   ARCHIVED_TRIPS_PER_PAGE = 5
 
   before_action :set_trip, only: :show
+  # Campsites, open spots, and who signed up are members-only, and none of it gets indexed.
+  before_action :require_trip_login, only: %i[past_trips show]
 
   def index
+    # Signed-out visitors see what's planned, not what's open.
+    response.set_header("X-Robots-Tag", "noindex")
     @trips = Trip.published_for_public.includes(:campsite_coordinator, :partner_company, :class_signups, :campsites)
   end
 
@@ -55,6 +59,7 @@ class TripsController < ApplicationController
       @waitlist_confirmation_campsites = @current_signup&.waitlisted? ? @trip.waitlist_confirmation_campsites_for(@current_signup) : []
       @waitlist_confirmation_campsite_ids = @waitlist_confirmation_campsites.map(&:id)
       @completion_signup = participant_details_signup || guest_details_signup
+      return redirect_to_trip_login unless user_signed_in?
       @confirmed_participant = @current_signup&.confirmed?
       @show_payment_success_modal = payment_success_return?
       if @show_payment_success_modal
@@ -68,6 +73,17 @@ class TripsController < ApplicationController
 
   def set_trip
     @trip = Trip.visible_for_public.find(params[:id])
+  end
+
+  def require_trip_login
+    # Emailed completion links sign campsite participants in during show, which checks again.
+    return if user_signed_in? || (action_name == "show" && params[:complete_signup].present? && !@trip.uses_day_trip_signups? && !@trip.class_trip?)
+
+    redirect_to_trip_login
+  end
+
+  def redirect_to_trip_login
+    redirect_to new_session_path(return_to: request.path), alert: "Tie in first: log in to see trips."
   end
 
   def participant_details_signup

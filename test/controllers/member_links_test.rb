@@ -1,18 +1,33 @@
 require "test_helper"
 
 class MemberLinksTest < ActionDispatch::IntegrationTest
-  test "trip actions preserve the originating page through login" do
-    get trip_url(trips(:yosemite))
-    login_path = new_session_path(return_to: trip_path(trips(:yosemite)))
-    assert_select "a[href='#{login_path}']", text: "Log in to sign up"
-    assert_select "a[href='#{login_path}']", text: "Log in to join the board"
-
-    %w[day_trip gym_outing class_trip].each do |type|
-      trip = create_trip(type)
-      get trip_url(trip)
-      label = type == "class_trip" ? "Log in to mark interest" : "Log in to sign up"
-      assert_select "a[href='#{new_session_path(return_to: trip_path(trip))}']", text: label
+  test "signed-out visitors see planned trips but log in for details and open spots" do
+    trip_paths = [ past_trips_trips_path, trip_path(trips(:yosemite)) ] + %w[day_trip gym_outing class_trip].map { |type| trip_path(create_trip(type)) }
+    trip_paths.each do |path|
+      get path
+      assert_redirected_to new_session_path(return_to: path)
+      assert_equal "Tie in first: log in to see trips.", flash[:alert]
+      assert_empty response.body
     end
+    get past_trips_url
+    assert_redirected_to new_session_path(return_to: past_trips_path)
+    get trip_url(trips(:yosemite), complete_signup: "bogus")
+    assert_redirected_to new_session_path(return_to: trip_path(trips(:yosemite)))
+
+    get trips_url
+    assert_response :success
+    assert_equal "noindex", response.headers["X-Robots-Tag"]
+    assert_select ".trip-card[href='#{trip_path(trips(:yosemite))}'] h2", "Yosemite Valley Spring"
+    assert_select ".trip-card", text: /June 12, 2026/
+    assert_select "dt", text: "Open Spaces", count: 0
+    assert_no_match(/space|waitlist|Upper Pines/i, css_select(".trip-cards").text)
+
+    get new_session_url(return_to: trip_path(trips(:yosemite)))
+    assert_equal "noindex", response.headers["X-Robots-Tag"]
+    post session_url, params: { email: users(:sam).email, password: "password", return_to: trip_path(trips(:yosemite)) }
+    assert_redirected_to trip_path(trips(:yosemite))
+    follow_redirect!
+    assert_select "h1", "Yosemite Valley Spring"
   end
 
   test "all trip types reveal private resources and coordinator email only after login" do
@@ -20,15 +35,13 @@ class MemberLinksTest < ActionDispatch::IntegrationTest
       trip = create_trip(type)
       ClimbingPartnerRequest.create!(trip: trip, user: users(:alex)) if type == "camping"
       get trip_url(trip)
-      assert_response :success
-      %w[whatsapp-token album-token prose-token alex@example.com 555-0100].each { |secret| assert_not_includes response.body, secret }
-      assert_select "a[href='#{new_session_path(return_to: trip_path(trip))}']", text: /log in to reveal/i
-      assert_select "a[href='https://forecast.weather.gov/public']"
-      assert_select "a[href='https://example.com/public-guide']"
+      assert_redirected_to new_session_path(return_to: trip_path(trip))
 
       log_in_as(users(:sam))
       get trip_url(trip)
       assert_response :success
+      assert_select "a[href='https://forecast.weather.gov/public']"
+      assert_select "a[href='https://example.com/public-guide']"
       assert_select "a[href='https://chat.whatsapp.com/whatsapp-token']"
       assert_select "a[href='https://example.com/album-token']"
       assert_select "a[href='https://photos.app.goo.gl/prose-token']"
@@ -42,7 +55,7 @@ class MemberLinksTest < ActionDispatch::IntegrationTest
   test "content pages and global liability text gate embedded member links" do
     ContentPage.current!("what_to_expect").update!(body: "[Photos](https://photos.app.goo.gl/content-token)\n\nhttps://chat.whatsapp.com/plain-token")
     SiteSetting.current.update!(liability_warning: "Contact mailto:coordinator@example.com or https://chat.whatsapp.com/footer-token")
-    [ root_url, trips_url, what_to_expect_trips_url ].each do |url|
+    [ root_url, what_to_expect_trips_url ].each do |url|
       get url
       assert_response :success
       %w[content-token plain-token coordinator@example.com footer-token].each { |secret| assert_not_includes response.body, secret }
@@ -55,33 +68,31 @@ class MemberLinksTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "footer-token"
   end
 
-  test "plain trip instructions gate contact links but keep public maps" do
+  test "plain trip instructions show contact links and maps to members" do
     trip = create_trip("day_trip")
     trip.update!(late_arrival_instructions: "https://chat.whatsapp.com/late-token or mailto:late@example.com", carpool_meeting_spot: "Meet at https://maps.google.com/public or https://photos.google.com/share/carpool-token")
     get trip_url(trip)
-    %w[late-token late@example.com carpool-token].each { |secret| assert_not_includes response.body, secret }
-    assert_select "a[href='https://maps.google.com/public']"
+    assert_redirected_to new_session_path(return_to: trip_path(trip))
     log_in_as(users(:sam))
     get trip_url(trip)
     %w[late-token late@example.com carpool-token].each { |secret| assert_includes response.body, secret }
+    assert_select "a[href='https://maps.google.com/public']"
   end
 
-  test "public headings cards and content subtitles cannot leak member links" do
+  test "public calendars and content subtitles cannot leak member links" do
     trip = create_trip("day_trip")
     trip.update!(name: "Outing https://chat.whatsapp.com/name-token", location: "https://example.com/album-token", sun_exposure: "https://photos.app.goo.gl/sun-token")
-    [ trips_url, trip_url(trip) ].each do |url|
+    [ calendar_trips_url(format: :ics), calendar_trip_url(trip, format: :ics) ].each do |url|
       get url
+      assert_response :success
       %w[name-token album-token sun-token].each { |secret| assert_not_includes response.body, secret }
     end
-    trip.update!(status: "archived")
-    get past_trips_trips_url
-    %w[name-token album-token].each { |secret| assert_not_includes response.body, secret }
     ContentPage.current!("what_to_expect").update!(title: "https://chat.whatsapp.com/title-token", subtitle: "https://photos.app.goo.gl/subtitle-token")
     get what_to_expect_trips_url
     %w[title-token subtitle-token].each { |secret| assert_not_includes response.body, secret }
   end
 
-  test "user edited participant names cannot expose member links on public lists" do
+  test "participant lists with user edited names are members-only" do
     users(:sam).update!(first_name: "https://chat.whatsapp.com/participant-token")
     users(:alex).update!(first_name: "name-contact@example.com")
     camping_trip = trips(:yosemite)
@@ -99,8 +110,7 @@ class MemberLinksTest < ActionDispatch::IntegrationTest
 
     [ camping_trip, day_trip, class_trip ].each do |trip|
       get trip_url(trip)
-      assert_response :success
-      %w[participant-token name-contact@example.com].each { |secret| assert_not_includes response.body, secret }
+      assert_redirected_to new_session_path(return_to: trip_path(trip))
     end
 
     log_in_as(users(:sam))
@@ -115,8 +125,7 @@ class MemberLinksTest < ActionDispatch::IntegrationTest
     trip = create_trip("class_trip")
     trip.update!(photo_album_url: "https://EXAMPLE.com/Private%20Album", description: "[Open here](https://example.com/Private%20Album)", class_original_price: "See https://chat.whatsapp.com/price-token", class_offers_discount: true, class_discounted_price: "See https://photos.app.goo.gl/discount-price-token")
     get trip_url(trip)
-    assert_response :success
-    %w[Private%20Album price-token discount-price-token].each { |secret| assert_not_includes response.body, secret }
+    assert_redirected_to new_session_path(return_to: trip_path(trip))
     log_in_as(users(:sam))
     get trip_url(trip)
     %w[Private%20Album price-token discount-price-token].each { |secret| assert_includes response.body, secret }
