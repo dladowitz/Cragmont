@@ -9,7 +9,7 @@ class Resource < ApplicationRecord
   TITLE_MAX = 150
   URL_MAX = 2000
   BODY_MAX = 50_000
-  # Member-submitted links: no opener access, and no search-ranking endorsement.
+  # Outside links: no opener access, and no search-ranking endorsement.
   LINK_REL = "noopener nofollow ugc".freeze
 
   belongs_to :user

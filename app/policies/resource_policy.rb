@@ -1,7 +1,7 @@
 class ResourcePolicy < ApplicationPolicy
-  # Any signed-in account publishes immediately; the club asked for no review queue to start.
+  # Admins publish immediately; members read.
   def create?
-    user.present?
+    global_trip_admin?
   end
 
   def update?

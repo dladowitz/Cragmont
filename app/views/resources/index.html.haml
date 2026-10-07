@@ -8,8 +8,9 @@
       %div
         %p.eyebrow Resources
         %h1= category_name
-        %p.muted Links and articles shared by club members, newest first.
-      = ui_link "Submit a resource", new_resource_path(category: @category)
+        %p.muted Links and articles picked by club admins, newest first.
+      - if policy(Resource).create?
+        = ui_link "Submit a resource", new_resource_path(category: @category)
     - if @resources.any?
       %ol.resource-list
         - @resources.each do |resource|
