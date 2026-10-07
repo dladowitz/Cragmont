@@ -1,0 +1,36 @@
+- article = resource.article?
+- link = resource.link?
+= form_with model: resource, url: (resource.persisted? ? resource_path(resource) : resources_path), class: "admin-form resource-form", data: {controller: "resource-form"} do |form|
+  = render "admin/shared/errors", record: resource
+  %fieldset.radio-field
+    %legend
+      What are you sharing?
+      = required_marker
+    %label
+      = form.radio_button :kind, "link", required: true, data: {action: "resource-form#toggle"}
+      Submit external resource
+    %label
+      = form.radio_button :kind, "article", required: true, data: {action: "resource-form#toggle"}
+      Write an article
+  .field
+    = required_label form, :category
+    = form.select :category, Resource::CATEGORIES.invert, {prompt: "Choose a category"}, required: true
+  .field
+    = required_label form, :title
+    = form.text_field :title, required: true, maxlength: Resource::TITLE_MAX
+  -# A disabled fieldset is skipped by validation and submission, so the hidden kind's required field cannot block the form.
+  %fieldset.resource-kind-fields{hidden: article, disabled: article, data: {resource_form_target: "link"}}
+    .field
+      = required_label form, :url, "Link (URL)"
+      = form.url_field :url, required: true, maxlength: Resource::URL_MAX, placeholder: "https://", inputmode: "url"
+  %fieldset.resource-kind-fields{hidden: link, disabled: link, data: {resource_form_target: "article"}}
+    .field
+      = required_label form, :body, "Article"
+      .report-formatting{role: "group", aria: {label: "Text formatting"}}
+        - [["Bold", "**"], ["Italic", "*"], ["Heading", "## "], ["List", "- "]].each do |label, marker|
+          = ui_button(label, variant: :secondary, type: "button", data: {action: "resource-form#format", resource_form_marker_param: marker})
+      = form.text_area :body, rows: 14, required: true, maxlength: Resource::BODY_MAX, data: {resource_form_target: "body"}
+      %p.muted Markdown is supported.
+  = ui_actions(kind: :form) do
+    = ui_submit form, (resource.persisted? ? "Save changes" : "Publish resource")
+    = ui_link "Cancel", (resource.category_name ? resource_category_path(resource.category) : root_path), variant: :secondary

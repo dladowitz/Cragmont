@@ -29,3 +29,8 @@
 
 en:
   hello: "Hello world"
+  activerecord:
+    attributes:
+      resource:
+        url: "Link"
+        body: "Article"

@@ -1,0 +1,9 @@
+- content_for :title, "Submit a resource | Cragmont Climbing Club"
+- content_for :body_class, "club-page resources-page"
+= render "shared/public_header"
+%main.public-main.club-main
+  = ui_panel(class: "club-panel") do
+    %p.eyebrow Resources
+    %h1.report-page-title Submit a resource
+    %p.muted Share a link or write an article for the club. It goes live as soon as you publish it.
+    = render "form", resource: @resource

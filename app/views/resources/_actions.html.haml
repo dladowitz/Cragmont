@@ -1,0 +1,5 @@
+- if policy(resource).update?
+  = ui_actions(class: "resource-actions") do
+    = ui_link "Edit", edit_resource_path(resource), variant: :secondary, aria: {label: "Edit #{resource.title}"}
+    = ui_button_to "Delete", resource_path(resource), method: :delete, variant: :danger_secondary, aria: {label: "Delete #{resource.title}"},
+      form: {data: {turbo_confirm: "Delete \"#{resource.title}\"? This cannot be undone."}}
