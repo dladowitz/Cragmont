@@ -10,4 +10,12 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     options.add_preference("profile.password_manager_enabled", false)
     options.add_preference("profile.password_manager_leak_detection", false)
   end
+
+  def log_in_as(user)
+    visit new_session_path
+    fill_in "Email", with: user.email
+    fill_in "Password", with: "password"
+    click_button "Log in", exact: true
+    assert_selector ".account-nav"
+  end
 end

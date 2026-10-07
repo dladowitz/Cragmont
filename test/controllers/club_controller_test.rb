@@ -44,7 +44,10 @@ class ClubControllerTest < ActionDispatch::IntegrationTest
     assert_select ".club-timeline", count: 0
   end
 
-  test "past trips has a public top-level page" do
+  test "past trips has a members-only top-level page" do
+    get past_trips_url
+    assert_redirected_to new_session_path(return_to: past_trips_path)
+    log_in_as_member
     get past_trips_url
     assert_response :success
     assert_select "h1", "Past Trips"
@@ -113,6 +116,7 @@ class ClubControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "page switching stays in the top navigation rather than page content" do
+    log_in_as_member
     resource_paths = Resource::CATEGORIES.keys.map { |category| resource_category_path(category) }
     destinations = [ trips_path, past_trips_path, past_trips_trips_path, trip_reports_path,
       about_path, membership_path, history_path, join_the_list_path ] + resource_paths
@@ -131,9 +135,14 @@ class ClubControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "public pages do not show the obsolete site beta banner" do
-    [ root_url, trips_url, past_trips_url, trip_reports_url, about_url, membership_url,
-      history_url, join_the_list_url, new_session_url, new_registration_url,
-      new_help_request_url, trip_url(trips(:yosemite)) ].each do |url|
+    [ root_url, trips_url, trip_reports_url, about_url, membership_url, history_url, join_the_list_url,
+      new_session_url, new_registration_url, new_help_request_url ].each do |url|
+      get url
+      assert_response :success
+      assert_no_match(/still getting dialed in/i, response.body, url)
+    end
+    log_in_as_member
+    [ past_trips_url, trip_url(trips(:yosemite)) ].each do |url|
       get url
       assert_response :success
       assert_no_match(/still getting dialed in/i, response.body, url)
