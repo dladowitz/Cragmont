@@ -44,7 +44,7 @@ gem "image_processing", "~> 2.0"
 gem "ruby-vips", "~> 2.0"
 
 # Store Active Storage uploads in Bucketeer/S3 on Heroku.
-gem "aws-sdk-s3", "~> 1.225"
+gem "aws-sdk-s3", "~> 1.229"
 
 # Render Rails views with HAML templates.
 gem "haml-rails", "~> 3.0"
