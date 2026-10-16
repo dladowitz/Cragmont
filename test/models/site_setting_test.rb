@@ -5,6 +5,7 @@ class SiteSettingTest < ActiveSupport::TestCase
     setting = SiteSetting.current
 
     assert setting.persisted?
+    assert_equal 15, setting.camping_member_priority_days
     assert_equal 13, setting.uncounted_minor_age_limit
     assert_equal 0, setting.first_two_nights_fee_cents
     assert_equal 0, setting.extra_night_fee_cents
@@ -12,6 +13,15 @@ class SiteSettingTest < ActiveSupport::TestCase
     assert_equal 0, setting.minor_extra_night_fee_cents
     assert_equal SiteSetting::DEFAULT_LIABILITY_WARNING, setting.liability_warning
     assert_equal SiteSetting::DEFAULT_DAY_TRIP_SAFETY_REMINDER, setting.day_trip_safety_reminder
+  end
+
+  test "member priority days must be a whole number between zero and 365" do
+    [ nil, -1, 1.5, "abc", 366 ].each do |days|
+      setting = SiteSetting.current
+      setting.camping_member_priority_days = days
+      assert_not setting.valid?, "Should reject #{days.inspect}"
+      assert setting.errors[:camping_member_priority_days].any?
+    end
   end
 
   test "stores dollar fee inputs as cents" do

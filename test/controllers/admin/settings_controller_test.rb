@@ -13,6 +13,8 @@ class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1.visually-hidden"
     assert_select "h2", "Camping Trip Settings"
+    assert_select "label[for='site_setting_camping_member_priority_days'] .required-marker", text: "*"
+    assert_select "input[name='site_setting[camping_member_priority_days]'][value='15'][required]"
     assert_select ".admin-nav a[href='#{admin_content_path}']", text: "Content"
     assert_select "h2", text: "Content", count: 0
     assert_select "label", text: /Age limit of uncounted minors/
@@ -34,6 +36,7 @@ class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
   test "can update settings" do
     patch admin_settings_url, params: {
       site_setting: {
+        camping_member_priority_days: "21",
         uncounted_minor_age_limit: "12",
         first_two_nights_fee: "35.50",
         extra_night_fee: "10",
@@ -44,6 +47,7 @@ class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to admin_settings_url
     setting = SiteSetting.current.reload
+    assert_equal 21, setting.camping_member_priority_days
     assert_equal 12, setting.uncounted_minor_age_limit
     assert_equal 3550, setting.first_two_nights_fee_cents
     assert_equal 1000, setting.extra_night_fee_cents
@@ -64,5 +68,19 @@ class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_select ".form-errors", text: /Uncounted minor age limit/
+  end
+
+  test "rejects invalid member priority duration and does not save it" do
+    patch admin_settings_url, params: { site_setting: { camping_member_priority_days: "-1" } }
+    assert_response :unprocessable_entity
+    assert_equal 15, SiteSetting.current.camping_member_priority_days
+    assert_select ".form-errors", text: /Camping member priority days/
+  end
+
+  test "non admins cannot change the duration" do
+    log_in_as(users(:sam))
+    patch admin_settings_url, params: { site_setting: { camping_member_priority_days: "0" } }
+    assert_equal 15, SiteSetting.current.camping_member_priority_days
+    assert_response :redirect
   end
 end

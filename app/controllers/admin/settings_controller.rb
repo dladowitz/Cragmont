@@ -19,6 +19,7 @@ class Admin::SettingsController < Admin::BaseController
 
   def site_setting_params
     params.require(:site_setting).permit(
+      :camping_member_priority_days,
       :uncounted_minor_age_limit,
       :first_two_nights_fee,
       :extra_night_fee,

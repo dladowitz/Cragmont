@@ -4,6 +4,8 @@
     .trip-card-title-line
       %p= public_member_text(trip.location, trip: trip)
       = trip_type_badge(trip)
+      - if trip.member_priority_active?
+        = ui_badge "Members first", tone: :warning
   %dl.trip-card-meta
     %div
       %dt Dates

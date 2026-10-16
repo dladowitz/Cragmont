@@ -6,6 +6,7 @@ yosemite:
   end_date: 2026-06-15
   description: Spring granite weekend.
   status: published
+  first_published_at: 2026-01-01 12:00:00
   campsite_coordinator: alex
 
 jtree:

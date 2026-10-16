@@ -6,6 +6,10 @@
     = render "admin/shared/errors", record: @site_setting
     .form-grid
       %div
+        = required_label form, :camping_member_priority_days, "Member-only signup period (days)"
+        = form.number_field :camping_member_priority_days, min: 0, max: 365, step: 1, required: true, aria: {describedby: "member-priority-help"}
+        %p.muted#member-priority-help Give members first dibs on newly published camping trips. Starts at first publication; 0 disables it. Changes apply to future publications, not trips already published.
+      %div
         = required_label form, :uncounted_minor_age_limit, "Age limit of uncounted minors"
         = form.number_field :uncounted_minor_age_limit, min: 0, max: 17, required: true
       %div

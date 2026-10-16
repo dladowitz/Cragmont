@@ -62,6 +62,7 @@ class Trip < ApplicationRecord
 
   before_validation :normalize_climbing_types
   before_validation :sync_single_day_end_date
+  before_save :record_first_publication
   before_destroy :ensure_no_active_signups, prepend: true
 
   enum :status, STATUSES.index_with(&:itself), default: "draft"
@@ -95,6 +96,19 @@ class Trip < ApplicationRecord
     return 0 if single_day_event?
 
     campsites.size
+  end
+
+  def member_priority_active?(now: Time.current)
+    camping? && published? && !deleted? && members_only_until.present? && now < members_only_until
+  end
+
+  def member_priority_blocks?(user)
+    member_priority_active? && !user&.member?
+  end
+
+  def member_priority_message
+    opens_at = members_only_until.in_time_zone(TripCalendar::TIME_ZONE)
+    "Members get first dibs! Non-member signup and waitlist access open #{opens_at.strftime('%B %-d, %Y at %-I:%M %p %Z')}."
   end
 
   def total_participant_capacity
@@ -304,6 +318,16 @@ class Trip < ApplicationRecord
   end
 
   private
+
+  def record_first_publication
+    return unless published? && first_published_at.nil? && (new_record? || will_save_change_to_status?)
+
+    self.first_published_at = Time.current
+    if camping?
+      days = SiteSetting.current.camping_member_priority_days
+      self.members_only_until = first_published_at.in_time_zone(TripCalendar::TIME_ZONE).advance(days: days) if days.positive?
+    end
+  end
 
   def ensure_no_active_signups
     return unless delete_blocked_by_participants?

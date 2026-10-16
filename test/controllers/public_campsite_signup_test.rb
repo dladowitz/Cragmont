@@ -2065,7 +2065,7 @@ class PublicCampsiteSignupTest < ActionDispatch::IntegrationTest
   test "check in and check out step is hidden outside Yosemite National Park" do
     trip = trips(:jtree)
     trip.update!(status: "published")
-    log_in_as(users(:sam))
+    log_in_as(users(:alex))
 
     get trip_url(trip)
 

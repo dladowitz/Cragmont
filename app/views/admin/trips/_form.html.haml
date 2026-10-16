@@ -131,6 +131,10 @@
       .field.admin-trip-status-field
         = required_label form, :status
         = form.select :status, Trip.statuses.keys.map { |status| [status.titleize, status] }, {}, required: true
+        - if trip.camping? && trip.first_published_at.nil?
+          %p.muted Publishing starts a #{SiteSetting.current.camping_member_priority_days}-day member-only signup period. A setting of 0 opens signup to everyone immediately.
+        - elsif trip.member_priority_active?
+          %p.muted= trip.member_priority_message
       - if policy(trip).assign_coordinator?
         .field.admin-trip-coordinator-field
           = form.label :campsite_coordinator_id, id: "#{coordinator_field_id}-label" do
