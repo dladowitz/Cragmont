@@ -134,6 +134,7 @@ class AdminMobileLayoutTest < ApplicationSystemTestCase
     save_screenshot(Rails.root.join("tmp/screenshots/admin-mobile-reimbursement-filter.png"))
     select "All campsites", from: "View campsites"
     click_button "Apply", exact: true
+    assert_current_path(/reimbursement_status(?:%5B%5D|\[\])=all/i)
     assert_selector "#campsite-reimbursement-#{campsites(:yosemite_b).id}"
     find("#campsite-reimbursement-#{campsites(:yosemite_a).id}").click_button("Record Reimbursement")
     within "dialog[open]" do
@@ -157,6 +158,9 @@ class AdminMobileLayoutTest < ApplicationSystemTestCase
     assert_equal users(:sam), campsites(:yosemite_a).reload.registration_reimbursed_by
     select "Reimbursed", from: "View campsites"
     click_button "Apply", exact: true
+    # This record also exists on the old page. Wait for the submitted filter's
+    # navigation before asking Chrome about nodes in the replacement document.
+    assert_current_path(/reimbursement_status(?:%5B%5D|\[\])=reimbursed/i)
     assert_selector "#campsite-reimbursement-#{campsites(:yosemite_a).id}"
     assert_no_selector "#campsite-reimbursement-#{campsites(:yosemite_b).id}"
   end
