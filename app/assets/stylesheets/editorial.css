@@ -881,3 +881,15 @@ table { max-width: 100%; }
     background: var(--panel);
   }
 }
+
+/* Registration timing is persistent trip information, not a transient toast. */
+.member-priority-notice {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius);
+  background: var(--bg);
+}
+.member-priority-notice p { margin: 0; }
+.member-priority-notice p + p { margin-top: 8px; }
+.member-priority-notice .status { margin-right: 6px; }

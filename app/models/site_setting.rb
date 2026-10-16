@@ -4,6 +4,8 @@ class SiteSetting < ApplicationRecord
 
   validates :uncounted_minor_age_limit,
     numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 17 }
+  validates :camping_member_priority_days,
+    numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 365 }
   validates :first_two_nights_fee_cents, :extra_night_fee_cents, :minor_fee_cents, :minor_extra_night_fee_cents,
     numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :liability_warning, :day_trip_safety_reminder, presence: true

@@ -7,6 +7,12 @@ class CampsiteSignupsController < ApplicationController
     campsite = trip.campsites.find(params[:campsite_id])
     signup = trip.campsite_signups.active.find_or_initialize_by(user: current_user)
 
+    claiming_spot = signup.new_record? || (signup.waitlisted? && (confirming_waitlist? || signing_up_from_waitlist?))
+    if claiming_spot && trip.member_priority_blocks?(current_user)
+      redirect_to trip_path(trip), alert: trip.member_priority_message, status: :see_other
+      return
+    end
+
     if signup.persisted? && confirming_waitlist?
       confirm_waitlisted_signup(trip, campsite, signup)
     elsif signup.persisted? && signing_up_from_waitlist?

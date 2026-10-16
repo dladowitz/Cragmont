@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_06_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_16_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -359,6 +359,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_06_130000) do
   end
 
   create_table "site_settings", force: :cascade do |t|
+    t.integer "camping_member_priority_days", default: 15, null: false
     t.datetime "created_at", null: false
     t.text "day_trip_safety_reminder", default: "Climbing is dangerous. Everyone is responsible for checking their own knots, belay setup, anchors, gear, and decisions at the crag.", null: false
     t.integer "extra_night_fee_cents", default: 0, null: false
@@ -368,6 +369,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_06_130000) do
     t.integer "minor_fee_cents", default: 0, null: false
     t.integer "uncounted_minor_age_limit", default: 13, null: false
     t.datetime "updated_at", null: false
+    t.check_constraint "camping_member_priority_days >= 0 AND camping_member_priority_days <= 365", name: "camping_member_priority_days_range"
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|
@@ -615,6 +617,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_06_130000) do
     t.text "description"
     t.date "end_date", null: false
     t.time "end_time"
+    t.datetime "first_published_at"
     t.bigint "group_campfire_campsite_id"
     t.string "group_fire_night"
     t.text "guide_book_url"
@@ -623,6 +626,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_06_130000) do
     t.string "meeting_location"
     t.text "meeting_location_url"
     t.time "meeting_time"
+    t.datetime "members_only_until"
     t.text "mountain_project_url"
     t.string "name", null: false
     t.integer "participant_capacity", default: 0, null: false

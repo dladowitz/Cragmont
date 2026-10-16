@@ -64,6 +64,16 @@
             - if photo_album_url.present?
               = member_link_to "Photo Album", photo_album_url, class: "trip-resource-link trip-photo-album-link", target: "_blank", rel: "noopener"
     = render "report_links", trip: @trip
+    - if @trip.member_priority_active?
+      .member-priority-notice
+        %p
+          = ui_badge "Members first", tone: :warning
+          = @trip.member_priority_message
+        %p
+          = link_to "About membership", membership_path
+          - unless user_signed_in?
+            %span ·
+            = link_to "Log in to sign up as a member", member_links_login_path
     = ui_stats do
       - if @trip.confirmed_uncounted_minor_count.positive?
         .split-signup-stat
@@ -155,6 +165,8 @@
                               = ui_button_to remove_button_text, trip_campsite_campsite_signup_path(@trip, campsite), method: :delete, variant: :danger
                 - elsif signed_up_for_another_campsite
                   %p.muted.already-signed-up-note You are already signed up for another campsite on this trip.
+                - elsif user_signed_in? && @trip.member_priority_blocks?(current_user)
+                  %p.muted.already-signed-up-note Member-only signup is open. See the opening date above for non-members.
                 - elsif current_waitlisted_signup
                   .waitlist-action-buttons
                     - if waitlist_confirmation_available
