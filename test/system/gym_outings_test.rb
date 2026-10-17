@@ -15,15 +15,9 @@ class GymOutingsSystemTest < ApplicationSystemTestCase
   test "member resources return to the gym outing after login and disappear after logout" do
     page.driver.browser.manage.window.resize_to(1400, 1000)
     visit trip_path(@trip)
-    whatsapp_link = all(".trip-whatsapp-link", visible: :all).find { |link| link[:textContent].include?("log in to reveal") }
-    assert whatsapp_link
-    assert_no_selector "a[href='#{@trip.whatsapp_group}']", visible: :all
-    assert_no_selector "a[href='#{@trip.photo_album_url}']", visible: :all
+    assert_current_path new_session_path(return_to: trip_path(@trip))
     assert_not_includes page.html, "system-test-private-invite"
     assert_not_includes page.html, "system-test-private-album"
-
-    page.execute_script("arguments[0].click()", whatsapp_link)
-    assert_current_path new_session_path(return_to: trip_path(@trip))
     page.execute_script("arguments[0].value = arguments[1]", find_field("Email"), users(:alex).email)
     page.execute_script("arguments[0].value = arguments[1]", find_field("Password"), "password")
     login = find_button("Log in")
@@ -44,10 +38,7 @@ class GymOutingsSystemTest < ApplicationSystemTestCase
     page.execute_script("arguments[0].form.requestSubmit(arguments[0])", logout)
     assert_current_path root_path
     page.go_back
-    assert_current_path trip_path(@trip)
-    assert all(".trip-whatsapp-link", visible: :all).any? { |link| link[:textContent].include?("log in to reveal") }
-    assert_no_selector "a[href='#{@trip.whatsapp_group}']", visible: :all
-    assert_no_selector "a[href='#{@trip.photo_album_url}']", visible: :all
+    assert_selector "h1", text: "Log in to Cragmont"
     assert_not_includes page.html, "system-test-private-invite"
     assert_not_includes page.html, "system-test-private-album"
   end

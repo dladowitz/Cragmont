@@ -1,5 +1,7 @@
 class SessionsController < ApplicationController
   def new
+    # Members-only pages redirect here, so keep it out of search results too.
+    response.set_header("X-Robots-Tag", "noindex")
   end
 
   def create
