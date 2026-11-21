@@ -60,10 +60,11 @@ class MemberPrioritySignupsTest < ActionDispatch::IntegrationTest
     get trips_url
     assert_select ".trip-card[href='#{trip_path(@trip)}'] .status", text: "Members first"
     get trip_url(@trip)
-    assert_select ".member-priority-notice", text: /Non-member signup and waitlist access open/
-    assert_select ".member-priority-notice a[href='#{membership_path}']"
+    assert_redirected_to new_session_path(return_to: trip_path(@trip))
     log_in_as(users(:sam))
     get trip_url(@trip)
+    assert_select ".member-priority-notice", text: /Non-member signup and waitlist access open/
+    assert_select ".member-priority-notice a[href='#{membership_path}']"
     assert_select ".campsite-signup-action form", count: 0
     assert_select ".campsite-signup-action", text: /Member-only signup is open/, minimum: 1
     log_in_as(users(:alex))

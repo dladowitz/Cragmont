@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-ruby "3.3.11"
+ruby "3.3.14"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.1.3"
@@ -44,13 +44,13 @@ gem "image_processing", "~> 2.0"
 gem "ruby-vips", "~> 2.0"
 
 # Store Active Storage uploads in Bucketeer/S3 on Heroku.
-gem "aws-sdk-s3", "~> 1.225"
+gem "aws-sdk-s3", "~> 1.229"
 
 # Render Rails views with HAML templates.
-gem "haml-rails", "~> 3.0"
+gem "haml-rails", "~> 3.1"
 
 # Render admin-managed Markdown content pages.
-gem "commonmarker", "~> 2.0"
+gem "commonmarker", "~> 2.9"
 
 # Generate downloadable CSV reports.
 gem "csv"
@@ -62,7 +62,7 @@ gem "pundit", "~> 2.5"
 gem "prawn", "~> 2.5"
 
 # Collect card payments for trip signups.
-gem "stripe", "~> 19.2"
+gem "stripe", "~> 19.4"
 
 # Capture emails in non-production delivery environments.
 gem "letter_opener_web", "~> 3.0"
