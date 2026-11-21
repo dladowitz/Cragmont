@@ -37,8 +37,7 @@ module ApplicationHelper
   end
 
   def render_content_page_markdown(markdown, rel: "noopener")
-    html = Commonmarker.to_html(markdown.to_s)
-    html = html.gsub(%r{<a href="#[^"]+" aria-hidden="true" class="anchor" id="[^"]+"></a>}, "")
+    html = Commonmarker.to_html(markdown.to_s, options: { extension: { header_ids: nil } })
     sanitized_html = sanitize(
       html,
       tags: %w[p h2 h3 h4 ul ol li strong em a br],
@@ -88,8 +87,7 @@ module ApplicationHelper
   end
 
   def render_trip_details_email_markdown(markdown)
-    html = Commonmarker.to_html(markdown.to_s)
-    html = html.gsub(%r{<a href="#[^"]+" aria-hidden="true" class="anchor" id="[^"]+"></a>}, "")
+    html = Commonmarker.to_html(markdown.to_s, options: { extension: { header_ids: nil } })
 
     sanitize_trip_details_email_html(html)
   end

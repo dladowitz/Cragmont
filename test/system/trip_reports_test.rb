@@ -6,8 +6,8 @@ class TripReportsTest < ApplicationSystemTestCase
     ActionController::Base.allow_forgery_protection = true
     @trip = trips(:yosemite)
     @trip.update!(campsite_coordinator: users(:sam), auto_trip_report: true,
+      start_date: 3.weeks.ago.to_date, end_date: 2.weeks.ago.to_date,
       photo_album_url: "https://photos.app.goo.gl/sample")
-    travel_to Time.utc(2026, 7, 1)
     visit new_session_path
     fill_in "Email", with: users(:sam).email
     fill_in "Password", with: "password"
@@ -18,7 +18,6 @@ class TripReportsTest < ApplicationSystemTestCase
 
   teardown do
     ActionController::Base.allow_forgery_protection = @old_forgery_protection
-    travel_back
     page.driver.browser.manage.window.resize_to(1400, 1000)
   end
 
