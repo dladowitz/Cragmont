@@ -48,6 +48,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
   end
 
   test "mobile trip lists keep metadata labels left and values right" do
+    log_in_as_member
     trips(:jtree).update!(status: "archived")
     [ trips_path, past_trips_trips_path ].each do |path|
       visit path
@@ -79,6 +80,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
   end
 
   test "empty trip lists use inset rounded cards on mobile" do
+    log_in_as_member
     Trip.update_all(status: "draft")
     [ trips_path, past_trips_path ].each do |path|
       visit path
@@ -102,6 +104,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
   end
 
   test "mobile trip section paragraphs and empty states share typography and heading spacing" do
+    log_in_as_member
     {
       "day_trip" => { meeting_time: "08:30", meeting_location: "Parking lot", meeting_location_url: "https://maps.google.com/?q=Castle+Rock", late_arrival_instructions: "Meet at the main wall.", climbing_types: [ "sport" ] },
       "gym_outing" => { meeting_time: "18:00" },
@@ -381,6 +384,7 @@ class EditorialVisualTest < ApplicationSystemTestCase
   end
 
   test "trip headings place desktop badges beside the name and retain mobile stacking" do
+    log_in_as_member
     page.driver.browser.manage.window.resize_to(1440, 900)
     visit trip_path(trips(:yosemite))
     assert_in_delta 58.29, find(".trip-summary-copy h1").native.css_value("font-size").to_f, 0.1

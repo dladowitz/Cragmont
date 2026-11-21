@@ -50,7 +50,11 @@ class GymOutingsTest < ActionDispatch::IntegrationTest
     assert_select "h2", text: "Campsites", count: 0
   end
 
-  test "gym outing appears publicly with its schedule and gym specific registration" do
+  test "gym outing appears for members with its schedule and gym specific registration" do
+    get trip_url(@trip)
+    assert_redirected_to new_session_path(return_to: trip_path(@trip))
+
+    log_in_as_member
     get trips_url
     assert_select ".trip-card[href='#{trip_path(@trip)}'] .trip-type-badge.gym-outing-badge", text: "Gym Outing"
     get trip_url(@trip)
@@ -60,7 +64,6 @@ class GymOutingsTest < ActionDispatch::IntegrationTest
     assert_select "dd", text: "Movement, San Francisco"
     assert_select "dd", text: "6:00pm"
     assert_select "dd", text: "8:00pm"
-    assert_select "a[href='#{new_session_path(return_to: trip_path(@trip))}']", text: "Log in to sign up"
     assert_select ".trips-faq-callout", count: 0
     assert_select "dt", text: "Types of climbing", count: 0
     assert_select "dt", text: "If you are running late", count: 0
@@ -77,6 +80,7 @@ class GymOutingsTest < ActionDispatch::IntegrationTest
   end
 
   test "overnight end times are explicit on public and admin trip details" do
+    log_in_as_member
     @trip.update!(end_time: "01:00")
     get trip_url(@trip)
     assert_select "dd", text: "1:00am (next day)"
@@ -147,6 +151,7 @@ class GymOutingsTest < ActionDispatch::IntegrationTest
   end
 
   test "archived gym outings show participant counts instead of campsites" do
+    log_in_as_member
     DayTripSignup.create!(trip: @trip, user: users(:sam), climbing_abilities: [ "none" ])
     @trip.update!(status: "archived")
 
@@ -176,21 +181,18 @@ class GymOutingsTest < ActionDispatch::IntegrationTest
     assert_equal 2, signup.party_capacity_count
   end
 
-  test "gym calendar subscriptions stay public while member links require login" do
+  test "gym calendar subscriptions stay public while trip pages require login" do
     @trip.update!(
       whatsapp_group: "https://chat.whatsapp.com/gym-private-invite",
       photo_album_url: "https://example.com/gym-private-album",
       description: "Photos: https://example.com/gym-private-album"
     )
     get trip_url(@trip)
-    assert_response :success
-    assert_not_includes response.body, "gym-private-invite"
-    assert_not_includes response.body, "gym-private-album"
-    assert_select "a[href='#{new_session_path(return_to: trip_path(@trip))}']", text: /log in to reveal/
-    assert_select "a[href='#{calendar_trip_path(@trip, format: :ics)}']", count: 0
+    assert_redirected_to new_session_path(return_to: trip_path(@trip))
 
     get calendar_trips_url(format: :ics)
     assert_response :success
+    assert_equal "noindex", response.headers["X-Robots-Tag"]
     assert_includes response.body, "UID:trip-#{@trip.id}@cragmontclimbing.com"
     assert_includes response.body, "DTSTART:20261017T010000Z"
     assert_includes response.body, "DTEND:20261017T030000Z"

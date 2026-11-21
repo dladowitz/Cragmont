@@ -1,4 +1,7 @@
 class TripCalendarsController < ApplicationController
+  # Calendar apps can't log in, so the feeds stay public but unindexed.
+  before_action { response.set_header("X-Robots-Tag", "noindex") }
+
   def index
     send_calendar(Trip.visible_for_public.order(:start_date, :id), "cragmont-events.ics")
   end

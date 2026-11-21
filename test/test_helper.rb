@@ -50,6 +50,11 @@ module ActiveSupport
       post session_url, params: { email: user.email, password: "password" }
     end
 
+    # Trip pages are members-only; this member isn't on any trip.
+    def log_in_as_member
+      log_in_as(User.find_or_create_by!(email: "member@example.com") { |user| user.assign_attributes(first_name: "Casey", last_name: "Member", password: "password") })
+    end
+
     def assign_role(user, slug)
       user.roles << roles(slug) unless user.has_role?(slug.to_s)
       user.reload
