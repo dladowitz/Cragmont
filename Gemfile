@@ -50,7 +50,7 @@ gem "aws-sdk-s3", "~> 1.229"
 gem "haml-rails", "~> 3.1"
 
 # Render admin-managed Markdown content pages.
-gem "commonmarker", "~> 2.9"
+gem "commonmarker", "~> 2.10"
 
 # Generate downloadable CSV reports.
 gem "csv"
